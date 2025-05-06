@@ -10,6 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "AbilitySystemComponent.h"
+#include "SkillGameplayTags.h"
+#include "CharacterAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -52,12 +55,60 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 }
 
 void ASkillProjectCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	if (IsValid(AbilitySystemComponent))
+	{
+		//# 설정한 AttributeSet 가져옴
+		CharacterAttributeSet = AbilitySystemComponent->GetSet<UCharacterAttributeSet>();
+
+		//# 캐릭터에 등록된 스킬 부여
+		for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
+		{
+			if (AbilityClass)
+			{
+				FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
+				AbilitySystemComponent->GiveAbility(AbilitySpec);
+			}
+		}
+
+		//# 스킬 사용
+		UseSkill();
+	}
+}
+
+void ASkillProjectCharacter::UseSkill()
+{
+	//# 사용할 스킬 태그 등록
+	FGameplayTagContainer TagContaingers;
+	TagContaingers.AddTag(SkillGameplayTags::Skill_A);
+
+	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
+	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
+	AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
+
+	//# 가져온 능력 실행
+	for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
+	{
+		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
+		}
+	}
+
+	//# 남은 마나 로그
+	UE_LOG(LogTemp, Warning, TEXT("Mana : %f"), CharacterAttributeSet->GetMana());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -127,4 +178,9 @@ void ASkillProjectCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+UAbilitySystemComponent* ASkillProjectCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
