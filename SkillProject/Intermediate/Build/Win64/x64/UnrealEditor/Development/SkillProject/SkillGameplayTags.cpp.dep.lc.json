@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\tae\\desktop\\myproject\\skillproject\\source\\skillproject\\skillgameplaytags.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\tae\\desktop\\myproject\\skillproject\\intermediate\\build\\win64\\x64\\skillprojecteditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\users\\tae\\desktop\\myproject\\skillproject\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\skillproject\\definitions.skillproject.h",
+            "c:\\users\\tae\\desktop\\myproject\\skillproject\\source\\skillproject\\skillgameplaytags.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

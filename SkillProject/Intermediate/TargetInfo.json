@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "SkillProject",
+			"Path": "..\\Source\\SkillProject.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "SkillProjectEditor",
+			"Path": "..\\Source\\SkillProjectEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
