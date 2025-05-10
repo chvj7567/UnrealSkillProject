@@ -81,6 +81,14 @@ void ASkillProjectCharacter::BeginPlay()
 
 		//# 스킬 사용
 		UseSkill();
+		FTimerHandle timerHandle;
+		GetWorld()->GetTimerManager().SetTimer(
+			timerHandle,
+			this,
+			&ASkillProjectCharacter::UseSkill,
+			1.0f,       // 1초 뒤에
+			false       // 반복하지 않음
+		);
 	}
 }
 
