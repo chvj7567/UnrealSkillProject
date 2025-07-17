@@ -68,27 +68,32 @@ void ASkillProjectCharacter::BeginPlay()
 	{
 		//# 설정한 AttributeSet 가져옴
 		CharacterAttributeSet = AbilitySystemComponent->GetSet<UCharacterAttributeSet>();
-
-		//# 캐릭터에 등록된 스킬 부여
-		for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
+		if (CharacterAttributeSet == nullptr)
 		{
-			if (AbilityClass)
-			{
-				FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
-				AbilitySystemComponent->GiveAbility(AbilitySpec);
-			}
+			UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
 		}
+		else
+		{
+			//# 캐릭터에 등록된 스킬 부여
+			for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
+			{
+				if (AbilityClass)
+				{
+					FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
+					AbilitySystemComponent->GiveAbility(AbilitySpec);
+				}
+			}
 
-		//# 스킬 사용
-		UseSkill();
-		FTimerHandle timerHandle;
-		GetWorld()->GetTimerManager().SetTimer(
-			timerHandle,
-			this,
-			&ASkillProjectCharacter::UseSkill,
-			1.0f,       // 1초 뒤에
-			false       // 반복하지 않음
-		);
+			//# 스킬 사용
+			//FTimerHandle timerHandle;
+			//GetWorld()->GetTimerManager().SetTimer(
+			//	timerHandle,
+			//	this,
+			//	&ASkillProjectCharacter::UseSkill,
+			//	10.0f,       // 10초 뒤에
+			//	false       // 반복하지 않음
+			//);
+		}
 	}
 }
 
