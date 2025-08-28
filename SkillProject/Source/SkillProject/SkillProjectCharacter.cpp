@@ -150,6 +150,8 @@ void ASkillProjectCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASkillProjectCharacter::Look);
+
+		EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &ASkillProjectCharacter::UseSkill);
 	}
 	else
 	{

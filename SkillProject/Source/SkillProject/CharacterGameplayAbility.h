@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
+#include "SkillGameplayTags.h"
 #include "CharacterGameplayAbility.generated.h"
 
 /**
@@ -13,6 +14,26 @@ UCLASS()
 class SKILLPROJECT_API UCharacterGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
+    TObjectPtr<UAnimMontage> SkillMontage;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
+    FGameplayTag WaitGameplayTag;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
+    TSubclassOf<UGameplayEffect> GameplayEffectClass;
+
+private:
+    UFUNCTION()
+    void OnMontageCompleted();
+
+    UFUNCTION()
+    void OnMontageCancelled();
+
+    UFUNCTION()
+    void OnWaitGameplayEvent(FGameplayEventData Payload);
 
 public:
     //# 능력 발동 시 호출 (조건 체크 X)

@@ -2,6 +2,35 @@
 
 
 #include "CharacterGameplayAbility.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "SkillProjectCharacter.h"
+#include "AbilitySystemGlobals.h"
+#include "AbilitySystemBlueprintLibrary.h"
+
+void UCharacterGameplayAbility::OnMontageCompleted()
+{
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void UCharacterGameplayAbility::OnMontageCancelled()
+{
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void UCharacterGameplayAbility::OnWaitGameplayEvent(FGameplayEventData Payload)
+{
+    if (GameplayEffectClass == nullptr)
+        return;
+
+    AActor* TargetActor = const_cast<AActor*>(Payload.Target.Get());
+    if (TargetActor == nullptr)
+        return;
+
+    FGameplayAbilityTargetDataHandle TargetDataHandle = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(TargetActor);
+
+    ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, TargetDataHandle, GameplayEffectClass, GetAbilityLevel());
+}
 
 void UCharacterGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -9,7 +38,27 @@ void UCharacterGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle
 
     UE_LOG(LogTemp, Warning, TEXT("ActivateAbility called"));
 
-    //CommitAbility(Handle, ActorInfo, ActivationInfo);
+    if (CommitAbility(Handle, ActorInfo, ActivationInfo))
+    {
+        CurrentSpecHandle = Handle;
+        CurrentActorInfo = ActorInfo;
+        CurrentActivationInfo = ActivationInfo;
+
+        UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage);
+        MontageTask->OnCompleted.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCompleted);
+        MontageTask->OnInterrupted.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCancelled);
+        MontageTask->OnCancelled.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCancelled);
+
+        UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitGameplayTag, nullptr, false, false);
+        WaitTask->EventReceived.AddDynamic(this, &UCharacterGameplayAbility::OnWaitGameplayEvent);
+
+        WaitTask->ReadyForActivation();
+        MontageTask->ReadyForActivation();
+    }
+    else
+    {
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+    }
 }
 
 void UCharacterGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
@@ -24,8 +73,6 @@ bool UCharacterGameplayAbility::CommitAbility(const FGameplayAbilitySpecHandle H
     bool bResult = Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
 
     UE_LOG(LogTemp, Warning, TEXT("CommitAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
-
-    //EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 
     return bResult;
 }
