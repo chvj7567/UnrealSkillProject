@@ -50,7 +50,9 @@ class ASkillProjectCharacter : public ACharacter, public IAbilitySystemInterface
 
 public:
 	ASkillProjectCharacter();
-	
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_UseSkill();
 
 protected:
 
@@ -59,7 +61,6 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
 
 protected:
 	// APawn interface

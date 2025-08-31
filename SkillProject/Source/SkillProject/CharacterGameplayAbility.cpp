@@ -44,16 +44,19 @@ void UCharacterGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle
         CurrentActorInfo = ActorInfo;
         CurrentActivationInfo = ActivationInfo;
 
-        UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage);
-        MontageTask->OnCompleted.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCompleted);
-        MontageTask->OnInterrupted.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCancelled);
-        MontageTask->OnCancelled.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCancelled);
+        if (UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitGameplayTag, nullptr, false, false))
+        {
+            WaitTask->EventReceived.AddDynamic(this, &UCharacterGameplayAbility::OnWaitGameplayEvent);
+            WaitTask->ReadyForActivation();
+        }
 
-        UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitGameplayTag, nullptr, false, false);
-        WaitTask->EventReceived.AddDynamic(this, &UCharacterGameplayAbility::OnWaitGameplayEvent);
-
-        WaitTask->ReadyForActivation();
-        MontageTask->ReadyForActivation();
+        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
+        {
+            MontageTask->OnCompleted.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCompleted);
+            MontageTask->OnInterrupted.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCancelled);
+            MontageTask->OnCancelled.AddDynamic(this, &UCharacterGameplayAbility::OnMontageCancelled);
+            MontageTask->ReadyForActivation();
+        }
     }
     else
     {

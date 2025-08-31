@@ -13,6 +13,7 @@
 #include "AbilitySystemComponent.h"
 #include "SkillGameplayTags.h"
 #include "CharacterAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -21,6 +22,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 ASkillProjectCharacter::ASkillProjectCharacter()
 {
+	bReplicates = true;
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -59,10 +62,21 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 }
 
+void ASkillProjectCharacter::Server_UseSkill_Implementation()
+{
+	if (HasAuthority() == false)
+		return;
+
+	UseSkill();
+}
+
 void ASkillProjectCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	if (HasAuthority() == false)
+		return;
 
 	if (IsValid(AbilitySystemComponent))
 	{
@@ -151,7 +165,7 @@ void ASkillProjectCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASkillProjectCharacter::Look);
 
-		EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &ASkillProjectCharacter::UseSkill);
+		EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &ASkillProjectCharacter::Server_UseSkill);
 	}
 	else
 	{

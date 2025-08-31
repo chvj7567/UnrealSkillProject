@@ -17,20 +17,23 @@ UCLASS()
 class SKILLPROJECT_API UCharacterAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Health);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxHealth);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData Mana;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Mana);
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxMana);
 };
