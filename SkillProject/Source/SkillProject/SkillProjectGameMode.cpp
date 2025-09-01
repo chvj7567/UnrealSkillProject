@@ -2,14 +2,20 @@
 
 #include "SkillProjectGameMode.h"
 #include "SkillProjectCharacter.h"
+#include "SkillProjectPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 
 ASkillProjectGameMode::ASkillProjectGameMode()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+	static ConstructorHelpers::FClassFinder<APawn> BPPawnClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
+	if (BPPawnClass.Class != NULL)
 	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
+		DefaultPawnClass = BPPawnClass.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<APlayerController> BPPlayerController(TEXT("/Game/ThirdPerson/Input/BP_CharacterController"));
+	if (BPPlayerController.Class != NULL)
+	{
+		PlayerControllerClass = BPPlayerController.Class;
 	}
 }
