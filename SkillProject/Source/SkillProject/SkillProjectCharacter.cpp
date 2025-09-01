@@ -67,7 +67,29 @@ void ASkillProjectCharacter::Server_UseSkill_Implementation()
 	if (HasAuthority() == false)
 		return;
 
-	UseSkill();
+	//# 사용할 스킬 태그 등록
+	FGameplayTagContainer TagContaingers;
+	TagContaingers.AddTag(SkillGameplayTags::Skill_A);
+
+	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
+	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
+	AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
+
+	//# 가져온 능력 실행
+	for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
+	{
+		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
+		}
+	}
+
+	//# 남은 마나 로그
+	UE_LOG(LogTemp, Warning, TEXT("Mana : %f"), CharacterAttributeSet->GetMana());
 }
 
 void ASkillProjectCharacter::BeginPlay()
@@ -97,45 +119,8 @@ void ASkillProjectCharacter::BeginPlay()
 					AbilitySystemComponent->GiveAbility(AbilitySpec);
 				}
 			}
-
-			//# 스킬 사용
-			//FTimerHandle timerHandle;
-			//GetWorld()->GetTimerManager().SetTimer(
-			//	timerHandle,
-			//	this,
-			//	&ASkillProjectCharacter::UseSkill,
-			//	10.0f,       // 10초 뒤에
-			//	false       // 반복하지 않음
-			//);
 		}
 	}
-}
-
-void ASkillProjectCharacter::UseSkill()
-{
-	//# 사용할 스킬 태그 등록
-	FGameplayTagContainer TagContaingers;
-	TagContaingers.AddTag(SkillGameplayTags::Skill_A);
-
-	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
-	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
-	AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
-
-	//# 가져온 능력 실행
-	for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
-	{
-		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
-		}
-	}
-
-	//# 남은 마나 로그
-	UE_LOG(LogTemp, Warning, TEXT("Mana : %f"), CharacterAttributeSet->GetMana());
 }
 
 //////////////////////////////////////////////////////////////////////////
