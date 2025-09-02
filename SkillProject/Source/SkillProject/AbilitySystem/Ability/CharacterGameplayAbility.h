@@ -25,15 +25,15 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
     TSubclassOf<UGameplayEffect> GameplayEffectClass;
 
-private:
+protected:
     UFUNCTION()
-    void OnMontageCompleted();
+    virtual void OnMontageCompleted();
 
     UFUNCTION()
-    void OnMontageCancelled();
+    virtual void OnMontageCancelled();
 
     UFUNCTION()
-    void OnWaitGameplayEvent(FGameplayEventData Payload);
+    virtual void OnWaitGameplayEvent(FGameplayEventData Payload);
 
 public:
     //# 능력 발동 시 호출 (조건 체크 X)
