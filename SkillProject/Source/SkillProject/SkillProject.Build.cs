@@ -8,7 +8,25 @@ public class SkillProject : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
-		PrivateDependencyModuleNames.AddRange(new string[] { "GameplayAbilities", "GameplayTags", "GameplayTasks" });
+        PublicIncludePaths.AddRange(new string[]
+        {
+            "SkillProject"
+        });
+
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+            "EnhancedInput"
+        });
+
+		PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "GameplayAbilities",
+            "GameplayTags",
+            "GameplayTasks"
+        });
 	}
 }

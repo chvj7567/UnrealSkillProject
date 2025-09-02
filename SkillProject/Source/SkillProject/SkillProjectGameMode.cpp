@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SkillProjectGameMode.h"
-#include "SkillProjectCharacter.h"
+#include "Character/SkillProjectCharacter.h"
 #include "SkillProjectPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 

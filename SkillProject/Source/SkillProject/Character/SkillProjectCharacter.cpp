@@ -9,7 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
 #include "SkillGameplayTags.h"
-#include "CharacterAttributeSet.h"
+#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectCharacter)

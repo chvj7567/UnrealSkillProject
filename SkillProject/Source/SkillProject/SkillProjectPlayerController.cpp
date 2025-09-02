@@ -2,7 +2,7 @@
 
 
 #include "SkillProjectPlayerController.h"
-#include "SkillProjectCharacter.h"
+#include "Character/SkillProjectCharacter.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"

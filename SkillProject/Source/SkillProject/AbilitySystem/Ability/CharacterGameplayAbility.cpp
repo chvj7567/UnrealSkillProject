@@ -4,7 +4,7 @@
 #include "CharacterGameplayAbility.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "SkillProjectCharacter.h"
+#include "Character/SkillProjectCharacter.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
