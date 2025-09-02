@@ -48,6 +48,6 @@ public:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void Server_UseSkill();
+	void Server_UseSkill(FGameplayTag SkillTag);
 };
 

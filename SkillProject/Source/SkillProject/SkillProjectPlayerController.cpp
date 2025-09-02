@@ -6,6 +6,7 @@
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "SkillGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectPlayerController)
 
@@ -87,6 +88,6 @@ void ASkillProjectPlayerController::UseSkill(const FInputActionValue& Value)
 {
 	if (ASkillProjectCharacter* SkillProjectCharacter = Cast<ASkillProjectCharacter>(GetPawn()))
 	{
-		SkillProjectCharacter->Server_UseSkill();
+		SkillProjectCharacter->Server_UseSkill(SkillGameplayTags::Skill_A);
 	}
 }

@@ -7,8 +7,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
-
-
 #include "AbilitySystemComponent.h"
 #include "SkillGameplayTags.h"
 #include "CharacterAttributeSet.h"
@@ -58,14 +56,14 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 }
 
-void ASkillProjectCharacter::Server_UseSkill_Implementation()
+void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
 {
 	if (HasAuthority() == false)
 		return;
 
 	//# 사용할 스킬 태그 등록
 	FGameplayTagContainer TagContaingers;
-	TagContaingers.AddTag(SkillGameplayTags::Skill_A);
+	TagContaingers.AddTag(SkillTag);
 
 	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
 	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
@@ -76,11 +74,11 @@ void ASkillProjectCharacter::Server_UseSkill_Implementation()
 	{
 		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
+			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillTag.ToString());
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillGameplayTags::Skill_A.GetTag().ToString());
+			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
 		}
 	}
 
