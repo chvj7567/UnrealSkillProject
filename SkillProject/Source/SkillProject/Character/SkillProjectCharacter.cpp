@@ -11,6 +11,8 @@
 #include "SkillGameplayTags.h"
 #include "AbilitySystem/Attribute/CharacterAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystemGlobals.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectCharacter)
 
@@ -54,6 +56,11 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
+	LeftWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftWeaponCollision"));
+	RightWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("RightWeaponCollision"));
+	LeftWeaponCollision->SetupAttachment(GetMesh());
+	RightWeaponCollision->SetupAttachment(GetMesh());
 }
 
 void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
@@ -114,7 +121,71 @@ void ASkillProjectCharacter::BeginPlay()
 				}
 			}
 		}
+
+		LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
+		RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
 	}
+}
+
+void ASkillProjectCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	//if (HasAuthority() && GetCharacterMovement()->HasRootMotionSources()) // 서버에서만
+	//{
+	//	FRootMotionMovementParams RootMotion = GetMesh()->ConsumeRootMotion();
+	//	RootMotion = GetCharacterMovement()->RootMotionParams;
+	//	if (RootMotion.bHasRootMotion == false)
+	//	{
+	//		FTransform RootMotionDelta = RootMotion.GetRootMotionTransform();
+	//		FHitResult Hit;
+
+	//		UE_LOG(LogTemp, Warning, TEXT("Me FVector %f / %f / %f"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
+	//		UE_LOG(LogTemp, Warning, TEXT("Me FRotator %f / %f / %f"), GetActorRotation().Pitch, GetActorRotation().Yaw, GetActorRotation().Roll);
+	//		UE_LOG(LogTemp, Warning, TEXT("Te FVector %f / %f / %f"), RootMotionDelta.GetTranslation().X, RootMotionDelta.GetTranslation().Y, RootMotionDelta.GetTranslation().Z);
+	//		UE_LOG(LogTemp, Warning, TEXT("FRotator %f / %f / %f"), RootMotionDelta.Rotator().Pitch, RootMotionDelta.Rotator().Yaw, RootMotionDelta.Rotator().Roll);
+
+	//		GetCharacterMovement()->SafeMoveUpdatedComponent(
+	//			RootMotionDelta.GetTranslation(),
+	//			RootMotionDelta.Rotator(),
+	//			true,
+	//			Hit
+	//		);
+	//	}
+	//}
+}
+
+void ASkillProjectCharacter::OnSkillHitOverlap(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	if (HasAuthority() == false)
+		return;
+
+	FGameplayTag EventTag = SkillGameplayTags::Skill_E;
+
+	FGameplayEventData Payload;
+	Payload.EventTag = EventTag;
+	Payload.Instigator = this;
+	Payload.Target = OtherActor;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OtherActor, EventTag, Payload);
+
+	ASkillProjectCharacter* OtherCharacter = Cast<ASkillProjectCharacter>(OtherActor);
+	if (OtherCharacter)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Send Gameplay Event [%s] from %s to %s And My Mana %f Target Health %f"),
+			*EventTag.ToString(),
+			*GetName(),
+			*OtherActor->GetName(),
+			CharacterAttributeSet->GetMana(), OtherCharacter->CharacterAttributeSet->GetHealth());
+	}
+	
 }
 
 UAbilitySystemComponent* ASkillProjectCharacter::GetAbilitySystemComponent() const
