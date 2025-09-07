@@ -16,29 +16,29 @@ class SKILLPROJECT_API UCharacterAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ASkillProjectCharacter> MyCharacter;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UCharacterMovementComponent> MyMovementComponent;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	float AimPitch;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	FVector Velocity;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	float GroundSpeed;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	bool ShouldMove;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	bool IsCrouching;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly)
 	bool IsFalling;
 
 public:
