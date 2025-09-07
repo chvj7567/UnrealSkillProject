@@ -122,6 +122,10 @@ void ASkillProjectCharacter::BeginPlay()
 			}
 		}
 
+		AbilitySystemComponent
+			->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
+			.AddUObject(this, &ASkillProjectCharacter::OnHealthChangedInternal);
+
 		LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
 		RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
 	}
@@ -155,40 +159,60 @@ void ASkillProjectCharacter::Tick(float DeltaTime)
 	//}
 }
 
-void ASkillProjectCharacter::OnSkillHitOverlap(UPrimitiveComponent* OverlappedComp,
+void ASkillProjectCharacter::OnHealthChangedInternal(const FOnAttributeChangeData& Data)
+{
+	float OldValue = Data.OldValue;
+	float NewValue = Data.NewValue;
+
+	UE_LOG(LogTemp, Warning, TEXT("[Struct] Health changed: %f -> %f"), OldValue, NewValue);
+
+	if (NewValue <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Struct] Die"));
+	}
+}
+
+void ASkillProjectCharacter::OnSkillHitOverlap(
+	UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex,
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	Super::NotifyActorBeginOverlap(OtherActor);
-
 	if (HasAuthority() == false)
 		return;
 
-	FGameplayTag EventTag = SkillGameplayTags::Skill_E;
-
-	FGameplayEventData Payload;
-	Payload.EventTag = EventTag;
-	Payload.Instigator = this;
-	Payload.Target = OtherActor;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OtherActor, EventTag, Payload);
-
 	ASkillProjectCharacter* OtherCharacter = Cast<ASkillProjectCharacter>(OtherActor);
-	if (OtherCharacter)
+	if (OtherCharacter == nullptr)
+		return;
+
+	FGameplayTagContainer EventTags = GetActivatableAbilityTags();
+	for (FGameplayTag EventTag : EventTags.GetGameplayTagArray())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Send Gameplay Event [%s] from %s to %s And My Mana %f Target Health %f"),
-			*EventTag.ToString(),
-			*GetName(),
-			*OtherActor->GetName(),
-			CharacterAttributeSet->GetMana(), OtherCharacter->CharacterAttributeSet->GetHealth());
+		FGameplayEventData Payload;
+		Payload.EventTag = EventTag;
+		Payload.Instigator = this;
+		Payload.Target = OtherActor;
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, Payload);
 	}
-	
 }
 
-UAbilitySystemComponent* ASkillProjectCharacter::GetAbilitySystemComponent() const
+FGameplayTagContainer ASkillProjectCharacter::GetActivatableAbilityTags()
 {
-	return AbilitySystemComponent;
+	TArray<FGameplayAbilitySpec> Abilities;
+	Abilities = AbilitySystemComponent->GetActivatableAbilities();
+
+	FGameplayTagContainer ActivatableTags;
+	for (FGameplayAbilitySpec Spec : Abilities)
+	{
+		if (Spec.IsActive())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability ½ÇÇà Áß: %s"), *Spec.Ability->GetName());
+			ActivatableTags.AppendTags(Spec.Ability->AbilityTags);
+		}
+	}
+
+	return ActivatableTags;
 }

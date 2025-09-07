@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
 #include "Components/BoxComponent.h"
 #include "SkillProjectCharacter.generated.h"
@@ -40,6 +41,7 @@ protected:
 public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystemComponent; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
@@ -52,7 +54,10 @@ protected:
 	TArray<TSubclassOf<class UGameplayAbility>> AbilityClasses;
 
 public:
-	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	struct FGameplayTagContainer GetActivatableAbilityTags();
+
+public:
+	void OnHealthChangedInternal(const struct FOnAttributeChangeData& Data);
 
 	UFUNCTION()
 	void OnSkillHitOverlap(UPrimitiveComponent* OverlappedComp,

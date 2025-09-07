@@ -11,6 +11,12 @@ namespace SkillGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_D, "Skill.D");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_E, "Skill.E");
 
+	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_A, "SkillDamage.A");
+	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_B, "SkillDamage.B");
+	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_C, "SkillDamage.C");
+	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_D, "SkillDamage.D");
+	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_E, "SkillDamage.E");
+
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_A, "GameplayCue.A");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_B, "GameplayCue.B");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_C, "GameplayCue.C");

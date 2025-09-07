@@ -10,22 +10,16 @@
 
 void UGameplayAbility_SkillA::OnMontageCompleted()
 {
-    Super::OnMontageCompleted();
-
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void UGameplayAbility_SkillA::OnMontageCancelled()
 {
-    Super::OnMontageCancelled();
-
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void UGameplayAbility_SkillA::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
-    Super::OnWaitGameplayEvent(Payload);
-
     if (GameplayEffectClass == nullptr)
         return;
 
