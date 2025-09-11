@@ -64,8 +64,7 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
-	
-public:
+
     //# 능력 발동 조건 확인
     virtual bool CanActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
@@ -94,4 +93,6 @@ public:
 
     //# 능력 제거
     virtual void OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+
+    virtual FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
 };

@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "AbilitySystem/SpyAbilitySourceInterface.h"
+#include "AbilitySystem/SpyGameplayEffectContext.h"
 #include "CharacterGameplayAbility.h"
 
 void UCharacterGameplayAbility::OnMontageCompleted()
@@ -96,3 +98,26 @@ void UCharacterGameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo*
     UE_LOG(LogTemp, Warning, TEXT("OnRemoveAbility called"));
 }
 
+FGameplayEffectContextHandle UCharacterGameplayAbility::MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const
+{
+    FGameplayEffectContextHandle ContextHandle = Super::MakeEffectContext(Handle, ActorInfo);
+
+    FSpyGameplayEffectContext* EffectContext = FSpyGameplayEffectContext::ExtractEffectContext(ContextHandle);
+    check(EffectContext);
+    check(ActorInfo);
+
+    //# Default
+    AActor* Instigator = ActorInfo->OwnerActor.Get();
+    AActor* EffectCauser = ActorInfo->AvatarActor.Get();
+    UObject* SourceObject = GetSourceObject(Handle, ActorInfo);
+
+    EffectContext->AddInstigator(Instigator, EffectCauser);
+    EffectContext->AddSourceObject(SourceObject);
+
+    //# Custom
+    ISpyAbilitySourceInterface* AbilitySource = Cast<ISpyAbilitySourceInterface>(SourceObject);
+
+    EffectContext->SetAbilitySource(AbilitySource, 0.0f);
+
+    return ContextHandle;
+}
