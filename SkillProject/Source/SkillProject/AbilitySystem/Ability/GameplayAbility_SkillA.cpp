@@ -7,6 +7,8 @@
 #include "Character/SkillProjectCharacter.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/SpyGameplayEffectContext.h"
+#include "AbilitySystemComponent.h"
 
 void UGameplayAbility_SkillA::OnMontageCompleted()
 {
@@ -27,9 +29,29 @@ void UGameplayAbility_SkillA::OnWaitGameplayEvent(FGameplayEventData Payload)
     if (TargetActor == nullptr)
         return;
 
-    FGameplayAbilityTargetDataHandle TargetDataHandle = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(TargetActor);
+    //FGameplayAbilityTargetDataHandle TargetDataHandle = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(TargetActor);
+    //ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, TargetDataHandle, GameplayEffectClass, GetAbilityLevel());
 
-    ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, TargetDataHandle, GameplayEffectClass, GetAbilityLevel());
+    UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();
+    if (ASC == nullptr)
+        return;
+
+    FGameplayEffectContextHandle EffectContext = MakeEffectContext(CurrentSpecHandle, CurrentActorInfo);
+    FSpyGameplayEffectContext* CustomContext = FSpyGameplayEffectContext::ExtractEffectContext(EffectContext);
+    if (CustomContext == nullptr)
+        return;
+
+    CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
+    CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
+
+    FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GameplayEffectClass, GetAbilityLevel(), EffectContext);
+    if (SpecHandle.IsValid())
+    {
+        if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor))
+        {
+            ASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+        }
+    }
 }
 
 void UGameplayAbility_SkillA::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
