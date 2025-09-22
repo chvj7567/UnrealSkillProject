@@ -58,8 +58,6 @@ void UGameplayAbility_SkillA::ActivateAbility(const FGameplayAbilitySpecHandle H
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    UE_LOG(LogTemp, Warning, TEXT("ActivateAbility called"));
-
     if (CommitAbility(Handle, ActorInfo, ActivationInfo))
     {
         CurrentSpecHandle = Handle;
