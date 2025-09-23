@@ -40,33 +40,33 @@ void USpyAbilitySystemComponent::NotifyAbilityActivated(const FGameplayAbilitySp
 {
 	Super::NotifyAbilityActivated(Handle, Ability);
 
-	UE_LOG(LogTemp, Warning, TEXT("NotifyAbilityActivated called"));
+	UE_LOG(LogTemp, Warning, TEXT("NotifyAbilityActivated called : %s"), *Ability->GetName());
 }
 
 void USpyAbilitySystemComponent::NotifyAbilityFailed(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
 {
 	Super::NotifyAbilityFailed(Handle, Ability, FailureReason);
 
-	UE_LOG(LogTemp, Warning, TEXT("NotifyAbilityFailed called"));
+	UE_LOG(LogTemp, Warning, TEXT("NotifyAbilityFailed called : %s"), *Ability->GetName());
 }
 
 void USpyAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, bool bWasCancelled)
 {
 	Super::NotifyAbilityEnded(Handle, Ability, bWasCancelled);
 
-	UE_LOG(LogTemp, Warning, TEXT("NotifyAbilityEnded called"));
+	UE_LOG(LogTemp, Warning, TEXT("NotifyAbilityEnded called : %s"), *Ability->GetName());
 }
 
 void USpyAbilitySystemComponent::ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags)
 {
 	Super::ApplyAbilityBlockAndCancelTags(AbilityTags, RequestingAbility, bEnableBlockTags, BlockTags, bExecuteCancelTags, CancelTags);
 
-	UE_LOG(LogTemp, Warning, TEXT("ApplyAbilityBlockAndCancelTags called"));
+	UE_LOG(LogTemp, Warning, TEXT("ApplyAbilityBlockAndCancelTags : %s called"), *RequestingAbility->GetName());
 }
 
 void USpyAbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bCanBeCanceled)
 {
 	Super::HandleChangeAbilityCanBeCanceled(AbilityTags, RequestingAbility, bCanBeCanceled);
 
-	UE_LOG(LogTemp, Warning, TEXT("HandleChangeAbilityCanBeCanceled called"));
+	UE_LOG(LogTemp, Warning, TEXT("HandleChangeAbilityCanBeCanceled : %s called"), *RequestingAbility->GetName());
 }

@@ -19,7 +19,8 @@ public class SkillProject : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
-            "EnhancedInput"
+            "EnhancedInput",
+            "ModularGameplay"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[]
