@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UObject/Interface.h"
+
 #include "SpyAbilitySourceInterface.generated.h"
 
 class UObject;

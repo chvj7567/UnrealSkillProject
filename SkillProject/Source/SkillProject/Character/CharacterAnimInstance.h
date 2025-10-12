@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "SkillProjectCharacter.h"
+#include "Character/SkillProjectCharacter.h"
+
 #include "CharacterAnimInstance.generated.h"
 
 /**

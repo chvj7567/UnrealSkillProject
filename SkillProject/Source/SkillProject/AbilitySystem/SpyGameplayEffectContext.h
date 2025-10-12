@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "GameplayEffectTypes.h"
+
 #include "SpyGameplayEffectContext.generated.h"
 
 class ISpyAbilitySourceInterface;

@@ -9,6 +9,7 @@
 #include "AbilitySystemInterface.h"
 #include "Components/BoxComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+
 #include "SkillProjectCharacter.generated.h"
 
 class USpringArmComponent;

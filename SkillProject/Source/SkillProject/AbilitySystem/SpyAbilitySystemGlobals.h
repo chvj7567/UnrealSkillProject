@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "AbilitySystemGlobals.h"
+
 #include "SpyAbilitySystemGlobals.generated.h"
 
 

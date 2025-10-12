@@ -20,7 +20,10 @@ public class SkillProject : ModuleRules
             "Engine",
             "InputCore",
             "EnhancedInput",
-            "ModularGameplay"
+            "ModularGameplay",
+            "UMG",
+            "Slate",
+            "SlateCore"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[]
