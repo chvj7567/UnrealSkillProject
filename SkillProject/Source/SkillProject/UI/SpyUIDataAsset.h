@@ -4,9 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Util//DefineEnum.h"
 #include "SpyUIDataAsset.generated.h"
 
 class USpyUserWidget;
+
+USTRUCT(BlueprintType)
+struct FSpyUIData
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    ESpyUIType UIType = ESpyUIType::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TSubclassOf<UUserWidget> UIWidgetClass;
+};
 
 UCLASS()
 class SKILLPROJECT_API USpyUIDataAsset : public UPrimaryDataAsset
@@ -15,7 +29,7 @@ class SKILLPROJECT_API USpyUIDataAsset : public UPrimaryDataAsset
 	
 public:
     UPROPERTY(EditDefaultsOnly)
-    TSubclassOf<USpyUserWidget> WidgetClass;
+    TArray<FSpyUIData> UIDatas;
 
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override
 	{

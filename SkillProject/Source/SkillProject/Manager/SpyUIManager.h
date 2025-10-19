@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Util/DefineEnum.h"
 #include "SpyUIManager.generated.h"
 
 class USpyUserWidget;
-class ASkillProjectPlayerController;
 
 UCLASS()
 class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
@@ -22,5 +22,5 @@ public:
 	static USpyUIManager* Get(const UObject* WorldContextObject);
 
 public:
-	void OpenWidget();
+	void OpenWidget(ESpyUIType UIType);
 };

@@ -23,15 +23,21 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 	return nullptr;
 }
 
-void USpyUIManager::OpenWidget()
+void USpyUIManager::OpenWidget(ESpyUIType UIType)
 {
 	USpyAssetManager& AM = USpyAssetManager::Get();
 
-	if (USpyUIDataAsset* UIData = AM.LoadUI())
+	if (USpyUIDataAsset* UIDataAsset = AM.LoadUI())
 	{
-		if (USpyUserWidget* MainHUD = CreateWidget<USpyUserWidget>(GetWorld(), UIData->WidgetClass))
+		for (FSpyUIData Data : UIDataAsset->UIDatas)
 		{
-			MainHUD->AddToViewport();
+			if (Data.UIType != UIType)
+				continue;
+
+			if (USpyUserWidget* MainHUD = CreateWidget<USpyUserWidget>(GetWorld(), Data.UIWidgetClass))
+			{
+				MainHUD->AddToViewport();
+			}
 		}
 	}
 }

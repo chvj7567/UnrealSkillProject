@@ -11,6 +11,7 @@
 #include "UI/SpyUserWidget.h"
 #include "Manager/SpyAssetManager.h"
 #include "Manager/SpyUIManager.h"
+#include "Util/DefineEnum.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectPlayerController)
 
@@ -31,7 +32,7 @@ void ASkillProjectPlayerController::BeginPlay()
 		}
 	}
 
-	USpyUIManager::Get(this)->OpenWidget();
+	USpyUIManager::Get(this)->OpenWidget(ESpyUIType::MainHUD);
 	/*if (USpyUIManager* UIManager = GetGameInstance()->GetSubsystem<USpyUIManager>())
 	{
 		UIManager->OpenWidget();
