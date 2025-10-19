@@ -16,6 +16,11 @@ class SKILLPROJECT_API ASkillProjectPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+public:
+	ASkillProjectPlayerController();
+
+	TSubclassOf<UUserWidget> TestWidget;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
