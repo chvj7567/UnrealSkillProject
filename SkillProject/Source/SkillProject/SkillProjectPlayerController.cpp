@@ -8,18 +8,14 @@
 #include "EnhancedInputSubsystems.h"
 #include "SkillGameplayTags.h"
 #include "UI/SpyUIDataAsset.h"
-#include "UI/SpyAssetManager.h"
 #include "UI/SpyUserWidget.h"
+#include "Manager/SpyAssetManager.h"
+#include "Manager/SpyUIManager.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectPlayerController)
 
 ASkillProjectPlayerController::ASkillProjectPlayerController()
 {
-	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClassFinder(TEXT("/Game/UI/WBP_MainHUD.WBP_MainHUD_C"));
-	if (WidgetClassFinder.Succeeded())
-	{
-		TestWidget = WidgetClassFinder.Class;
-	}
 }
 
 void ASkillProjectPlayerController::BeginPlay()
@@ -35,15 +31,11 @@ void ASkillProjectPlayerController::BeginPlay()
 		}
 	}
 
-	USpyAssetManager& AM = USpyAssetManager::Get();
-
-	if (USpyUIDataAsset* UIData = AM.LoadUI())
+	USpyUIManager::Get(this)->OpenWidget();
+	/*if (USpyUIManager* UIManager = GetGameInstance()->GetSubsystem<USpyUIManager>())
 	{
-		if (USpyUserWidget* MainHUD = CreateWidget<USpyUserWidget>(this, UIData->WidgetClass))
-		{
-			MainHUD->AddToViewport();
-		}
-	}
+		UIManager->OpenWidget();
+	}*/
 }
 
 void ASkillProjectPlayerController::SetupInputComponent()
