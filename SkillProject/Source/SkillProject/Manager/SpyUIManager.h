@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Util/DefineEnum.h"
+
 #include "SpyUIManager.generated.h"
 
 class USpyUserWidget;
@@ -15,12 +16,32 @@ class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
 	GENERATED_BODY()
 	
 protected:
-	TArray<TObjectPtr<USpyUserWidget>> UIWidgets;
-	TObjectPtr<USpyUserWidget> CurrentWidget;
+	const int MaxCashingUICount = 5;
+
+protected:
+	UPROPERTY()
+	TArray<TObjectPtr<USpyUserWidget>> OpenUIList;
+
+	UPROPERTY()
+	TArray<TObjectPtr<USpyUserWidget>> CashingUIList;
+
+	UPROPERTY()
+	ESpyUIType LastUIType;
 
 public:
 	static USpyUIManager* Get(const UObject* WorldContextObject);
 
 public:
-	void OpenWidget(ESpyUIType UIType);
+	UFUNCTION(BlueprintCallable)
+	void OpenUI(ESpyUIType UIType);
+
+	UFUNCTION(BlueprintCallable)
+	void CloseUI(ESpyUIType UIType);
+
+	UFUNCTION(BlueprintCallable)
+	void CloseLastUI();
+
+protected:
+	UFUNCTION(BlueprintCallable)
+	void AddCashingUI(USpyUserWidget* UserWidget);
 };

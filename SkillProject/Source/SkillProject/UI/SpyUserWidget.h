@@ -4,13 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Util//DefineEnum.h"
 
 #include "SpyUserWidget.generated.h"
+
+class USpyUIManager;
 
 UCLASS()
 class SKILLPROJECT_API USpyUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
+
+private:
+	friend USpyUIManager;
 
 public:
 	USpyUserWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -28,11 +34,17 @@ protected:
 	virtual FReply NativeOnTouchMoved(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 	virtual FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InGestureEvent) override;
 
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	bool bConsumePointerInput = false;
+
+	UPROPERTY()
+	ESpyUIType UIType;
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetConsumePointerInput(bool bInConsumePointerInput);
 
-private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	bool bConsumePointerInput = false;
+	UFUNCTION(BlueprintCallable)
+	ESpyUIType GetUIType();
 };

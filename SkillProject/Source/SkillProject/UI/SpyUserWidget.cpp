@@ -63,3 +63,8 @@ void USpyUserWidget::SetConsumePointerInput(bool bInConsumePointerInput)
 {
 	bConsumePointerInput = bInConsumePointerInput;
 }
+
+ESpyUIType USpyUserWidget::GetUIType()
+{
+	return UIType;
+}

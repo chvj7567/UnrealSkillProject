@@ -23,21 +23,96 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 	return nullptr;
 }
 
-void USpyUIManager::OpenWidget(ESpyUIType UIType)
+void USpyUIManager::OpenUI(ESpyUIType UIType)
 {
-	USpyAssetManager& AM = USpyAssetManager::Get();
+	USpyAssetManager& AssetManager = USpyAssetManager::Get();
 
-	if (USpyUIDataAsset* UIDataAsset = AM.LoadUI())
+	if (USpyUIDataAsset* UIDataAsset = AssetManager.LoadUI())
 	{
 		for (FSpyUIData Data : UIDataAsset->UIDatas)
 		{
 			if (Data.UIType != UIType)
 				continue;
 
-			if (USpyUserWidget* MainHUD = CreateWidget<USpyUserWidget>(GetWorld(), Data.UIWidgetClass))
+			//# 이미 열려있는 UI 확인
+			const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
+				[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
+				{
+					return UserWidget->GetUIType() == UIType;
+				});
+
+			if (FindOpenningUI)
 			{
-				MainHUD->AddToViewport();
+				//# 동일한 UI는 중복해서 띄우지 않음
+				return;
+			}
+
+			//# 캐싱 중인 UI 확인
+			const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
+				[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
+				{
+					return UserWidget->GetUIType() == UIType;
+				});
+
+			if (FindCashingUI)
+			{
+				//# 캐싱 중인 UI이면 Open
+				FindCashingUI->Get()->AddToViewport();
+				return;
+			}
+
+			//# UI 생성
+			if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), Data.UIWidgetClass))
+			{
+				UserWidget->UIType = UIType;
+				OpenUIList.Add(UserWidget);
+				LastUIType = UIType;
+
+				UserWidget->AddToViewport();
 			}
 		}
 	}
+}
+
+void USpyUIManager::CloseUI(ESpyUIType UIType)
+{
+	if (UIType == LastUIType)
+	{
+		CloseLastUI();
+		return;
+	}
+	
+	//# 이미 열려있는 UI 확인
+	const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
+		[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
+		{
+			return UserWidget->GetUIType() == UIType;
+		});
+
+	if (FindOpenningUI)
+	{
+		AddCashingUI(FindOpenningUI->Get());
+		FindOpenningUI->Get()->RemoveFromViewport();
+	}
+}
+
+void USpyUIManager::CloseLastUI()
+{
+	USpyUserWidget* UserWidget = OpenUIList.Last();
+	if (UserWidget)
+	{
+		AddCashingUI(UserWidget);
+		UserWidget->RemoveFromViewport();
+	}
+}
+
+void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
+{
+	//# 캐싱 수가 Max라면 오래된 UI 제거 후 추가
+	if (MaxCashingUICount > 0 && CashingUIList.Num() >= MaxCashingUICount)
+	{
+		CashingUIList.RemoveAt(0);
+	}
+
+	CashingUIList.Add(UserWidget);
 }
