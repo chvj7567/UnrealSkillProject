@@ -33,11 +33,6 @@ void ASkillProjectPlayerController::BeginPlay()
 	}
 
 	USpyUIManager::Get(this)->OpenUI(ESpyUIType::MainHUD);
-	/*if (USpyUIManager* UIManager = GetGameInstance()->GetSubsystem<USpyUIManager>())
-	{
-		UIManager->OpenUI();
-	}*/
-	USpyUIManager::Get(this)->CloseLastUI();
 }
 
 void ASkillProjectPlayerController::SetupInputComponent()

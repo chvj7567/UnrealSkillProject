@@ -112,7 +112,6 @@ void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
 	if (MaxCashingUICount > 0 && CashingUIList.Num() >= MaxCashingUICount)
 	{
 		CashingUIList.RemoveAt(0);
+		CashingUIList.Add(UserWidget);
 	}
-
-	CashingUIList.Add(UserWidget);
 }
