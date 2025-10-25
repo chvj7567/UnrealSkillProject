@@ -8,6 +8,7 @@
 UENUM(BlueprintType)
 enum class ESpyUIType : uint8
 {
-    None,
+    None            UMETA(DisplayName = "None"),
     MainHUD         UMETA(DisplayName = "MainHUD"),
+    HpBar           UMETA(DisplayName = "HpBar"),
 };

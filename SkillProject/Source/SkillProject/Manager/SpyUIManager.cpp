@@ -6,6 +6,21 @@
 #include "Blueprint/UserWidget.h"
 #include "UI/SpyUIDataAsset.h"
 #include "UI/SpyUserWidget.h"
+#include "Components/WidgetComponent.h"
+#include "Character/SkillProjectCharacter.h"
+
+void USpyUIManager::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	USpyAssetManager& AssetManager = USpyAssetManager::Get();
+	UIDataAsset = AssetManager.LoadUI();
+}
+
+void USpyUIManager::Deinitialize()
+{
+	Super::Deinitialize();
+}
 
 USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 {
@@ -25,51 +40,48 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 
 void USpyUIManager::OpenUI(ESpyUIType UIType)
 {
-	USpyAssetManager& AssetManager = USpyAssetManager::Get();
+	check(UIDataAsset);
 
-	if (USpyUIDataAsset* UIDataAsset = AssetManager.LoadUI())
+	for (FSpyUIData Data : UIDataAsset->UIDatas)
 	{
-		for (FSpyUIData Data : UIDataAsset->UIDatas)
+		if (Data.UIType != UIType)
+			continue;
+
+		//# 이미 열려있는 UI 확인
+		const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
+			[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
+			{
+				return UserWidget->GetUIType() == UIType;
+			});
+
+		if (FindOpenningUI)
 		{
-			if (Data.UIType != UIType)
-				continue;
+			//# 동일한 UI는 중복해서 띄우지 않음
+			return;
+		}
 
-			//# 이미 열려있는 UI 확인
-			const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
-				[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
-				{
-					return UserWidget->GetUIType() == UIType;
-				});
-
-			if (FindOpenningUI)
+		//# 캐싱 중인 UI 확인
+		const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
+			[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
 			{
-				//# 동일한 UI는 중복해서 띄우지 않음
-				return;
-			}
+				return UserWidget->GetUIType() == UIType;
+			});
 
-			//# 캐싱 중인 UI 확인
-			const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
-				[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
-				{
-					return UserWidget->GetUIType() == UIType;
-				});
+		if (FindCashingUI)
+		{
+			//# 캐싱 중인 UI이면 Open
+			FindCashingUI->Get()->AddToViewport();
+			return;
+		}
 
-			if (FindCashingUI)
-			{
-				//# 캐싱 중인 UI이면 Open
-				FindCashingUI->Get()->AddToViewport();
-				return;
-			}
+		//# UI 생성
+		if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), Data.UIWidgetClass))
+		{
+			UserWidget->UIType = UIType;
+			OpenUIList.Add(UserWidget);
+			LastUIType = UIType;
 
-			//# UI 생성
-			if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), Data.UIWidgetClass))
-			{
-				UserWidget->UIType = UIType;
-				OpenUIList.Add(UserWidget);
-				LastUIType = UIType;
-
-				UserWidget->AddToViewport();
-			}
+			UserWidget->AddToViewport();
 		}
 	}
 }
@@ -103,6 +115,28 @@ void USpyUIManager::CloseLastUI()
 	{
 		AddCashingUI(UserWidget);
 		UserWidget->RemoveFromViewport();
+	}
+}
+
+void USpyUIManager::OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space)
+{
+	check(UIDataAsset);
+
+	if (!WidgetComponent)
+		return;
+
+	for (FSpyUIData Data : UIDataAsset->UIDatas)
+	{
+		if (Data.UIType != UIType)
+			continue;
+
+		if (!Data.UIWidgetClass)
+			continue;
+
+		WidgetComponent->SetWidgetClass(Data.UIWidgetClass);
+		WidgetComponent->SetWidgetSpace(Space);
+		WidgetComponent->InitWidget();
+		WidgetComponent->SetVisibility(true);
 	}
 }
 

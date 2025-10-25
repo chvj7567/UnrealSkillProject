@@ -9,16 +9,25 @@
 #include "SpyUIManager.generated.h"
 
 class USpyUserWidget;
+class ASkillProjectCharacter;
+class USpyUIDataAsset;
 
 UCLASS()
 class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
+
+public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 	
 protected:
 	const int MaxCashingUICount = 5;
 
 protected:
+	UPROPERTY()
+	TObjectPtr<USpyUIDataAsset> UIDataAsset;
+
 	UPROPERTY()
 	TArray<TObjectPtr<USpyUserWidget>> OpenUIList;
 
@@ -40,6 +49,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void CloseLastUI();
+
+	UFUNCTION(BlueprintCallable)
+	void OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
 
 protected:
 	UFUNCTION(BlueprintCallable)

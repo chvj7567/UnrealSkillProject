@@ -14,6 +14,9 @@
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Manager/SpyUIManager.h"
+#include "UI/SpyHPBar.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectCharacter)
 
@@ -64,6 +67,15 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	RightWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("RightWeaponCollision"));
 	LeftWeaponCollision->SetupAttachment(GetMesh());
 	RightWeaponCollision->SetupAttachment(GetMesh());
+
+	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBar"));
+	HPBarComponent->SetupAttachment(GetMesh());
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarWidgetClass(TEXT("/Game/UI/WBP_HpBar.WBP_HpBar_C"));
+	if (HPBarWidgetClass.Succeeded())
+	{
+		HPBarComponent->SetWidgetClass(HPBarWidgetClass.Class);
+	}
 }
 
 void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
@@ -98,80 +110,75 @@ void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTa
 
 void ASkillProjectCharacter::BeginPlay()
 {
-	// Call the base class  
 	Super::BeginPlay();
 
-	if (HasAuthority() == false)
-		return;
+	RegisterAbility();
+	BindCollision();
 
-	if (IsValid(AbilitySystemComponent))
-	{
-		//# 설정한 AttributeSet 가져옴
-		CharacterAttributeSet = AbilitySystemComponent->GetSet<UCharacterAttributeSet>();
-		if (CharacterAttributeSet == nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
-		}
-		else
-		{
-			//# 캐릭터에 등록된 스킬 부여
-			for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
-			{
-				if (AbilityClass)
-				{
-					FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
-					AbilitySystemComponent->GiveAbility(AbilitySpec);
-				}
-			}
-		}
+	USpyUIManager::Get(this)->OpenSubUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
+}
 
-		AbilitySystemComponent
-			->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
-			.AddUObject(this, &ASkillProjectCharacter::OnHealthChangedInternal);
-
-		LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
-		RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
-	}
+void ASkillProjectCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 }
 
 void ASkillProjectCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//if (HasAuthority() && GetCharacterMovement()->HasRootMotionSources()) // 서버에서만
-	//{
-	//	FRootMotionMovementParams RootMotion = GetMesh()->ConsumeRootMotion();
-	//	RootMotion = GetCharacterMovement()->RootMotionParams;
-	//	if (RootMotion.bHasRootMotion == false)
-	//	{
-	//		FTransform RootMotionDelta = RootMotion.GetRootMotionTransform();
-	//		FHitResult Hit;
-
-	//		UE_LOG(LogTemp, Warning, TEXT("Me FVector %f / %f / %f"), GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z);
-	//		UE_LOG(LogTemp, Warning, TEXT("Me FRotator %f / %f / %f"), GetActorRotation().Pitch, GetActorRotation().Yaw, GetActorRotation().Roll);
-	//		UE_LOG(LogTemp, Warning, TEXT("Te FVector %f / %f / %f"), RootMotionDelta.GetTranslation().X, RootMotionDelta.GetTranslation().Y, RootMotionDelta.GetTranslation().Z);
-	//		UE_LOG(LogTemp, Warning, TEXT("FRotator %f / %f / %f"), RootMotionDelta.Rotator().Pitch, RootMotionDelta.Rotator().Yaw, RootMotionDelta.Rotator().Roll);
-
-	//		GetCharacterMovement()->SafeMoveUpdatedComponent(
-	//			RootMotionDelta.GetTranslation(),
-	//			RootMotionDelta.Rotator(),
-	//			true,
-	//			Hit
-	//		);
-	//	}
-	//}
 }
 
-void ASkillProjectCharacter::OnHealthChangedInternal(const FOnAttributeChangeData& Data)
+void ASkillProjectCharacter::RegisterAbility()
 {
-	float OldValue = Data.OldValue;
-	float NewValue = Data.NewValue;
+	if (HasAuthority() == false)
+		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("[Struct] Health changed: %f -> %f"), OldValue, NewValue);
+	if (!AbilitySystemComponent)
+		return;
 
-	if (NewValue <= 0.f)
+	//# 설정한 AttributeSet 가져옴
+	CharacterAttributeSet = AbilitySystemComponent->GetSet<UCharacterAttributeSet>();
+	if (CharacterAttributeSet == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
+	}
+	else
+	{
+		//# 캐릭터에 등록된 스킬 부여
+		for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
+		{
+			if (AbilityClass)
+			{
+				FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
+				AbilitySystemComponent->GiveAbility(AbilitySpec);
+			}
+		}
+	}
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
+		.AddUObject(this, &ASkillProjectCharacter::OnHealthChanged);
+}
+
+void ASkillProjectCharacter::BindCollision()
+{
+	LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
+	RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
+}
+
+void ASkillProjectCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Struct] Health changed: %f -> %f"), Data.OldValue, Data.NewValue);
+
+	if (Data.NewValue < 0.f)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Struct] Die"));
+	}
+	else
+	{
+		if (USpyHPBar* hpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+		{
+			hpBar->UpdateHP(Data.NewValue, CharacterAttributeSet->GetMaxHealth());
+		}
 	}
 }
 

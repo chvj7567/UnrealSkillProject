@@ -7,13 +7,19 @@
 #include "Logging/LogMacros.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
-#include "Components/BoxComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Components/BoxComponent.h"
 
 #include "SkillProjectCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
+class UWidgetComponent;
+class UGameplayAbility;
+class UAbilitySystemComponent;
+class UCharacterAttributeSet;
+
+struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
 class ASkillProjectCharacter : public ACharacter, public IAbilitySystemInterface
@@ -38,30 +44,42 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE class UAbilitySystemComponent* GetAbilitySystemComponent() const override { return Cast<UAbilitySystemComponent>(AbilitySystemComponent); }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE UAbilitySystemComponent* GetAbilitySystemComponent() const override { return Cast<UAbilitySystemComponent>(AbilitySystemComponent); }
+	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
 
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
-	class USpyAbilitySystemComponent* AbilitySystemComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
-	const class UCharacterAttributeSet* CharacterAttributeSet;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
-	TArray<TSubclassOf<class UGameplayAbility>> AbilityClasses;
-
-public:
 	struct FGameplayTagContainer GetActivatableAbilityTags();
 
-public:
-	void OnHealthChangedInternal(const struct FOnAttributeChangeData& Data);
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	USpyAbilitySystemComponent* AbilitySystemComponent;
 
-	UFUNCTION()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	const UCharacterAttributeSet* CharacterAttributeSet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	TArray<TSubclassOf<UGameplayAbility>> AbilityClasses;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UWidgetComponent> HPBarComponent;
+
+private:
+	UFUNCTION(BlueprintCallable)
+	void RegisterAbility();
+
+	UFUNCTION(BlueprintCallable)
+	void BindCollision();
+
+public:
+	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
+
+public:
+	UFUNCTION(BlueprintCallable)
 	void OnSkillHitOverlap(UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
