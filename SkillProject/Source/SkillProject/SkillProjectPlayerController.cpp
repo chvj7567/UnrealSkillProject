@@ -32,6 +32,7 @@ void ASkillProjectPlayerController::BeginPlay()
 		}
 	}
 
+	bShowMouseCursor = true;
 	USpyUIManager::Get(this)->OpenUI(ESpyUIType::MainHUD);
 }
 

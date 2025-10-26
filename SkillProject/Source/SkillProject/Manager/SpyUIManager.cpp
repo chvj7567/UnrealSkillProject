@@ -148,6 +148,12 @@ void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
 	//# 캐싱 수가 Max라면 오래된 UI 제거 후 추가
 	if (MaxCashingUICount > 0)
 	{
+		for (USpyUserWidget* CashingUserWIdget : CashingUIList)
+		{
+			if (CashingUserWIdget->UIType == UserWidget->UIType)
+				return;
+		}
+
 		CashingUIList.Add(UserWidget);
 
 		if (CashingUIList.Num() >= MaxCashingUICount)
