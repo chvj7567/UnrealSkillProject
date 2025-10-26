@@ -11,4 +11,5 @@ enum class ESpyUIType : uint8
     None            UMETA(DisplayName = "None"),
     MainHUD         UMETA(DisplayName = "MainHUD"),
     HpBar           UMETA(DisplayName = "HpBar"),
+    Menu            UMETA(DisplayName = "Menu"),
 };

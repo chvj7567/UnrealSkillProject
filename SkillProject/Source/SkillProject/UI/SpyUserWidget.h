@@ -23,6 +23,7 @@ public:
 	
 protected:
 	virtual void OnWidgetRebuilt() override;
+	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -47,4 +48,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ESpyUIType GetUIType();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void Close();
 };

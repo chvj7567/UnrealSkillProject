@@ -70,6 +70,7 @@ void USpyUIManager::OpenUI(ESpyUIType UIType)
 		if (FindCashingUI)
 		{
 			//# 캐싱 중인 UI이면 Open
+			OpenUIList.Add(FindCashingUI->Get());
 			FindCashingUI->Get()->AddToViewport();
 			return;
 		}
@@ -79,7 +80,6 @@ void USpyUIManager::OpenUI(ESpyUIType UIType)
 		{
 			UserWidget->UIType = UIType;
 			OpenUIList.Add(UserWidget);
-			LastUIType = UIType;
 
 			UserWidget->AddToViewport();
 		}
@@ -88,11 +88,11 @@ void USpyUIManager::OpenUI(ESpyUIType UIType)
 
 void USpyUIManager::CloseUI(ESpyUIType UIType)
 {
-	if (UIType == LastUIType)
-	{
-		CloseLastUI();
+	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
+	UE_LOG(LogTemp, Warning, TEXT("CloseUI: %s"), *EnumName);
+
+	if (OpenUIList.IsEmpty())
 		return;
-	}
 	
 	//# 이미 열려있는 UI 확인
 	const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
@@ -103,6 +103,7 @@ void USpyUIManager::CloseUI(ESpyUIType UIType)
 
 	if (FindOpenningUI)
 	{
+		OpenUIList.Remove(FindOpenningUI->Get());
 		AddCashingUI(FindOpenningUI->Get());
 		FindOpenningUI->Get()->RemoveFromViewport();
 	}
@@ -110,11 +111,13 @@ void USpyUIManager::CloseUI(ESpyUIType UIType)
 
 void USpyUIManager::CloseLastUI()
 {
-	USpyUserWidget* UserWidget = OpenUIList.Last();
-	if (UserWidget)
+	if (OpenUIList.IsEmpty())
+		return;
+
+	if (USpyUserWidget* UserWidget = OpenUIList.Last())
 	{
-		AddCashingUI(UserWidget);
-		UserWidget->RemoveFromViewport();
+		OpenUIList.Pop();
+		CloseUI(UserWidget->UIType);
 	}
 }
 
@@ -143,9 +146,13 @@ void USpyUIManager::OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetCompone
 void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
 {
 	//# 캐싱 수가 Max라면 오래된 UI 제거 후 추가
-	if (MaxCashingUICount > 0 && CashingUIList.Num() >= MaxCashingUICount)
+	if (MaxCashingUICount > 0)
 	{
-		CashingUIList.RemoveAt(0);
 		CashingUIList.Add(UserWidget);
+
+		if (CashingUIList.Num() >= MaxCashingUICount)
+		{
+			CashingUIList.RemoveAt(0);
+		}
 	}
 }

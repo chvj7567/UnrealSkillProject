@@ -4,13 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "UI/SpyUserWidget.h"
-#include "SpyMainHUD.generated.h"
+#include "SpyMenu.generated.h"
 
-class UProgressBar;
 class UButton;
 
 UCLASS()
-class SKILLPROJECT_API USpyMainHUD : public USpyUserWidget
+class SKILLPROJECT_API USpyMenu : public USpyUserWidget
 {
 	GENERATED_BODY()
 
@@ -20,9 +19,5 @@ protected:
 
 protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	TObjectPtr<UButton> Btn_Menu;
-
-protected:
-	UFUNCTION(BlueprintCallable)
-	void ShowMenu();
+	TObjectPtr<UButton> Btn_Close;
 };

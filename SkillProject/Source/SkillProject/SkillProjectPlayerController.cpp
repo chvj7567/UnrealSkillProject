@@ -32,8 +32,7 @@ void ASkillProjectPlayerController::BeginPlay()
 		}
 	}
 
-	//USpyUIManager::Get(this)->OpenUI(ESpyUIType::MainHUD);
-	//USpyUIManager::Get(this)->OpenUI(ESpyUIType::HpBar);
+	USpyUIManager::Get(this)->OpenUI(ESpyUIType::MainHUD);
 }
 
 void ASkillProjectPlayerController::SetupInputComponent()

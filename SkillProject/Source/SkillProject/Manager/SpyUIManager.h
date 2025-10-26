@@ -34,9 +34,6 @@ protected:
 	UPROPERTY()
 	TArray<TObjectPtr<USpyUserWidget>> CashingUIList;
 
-	UPROPERTY()
-	ESpyUIType LastUIType;
-
 public:
 	static USpyUIManager* Get(const UObject* WorldContextObject);
 

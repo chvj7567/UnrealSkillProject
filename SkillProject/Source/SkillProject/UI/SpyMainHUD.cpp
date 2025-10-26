@@ -4,40 +4,29 @@
 #include "UI/SpyMainHUD.h"
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
+#include "Manager/SpyUIManager.h"
 
 void USpyMainHUD::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    if (Btn_Start)
+    if (Btn_Menu)
     {
-        Btn_Start->OnClicked.AddDynamic(this, &USpyMainHUD::OnIncreaseButtonClicked);
-    }
-
-    if (PB_Timer)
-    {
-        PB_Timer->SetPercent(0.0f);
+        Btn_Menu->OnClicked.AddDynamic(this, &USpyMainHUD::ShowMenu);
     }
 }
 
-void USpyMainHUD::OnIncreaseButtonClicked()
+void USpyMainHUD::NativeDestruct()
 {
-    bShouldIncrease = true;
+    Super::NativeDestruct();
+
+    if (Btn_Menu)
+    {
+        Btn_Menu->OnClicked.Clear();
+    }
 }
 
-void USpyMainHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+void USpyMainHUD::ShowMenu()
 {
-    Super::NativeTick(MyGeometry, InDeltaTime);
-
-    if (bShouldIncrease && PB_Timer)
-    {
-        CurrentProgress += 0.1f * InDeltaTime * 10.f; // 약 0.1씩 증가 (속도 조절 가능)
-        CurrentProgress = FMath::Clamp(CurrentProgress, 0.0f, 1.0f);
-        PB_Timer->SetPercent(CurrentProgress);
-
-        if (CurrentProgress >= 1.0f)
-        {
-            bShouldIncrease = false;
-        }
-    }
+    USpyUIManager::Get(this)->OpenUI(ESpyUIType::Menu);
 }

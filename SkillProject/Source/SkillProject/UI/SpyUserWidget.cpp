@@ -2,6 +2,7 @@
 
 
 #include "SpyUserWidget.h"
+#include "Manager/SpyUIManager.h"
 
 USpyUserWidget::USpyUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -12,6 +13,11 @@ USpyUserWidget::USpyUserWidget(const FObjectInitializer& ObjectInitializer)
 void USpyUserWidget::OnWidgetRebuilt()
 {
 	Super::OnWidgetRebuilt();
+}
+
+void USpyUserWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
 }
 
 void USpyUserWidget::NativeDestruct()
@@ -67,4 +73,9 @@ void USpyUserWidget::SetConsumePointerInput(bool bInConsumePointerInput)
 ESpyUIType USpyUserWidget::GetUIType()
 {
 	return UIType;
+}
+
+void USpyUserWidget::Close()
+{
+	USpyUIManager::Get(this)->CloseUI(UIType);
 }
