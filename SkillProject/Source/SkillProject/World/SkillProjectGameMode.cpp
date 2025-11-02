@@ -7,7 +7,7 @@
 
 ASkillProjectGameMode::ASkillProjectGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn> BPPawnClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> BPPawnClass(TEXT("/Game/ThirdPerson/Blueprints/BP_SkillProjectCharacter"));
 	if (BPPawnClass.Class != NULL)
 	{
 		DefaultPawnClass = BPPawnClass.Class;

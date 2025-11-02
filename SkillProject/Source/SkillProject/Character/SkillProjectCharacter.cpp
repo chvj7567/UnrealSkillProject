@@ -8,7 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
-#include "SkillGameplayTags.h"
+#include "Util/SkillGameplayTags.h"
 #include "AbilitySystem/Attribute/CharacterAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"
@@ -17,6 +17,8 @@
 #include "Components/WidgetComponent.h"
 #include "Manager/SpyUIManager.h"
 #include "UI/SpyHPBar.h"
+#include "ManagerComponent/SpyAnimManagerComponent.h"
+#include "Character/AnimInstance/CharacterAnimInstance.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectCharacter)
 
@@ -68,14 +70,17 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	LeftWeaponCollision->SetupAttachment(GetMesh());
 	RightWeaponCollision->SetupAttachment(GetMesh());
 
-	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBar"));
+	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
 	HPBarComponent->SetupAttachment(GetMesh());
+	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarWidgetClass(TEXT("/Game/UI/WBP_HpBar.WBP_HpBar_C"));
 	if (HPBarWidgetClass.Succeeded())
 	{
 		HPBarComponent->SetWidgetClass(HPBarWidgetClass.Class);
 	}
+
+	AnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("AnimManagerComponent"));
 }
 
 void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
@@ -116,6 +121,11 @@ void ASkillProjectCharacter::BeginPlay()
 	BindCollision();
 
 	USpyUIManager::Get(this)->OpenSubUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimManagerComponent->Initialize(Cast<UCharacterAnimInstance>(AnimInstance));
+	}
 }
 
 void ASkillProjectCharacter::PostInitializeComponents()

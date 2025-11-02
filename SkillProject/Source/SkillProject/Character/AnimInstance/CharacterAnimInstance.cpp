@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/CharacterAnimInstance.h"
+#include "Character/AnimInstance/CharacterAnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void UCharacterAnimInstance::NativeBeginPlay()

@@ -18,6 +18,7 @@ class UWidgetComponent;
 class UGameplayAbility;
 class UAbilitySystemComponent;
 class UCharacterAttributeSet;
+class USpyAnimManagerComponent;
 
 struct FOnAttributeChangeData;
 
@@ -67,6 +68,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UWidgetComponent> HPBarComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim")
+	TObjectPtr<USpyAnimManagerComponent> AnimManagerComponent;
 
 private:
 	UFUNCTION(BlueprintCallable)
