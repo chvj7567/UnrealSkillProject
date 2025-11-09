@@ -7,13 +7,13 @@
 
 ASkillProjectGameMode::ASkillProjectGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn> BPPawnClass(TEXT("/Game/ThirdPerson/Blueprints/BP_SkillProjectCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> BPPawnClass(TEXT("/Game/ThirdPerson/Blueprints/BP_SpyCharacter"));
 	if (BPPawnClass.Class != NULL)
 	{
 		DefaultPawnClass = BPPawnClass.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<APlayerController> BPPlayerController(TEXT("/Game/ThirdPerson/Input/BP_CharacterController"));
+	static ConstructorHelpers::FClassFinder<APlayerController> BPPlayerController(TEXT("/Game/ThirdPerson/Input/BP_SpyCharacterController"));
 	if (BPPlayerController.Class != NULL)
 	{
 		PlayerControllerClass = BPPlayerController.Class;
