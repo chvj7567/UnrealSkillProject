@@ -29,9 +29,6 @@ void UGameplayAbility_SkillA::OnWaitGameplayEvent(FGameplayEventData Payload)
     if (TargetActor == nullptr)
         return;
 
-    //FGameplayAbilityTargetDataHandle TargetDataHandle = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(TargetActor);
-    //ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, TargetDataHandle, GameplayEffectClass, GetAbilityLevel());
-
     UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();
     if (ASC == nullptr)
         return;

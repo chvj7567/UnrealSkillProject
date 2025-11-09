@@ -16,17 +16,25 @@ class SKILLPROJECT_API UCharacterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
+public:
+	virtual void NativeBeginPlay() override;
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_AttackHit(UAnimNotify* Notify);
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ASkillProjectCharacter> MyCharacter;
+	TObjectPtr<ASkillProjectCharacter> Player;
 
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UCharacterMovementComponent> MyMovementComponent;
+	TObjectPtr<UCharacterMovementComponent> PlayerMovementComponent;
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	float AimPitch;
-	
+
 	UPROPERTY(BlueprintReadOnly)
 	FVector Velocity;
 
@@ -41,8 +49,4 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool IsFalling;
-
-public:
-	virtual void NativeBeginPlay() override;
-	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 };

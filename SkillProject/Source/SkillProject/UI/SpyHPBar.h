@@ -15,7 +15,6 @@ class SKILLPROJECT_API USpyHPBar : public USpyUserWidget
 	
 protected:
 	void NativeConstruct() override;
-	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
 	void UpdateHP(float InTargetHP, float InMaxHP);
@@ -23,13 +22,4 @@ public:
 protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	TObjectPtr<UProgressBar> PB_HPBar;
-
-private:
-	bool bShouldChange = false;
-	float LastTargetHP = 0.f;
-	float MaxHP = 0.f;
-	float CurrentTargetHP = 0.f;
-	float ElapsedTime = 0.f;
-	float InterpDuration = 0.f;
-	float TargetPercent = 0.f;
 };

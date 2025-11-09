@@ -169,6 +169,21 @@ void ASkillProjectCharacter::BindCollision()
 	RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
 }
 
+void ASkillProjectCharacter::TestHit()
+{
+	FGameplayAttribute HealthAttr = UCharacterAttributeSet::GetHealthAttribute();
+	float CurrentHealth = AbilitySystemComponent->GetNumericAttribute(HealthAttr);
+	float NewHealth = CurrentHealth - 10.f;
+
+	NewHealth = FMath::Max(NewHealth, 0.f);
+	AbilitySystemComponent->SetNumericAttributeBase(HealthAttr, NewHealth);
+
+	if (USpyHPBar* hpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+	{
+		hpBar->UpdateHP(NewHealth, CharacterAttributeSet->GetMaxHealth());
+	}
+}
+
 void ASkillProjectCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Struct] Health changed: %f -> %f"), Data.OldValue, Data.NewValue);

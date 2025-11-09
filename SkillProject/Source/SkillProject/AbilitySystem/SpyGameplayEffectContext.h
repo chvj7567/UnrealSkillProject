@@ -29,7 +29,6 @@ struct FSpyGameplayEffectContext : public FGameplayEffectContext
 
 	void SetAbilitySource(ISpyAbilitySourceInterface* InObject, float InSourceLevel);
 
-	/** Returns the ability source interface associated with the source object. Only valid on the authority. */
 	const ISpyAbilitySourceInterface* GetAbilitySource() const;
 
 	virtual FGameplayEffectContext* Duplicate() const override
@@ -49,10 +48,8 @@ struct FSpyGameplayEffectContext : public FGameplayEffectContext
 		return FSpyGameplayEffectContext::StaticStruct();
 	}
 
-	/** Overridden to serialize new fields */
 	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) override;
 
-	/** Returns the physical material from the hit result if there is one */
 	const UPhysicalMaterial* GetPhysicalMaterial() const;
 };
 

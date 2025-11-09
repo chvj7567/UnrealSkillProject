@@ -23,9 +23,6 @@ bool FSpyGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* Ma
 {
 	FGameplayEffectContext::NetSerialize(Ar, Map, bOutSuccess);
 
-	// Not serialized for post-activation use:
-	// CartridgeID
-
 	return true;
 }
 

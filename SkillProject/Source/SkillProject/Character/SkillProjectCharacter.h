@@ -82,6 +82,8 @@ private:
 public:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 
+	void TestHit();
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void OnSkillHitOverlap(UPrimitiveComponent* OverlappedComp,

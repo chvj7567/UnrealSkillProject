@@ -12,12 +12,12 @@ void UCharacterAnimInstance::NativeBeginPlay()
     if (PawnOwner == nullptr)
         return;
 
-    MyCharacter = Cast<ASkillProjectCharacter>(PawnOwner);
-    if (MyCharacter == nullptr)
+    Player = Cast<ASkillProjectCharacter>(PawnOwner);
+    if (Player == nullptr)
         return;
 
-    MyMovementComponent = MyCharacter->GetCharacterMovement();
-    if (MyMovementComponent == nullptr)
+    PlayerMovementComponent = Player->GetCharacterMovement();
+    if (PlayerMovementComponent == nullptr)
         return;
 }
 
@@ -25,21 +25,21 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
 
-    if (MyCharacter == nullptr || MyMovementComponent == nullptr)
+    if (Player == nullptr || PlayerMovementComponent == nullptr)
         return;
 
     //# Set AimPitch
     {
         FRotator Rot;
-        if (MyCharacter->IsLocallyControlled())
+        if (Player->IsLocallyControlled())
         {
             //# 로컬 플레이어 -> 컨트롤러 기준
-            Rot = MyCharacter->GetControlRotation();
+            Rot = Player->GetControlRotation();
         }
         else
         {
             //# 서버/원격 -> 캐릭터 기준
-            Rot = MyCharacter->GetBaseAimRotation();
+            Rot = Player->GetBaseAimRotation();
         }
 
         AimPitch = FRotator::NormalizeAxis(Rot.Pitch);
@@ -47,10 +47,10 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 
     //# Set Velocity And GroundSpeed And ShouldMove
     {
-        Velocity = MyCharacter->GetVelocity();
+        Velocity = Player->GetVelocity();
         GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
 
-        FVector CurrentAcceleration = MyMovementComponent->GetCurrentAcceleration();
+        FVector CurrentAcceleration = PlayerMovementComponent->GetCurrentAcceleration();
         if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f)
         {
             ShouldMove = true;
@@ -63,7 +63,12 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 
     //# Set IsFalling And IsCrouching
     {
-        IsFalling = MyMovementComponent->IsFalling();
-        IsCrouching = MyMovementComponent->IsCrouching();
+        IsFalling = PlayerMovementComponent->IsFalling();
+        IsCrouching = PlayerMovementComponent->IsCrouching();
     }
+}
+
+void UCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
+{
+    Player->TestHit();
 }
