@@ -5,6 +5,8 @@
 #include "Blueprint/UserWidget.h"
 #include "UI/SpyUIDataAsset.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAssetManager)
+
 USpyAssetManager::USpyAssetManager()
 {
 }
@@ -23,56 +25,44 @@ USpyAssetManager& USpyAssetManager::Get()
 	return *NewObject<USpyAssetManager>();
 }
 
-TObjectPtr<USpyUIDataAsset> USpyAssetManager::LoadUI()
+UObject* USpyAssetManager::SynchronousLoadAsset(const FSoftObjectPath& AssetPath)
 {
-    // 로드할 에셋의 PrimaryAssetId 지정
-    FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyUIDataAsset"), TEXT("SpyUIDataAsset"));
-
-    // AssetManager 가져오기
-    USpyAssetManager& AssetManager = USpyAssetManager::Get();
-
-    TArray<FPrimaryAssetTypeInfo> TypeInfos;
-    AssetManager.GetPrimaryAssetTypeInfoList(TypeInfos);
-
-    for (FPrimaryAssetTypeInfo& Info : TypeInfos)
+    if (AssetPath.IsValid())
     {
-        UE_LOG(LogTemp, Warning, TEXT("# Type: %s"), *Info.PrimaryAssetType.ToString());
-    }
+        TUniquePtr<FScopeLogTime> LogTimePtr;
 
-    TArray<FPrimaryAssetId> AssetIds;
-    AssetManager.GetPrimaryAssetIdList(TEXT("SpyUIDataAsset"), AssetIds);
-
-    for (const FPrimaryAssetId& Id : AssetIds)
-    {
-        FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(Id));
-
-        if (AssetPtr.IsPending())
+        if (UAssetManager::IsInitialized())
         {
-            AssetPtr.LoadSynchronous();
+            return UAssetManager::GetStreamableManager().LoadSynchronous(AssetPath, false);
         }
 
-        return Cast<USpyUIDataAsset>(AssetPtr.Get());
+        return AssetPath.TryLoad();
     }
 
     return nullptr;
+}
 
-    // 비동기 로드 요청
-    //AssetManager.LoadPrimaryAsset(
-    //    AssetId,
-    //    TArray<FName>(), // Optional Bundles
-    //    FStreamableDelegate::CreateLambda([AssetId]()
-    //        {
-    //            // 로드 완료 시 호출되는 콜백
-    //            USpyAssetManager& AM = USpyAssetManager::Get();
-    //            UObject* LoadedAsset = AM.GetPrimaryAssetObject(AssetId);
-    //            if (LoadedAsset)
-    //            {
-    //                UE_LOG(LogTemp, Log, TEXT("Success Asset Load: %s"), *LoadedAsset->GetName());
-    //            }
-    //            else
-    //            {
-    //                UE_LOG(LogTemp, Warning, TEXT("Failed Asset Load: %s"), *AssetId.ToString());
-    //            }
-    //        })
-    //);
+void USpyAssetManager::AddLoadedAsset(const UObject* Asset)
+{
+    if (ensureAlways(Asset))
+    {
+        FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
+        LoadedAssets.Add(Asset);
+    }
+}
+
+const USpyAssetData& USpyAssetManager::GetAssetData()
+{
+    FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyAssetData"), TEXT("SpyAssetData"));
+
+    USpyAssetManager& AssetManager = USpyAssetManager::Get();
+
+    FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(AssetId));
+
+    if (AssetPtr.IsPending())
+    {
+        AssetPtr.LoadSynchronous();
+    }
+
+    return *CastChecked<USpyAssetData>(AssetPtr.Get());
 }

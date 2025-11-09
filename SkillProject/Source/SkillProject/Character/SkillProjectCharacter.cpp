@@ -74,12 +74,6 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	HPBarComponent->SetupAttachment(GetMesh());
 	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarWidgetClass(TEXT("/Game/UI/WBP_HpBar.WBP_HpBar_C"));
-	if (HPBarWidgetClass.Succeeded())
-	{
-		HPBarComponent->SetWidgetClass(HPBarWidgetClass.Class);
-	}
-
 	AnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("AnimManagerComponent"));
 }
 

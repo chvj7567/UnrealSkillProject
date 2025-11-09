@@ -11,6 +11,7 @@
 class USpyUserWidget;
 class ASkillProjectCharacter;
 class USpyUIDataAsset;
+class USpyAssetData;
 
 UCLASS()
 class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
@@ -25,9 +26,6 @@ protected:
 	const int MaxCashingUICount = 5;
 
 protected:
-	UPROPERTY()
-	TObjectPtr<USpyUIDataAsset> UIDataAsset;
-
 	UPROPERTY()
 	TArray<TObjectPtr<USpyUserWidget>> OpenUIList;
 

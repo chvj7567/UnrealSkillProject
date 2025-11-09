@@ -7,14 +7,13 @@
 #include "UI/SpyUIDataAsset.h"
 #include "UI/SpyUserWidget.h"
 #include "Components/WidgetComponent.h"
+#include "Data/SpyAssetData.h"
+
 #include "Character/SkillProjectCharacter.h"
 
 void USpyUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	UIDataAsset = AssetManager.LoadUI();
 }
 
 void USpyUIManager::Deinitialize()
@@ -40,13 +39,13 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 
 void USpyUIManager::OpenUI(ESpyUIType UIType)
 {
-	check(UIDataAsset);
+	USpyAssetManager& AssetManager = USpyAssetManager::Get();
+	const USpyAssetData& AssetData = AssetManager.GetAssetData();
 
-	for (FSpyUIData Data : UIDataAsset->UIDatas)
+	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
+	UClass* UI = AssetManager.GetAssetByName<UClass>(*EnumName);
+	if (UI)
 	{
-		if (Data.UIType != UIType)
-			continue;
-
 		//# 이미 열려있는 UI 확인
 		const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
 			[UIType](TObjectPtr<USpyUserWidget>& UserWidget)
@@ -57,6 +56,7 @@ void USpyUIManager::OpenUI(ESpyUIType UIType)
 		if (FindOpenningUI)
 		{
 			//# 동일한 UI는 중복해서 띄우지 않음
+			UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *EnumName);
 			return;
 		}
 
@@ -72,16 +72,20 @@ void USpyUIManager::OpenUI(ESpyUIType UIType)
 			//# 캐싱 중인 UI이면 Open
 			OpenUIList.Add(FindCashingUI->Get());
 			FindCashingUI->Get()->AddToViewport();
+
+			UE_LOG(LogTemp, Warning, TEXT("Cashing Opening UI: %s"), *EnumName);
 			return;
 		}
 
 		//# UI 생성
-		if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), Data.UIWidgetClass))
+		if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), UI))
 		{
 			UserWidget->UIType = UIType;
 			OpenUIList.Add(UserWidget);
 
 			UserWidget->AddToViewport();
+
+			UE_LOG(LogTemp, Warning, TEXT("New Opening UI: %s"), *EnumName);
 		}
 	}
 }
@@ -105,7 +109,7 @@ void USpyUIManager::CloseUI(ESpyUIType UIType)
 	{
 		OpenUIList.Remove(FindOpenningUI->Get());
 		AddCashingUI(FindOpenningUI->Get());
-		FindOpenningUI->Get()->RemoveFromViewport();
+		FindOpenningUI->Get()->RemoveFromParent();
 	}
 }
 
@@ -123,23 +127,21 @@ void USpyUIManager::CloseLastUI()
 
 void USpyUIManager::OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space)
 {
-	check(UIDataAsset);
+	USpyAssetManager& AssetManager = USpyAssetManager::Get();
+	const USpyAssetData& AssetData = AssetManager.GetAssetData();
 
 	if (!WidgetComponent)
 		return;
 
-	for (FSpyUIData Data : UIDataAsset->UIDatas)
+	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
+	UClass* UI = AssetManager.GetAssetByName<UClass>(*EnumName);
+	if (UI)
 	{
-		if (Data.UIType != UIType)
-			continue;
-
-		if (!Data.UIWidgetClass)
-			continue;
-
-		WidgetComponent->SetWidgetClass(Data.UIWidgetClass);
+		WidgetComponent->SetWidgetClass(UI);
 		WidgetComponent->SetWidgetSpace(Space);
 		WidgetComponent->InitWidget();
 		WidgetComponent->SetVisibility(true);
+
 	}
 }
 
