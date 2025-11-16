@@ -13,3 +13,11 @@ enum class ESpyUIType : uint8
     HpBar           UMETA(DisplayName = "HpBar"),
     Menu            UMETA(DisplayName = "Menu"),
 };
+
+UENUM(BlueprintType, meta = (Bitflags))
+enum class ESpyPlayerStateFlags : uint8
+{
+    None = 0,
+    IsAlive = 1 << 0,
+};
+ENUM_CLASS_FLAGS(ESpyPlayerStateFlags);

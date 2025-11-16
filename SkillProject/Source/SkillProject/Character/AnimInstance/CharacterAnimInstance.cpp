@@ -3,6 +3,7 @@
 
 #include "Character/AnimInstance/CharacterAnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "World/SkillProjectPlayerState.h"
 
 void UCharacterAnimInstance::NativeBeginPlay()
 {
@@ -65,6 +66,14 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
     {
         IsFalling = PlayerMovementComponent->IsFalling();
         IsCrouching = PlayerMovementComponent->IsCrouching();
+    }
+
+    //# Set IsDeath
+    {
+        if (ASkillProjectPlayerState* SpyPlayerState = Cast<ASkillProjectPlayerState>(Player->GetPlayerState()))
+        {
+            IsDeath = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive) == false;
+        }
     }
 }
 

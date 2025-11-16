@@ -19,6 +19,7 @@
 #include "UI/SpyHPBar.h"
 #include "ManagerComponent/SpyAnimManagerComponent.h"
 #include "Character/AnimInstance/CharacterAnimInstance.h"
+#include "World/SkillProjectPlayerState.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectCharacter)
 
@@ -132,11 +133,26 @@ void ASkillProjectCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void ASkillProjectCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (HasAuthority())
+	{
+		if (ASkillProjectPlayerState* SpyPlayerState = Cast<ASkillProjectPlayerState>(GetPlayerState()))
+		{
+			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
+		}
+	}
+}
+
+void ASkillProjectCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+}
+
 void ASkillProjectCharacter::RegisterAbility()
 {
-	if (HasAuthority() == false)
-		return;
-
 	if (!AbilitySystemComponent)
 		return;
 
@@ -186,11 +202,18 @@ void ASkillProjectCharacter::TestHit()
 
 void ASkillProjectCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Struct] Health changed: %f -> %f"), Data.OldValue, Data.NewValue);
-
 	if (Data.NewValue < 0.f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Struct] Die"));
+		if (HasAuthority())
+		{
+			if (ASkillProjectPlayerState* SpyPlayerState = Cast<ASkillProjectPlayerState>(GetPlayerState()))
+			{
+				if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive))
+				{
+					SpyPlayerState->Multicast_Death();
+				}
+			}
+		}
 	}
 	else
 	{
