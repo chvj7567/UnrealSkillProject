@@ -1,11 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/AnimInstance/CharacterAnimInstance.h"
+#include "Character/AnimInstance/SpyCharacterAnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "World/SkillProjectPlayerState.h"
+#include "System/SpyPlayerState.h"
+#include "Character/SpyCharacter.h"
 
-void UCharacterAnimInstance::NativeBeginPlay()
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
+
+void USpyCharacterAnimInstance::NativeBeginPlay()
 {
     Super::NativeBeginPlay();
 
@@ -13,7 +16,7 @@ void UCharacterAnimInstance::NativeBeginPlay()
     if (PawnOwner == nullptr)
         return;
 
-    Player = Cast<ASkillProjectCharacter>(PawnOwner);
+    Player = Cast<ASpyCharacter>(PawnOwner);
     if (Player == nullptr)
         return;
 
@@ -22,7 +25,7 @@ void UCharacterAnimInstance::NativeBeginPlay()
         return;
 }
 
-void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
 
@@ -70,14 +73,14 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 
     //# Set IsDeath
     {
-        if (ASkillProjectPlayerState* SpyPlayerState = Cast<ASkillProjectPlayerState>(Player->GetPlayerState()))
+        if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(Player->GetPlayerState()))
         {
             IsDeath = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive) == false;
         }
     }
 }
 
-void UCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
+void USpyCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
 {
     Player->TestHit();
 }

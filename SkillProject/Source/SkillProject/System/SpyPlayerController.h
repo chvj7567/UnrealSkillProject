@@ -5,19 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 
-#include "SkillProjectPlayerController.generated.h"
+#include "SpyPlayerController.generated.h"
 
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
 UCLASS()
-class SKILLPROJECT_API ASkillProjectPlayerController : public APlayerController
+class SKILLPROJECT_API ASpyPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
 public:
-	ASkillProjectPlayerController();
+	ASpyPlayerController();
 
 	TSubclassOf<UUserWidget> TestWidget;
 

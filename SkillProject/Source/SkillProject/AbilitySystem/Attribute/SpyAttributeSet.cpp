@@ -1,18 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CharacterAttributeSet.h"
+#include "SpyAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 
-void UCharacterAttributeSet::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAttributeSet)
+
+void USpyAttributeSet::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
-	DOREPLIFETIME(UCharacterAttributeSet, Health);
-	DOREPLIFETIME(UCharacterAttributeSet, Mana);
-	DOREPLIFETIME(UCharacterAttributeSet, MaxHealth);
-	DOREPLIFETIME(UCharacterAttributeSet, MaxMana);
+	DOREPLIFETIME(USpyAttributeSet, Health);
+	DOREPLIFETIME(USpyAttributeSet, Mana);
+	DOREPLIFETIME(USpyAttributeSet, MaxHealth);
+	DOREPLIFETIME(USpyAttributeSet, MaxMana);
 }
 
-void UCharacterAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
+void USpyAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, Health, OldValue);
 
@@ -22,19 +24,19 @@ void UCharacterAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue
 	OnHealthChanged.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHealth);
 }
 
-void UCharacterAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
+void USpyAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, MaxHealth, OldValue);
 
 	OnMaxHealthChanged.Broadcast(nullptr, nullptr, nullptr, GetMaxHealth() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetMaxHealth());
 }
 
-void UCharacterAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldValue)
+void USpyAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, Mana, OldValue);
 }
 
-void UCharacterAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue)
+void USpyAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, MaxMana, OldValue);
 }

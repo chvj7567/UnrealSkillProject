@@ -10,20 +10,20 @@
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Components/BoxComponent.h"
 
-#include "SkillProjectCharacter.generated.h"
+#include "SpyCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UWidgetComponent;
 class UGameplayAbility;
 class UAbilitySystemComponent;
-class UCharacterAttributeSet;
+class USpyAttributeSet;
 class USpyAnimManagerComponent;
 
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
-class ASkillProjectCharacter : public ACharacter, public IAbilitySystemInterface
+class ASpyCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -41,7 +41,7 @@ private:
 	UBoxComponent* RightWeaponCollision;
 
 public:
-	ASkillProjectCharacter();
+	ASpyCharacter();
 
 protected:
 	virtual void BeginPlay() override;
@@ -63,7 +63,7 @@ protected:
 	USpyAbilitySystemComponent* AbilitySystemComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	const UCharacterAttributeSet* CharacterAttributeSet;
+	const USpyAttributeSet* CharacterAttributeSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	TArray<TSubclassOf<UGameplayAbility>> AbilityClasses;

@@ -4,6 +4,8 @@
 #include "UI/SpyHPBar.h"
 #include "Components/ProgressBar.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHPBar)
+
 void USpyHPBar::NativeConstruct()
 {
     Super::NativeConstruct();

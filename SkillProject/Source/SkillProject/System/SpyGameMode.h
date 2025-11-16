@@ -5,15 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
-#include "SkillProjectGameMode.generated.h"
+#include "SpyGameMode.generated.h"
 
 UCLASS(minimalapi)
-class ASkillProjectGameMode : public AGameModeBase
+class ASpyGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	ASkillProjectGameMode();
+	ASpyGameMode();
 };
 
 

@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SkillGameplayTags.h"
+#include "SpyGameplayTags.h"
 
-namespace SkillGameplayTags
+namespace SpyGameplayTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(Skill_A, "Skill.A");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_B, "Skill.B");

@@ -6,7 +6,9 @@
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
 
-#include "CharacterAttributeSet.generated.h"
+#include "SpyAttributeSet.generated.h"
+
+struct FGameplayEffectSpec;
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName)\
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName)\
@@ -14,12 +16,10 @@
 	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName)\
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
-struct FGameplayEffectSpec;
-
 DECLARE_MULTICAST_DELEGATE_SixParams(FSpyAttributeEvent, AActor* /*EffectInstigator*/, AActor* /*EffectCauser*/, const FGameplayEffectSpec* /*EffectSpec*/, float /*EffectMagnitude*/, float /*OldValue*/, float /*NewValue*/);
 
 UCLASS()
-class SKILLPROJECT_API UCharacterAttributeSet : public UAttributeSet
+class SKILLPROJECT_API USpyAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 
@@ -29,18 +29,18 @@ protected:
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData Health;
-	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Health);
+	ATTRIBUTE_ACCESSORS(USpyAttributeSet, Health);
 
 	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData MaxHealth;
-	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxHealth);
+	ATTRIBUTE_ACCESSORS(USpyAttributeSet, MaxHealth);
 
 	UPROPERTY(ReplicatedUsing = OnRep_Mana, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData Mana;
-	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, Mana);
+	ATTRIBUTE_ACCESSORS(USpyAttributeSet, Mana);
 	UPROPERTY(ReplicatedUsing = OnRep_MaxMana, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData MaxMana;
-	ATTRIBUTE_ACCESSORS(UCharacterAttributeSet, MaxMana);
+	ATTRIBUTE_ACCESSORS(USpyAttributeSet, MaxMana);
 
 protected:
 	UFUNCTION()

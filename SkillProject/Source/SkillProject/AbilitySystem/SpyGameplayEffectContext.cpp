@@ -6,7 +6,7 @@
 #include "Engine/HitResult.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 
-class FArchive;
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayEffectContext)
 
 FSpyGameplayEffectContext* FSpyGameplayEffectContext::ExtractEffectContext(struct FGameplayEffectContextHandle Handle)
 {

@@ -4,7 +4,7 @@
 
 #include "NativeGameplayTags.h"
 
-namespace SkillGameplayTags
+namespace SpyGameplayTags
 {
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_A);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_B);

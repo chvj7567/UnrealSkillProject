@@ -4,15 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Character/SkillProjectCharacter.h"
 
-#include "CharacterAnimInstance.generated.h"
+#include "SpyCharacterAnimInstance.generated.h"
 
-/**
- * 
- */
+class ASpyCharacter;
+class UCharacterMovementComponent;
+
 UCLASS()
-class SKILLPROJECT_API UCharacterAnimInstance : public UAnimInstance
+class SKILLPROJECT_API USpyCharacterAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
@@ -26,7 +25,7 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ASkillProjectCharacter> Player;
+	TObjectPtr<ASpyCharacter> Player;
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UCharacterMovementComponent> PlayerMovementComponent;

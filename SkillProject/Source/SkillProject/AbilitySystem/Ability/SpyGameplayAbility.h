@@ -4,15 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Util/SkillGameplayTags.h"
+#include "Util/SpyGameplayTags.h"
 
-#include "CharacterGameplayAbility.generated.h"
+#include "SpyGameplayAbility.generated.h"
 
-/**
- * 
- */
 UCLASS()
-class SKILLPROJECT_API UCharacterGameplayAbility : public UGameplayAbility
+class SKILLPROJECT_API USpyGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 

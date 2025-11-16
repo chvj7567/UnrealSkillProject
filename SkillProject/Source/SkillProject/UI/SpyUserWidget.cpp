@@ -4,6 +4,8 @@
 #include "SpyUserWidget.h"
 #include "Manager/SpyUIManager.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyUserWidget)
+
 USpyUserWidget::USpyUserWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

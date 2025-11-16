@@ -6,15 +6,15 @@
 #include "GameFramework/PlayerState.h"
 #include "Util/DefineEnum.h"
 
-#include "SkillProjectPlayerState.generated.h"
+#include "SpyPlayerState.generated.h"
 
 UCLASS()
-class SKILLPROJECT_API ASkillProjectPlayerState : public APlayerState
+class SKILLPROJECT_API ASpyPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 	
 public:
-	ASkillProjectPlayerState();
+    ASpyPlayerState();
 
 public:
     virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;

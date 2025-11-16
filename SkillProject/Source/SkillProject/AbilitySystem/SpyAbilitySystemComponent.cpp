@@ -3,6 +3,9 @@
 
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAbilitySystemComponent)
+
+
 USpyAbilitySystemComponent::USpyAbilitySystemComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

@@ -6,6 +6,8 @@
 #include "Components/ProgressBar.h"
 #include "Manager/SpyUIManager.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyMainHUD)
+
 void USpyMainHUD::NativeConstruct()
 {
     Super::NativeConstruct();

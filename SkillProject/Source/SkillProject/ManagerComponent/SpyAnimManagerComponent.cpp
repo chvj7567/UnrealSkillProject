@@ -2,7 +2,9 @@
 
 
 #include "SpyAnimManagerComponent.h"
-#include "Character/AnimInstance/CharacterAnimInstance.h"
+#include "Character/AnimInstance/SpyCharacterAnimInstance.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAnimManagerComponent)
 
 USpyAnimManagerComponent::USpyAnimManagerComponent()
 {
@@ -22,7 +24,7 @@ void USpyAnimManagerComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 }
 
-void USpyAnimManagerComponent::Initialize(UCharacterAnimInstance* InAnimInstance)
+void USpyAnimManagerComponent::Initialize(USpyCharacterAnimInstance* InAnimInstance)
 {
 	AnimInstance = InAnimInstance;
 }

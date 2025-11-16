@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "SkillProjectCharacter.h"
+#include "SpyCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -8,8 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
-#include "Util/SkillGameplayTags.h"
-#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
+#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/Attribute/SpyAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -18,12 +18,12 @@
 #include "Manager/SpyUIManager.h"
 #include "UI/SpyHPBar.h"
 #include "ManagerComponent/SpyAnimManagerComponent.h"
-#include "Character/AnimInstance/CharacterAnimInstance.h"
-#include "World/SkillProjectPlayerState.h"
+#include "Character/AnimInstance/SpyCharacterAnimInstance.h"
+#include "System/SpyPlayerState.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(SkillProjectCharacter)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
-ASkillProjectCharacter::ASkillProjectCharacter()
+ASpyCharacter::ASpyCharacter()
 {
 	bReplicates = true;
 
@@ -78,7 +78,7 @@ ASkillProjectCharacter::ASkillProjectCharacter()
 	AnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("AnimManagerComponent"));
 }
 
-void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
+void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
 {
 	if (HasAuthority() == false)
 		return;
@@ -108,7 +108,7 @@ void ASkillProjectCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTa
 	UE_LOG(LogTemp, Warning, TEXT("Mana : %f"), CharacterAttributeSet->GetMana());
 }
 
-void ASkillProjectCharacter::BeginPlay()
+void ASpyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -119,45 +119,45 @@ void ASkillProjectCharacter::BeginPlay()
 
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		AnimManagerComponent->Initialize(Cast<UCharacterAnimInstance>(AnimInstance));
+		AnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
 	}
 }
 
-void ASkillProjectCharacter::PostInitializeComponents()
+void ASpyCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 }
 
-void ASkillProjectCharacter::Tick(float DeltaTime)
+void ASpyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void ASkillProjectCharacter::PossessedBy(AController* NewController)
+void ASpyCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
 	if (HasAuthority())
 	{
-		if (ASkillProjectPlayerState* SpyPlayerState = Cast<ASkillProjectPlayerState>(GetPlayerState()))
+		if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
 		{
 			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
 		}
 	}
 }
 
-void ASkillProjectCharacter::OnRep_PlayerState()
+void ASpyCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 }
 
-void ASkillProjectCharacter::RegisterAbility()
+void ASpyCharacter::RegisterAbility()
 {
 	if (!AbilitySystemComponent)
 		return;
 
 	//# 설정한 AttributeSet 가져옴
-	CharacterAttributeSet = AbilitySystemComponent->GetSet<UCharacterAttributeSet>();
+	CharacterAttributeSet = AbilitySystemComponent->GetSet<USpyAttributeSet>();
 	if (CharacterAttributeSet == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
@@ -176,18 +176,18 @@ void ASkillProjectCharacter::RegisterAbility()
 	}
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
-		.AddUObject(this, &ASkillProjectCharacter::OnHealthChanged);
+		.AddUObject(this, &ASpyCharacter::OnHealthChanged);
 }
 
-void ASkillProjectCharacter::BindCollision()
+void ASpyCharacter::BindCollision()
 {
-	LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
-	RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASkillProjectCharacter::OnSkillHitOverlap);
+	LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASpyCharacter::OnSkillHitOverlap);
+	RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASpyCharacter::OnSkillHitOverlap);
 }
 
-void ASkillProjectCharacter::TestHit()
+void ASpyCharacter::TestHit()
 {
-	FGameplayAttribute HealthAttr = UCharacterAttributeSet::GetHealthAttribute();
+	FGameplayAttribute HealthAttr = USpyAttributeSet::GetHealthAttribute();
 	float CurrentHealth = AbilitySystemComponent->GetNumericAttribute(HealthAttr);
 	float NewHealth = CurrentHealth - 10.f;
 
@@ -200,13 +200,13 @@ void ASkillProjectCharacter::TestHit()
 	}
 }
 
-void ASkillProjectCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
+void ASpyCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
 	if (Data.NewValue < 0.f)
 	{
 		if (HasAuthority())
 		{
-			if (ASkillProjectPlayerState* SpyPlayerState = Cast<ASkillProjectPlayerState>(GetPlayerState()))
+			if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
 			{
 				if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive))
 				{
@@ -224,7 +224,7 @@ void ASkillProjectCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 	}
 }
 
-void ASkillProjectCharacter::OnSkillHitOverlap(
+void ASpyCharacter::OnSkillHitOverlap(
 	UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
@@ -235,7 +235,7 @@ void ASkillProjectCharacter::OnSkillHitOverlap(
 	if (HasAuthority() == false)
 		return;
 
-	ASkillProjectCharacter* OtherCharacter = Cast<ASkillProjectCharacter>(OtherActor);
+	ASpyCharacter* OtherCharacter = Cast<ASpyCharacter>(OtherActor);
 	if (OtherCharacter == nullptr)
 		return;
 
@@ -251,7 +251,7 @@ void ASkillProjectCharacter::OnSkillHitOverlap(
 	}
 }
 
-FGameplayTagContainer ASkillProjectCharacter::GetActivatableAbilityTags()
+FGameplayTagContainer ASpyCharacter::GetActivatableAbilityTags()
 {
 	TArray<FGameplayAbilitySpec> Abilities;
 	Abilities = AbilitySystemComponent->GetActivatableAbilities();

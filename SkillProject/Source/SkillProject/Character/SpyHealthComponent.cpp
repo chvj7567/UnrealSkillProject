@@ -2,9 +2,11 @@
 
 
 #include "Character/SpyHealthComponent.h"
-
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
+#include "AbilitySystem/Attribute/SpyAttributeSet.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
+
 
 void USpyHealthComponent::Initialize(USpyAbilitySystemComponent* InASC)
 {
@@ -21,7 +23,7 @@ void USpyHealthComponent::Initialize(USpyAbilitySystemComponent* InASC)
 
 	AbilitySystemComponent = InASC;
 
-	HealthSet = AbilitySystemComponent->GetSet<UCharacterAttributeSet>();
+	HealthSet = AbilitySystemComponent->GetSet<USpyAttributeSet>();
 
 	HealthSet->OnHealthChanged.AddUObject(this, &ThisClass::HandleHealthChanged);
 	HealthSet->OnMaxHealthChanged.AddUObject(this, &ThisClass::HandleMaxHealthChanged);

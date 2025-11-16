@@ -8,8 +8,9 @@
 #include "UI/SpyUserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Data/SpyAssetData.h"
+#include "Character/SpyCharacter.h"
 
-#include "Character/SkillProjectCharacter.h"
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyUIManager)
 
 void USpyUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {

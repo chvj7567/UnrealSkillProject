@@ -3,15 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/Ability/CharacterGameplayAbility.h"
+#include "AbilitySystem/Ability/SpyGameplayAbility.h"
 
-#include "GameplayAbility_SkillA.generated.h"
+#include "SpyGameplayAbility_SkillA.generated.h"
 
-/**
- * 
- */
 UCLASS()
-class SKILLPROJECT_API UGameplayAbility_SkillA : public UCharacterGameplayAbility
+class SKILLPROJECT_API USpyGameplayAbility_SkillA : public USpyGameplayAbility
 {
 	GENERATED_BODY()
 	

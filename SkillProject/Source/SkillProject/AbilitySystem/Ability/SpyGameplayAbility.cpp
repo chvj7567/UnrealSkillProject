@@ -1,40 +1,41 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CharacterGameplayAbility.h"
+#include "SpyGameplayAbility.h"
 #include "AbilitySystem/SpyAbilitySourceInterface.h"
 #include "AbilitySystem/SpyGameplayEffectContext.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility)
 
-void UCharacterGameplayAbility::OnMontageCompleted()
+void USpyGameplayAbility::OnMontageCompleted()
 {
     UE_LOG(LogTemp, Warning, TEXT("OnMontageCompleted"));
 }
 
-void UCharacterGameplayAbility::OnMontageCancelled()
+void USpyGameplayAbility::OnMontageCancelled()
 {
     UE_LOG(LogTemp, Warning, TEXT("OnMontageCancelled"));
 }
 
-void UCharacterGameplayAbility::OnWaitGameplayEvent(FGameplayEventData Payload)
+void USpyGameplayAbility::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
     UE_LOG(LogTemp, Warning, TEXT("OnWaitGameplayEvent"));
 }
 
-void UCharacterGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void USpyGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
     UE_LOG(LogTemp, Warning, TEXT("ActivateAbility called"));
 }
 
-void UCharacterGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
+void USpyGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
     Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
     UE_LOG(LogTemp, Warning, TEXT("CancelAbility called"));
 }
 
-bool UCharacterGameplayAbility::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
+bool USpyGameplayAbility::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
 {
     bool bResult = Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
 
@@ -43,14 +44,14 @@ bool UCharacterGameplayAbility::CommitAbility(const FGameplayAbilitySpecHandle H
     return bResult;
 }
 
-void UCharacterGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+void USpyGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
     UE_LOG(LogTemp, Warning, TEXT("EndAbility called, WasCancelled: %s"), bWasCancelled ? TEXT("true") : TEXT("false"));
 }
 
-bool UCharacterGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
+bool USpyGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
     bool bResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
@@ -59,7 +60,7 @@ bool UCharacterGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHan
     return bResult;
 }
 
-bool UCharacterGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags) const
+bool USpyGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
     bool bResult = Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags);
 
@@ -68,14 +69,14 @@ bool UCharacterGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handl
     return bResult;
 }
 
-void UCharacterGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
+void USpyGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
 {
     Super::ApplyCost(Handle, ActorInfo, ActivationInfo);
 
     UE_LOG(LogTemp, Warning, TEXT("ApplyCost called"));
 }
 
-const FGameplayTagContainer* UCharacterGameplayAbility::GetCooldownTags() const
+const FGameplayTagContainer* USpyGameplayAbility::GetCooldownTags() const
 {
     const FGameplayTagContainer* Result = Super::GetCooldownTags();
 
@@ -84,21 +85,21 @@ const FGameplayTagContainer* UCharacterGameplayAbility::GetCooldownTags() const
     return Result;
 }
 
-void UCharacterGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void USpyGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
     Super::OnGiveAbility(ActorInfo, Spec);
 
     UE_LOG(LogTemp, Warning, TEXT("OnGiveAbility called"));
 }
 
-void UCharacterGameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void USpyGameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
     Super::OnRemoveAbility(ActorInfo, Spec);
 
     UE_LOG(LogTemp, Warning, TEXT("OnRemoveAbility called"));
 }
 
-FGameplayEffectContextHandle UCharacterGameplayAbility::MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const
+FGameplayEffectContextHandle USpyGameplayAbility::MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const
 {
     FGameplayEffectContextHandle ContextHandle = Super::MakeEffectContext(Handle, ActorInfo);
 

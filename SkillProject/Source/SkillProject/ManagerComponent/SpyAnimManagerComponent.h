@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "SpyAnimManagerComponent.generated.h"
+#include "Character/AnimInstance/SpyCharacterAnimInstance.h"
 
-class UCharacterAnimInstance;
+#include "SpyAnimManagerComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyAnimManagerComponent : public UActorComponent
@@ -23,9 +23,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void Initialize(UCharacterAnimInstance* InAnimInstance);
+	void Initialize(USpyCharacterAnimInstance* InAnimInstance);
 	
 private:
 	UPROPERTY()
-	TObjectPtr<UCharacterAnimInstance> AnimInstance;
+	TObjectPtr<USpyCharacterAnimInstance> AnimInstance;
 };

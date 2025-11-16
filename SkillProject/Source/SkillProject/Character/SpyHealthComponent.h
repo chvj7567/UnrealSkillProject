@@ -10,6 +10,7 @@
 
 class USpyAbilitySystemComponent;
 class UCharacterAttributeSet;
+class USpyAttributeSet;
 struct FGameplayEffectSpec;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyHealth_AttributeChanged, USpyHealthComponent*, HealthComponent, float, OldValue, float, NewValue, AActor*, Instigator);
@@ -27,7 +28,7 @@ protected:
 	TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()
-	TObjectPtr<const UCharacterAttributeSet> HealthSet;
+	TObjectPtr<const USpyAttributeSet> HealthSet;
 	
 public:
 	void Initialize(USpyAbilitySystemComponent* InASC);
