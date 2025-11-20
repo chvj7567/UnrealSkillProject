@@ -5,28 +5,29 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
-#include "SpyAnimManagerComponent.generated.h"
+#include "SpyParkourManagerComponent.generated.h"
 
-class USpyCharacterAnimInstance;
+class UCharacterMovementComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SKILLPROJECT_API USpyAnimManagerComponent : public UActorComponent
+class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
-	USpyAnimManagerComponent();
+	USpyParkourManagerComponent();
 
 protected:
 	virtual void BeginPlay() override;
-
-public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void Initialize(USpyCharacterAnimInstance* InAnimInstance);
-	
+	FORCEINLINE bool IsWallClimbing() const { return bIsWallClimbing; }
+
+public:
+	void CheckAbleWallClimbing();
+
 private:
-	UPROPERTY()
-	TObjectPtr<USpyCharacterAnimInstance> AnimInstance;
+	TObjectPtr<UCharacterMovementComponent> MovementComponent;
+	bool bIsWallClimbing;
 };

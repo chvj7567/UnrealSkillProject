@@ -8,18 +8,18 @@
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "Components/BoxComponent.h"
 
 #include "SpyCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
+class UBoxComponent;
 class UWidgetComponent;
 class UGameplayAbility;
 class UAbilitySystemComponent;
 class USpyAttributeSet;
 class USpyAnimManagerComponent;
-
+class USpyParkourManagerComponent;
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
@@ -73,6 +73,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim")
 	TObjectPtr<USpyAnimManagerComponent> AnimManagerComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parkour")
+	TObjectPtr<USpyParkourManagerComponent> ParkourManagerComponent;
 
 private:
 	UFUNCTION(BlueprintCallable)

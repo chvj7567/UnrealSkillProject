@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacter.h"
+#include "ManagerComponent/SpyParkourManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
 
@@ -77,6 +78,11 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         {
             IsDeath = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive) == false;
         }
+    }
+
+    if (USpyParkourManagerComponent* ParkourComponent = Cast<USpyParkourManagerComponent>(Player->GetComponentByClass(USpyParkourManagerComponent::StaticClass())))
+    {
+        IsWallClimbing = ParkourComponent->IsWallClimbing();
     }
 }
 

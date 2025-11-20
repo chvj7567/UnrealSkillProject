@@ -57,4 +57,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool IsDeath;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool IsWallClimbing;
 };
