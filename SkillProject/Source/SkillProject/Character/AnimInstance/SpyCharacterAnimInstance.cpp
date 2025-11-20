@@ -84,3 +84,13 @@ void USpyCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
 {
     Player->TestHit();
 }
+
+void USpyCharacterAnimInstance::AnimNotify_DisableMove(UAnimNotify* Notify)
+{
+    PlayerMovementComponent->DisableMovement();
+}
+
+void USpyCharacterAnimInstance::AnimNotify_AbleMove(UAnimNotify* Notify)
+{
+    PlayerMovementComponent->SetMovementMode(MOVE_Walking);
+}

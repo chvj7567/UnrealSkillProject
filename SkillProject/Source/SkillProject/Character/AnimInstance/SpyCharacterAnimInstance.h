@@ -23,6 +23,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_AttackHit(UAnimNotify* Notify);
 
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_DisableMove(UAnimNotify* Notify);
+
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_AbleMove(UAnimNotify* Notify);
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ASpyCharacter> Player;
