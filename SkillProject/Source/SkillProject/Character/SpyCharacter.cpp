@@ -17,15 +17,17 @@
 #include "Components/WidgetComponent.h"
 #include "Manager/SpyUIManager.h"
 #include "UI/SpyHPBar.h"
-#include "ManagerComponent/SpyAnimManagerComponent.h"
-#include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Character/AnimInstance/SpyCharacterAnimInstance.h"
 #include "System/SpyPlayerState.h"
 #include "Components/BoxComponent.h"
+#include "Character/SpyCharacterMovementComponent.h"
+#include "ManagerComponent/SpyParkourManagerComponent.h"
+#include "ManagerComponent/SpyAnimManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
-ASpyCharacter::ASpyCharacter()
+ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer.SetDefaultSubobjectClass<USpyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	bReplicates = true;
 
@@ -67,8 +69,8 @@ ASpyCharacter::ASpyCharacter()
 	HPBarComponent->SetupAttachment(GetMesh());
 	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
 
-	AnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("AnimManagerComponent"));
-	ParkourManagerComponent = CreateDefaultSubobject<USpyParkourManagerComponent>(TEXT("ParkourManagerComponent"));
+	SpyAnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("SpyAnimManagerComponent"));
+	SpyParkourManagerComponent = CreateDefaultSubobject<USpyParkourManagerComponent>(TEXT("SpyParkourManagerComponent"));
 }
 
 void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
@@ -112,7 +114,7 @@ void ASpyCharacter::BeginPlay()
 
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		AnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
+		SpyAnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
 	}
 }
 
@@ -142,6 +144,14 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 void ASpyCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	if (HasAuthority() == false)
+	{
+		if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
+		{
+			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
+		}
+	}
 }
 
 void ASpyCharacter::RegisterAbility()
@@ -157,13 +167,16 @@ void ASpyCharacter::RegisterAbility()
 	}
 	else
 	{
-		//# 캐릭터에 등록된 스킬 부여
-		for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
+		if (HasAuthority())
 		{
-			if (AbilityClass)
+			//# 캐릭터에 등록된 스킬 부여
+			for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
 			{
-				FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
-				AbilitySystemComponent->GiveAbility(AbilitySpec);
+				if (AbilityClass)
+				{
+					FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
+					AbilitySystemComponent->GiveAbility(AbilitySpec);
+				}
 			}
 		}
 	}

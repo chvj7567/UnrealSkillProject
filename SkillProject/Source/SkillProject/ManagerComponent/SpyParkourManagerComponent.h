@@ -23,11 +23,16 @@ protected:
 
 public:
 	FORCEINLINE bool IsWallClimbing() const { return bIsWallClimbing; }
+	FORCEINLINE FVector GetHitNormalVector() const { return HitNormalVector; }
 
 public:
 	void CheckAbleWallClimbing();
 
-private:
+protected:
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UCharacterMovementComponent> MovementComponent;
+
+private:
 	bool bIsWallClimbing;
+	FVector HitNormalVector;
 };

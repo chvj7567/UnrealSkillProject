@@ -2,8 +2,11 @@
 
 
 #include "SpyParkourManagerComponent.h"
+#include "Util/DefineEnum.h"
 #include "Character/SpyCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "System/SpyPlayerController.h"
+#include "System/SpyPlayerState.h"
 
 USpyParkourManagerComponent::USpyParkourManagerComponent()
 {
@@ -25,7 +28,8 @@ void USpyParkourManagerComponent::TickComponent(float DeltaTime, ELevelTick Tick
 void USpyParkourManagerComponent::CheckAbleWallClimbing()
 {
     ASpyCharacter* OwnerChar = Cast<ASpyCharacter>(GetOwner());
-    if (!OwnerChar) return;
+    if (!OwnerChar)
+        return;
 
     FVector Start = OwnerChar->GetActorLocation() + OwnerChar->GetActorForwardVector() * 20.f;
     FVector End = Start + OwnerChar->GetActorForwardVector() * 40.f;
@@ -37,31 +41,41 @@ void USpyParkourManagerComponent::CheckAbleWallClimbing()
     bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
     FColor LineColor = bHit ? FColor::Green : FColor::Red;
-    float Lifetime = 1.0f;      // 화면에 얼마나 오래 보일지 (초)
-    float Thickness = 2.0f;     // 라인 두께
+    float Lifetime = 1.0f;
+    float Thickness = 2.0f;
 
     DrawDebugLine(
         GetWorld(),
         Start,
         End,
         LineColor,
-        false,      // PersistentLines, false = 일정 시간 후 사라짐
+        false,
         Lifetime,
-        0,          // DepthPriority
+        0,
         Thickness
     );
 
-    if (!bHit)
+    if (bIsWallClimbing != bHit)
     {
-        // 벽에서 손 놓기
-        bIsWallClimbing = false;
-    }
-    else
-    {
-        // 벽 유지 중
-        // 여기서 Hit.Normal 등으로 각도 체크 가능
-        float Dot = FVector::DotProduct(Hit.Normal, -OwnerChar->GetActorForwardVector());
-        bIsWallClimbing = true;
+        bIsWallClimbing = bHit;
+        HitNormalVector = Hit.ImpactNormal;
+
+        ASpyPlayerController* SpyPlayerController = OwnerChar->GetController<ASpyPlayerController>();
+        ASpyPlayerState* SpyPlayerState = OwnerChar->GetPlayerState<ASpyPlayerState>();
+
+        if (!SpyPlayerController || !SpyPlayerState)
+            return;
+
+        if (bIsWallClimbing)
+        {
+            SpyPlayerState->AddState(ESpyPlayerStateFlags::IsClimb);
+        }
+        else
+        {
+            SpyPlayerState->RemoveState(ESpyPlayerStateFlags::IsClimb);
+        }
+
+        SpyPlayerController->SetMappingContext();
     }
 }
 

@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacter.h"
+#include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
@@ -32,6 +33,12 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 
     if (Player == nullptr || PlayerMovementComponent == nullptr)
         return;
+
+    //# Set Direction
+    if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(PlayerMovementComponent))
+    {
+        InputDirection = SpyMovementComponent->GetInputDirection();
+    }
 
     //# Set AimPitch
     {
@@ -80,9 +87,12 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         }
     }
 
-    if (USpyParkourManagerComponent* ParkourComponent = Cast<USpyParkourManagerComponent>(Player->GetComponentByClass(USpyParkourManagerComponent::StaticClass())))
+    //# Set Climbing
     {
-        IsWallClimbing = ParkourComponent->IsWallClimbing();
+        if (USpyParkourManagerComponent* SpyParkourComponent = Player->GetSpyParkourManagerComponent())
+        {
+            IsWallClimbing = SpyParkourComponent->IsWallClimbing();
+        }
     }
 }
 

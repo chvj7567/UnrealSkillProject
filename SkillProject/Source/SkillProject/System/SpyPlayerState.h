@@ -30,6 +30,6 @@ public:
     void ToggleState(ESpyPlayerStateFlags Flag);
 
 protected:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "State")
+    UPROPERTY(Replicated)
     ESpyPlayerStateFlags PlayerFlags;
 };

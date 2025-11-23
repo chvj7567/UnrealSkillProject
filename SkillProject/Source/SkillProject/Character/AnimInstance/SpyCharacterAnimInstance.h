@@ -60,4 +60,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool IsWallClimbing;
+
+	UPROPERTY(BlueprintReadOnly)
+	float InputDirection;
 };

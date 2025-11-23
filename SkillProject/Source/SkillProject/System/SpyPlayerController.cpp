@@ -12,6 +12,8 @@
 #include "Manager/SpyAssetManager.h"
 #include "Manager/SpyUIManager.h"
 #include "Util/DefineEnum.h"
+#include "System/SpyPlayerState.h"
+#include "Character/SpyCharacterMovementComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerController)
 
@@ -23,17 +25,10 @@ void ASpyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
-
 	bShowMouseCursor = true;
 	USpyUIManager::Get(this)->OpenUI(ESpyUIType::MainHUD);
+
+	SetMappingContext(DefaultMappingContext);
 }
 
 void ASpyPlayerController::SetupInputComponent()
@@ -52,20 +47,38 @@ void ASpyPlayerController::SetupInputComponent()
 	}
 }
 
+void ASpyPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+}
+
+void ASpyPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+}
+
 void ASpyPlayerController::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (APawn* ControlledPawn = GetPawn())
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		const FRotator Rotation = ControlledPawn->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
+		{
+			const FRotator Rotation = SpyCharacter->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		ControlledPawn->AddMovementInput(ForwardDirection, MovementVector.Y);
-		ControlledPawn->AddMovementInput(RightDirection, MovementVector.X);
+			SpyCharacter->AddMovementInput(ForwardDirection, MovementVector.Y);
+			SpyCharacter->AddMovementInput(RightDirection, MovementVector.X);
+
+			if (USpyCharacterMovementComponent* SpyParkrourComponent = SpyCharacter->GetSpyCharacterMovementComponent())
+			{
+				SpyParkrourComponent->SetInputVector(MovementVector);
+			}
+		}
 	}
 }
 
@@ -101,5 +114,50 @@ void ASpyPlayerController::UseSkill(const FInputActionValue& Value)
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
 		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_A);
+	}
+}
+
+void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingContext)
+{
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			Subsystem->AddMappingContext(InMappingContext, 0);
+		}
+	}
+}
+
+void ASpyPlayerController::SetMappingContext()
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
+		{
+			if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb))
+			{
+				if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
+				{
+					if (USpyParkourManagerComponent* ParkourComponent = SpyCharacter->GetSpyParkourManagerComponent())
+					{
+						SpyMovementComponent->StartWallClimb(ParkourComponent->GetHitNormalVector());
+					}
+				}
+
+				UE_LOG(LogTemp, Warning, TEXT("WallClimbMappingContext"));
+				SetMappingContext(WallClimbMappingContext);
+			}
+			else
+			{
+				if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
+				{
+					SpyMovementComponent->StopWallClimb();
+				}
+
+				UE_LOG(LogTemp, Warning, TEXT("DefaultMappingContext"));
+				SetMappingContext(DefaultMappingContext);
+			}
+		}
 	}
 }

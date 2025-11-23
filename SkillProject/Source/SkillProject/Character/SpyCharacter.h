@@ -8,6 +8,8 @@
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "ManagerComponent/SpyParkourManagerComponent.h"
+#include "Character/SpyCharacterMovementComponent.h"
 
 #include "SpyCharacter.generated.h"
 
@@ -27,21 +29,8 @@ class ASpyCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
-private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* LeftWeaponCollision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* RightWeaponCollision;
-
 public:
-	ASpyCharacter();
+	ASpyCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,27 +44,8 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE UAbilitySystemComponent* GetAbilitySystemComponent() const override { return Cast<UAbilitySystemComponent>(AbilitySystemComponent); }
 	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
-
-	struct FGameplayTagContainer GetActivatableAbilityTags();
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	USpyAbilitySystemComponent* AbilitySystemComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	const USpyAttributeSet* CharacterAttributeSet;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	TArray<TSubclassOf<UGameplayAbility>> AbilityClasses;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	TObjectPtr<UWidgetComponent> HPBarComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim")
-	TObjectPtr<USpyAnimManagerComponent> AnimManagerComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parkour")
-	TObjectPtr<USpyParkourManagerComponent> ParkourManagerComponent;
+	FORCEINLINE USpyParkourManagerComponent* GetSpyParkourManagerComponent() const { return SpyParkourManagerComponent; }
+	FORCEINLINE USpyCharacterMovementComponent* GetSpyCharacterMovementComponent() const { return GetCharacterMovement<USpyCharacterMovementComponent>(); }
 
 private:
 	UFUNCTION(BlueprintCallable)
@@ -86,8 +56,8 @@ private:
 
 public:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
-
 	void TestHit();
+	struct FGameplayTagContainer GetActivatableAbilityTags();
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -101,5 +71,39 @@ public:
 public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_UseSkill(FGameplayTag SkillTag);
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* LeftWeaponCollision;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* RightWeaponCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	USpyAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	const USpyAttributeSet* CharacterAttributeSet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	TArray<TSubclassOf<UGameplayAbility>> AbilityClasses;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> HPBarComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpyAnimManagerComponent> SpyAnimManagerComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parkour", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpyParkourManagerComponent> SpyParkourManagerComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpyCharacterMovementComponent> SpyCharacterMovementCompnent;
 };
 
