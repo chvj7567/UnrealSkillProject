@@ -4,7 +4,7 @@
 #include "SpyParkourManagerComponent.h"
 #include "Util/DefineEnum.h"
 #include "Character/SpyCharacter.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Character/SpyCharacterMovementComponent.h"
 #include "System/SpyPlayerController.h"
 #include "System/SpyPlayerState.h"
 
@@ -27,16 +27,16 @@ void USpyParkourManagerComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 void USpyParkourManagerComponent::CheckAbleWallClimbing()
 {
-    ASpyCharacter* OwnerChar = Cast<ASpyCharacter>(GetOwner());
-    if (!OwnerChar)
+    ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetOwner());
+    if (!SpyCharacter)
         return;
 
-    FVector Start = OwnerChar->GetActorLocation() + OwnerChar->GetActorForwardVector() * 20.f;
-    FVector End = Start + OwnerChar->GetActorForwardVector() * 40.f;
+    FVector Start = SpyCharacter->GetActorLocation() + SpyCharacter->GetActorForwardVector() * 20.f;
+    FVector End = Start + SpyCharacter->GetActorForwardVector() * 40.f;
 
     FHitResult Hit;
     FCollisionQueryParams Params;
-    Params.AddIgnoredActor(OwnerChar);
+    Params.AddIgnoredActor(SpyCharacter);
 
     bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
@@ -60,8 +60,8 @@ void USpyParkourManagerComponent::CheckAbleWallClimbing()
         bIsWallClimbing = bHit;
         HitNormalVector = Hit.ImpactNormal;
 
-        ASpyPlayerController* SpyPlayerController = OwnerChar->GetController<ASpyPlayerController>();
-        ASpyPlayerState* SpyPlayerState = OwnerChar->GetPlayerState<ASpyPlayerState>();
+        ASpyPlayerController* SpyPlayerController = SpyCharacter->GetController<ASpyPlayerController>();
+        ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>();
 
         if (!SpyPlayerController || !SpyPlayerState)
             return;

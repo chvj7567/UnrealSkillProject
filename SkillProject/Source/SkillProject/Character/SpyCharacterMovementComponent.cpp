@@ -26,18 +26,13 @@ void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteration
 	}
 	break;
 	}
-
-	SpyInputVector = FVector2D::ZeroVector;
 }
 
 void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterations)
 {
 	if (!CharacterOwner || !UpdatedComponent)
-	{
 		return;
-	}
 
-	// 벽 표면 기준 방향 벡터 계산
 	const FVector WallNormal = CachedWallNormal;
 	const FVector UpVector = FVector::UpVector;
 
@@ -45,14 +40,12 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 
-	const float ClimbSpeed = 300.f;
+	const float ClimbSpeed = 100.f;
 	FVector DesiredVelocity =
 		WallUp * SpyInputVector.Y * ClimbSpeed +
 		WallRight * -SpyInputVector.X * ClimbSpeed;
 
 	Velocity = DesiredVelocity;
-
-	UE_LOG(LogTemp, Warning, TEXT("ConsumeInputVector: X=%.2f, Y=%.2f / Velocity X=%.2f, Y=%.2f, Z=%.2f"), SpyInputVector.X, SpyInputVector.Y, Velocity.X, Velocity.Y, Velocity.Z);
 
 	FVector Delta = Velocity * DeltaTime;
 
@@ -69,7 +62,15 @@ void USpyCharacterMovementComponent::StartWallClimb(const FVector& WallNormal)
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
 	GravityScale = 0.0f;
+	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
+
+	FVector ForwardDir = -WallNormal;
+	FRotator TargetRot = ForwardDir.Rotation();
+	TargetRot.Pitch = 0.f;
+	TargetRot.Roll = 0.f;
+
+	CharacterOwner->SetActorRotation(TargetRot);
 }
 
 void USpyCharacterMovementComponent::StopWallClimb()
@@ -77,5 +78,12 @@ void USpyCharacterMovementComponent::StopWallClimb()
 	UE_LOG(LogTemp, Warning, TEXT("StopWallClimb"));
 
 	GravityScale = 1.0f;
+	bOrientRotationToMovement = true;
 	SetMovementMode(MOVE_Walking);
+}
+
+float USpyCharacterMovementComponent::GetInputAngleByForward()
+{
+	float Angle = FMath::Atan2(SpyInputVector.X, SpyInputVector.Y);
+	return FMath::RadiansToDegrees(Angle);
 }

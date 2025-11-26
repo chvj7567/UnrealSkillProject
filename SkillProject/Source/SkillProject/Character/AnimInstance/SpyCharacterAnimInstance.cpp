@@ -2,7 +2,6 @@
 
 
 #include "Character/AnimInstance/SpyCharacterAnimInstance.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacter.h"
 #include "Character/SpyCharacterMovementComponent.h"
@@ -22,7 +21,7 @@ void USpyCharacterAnimInstance::NativeBeginPlay()
     if (Player == nullptr)
         return;
 
-    PlayerMovementComponent = Player->GetCharacterMovement();
+    PlayerMovementComponent = Player->GetSpyCharacterMovementComponent();
     if (PlayerMovementComponent == nullptr)
         return;
 }
@@ -34,10 +33,9 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
     if (Player == nullptr || PlayerMovementComponent == nullptr)
         return;
 
-    //# Set Direction
-    if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(PlayerMovementComponent))
+    //# Set InputAngle
     {
-        InputDirection = SpyMovementComponent->GetInputDirection();
+        InputAngle = PlayerMovementComponent->GetInputAngleByForward();
     }
 
     //# Set AimPitch
@@ -57,10 +55,11 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         AimPitch = FRotator::NormalizeAxis(Rot.Pitch);
     }
 
-    //# Set Velocity And GroundSpeed And ShouldMove
+    //# Set Velocity, GroundSpeed, WallClimbSpeed ShouldMove
     {
         Velocity = Player->GetVelocity();
         GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
+        WallClimbSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Z, 2));
 
         FVector CurrentAcceleration = PlayerMovementComponent->GetCurrentAcceleration();
         if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f)
@@ -72,6 +71,8 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
             ShouldMove = false;
         }
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("InputAngle: %f, WallClimbSpeed: %f"), InputAngle, WallClimbSpeed);
 
     //# Set IsFalling And IsCrouching
     {

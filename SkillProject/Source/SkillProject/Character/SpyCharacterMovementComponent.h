@@ -18,18 +18,14 @@ public:
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
 
 public:
-	FORCEINLINE float GetInputDirection()
-	{
-		float Angle = FMath::Atan2(SpyInputVector.Y, SpyInputVector.X);
-		return FMath::RadiansToDegrees(Angle);
-	}
-
 	FORCEINLINE void SetInputVector(FVector2D InInputVector) { SpyInputVector = InInputVector; }
 
 public:
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
 	void StartWallClimb(const FVector& WallNormal);
 	void StopWallClimb();
+
+	float GetInputAngleByForward();
 
 protected:
 	FVector2D SpyInputVector;

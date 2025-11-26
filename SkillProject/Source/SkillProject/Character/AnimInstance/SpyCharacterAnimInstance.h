@@ -8,7 +8,7 @@
 #include "SpyCharacterAnimInstance.generated.h"
 
 class ASpyCharacter;
-class UCharacterMovementComponent;
+class USpyCharacterMovementComponent;
 
 UCLASS()
 class SKILLPROJECT_API USpyCharacterAnimInstance : public UAnimInstance
@@ -34,7 +34,7 @@ protected:
 	TObjectPtr<ASpyCharacter> Player;
 
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UCharacterMovementComponent> PlayerMovementComponent;
+	TObjectPtr<USpyCharacterMovementComponent> PlayerMovementComponent;
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
@@ -45,6 +45,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	float GroundSpeed;
+
+	UPROPERTY(BlueprintReadOnly)
+	float WallClimbSpeed;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool ShouldMove;
@@ -62,5 +65,5 @@ protected:
 	bool IsWallClimbing;
 
 	UPROPERTY(BlueprintReadOnly)
-	float InputDirection;
+	float InputAngle;
 };
