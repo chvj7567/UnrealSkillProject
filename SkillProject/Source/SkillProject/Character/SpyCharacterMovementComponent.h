@@ -16,6 +16,7 @@ public:
 	USpyCharacterMovementComponent();
 
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
 public:
 	FORCEINLINE void SetInputVector(FVector2D InInputVector) { SpyInputVector = InInputVector; }
@@ -23,7 +24,7 @@ public:
 public:
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
 	void StartWallClimb(const FVector& WallNormal);
-	void StopWallClimb();
+	void EndWallClimb();
 
 	float GetInputAngleByForward();
 

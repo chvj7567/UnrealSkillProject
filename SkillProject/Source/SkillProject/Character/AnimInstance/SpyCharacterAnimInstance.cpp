@@ -55,14 +55,14 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         AimPitch = FRotator::NormalizeAxis(Rot.Pitch);
     }
 
-    //# Set Velocity, GroundSpeed, WallClimbSpeed ShouldMove
+    //# Set Velocity, GroundSpeed, WallClimbSpeed, ShouldMove
     {
         Velocity = Player->GetVelocity();
         GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
         WallClimbSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Z, 2));
 
         FVector CurrentAcceleration = PlayerMovementComponent->GetCurrentAcceleration();
-        if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f)
+        if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f && IsLanding == false)
         {
             ShouldMove = true;
         }
@@ -71,8 +71,6 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
             ShouldMove = false;
         }
     }
-
-    UE_LOG(LogTemp, Warning, TEXT("InputAngle: %f, WallClimbSpeed: %f"), InputAngle, WallClimbSpeed);
 
     //# Set IsFalling And IsCrouching
     {
@@ -104,10 +102,18 @@ void USpyCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
 
 void USpyCharacterAnimInstance::AnimNotify_DisableMove(UAnimNotify* Notify)
 {
-    PlayerMovementComponent->DisableMovement();
+    if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(Player->GetPlayerState()))
+    {
+        if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb) == false)
+        {
+            IsLanding = true;
+            PlayerMovementComponent->DisableMovement();
+        }
+    }
 }
 
 void USpyCharacterAnimInstance::AnimNotify_AbleMove(UAnimNotify* Notify)
 {
-    PlayerMovementComponent->SetMovementMode(MOVE_Walking);
+    IsLanding = false;
+    PlayerMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
 }

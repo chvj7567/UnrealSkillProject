@@ -11,6 +11,9 @@
 USpyParkourManagerComponent::USpyParkourManagerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+    bIsWallClimbing = false;
+    HitNormalVector = FVector::ZeroVector;
 }
 
 void USpyParkourManagerComponent::BeginPlay()
@@ -28,7 +31,7 @@ void USpyParkourManagerComponent::TickComponent(float DeltaTime, ELevelTick Tick
 void USpyParkourManagerComponent::CheckAbleWallClimbing()
 {
     ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetOwner());
-    if (!SpyCharacter)
+    if (SpyCharacter == nullptr)
         return;
 
     FVector Start = SpyCharacter->GetActorLocation() + SpyCharacter->GetActorForwardVector() * 20.f;
@@ -63,7 +66,7 @@ void USpyParkourManagerComponent::CheckAbleWallClimbing()
         ASpyPlayerController* SpyPlayerController = SpyCharacter->GetController<ASpyPlayerController>();
         ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>();
 
-        if (!SpyPlayerController || !SpyPlayerState)
+        if (SpyPlayerController == nullptr || SpyPlayerState == nullptr)
             return;
 
         if (bIsWallClimbing)

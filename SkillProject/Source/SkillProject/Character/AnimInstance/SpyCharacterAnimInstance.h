@@ -56,6 +56,9 @@ protected:
 	bool IsCrouching;
 
 	UPROPERTY(BlueprintReadOnly)
+	bool IsLanding;
+
+	UPROPERTY(BlueprintReadOnly)
 	bool IsFalling;
 
 	UPROPERTY(BlueprintReadOnly)

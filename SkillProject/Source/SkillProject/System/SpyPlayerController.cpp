@@ -146,18 +146,14 @@ void ASpyPlayerController::SetMappingContext()
 						SpyMovementComponent->StartWallClimb(ParkourComponent->GetHitNormalVector());
 					}
 				}
-
-				UE_LOG(LogTemp, Warning, TEXT("WallClimbMappingContext"));
 				SetMappingContext(WallClimbMappingContext);
 			}
 			else
 			{
 				if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
 				{
-					SpyMovementComponent->StopWallClimb();
+					SpyMovementComponent->EndWallClimb();
 				}
-
-				UE_LOG(LogTemp, Warning, TEXT("DefaultMappingContext"));
 				SetMappingContext(DefaultMappingContext);
 			}
 		}

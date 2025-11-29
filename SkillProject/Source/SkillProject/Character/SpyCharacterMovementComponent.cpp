@@ -11,8 +11,6 @@ USpyCharacterMovementComponent::USpyCharacterMovementComponent()
 
 void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 {
-	Super::PhysCustom(DeltaTime, Iterations);
-
 	switch (CustomMovementMode)
 	{
 	case (uint8)ECustomMovementMode::MOVE_WallClimb:
@@ -28,6 +26,11 @@ void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteration
 	}
 }
 
+void USpyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+}
+
 void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterations)
 {
 	if (!CharacterOwner || !UpdatedComponent)
@@ -37,14 +40,13 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	const FVector UpVector = FVector::UpVector;
 
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
-
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 
 	const float ClimbSpeed = 100.f;
 	FVector DesiredVelocity =
 		WallUp * SpyInputVector.Y * ClimbSpeed +
 		WallRight * -SpyInputVector.X * ClimbSpeed;
-
+	
 	Velocity = DesiredVelocity;
 
 	FVector Delta = Velocity * DeltaTime;
@@ -73,9 +75,9 @@ void USpyCharacterMovementComponent::StartWallClimb(const FVector& WallNormal)
 	CharacterOwner->SetActorRotation(TargetRot);
 }
 
-void USpyCharacterMovementComponent::StopWallClimb()
+void USpyCharacterMovementComponent::EndWallClimb()
 {
-	UE_LOG(LogTemp, Warning, TEXT("StopWallClimb"));
+	UE_LOG(LogTemp, Warning, TEXT("EndWallClimb"));
 
 	GravityScale = 1.0f;
 	bOrientRotationToMovement = true;
