@@ -5,6 +5,8 @@
 #include "Util/DefineEnum.h"
 #include "Character/SpyCharacter.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
+
 USpyCharacterMovementComponent::USpyCharacterMovementComponent()
 {
 }
