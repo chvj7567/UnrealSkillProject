@@ -6,20 +6,22 @@
 #include "GameFramework/Actor.h"
 #include "TimerManager.h"
 
-void USpyCueActorPool::Initialize(UWorld* InWorld)
+void FSpyCueActorPool::Initialize(UWorld* InWorld)
 {
     World = InWorld;
 }
-AActor* USpyCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, const FTransform& SpawnTransform, int32 MaxPoolSize)
+
+AActor* FSpyCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayTag GameplayCueTag, const FTransform& SpawnTransform, int32 MaxPoolSize)
 {
     if (ActorClass == nullptr || World == nullptr)
         return nullptr;
 
+    UE_LOG(LogTemp, Warning, TEXT("USpyCueActorPool: Use Pool %s Class"), *ActorClass->GetName());
+
     FPoolEntry& Entry = Pools.FindOrAdd(ActorClass);
     Entry.MaxSize = FMath::Max(1, MaxPoolSize);
 
-    //# 사용 가능한 액터가 있는지 확인
-    while (Entry.Available.Num() > 0)
+    if (Entry.Available.Num() > 0)
     {
         //# 약한 포인터이기에 외부에서 파괴될 가능성 있음
         //# nullptr이면 무시
@@ -33,22 +35,25 @@ AActor* USpyCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, const FTr
             return Actor;
         }
     }
-
-    //# 풀의 MaxSize보다 적으면 만듦
-    int32 CurrentCount = Entry.InUse.Num() + Entry.Available.Num();
-    if (CurrentCount < Entry.MaxSize)
+    else
     {
-        FActorSpawnParameters SpawnParams;
-
-        //# 스폰 위치에 충돌 여부 상관 없이 스폰하도록 설정
-        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-        if (AActor* NewActor = World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams))
+        //# 풀의 MaxSize보다 적으면 만듦
+        int32 CurrentCount = Entry.InUse.Num() + Entry.Available.Num();
+        if (CurrentCount < Entry.MaxSize)
         {
-            Entry.InUse.Add(NewActor);
-            ActorToClass.Add(NewActor, ActorClass.Get());
+            FActorSpawnParameters SpawnParams;
 
-            return NewActor;
+            //# 스폰 위치에 충돌 여부 상관 없이 스폰하도록 설정
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+            if (AActor* NewActor = World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams))
+            {
+                Entry.Tag = GameplayCueTag;
+                Entry.InUse.Add(NewActor);
+                ActorToClass.Add(NewActor, ActorClass.Get());
+
+                return NewActor;
+            }
         }
     }
 
@@ -58,7 +63,7 @@ AActor* USpyCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, const FTr
     return nullptr;
 }
 
-void USpyCueActorPool::ReturnCueActor(AActor* Actor)
+void FSpyCueActorPool::ReturnCueActor(AActor* Actor)
 {
     if (Actor == nullptr)
         return;
@@ -91,7 +96,7 @@ void USpyCueActorPool::ReturnCueActor(AActor* Actor)
     }
 }
 
-void USpyCueActorPool::DeactivateActorForPool(AActor* Actor)
+void FSpyCueActorPool::DeactivateActorForPool(AActor* Actor)
 {
     if (Actor == nullptr)
         return;
@@ -100,12 +105,12 @@ void USpyCueActorPool::DeactivateActorForPool(AActor* Actor)
     Actor->SetActorEnableCollision(false);
     Actor->SetActorTickEnabled(false);
 
-    // 사용자 초기화 훅
+    //# 사용자 초기화
     // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
     // if (Poolable) Poolable->OnReturnedToPool();
 }
 
-void USpyCueActorPool::ActivateActorFromPool(AActor* Actor, const FTransform& SpawnTransform)
+void FSpyCueActorPool::ActivateActorFromPool(AActor* Actor, const FTransform& SpawnTransform)
 {
     if (Actor == nullptr)
         return;
@@ -115,12 +120,12 @@ void USpyCueActorPool::ActivateActorFromPool(AActor* Actor, const FTransform& Sp
     Actor->SetActorEnableCollision(true);
     Actor->SetActorTickEnabled(true);
 
-    // 사용자 초기화 훅
+    //# 사용자 초기화
     // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
     // if (Poolable) Poolable->OnAcquiredFromPool();
 }
 
-void USpyCueActorPool::Tick(float DeltaSeconds)
+void FSpyCueActorPool::Tick(float DeltaSeconds)
 {
     double Now = FPlatformTime::Seconds();
 
@@ -141,7 +146,7 @@ void USpyCueActorPool::Tick(float DeltaSeconds)
             Keep.Add(Actor);
         }
 
-        //# 위의 액터의 경우 사이즈 절반으로 유지
+        //# 오래된 액터의 경우 사이즈 절반으로 유지
         int32 MaxKeep = FMath::Max(0, Entry.MaxSize / 2);
         if (Keep.Num() > MaxKeep)
         {
@@ -160,7 +165,7 @@ void USpyCueActorPool::Tick(float DeltaSeconds)
     }
 }
 
-void USpyCueActorPool::FlushAll()
+void FSpyCueActorPool::Clear()
 {
     for (auto& Pair : Pools)
     {

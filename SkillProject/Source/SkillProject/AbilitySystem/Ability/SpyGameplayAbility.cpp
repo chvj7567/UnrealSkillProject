@@ -8,38 +8,38 @@
 
 void USpyGameplayAbility::OnMontageCompleted()
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnMontageCompleted"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility OnMontageCompleted"));
 }
 
 void USpyGameplayAbility::OnMontageCancelled()
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnMontageCancelled"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility OnMontageCancelled"));
 }
 
 void USpyGameplayAbility::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnWaitGameplayEvent"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility OnWaitGameplayEvent"));
 }
 
 void USpyGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    UE_LOG(LogTemp, Warning, TEXT("ActivateAbility called"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility ActivateAbility called"));
 }
 
 void USpyGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
     Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
-    UE_LOG(LogTemp, Warning, TEXT("CancelAbility called"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility CancelAbility called"));
 }
 
 bool USpyGameplayAbility::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
 {
     bool bResult = Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
 
-    UE_LOG(LogTemp, Warning, TEXT("CommitAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility CommitAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
 
     return bResult;
 }
@@ -48,14 +48,14 @@ void USpyGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, co
 {
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-    UE_LOG(LogTemp, Warning, TEXT("EndAbility called, WasCancelled: %s"), bWasCancelled ? TEXT("true") : TEXT("false"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility EndAbility called, WasCancelled: %s"), bWasCancelled ? TEXT("true") : TEXT("false"));
 }
 
 bool USpyGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
     bool bResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
-    UE_LOG(LogTemp, Warning, TEXT("CanActivateAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility CanActivateAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
 
     return bResult;
 }
@@ -64,7 +64,7 @@ bool USpyGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, con
 {
     bool bResult = Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags);
 
-    UE_LOG(LogTemp, Warning, TEXT("CheckCost called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility CheckCost called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
 
     return bResult;
 }
@@ -73,14 +73,14 @@ void USpyGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, con
 {
     Super::ApplyCost(Handle, ActorInfo, ActivationInfo);
 
-    UE_LOG(LogTemp, Warning, TEXT("ApplyCost called"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility ApplyCost called"));
 }
 
 const FGameplayTagContainer* USpyGameplayAbility::GetCooldownTags() const
 {
     const FGameplayTagContainer* Result = Super::GetCooldownTags();
 
-    UE_LOG(LogTemp, Warning, TEXT("GetCooldownTags called"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility GetCooldownTags called"));
 
     return Result;
 }
@@ -89,19 +89,21 @@ void USpyGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorIn
 {
     Super::OnGiveAbility(ActorInfo, Spec);
 
-    UE_LOG(LogTemp, Warning, TEXT("OnGiveAbility called"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility OnGiveAbility called"));
 }
 
 void USpyGameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
     Super::OnRemoveAbility(ActorInfo, Spec);
 
-    UE_LOG(LogTemp, Warning, TEXT("OnRemoveAbility called"));
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility OnRemoveAbility called"));
 }
 
 FGameplayEffectContextHandle USpyGameplayAbility::MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const
 {
     FGameplayEffectContextHandle ContextHandle = Super::MakeEffectContext(Handle, ActorInfo);
+
+    UE_LOG(LogTemp, Warning, TEXT("USpyGameplayAbility MakeEffectContext called"));
 
     FSpyGameplayEffectContext* EffectContext = FSpyGameplayEffectContext::ExtractEffectContext(ContextHandle);
     check(EffectContext);

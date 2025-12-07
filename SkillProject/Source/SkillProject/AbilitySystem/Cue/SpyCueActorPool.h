@@ -3,32 +3,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
-#include "SpyCueActorPool.generated.h"
+#include "Util/SpyGameplayTags.h"
 
 struct FPoolEntry
 {
     TArray<TWeakObjectPtr<AActor>> Available;
     TSet<TWeakObjectPtr<AActor>> InUse;
+    FGameplayTag Tag;
     int32 MaxSize = 16;
     double LastUsedTime = 0.0;
 };
 
-UCLASS()
-class SKILLPROJECT_API USpyCueActorPool : public UObject
+class FSpyCueActorPool
 {
-	GENERATED_BODY()
-	
 public:
     void Initialize(UWorld* InWorld);
-    AActor* RentCueActor(TSubclassOf<AActor> ActorClass, const FTransform& SpawnTransform, int32 MaxPoolSize = 16);
+    AActor* RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayTag GameplayCueTag, const FTransform& SpawnTransform, int32 MaxPoolSize = 16);
     void ReturnCueActor(AActor* Actor);
+    void Clear();
 
 protected:
     void DeactivateActorForPool(AActor* Actor);
     void ActivateActorFromPool(AActor* Actor, const FTransform& SpawnTransform);
     void Tick(float DeltaSeconds);
-    void FlushAll();
 
 protected:
     UWorld* World = nullptr;

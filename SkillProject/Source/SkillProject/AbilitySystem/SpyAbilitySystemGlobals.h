@@ -14,10 +14,9 @@ class SKILLPROJECT_API USpyAbilitySystemGlobals : public UAbilitySystemGlobals
 {
 	GENERATED_BODY()
 
-	USpyAbilitySystemGlobals()
-		: UAbilitySystemGlobals()
-	{
-	}
-	
+public:
+	USpyAbilitySystemGlobals();
+
+public:
 	virtual FGameplayEffectContext* AllocGameplayEffectContext() const override;
 };
