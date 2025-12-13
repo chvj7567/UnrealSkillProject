@@ -25,7 +25,8 @@ void USpyParkourManagerComponent::TickComponent(float DeltaTime, ELevelTick Tick
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    CheckAbleWallClimbing();
+    //# º® Ã¼Å©
+    //CheckAbleWallClimbing();
 }
 
 void USpyParkourManagerComponent::CheckAbleWallClimbing()

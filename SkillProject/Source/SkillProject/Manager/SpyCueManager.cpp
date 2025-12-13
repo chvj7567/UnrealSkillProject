@@ -11,9 +11,13 @@
 #include "Manager/SpyAssetManager.h"
 #include "Util/SpyGameplayTags.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCueManager)
+
 USpyCueManager::USpyCueManager()
 {
 	UE_LOG(LogTemp, Warning, TEXT("USpyCueManager Create"));
+
+	NotifyCueActorPool.Clear();
 }
 
 USpyCueManager* USpyCueManager::Get()
@@ -48,8 +52,6 @@ void USpyCueManager::OnCreated()
 
 	TagToCueActorClass.Add(SpyGameplayTags::GameplayCue_A, SoftClass);
 	TagToCueActorClass.Add(SpyGameplayTags::GameplayCue_B, SoftClass2);
-
-	NotifyCueActorPool.Clear();
 }
 
 void USpyCueManager::OnEngineInitComplete()
@@ -64,7 +66,7 @@ bool USpyCueManager::ShouldSuppressGameplayCues(AActor* TargetActor)
 
 void USpyCueManager::HandleGameplayCue(AActor* TargetActor, FGameplayTag GameplayCueTag, EGameplayCueEvent::Type EventType, const FGameplayCueParameters& Parameters, EGameplayCueExecutionOptions Options)
 {
-	Super::HandleGameplayCue(TargetActor, GameplayCueTag, EventType, Parameters, Options);
+	//Super::HandleGameplayCue(TargetActor, GameplayCueTag, EventType, Parameters, Options);
 
 	TSoftClassPtr<AActor>* CueClassPtr = TagToCueActorClass.Find(GameplayCueTag);
 	if (CueClassPtr == nullptr || TargetActor == nullptr)
@@ -74,21 +76,19 @@ void USpyCueManager::HandleGameplayCue(AActor* TargetActor, FGameplayTag Gamepla
 		return;
 
 	NotifyCueActorPool.Initialize(TargetActor->GetWorld());
-	AActor* CueActor = NotifyCueActorPool.RentCueActor(CueClassPtr->Get(), GameplayCueTag, TargetActor->GetActorTransform());
-	if (CueActor == nullptr)
-		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("HandleGameplayCue %s: %s"), *UEnum::GetValueAsString(EventType), *GameplayCueTag.ToString());
 
 	switch (EventType)
 	{
 	case EGameplayCueEvent::OnActive:
 	{
-		CueActor->SetActorLocation(TargetActor->GetActorLocation());
-		CueActor->SetActorHiddenInGame(false);
+		NotifyCueActorPool.RentCueActor(CueClassPtr->Get(), GameplayCueTag, TargetActor);
 	}
 		break;
 	case EGameplayCueEvent::Removed:
 	{
-		NotifyCueActorPool.ReturnCueActor(CueActor);
+		NotifyCueActorPool.ReturnCueActor(GameplayCueTag);
 	}
 		break;
 	default:
@@ -101,7 +101,7 @@ void USpyCueManager::OnGameplayTagLoaded(const FGameplayTag& Tag)
 	FScopeLock Lock(&LoadedGameplayTagsToProcessCS);
 	LoadedGameplayTagsToProcess.Add(Tag);
 
-	// 태그 처리 (Lyra는 Task로 비동기 처리)
+	//# 태그 처리 (Lyra는 Task로 비동기 처리)
 	if (IsGarbageCollecting() == false)
 	{
 		ProcessLoadedTags();

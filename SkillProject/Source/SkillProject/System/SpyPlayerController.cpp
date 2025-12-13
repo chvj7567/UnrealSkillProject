@@ -146,6 +146,7 @@ void ASpyPlayerController::SetMappingContext()
 						SpyMovementComponent->StartWallClimb(ParkourComponent->GetHitNormalVector());
 					}
 				}
+
 				SetMappingContext(WallClimbMappingContext);
 			}
 			else
@@ -154,6 +155,7 @@ void ASpyPlayerController::SetMappingContext()
 				{
 					SpyMovementComponent->EndWallClimb();
 				}
+
 				SetMappingContext(DefaultMappingContext);
 			}
 		}

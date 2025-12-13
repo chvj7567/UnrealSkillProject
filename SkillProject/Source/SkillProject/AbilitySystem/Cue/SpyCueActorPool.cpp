@@ -11,56 +11,47 @@ void FSpyCueActorPool::Initialize(UWorld* InWorld)
     World = InWorld;
 }
 
-AActor* FSpyCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayTag GameplayCueTag, const FTransform& SpawnTransform, int32 MaxPoolSize)
+AActor* FSpyCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayTag GameplayCueTag, AActor* TargetActor)
 {
     if (ActorClass == nullptr || World == nullptr)
         return nullptr;
 
-    UE_LOG(LogTemp, Warning, TEXT("USpyCueActorPool: Use Pool %s Class"), *ActorClass->GetName());
-
+    AActor* RentActor = nullptr;
     FPoolEntry& Entry = Pools.FindOrAdd(ActorClass);
-    Entry.MaxSize = FMath::Max(1, MaxPoolSize);
 
     if (Entry.Available.Num() > 0)
     {
         //# 약한 포인터이기에 외부에서 파괴될 가능성 있음
-        //# nullptr이면 무시
+        //# nullptr이면 RentCueActor 재호출
         TWeakObjectPtr<AActor> WeakA = Entry.Available.Pop();
         if (AActor* Actor = WeakA.Get())
         {
             Entry.InUse.Add(Actor);
-            ActorToClass.Add(Actor, ActorClass.Get());
-            ActivateActorFromPool(Actor, SpawnTransform);
-
-            return Actor;
+            RentActor = Actor;
+        }
+        else
+        {
+            RentActor = RentCueActor(ActorClass, GameplayCueTag, TargetActor);
         }
     }
     else
     {
-        //# 풀의 MaxSize보다 적으면 만듦
-        int32 CurrentCount = Entry.InUse.Num() + Entry.Available.Num();
-        if (CurrentCount < Entry.MaxSize)
+        FActorSpawnParameters SpawnParams;
+
+        //# 스폰 위치에 충돌 여부 상관 없이 스폰하도록 설정
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+        if (AActor* NewActor = World->SpawnActor<AActor>(ActorClass, TargetActor->GetActorTransform(), SpawnParams))
         {
-            FActorSpawnParameters SpawnParams;
-
-            //# 스폰 위치에 충돌 여부 상관 없이 스폰하도록 설정
-            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-            if (AActor* NewActor = World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams))
-            {
-                Entry.Tag = GameplayCueTag;
-                Entry.InUse.Add(NewActor);
-                ActorToClass.Add(NewActor, ActorClass.Get());
-
-                return NewActor;
-            }
+            Entry.Tag = GameplayCueTag;
+            Entry.InUse.Add(NewActor);
+            RentActor = NewActor;
         }
     }
 
-    //# 풀 MaxSize 오버 로그
-    UE_LOG(LogTemp, Warning, TEXT("USpyCueActorPool: Pool full for class %s"), *ActorClass->GetName());
+    ActivateActorFromPool(RentActor, TargetActor);
 
-    return nullptr;
+    return RentActor;
 }
 
 void FSpyCueActorPool::ReturnCueActor(AActor* Actor)
@@ -68,31 +59,37 @@ void FSpyCueActorPool::ReturnCueActor(AActor* Actor)
     if (Actor == nullptr)
         return;
 
-    TWeakObjectPtr<AActor> WeakActor = Actor;
-
-    UClass** ClassPtr = ActorToClass.Find(Actor);
-    if (ClassPtr == nullptr)
-    {
-        //# 풀 대상 액터가 아님
-        Actor->Destroy();
-        return;
-    }
-
-    UClass* ActorClass = *ClassPtr;
-    FPoolEntry* Entry = Pools.Find(ActorClass);
-    if (Entry == nullptr)
-    {
-        //# 풀 대상 액터였지만 이후에 풀 대상에서 빠진 상태
-        Actor->Destroy();
-        ActorToClass.Remove(Actor);
-        return;
-    }
-
-    if (Entry->InUse.Remove(Actor) > 0)
+    FPoolEntry* Entry = Pools.Find(Actor->GetClass());
+    if (Entry != nullptr && Entry->InUse.Remove(Actor) > 0)
     {
         Entry->Available.Add(Actor);
         DeactivateActorForPool(Actor);
         Entry->LastUsedTime = FPlatformTime::Seconds();
+    }
+    else
+    {
+        //# 풀 대상 액터가 아님
+        Actor->Destroy();
+    }
+}
+
+void FSpyCueActorPool::ReturnCueActor(FGameplayTag Tag)
+{
+    for (auto& Pool : Pools)
+    {
+        if (Pool.Value.Tag == Tag)
+        {
+            int Index = 0;
+            for (auto& UseActor : Pool.Value.InUse)
+            {
+                if (AActor* PoolActor = Pool.Value.InUse[Index].Get())
+                {
+                    ReturnCueActor(PoolActor);
+                }
+            }
+
+            ++Index;
+        }
     }
 }
 
@@ -110,12 +107,13 @@ void FSpyCueActorPool::DeactivateActorForPool(AActor* Actor)
     // if (Poolable) Poolable->OnReturnedToPool();
 }
 
-void FSpyCueActorPool::ActivateActorFromPool(AActor* Actor, const FTransform& SpawnTransform)
+void FSpyCueActorPool::ActivateActorFromPool(AActor* Actor, AActor* TargetActor)
 {
     if (Actor == nullptr)
         return;
 
-    Actor->SetActorTransform(SpawnTransform);
+    Actor->AttachToComponent(TargetActor->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+    //Actor->SetActorTransform(FTransform());
     Actor->SetActorHiddenInGame(false);
     Actor->SetActorEnableCollision(true);
     Actor->SetActorTickEnabled(true);
@@ -123,46 +121,6 @@ void FSpyCueActorPool::ActivateActorFromPool(AActor* Actor, const FTransform& Sp
     //# 사용자 초기화
     // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
     // if (Poolable) Poolable->OnAcquiredFromPool();
-}
-
-void FSpyCueActorPool::Tick(float DeltaSeconds)
-{
-    double Now = FPlatformTime::Seconds();
-
-    for (auto& Pair : Pools)
-    {
-        FPoolEntry& Entry = Pair.Value;
-        if ((Now - Entry.LastUsedTime) < UsedIntervalSeconds)
-            continue;
-
-        //# 마지막으로 사용한 지 오래된 액터 확인
-        TArray<TWeakObjectPtr<AActor>> Keep;
-        for (TWeakObjectPtr<AActor>& WeakA : Entry.Available)
-        {
-            AActor* Actor = WeakA.Get();
-            if (Actor == nullptr)
-                continue;
-
-            Keep.Add(Actor);
-        }
-
-        //# 오래된 액터의 경우 사이즈 절반으로 유지
-        int32 MaxKeep = FMath::Max(0, Entry.MaxSize / 2);
-        if (Keep.Num() > MaxKeep)
-        {
-            int32 NumToRemove = Keep.Num() - MaxKeep;
-            for (int32 i = 0; i < NumToRemove; ++i)
-            {
-                TWeakObjectPtr<AActor> WeakA = Entry.Available.Pop();
-                if (AActor* Actor = WeakA.Get())
-                {
-                    Actor->Destroy();
-                }
-            }
-        }
-
-        Entry.LastUsedTime = Now;
-    }
 }
 
 void FSpyCueActorPool::Clear()
@@ -193,5 +151,4 @@ void FSpyCueActorPool::Clear()
     }
 
     Pools.Empty();
-    ActorToClass.Empty();
 }
