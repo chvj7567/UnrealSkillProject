@@ -20,6 +20,13 @@ void USpyHPBar::UpdateHP(float InTargetHP, float InMaxHP)
 {
     if (PB_HPBar)
     {
-        PB_HPBar->SetPercent(InTargetHP / InMaxHP);
+        if (InTargetHP == 0 || InMaxHP == 0)
+        {
+            PB_HPBar->SetPercent(0);
+        }
+        else
+        {
+            PB_HPBar->SetPercent(InTargetHP / InMaxHP);
+        }
     }
 }

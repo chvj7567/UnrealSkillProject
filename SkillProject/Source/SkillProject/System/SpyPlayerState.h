@@ -8,6 +8,8 @@
 
 #include "SpyPlayerState.generated.h"
 
+class ASpyCharacter;
+
 UCLASS()
 class SKILLPROJECT_API ASpyPlayerState : public APlayerState
 {
@@ -24,12 +26,17 @@ public:
     void Multicast_Death();
 
 public:
+    void Initialize(ASpyCharacter* SpyCharacter);
+
     bool HasState(ESpyPlayerStateFlags Flag) const;
     void AddState(ESpyPlayerStateFlags Flag);
     void RemoveState(ESpyPlayerStateFlags Flag);
     void ToggleState(ESpyPlayerStateFlags Flag);
 
 protected:
+    UPROPERTY()
+    TObjectPtr<ASpyCharacter> SpyCharacter;
+
     UPROPERTY(Replicated)
     ESpyPlayerStateFlags PlayerFlags;
 };

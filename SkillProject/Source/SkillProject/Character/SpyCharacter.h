@@ -56,6 +56,7 @@ private:
 
 public:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
+	void Death();
 	void TestHit();
 	struct FGameplayTagContainer GetActivatableAbilityTags();
 
@@ -68,11 +69,10 @@ public:
 		bool bFromSweep,
 		const FHitResult& SweepResult);
 
-public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_UseSkill(FGameplayTag SkillTag);
 
-private:
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 

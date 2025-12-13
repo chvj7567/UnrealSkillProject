@@ -136,6 +136,7 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 	{
 		if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
 		{
+			SpyPlayerState->Initialize(this);
 			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
 		}
 	}
@@ -149,6 +150,7 @@ void ASpyCharacter::OnRep_PlayerState()
 	{
 		if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
 		{
+			SpyPlayerState->Initialize(this);
 			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
 		}
 	}
@@ -200,9 +202,9 @@ void ASpyCharacter::TestHit()
 	NewHealth = FMath::Max(NewHealth, 0.f);
 	AbilitySystemComponent->SetNumericAttributeBase(HealthAttr, NewHealth);
 
-	if (USpyHPBar* hpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 	{
-		hpBar->UpdateHP(NewHealth, CharacterAttributeSet->GetMaxHealth());
+		HpBar->UpdateHP(NewHealth, CharacterAttributeSet->GetMaxHealth());
 	}
 }
 
@@ -223,10 +225,18 @@ void ASpyCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 	}
 	else
 	{
-		if (USpyHPBar* hpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+		if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 		{
-			hpBar->UpdateHP(Data.NewValue, CharacterAttributeSet->GetMaxHealth());
+			HpBar->UpdateHP(Data.NewValue, CharacterAttributeSet->GetMaxHealth());
 		}
+	}
+}
+
+void ASpyCharacter::Death()
+{
+	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+	{
+		HpBar->UpdateHP(0, 0);
 	}
 }
 

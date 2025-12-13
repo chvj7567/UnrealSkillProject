@@ -3,6 +3,9 @@
 
 #include "System/SpyPlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "Character/SpyCharacter.h"
+#include "UI/SpyHPBar.h"
+#include "UI/SpyUserWidget.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerState)
 
@@ -21,6 +24,12 @@ void ASpyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 void ASpyPlayerState::Multicast_Death_Implementation()
 {
 	RemoveState(ESpyPlayerStateFlags::IsAlive);
+	SpyCharacter->Death();
+}
+
+void ASpyPlayerState::Initialize(ASpyCharacter* Character)
+{
+	SpyCharacter = Character;
 }
 
 bool ASpyPlayerState::HasState(ESpyPlayerStateFlags Flag) const
