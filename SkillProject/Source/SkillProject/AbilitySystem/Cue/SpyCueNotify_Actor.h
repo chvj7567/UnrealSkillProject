@@ -22,7 +22,8 @@ public:
 	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) override;
 	virtual bool WhileActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) override;
 	virtual bool OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) override;
-	
+	virtual void GameplayCueFinishedCallback() override;
+	virtual bool Recycle() override;
 public:
 	virtual void ResetCue();
 	void ReturnToPool();

@@ -25,6 +25,12 @@ void ASpyCueNotify_Actor::BeginPlay()
 
 bool ASpyCueNotify_Actor::OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
+	Super::OnActive_Implementation(MyTarget, Parameters);
+
+	//# 서버는 연출 스킵
+	if (GetNetMode() == NM_DedicatedServer)
+		return true;
+
 	if (ParticleSystemComponent == nullptr)
 		return false;
 
@@ -40,19 +46,35 @@ bool ASpyCueNotify_Actor::OnActive_Implementation(AActor* MyTarget, const FGamep
 
 bool ASpyCueNotify_Actor::WhileActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
-	return false;
+	return Super::WhileActive_Implementation(MyTarget, Parameters);
 }
 
 bool ASpyCueNotify_Actor::OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
-	if (ParticleSystemComponent && ParticleSystemComponent->IsActive())
+	if (ParticleSystemComponent == nullptr)
+		return false;
+
+	ParticleSystemComponent->DeactivateSystem();
+
+	if (bLooping == false)
 	{
-		ParticleSystemComponent->Deactivate();
+		ParticleSystemComponent->OnSystemFinished.RemoveDynamic(this, &ASpyCueNotify_Actor::OnParticleSystemFinished);
 	}
 
-	ReturnToPool();
+	//# 호출해줘야 풀링 재사용 정상 동작
+	K2_EndGameplayCue();
 
-	return true;
+	return Super::OnRemove_Implementation(MyTarget, Parameters);
+}
+
+void ASpyCueNotify_Actor::GameplayCueFinishedCallback()
+{
+	Super::GameplayCueFinishedCallback();
+}
+
+bool ASpyCueNotify_Actor::Recycle()
+{
+	return Super::Recycle();
 }
 
 void ASpyCueNotify_Actor::ResetCue()
@@ -78,5 +100,5 @@ void ASpyCueNotify_Actor::OnParticleSystemFinished(UParticleSystemComponent* Fin
 	if (FinishedComponent != ParticleSystemComponent)
 		return;
 
-	ReturnToPool();
+	//ReturnToPool();
 }

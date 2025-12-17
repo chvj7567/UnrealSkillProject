@@ -85,10 +85,11 @@ void FSpyCueActorPool::ReturnCueActor(FGameplayTag Tag)
                 if (AActor* PoolActor = Pool.Value.InUse[Index].Get())
                 {
                     ReturnCueActor(PoolActor);
+                    return;
                 }
-            }
 
-            ++Index;
+                ++Index;
+            }
         }
     }
 }

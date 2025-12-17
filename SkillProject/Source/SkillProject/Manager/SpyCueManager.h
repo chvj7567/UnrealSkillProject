@@ -19,22 +19,7 @@ public:
 	static USpyCueManager* Get();
 
 public:
-	virtual void OnCreated() override;
-	virtual void OnEngineInitComplete() override;
-	virtual bool ShouldSuppressGameplayCues(AActor* TargetActor) override;
 	virtual void HandleGameplayCue(AActor* TargetActor, FGameplayTag GameplayCueTag,
 		EGameplayCueEvent::Type EventType, const FGameplayCueParameters& Parameters,
 		EGameplayCueExecutionOptions Options) override;
-
-public:
-	void OnGameplayTagLoaded(const FGameplayTag& Tag);
-	void HandlePostLoadMap(UWorld* LoadedWorld);
-	void HandlePostGarbageCollect();
-	void ProcessLoadedTags();
-
-private:
-	FSpyCueActorPool NotifyCueActorPool;
-	TArray<FGameplayTag> LoadedGameplayTagsToProcess;
-	FCriticalSection LoadedGameplayTagsToProcessCS;
-	TMap<FGameplayTag, TSoftClassPtr<AActor>> TagToCueActorClass;
 };
