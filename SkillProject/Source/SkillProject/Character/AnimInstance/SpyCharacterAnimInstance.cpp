@@ -97,7 +97,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 
 void USpyCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
 {
-    Player->TestHit();
+    //Player->TestHit();
 }
 
 void USpyCharacterAnimInstance::AnimNotify_DisableMove(UAnimNotify* Notify)

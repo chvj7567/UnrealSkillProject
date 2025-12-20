@@ -115,8 +115,6 @@ TSubclassOf<AssetType> USpyAssetManager::GetSubclassByName(const FName& AssetNam
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(AssetName);
 
 	FString AssetPathString = AssetPath.GetAssetPathString();
-	AssetPathString.Append(TEXT("_C"));
-
 	FSoftClassPath ClassPath(AssetPathString);
 	TSoftClassPtr<AssetType> ClassPtr(ClassPath);
 	return GetSubclassByPath<AssetType>(ClassPtr, bKeepInMemory);

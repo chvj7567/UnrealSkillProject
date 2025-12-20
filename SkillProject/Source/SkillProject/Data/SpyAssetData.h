@@ -10,9 +10,6 @@ struct FAssetEntry
 public:
 	UPROPERTY(EditDefaultsOnly)
 	FName AssetName;
-
-	UPROPERTY(EditDefaultsOnly)
-	bool bIsBlueprint;
 	
 	UPROPERTY(EditDefaultsOnly)
 	FSoftObjectPath AssetPath;

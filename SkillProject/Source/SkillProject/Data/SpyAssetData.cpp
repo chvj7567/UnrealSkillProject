@@ -31,18 +31,7 @@ void USpyAssetData::PreSave(FObjectPreSaveContext ObjectSaveContext)
 		const FAssetSet& AssetSet = Pair.Value;
 		for (FAssetEntry AssetEntry : AssetSet.AssetEntries)
 		{
-			if (AssetEntry.bIsBlueprint)
-			{
-				FString Path = AssetEntry.AssetPath.ToString();
-				if (Path.EndsWith("_C") == false)
-				{
-					AssetNameToPath.Emplace(AssetEntry.AssetName, FSoftObjectPath(Path + TEXT("_C")));
-				}
-			}
-			else
-			{
-				AssetNameToPath.Emplace(AssetEntry.AssetName, AssetEntry.AssetPath);
-			}
+			AssetNameToPath.Emplace(AssetEntry.AssetName, AssetEntry.AssetPath);
 
 			for (const FName& Label : AssetEntry.AssetLabels)
 			{

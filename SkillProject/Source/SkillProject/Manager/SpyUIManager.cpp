@@ -41,11 +41,9 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 void USpyUIManager::OpenUI(ESpyUIType UIType)
 {
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	const USpyAssetData& AssetData = AssetManager.GetAssetData();
 
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
-	UClass* UI = AssetManager.GetAssetByName<UClass>(*EnumName);
-	if (UI)
+	if (TSubclassOf<USpyUserWidget> UI = AssetManager.GetSubclassByName<USpyUserWidget>(*EnumName))
 	{
 		//# 이미 열려있는 UI 확인
 		const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
