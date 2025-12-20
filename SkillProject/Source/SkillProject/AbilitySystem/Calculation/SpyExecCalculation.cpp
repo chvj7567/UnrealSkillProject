@@ -3,6 +3,9 @@
 
 #include "AbilitySystem/Calculation/SpyExecCalculation.h"
 #include "AbilitySystem/Attribute/SpyAttributeSet.h"
+#include "Manager/SpyAssetManager.h"
+#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/SpyGameplayEffectContext.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyExecCalculation)
 
@@ -60,8 +63,36 @@ void USpyExecCalculation::Execute_Implementation(const FGameplayEffectCustomExec
 		Damage = Health;
 	}
 
-	SourceASC->ApplyModToAttribute(USpyAttributeSet::GetManaAttribute(), EGameplayModOp::Additive, -Damage / 2.0f);
+	if (Damage >= 0.0f)
+		return;
+
+	//SourceASC->ApplyModToAttribute(USpyAttributeSet::GetManaAttribute(), EGameplayModOp::Additive, -Damage / 2.0f);
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(GetDamageCapture().HealthProperty, EGameplayModOp::Additive, Damage));
 	//OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(GetDamageCapture().ManaProperty, EGameplayModOp::Additive, -Damage / 2.0f));
+
+	USpyAssetManager& AssetManager = USpyAssetManager::Get();
+	TSubclassOf<UGameplayEffect> EffectClass = AssetManager.GetSubclassByName<UGameplayEffect>(FName("Mana"));
+
+	if (SourceASC && EffectClass) // ManaRecoveryGEClass는 TSubclassOf<UGameplayEffect>
+	{
+		// 3-1. GE Spec 생성
+		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
+		if (FSpyGameplayEffectContext* CustomContext = FSpyGameplayEffectContext::ExtractEffectContext(ContextHandle))
+		{
+			CustomContext->AddInstigator(SourceActor, SourceActor);
+		}
+
+		FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(EffectClass, 1.0f, ContextHandle);
+
+		if (SpecHandle.IsValid())
+		{
+			// 3-2. 계산된 마나 회복량을 SetByCaller로 주입 (태그는 프로젝트 설정에 맞게)
+			float RecoveryAmount = Damage * 0.5f;
+			SpecHandle.Data.Get()->SetSetByCallerMagnitude(SpyGameplayTags::Skill_E, -1.0f);
+
+			// 3-3. 시전자 자신에게 적용
+			SourceASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
 }
