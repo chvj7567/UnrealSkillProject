@@ -210,7 +210,7 @@ void ASpyCharacter::TestHit()
 
 void ASpyCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
-	if (Data.NewValue < 0.f)
+	if (Data.NewValue <= 0.f)
 	{
 		if (HasAuthority())
 		{

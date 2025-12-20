@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameplayModMagnitudeCalculation.h"
+#include "AbilitySystem/Calculation/SpyBaseMagnitudeCalculation.h"
+
 #include "SpyDamageCalculation.generated.h"
 
 UCLASS()
-class SKILLPROJECT_API USpyDamageCalculation : public UGameplayModMagnitudeCalculation
+class SKILLPROJECT_API USpyDamageCalculation : public USpyBaseMagnitudeCalculation
 {
 	GENERATED_BODY()
 	
@@ -16,8 +18,4 @@ public:
 
 public:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
-
-private:
-	FGameplayEffectAttributeCaptureDefinition HealthDef;
-	FGameplayEffectAttributeCaptureDefinition MaxHealthDef;
 };
