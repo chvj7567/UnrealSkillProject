@@ -10,7 +10,6 @@
 
 class USpyUserWidget;
 class ASkillProjectCharacter;
-class USpyUIDataAsset;
 class USpyAssetData;
 
 UCLASS()

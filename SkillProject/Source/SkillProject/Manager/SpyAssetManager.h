@@ -3,12 +3,12 @@
 #pragma once
 
 #include "Engine/AssetManager.h"
-#include "Data/SpyAssetData.h"
 #include "Templates/SubclassOf.h"
+#include "Data/SpyAssetData.h"
 
 #include "SpyAssetManager.generated.h"
 
-class USpyUIDataAsset;
+class USpyCharacterAssetData;
 
 UCLASS()
 class SKILLPROJECT_API USpyAssetManager : public UAssetManager
@@ -35,6 +35,7 @@ public:
 
 public:
 	const USpyAssetData& GetAssetData();
+	const USpyCharacterAssetData& GetCharacterAssetData();
 
 protected:
 	static UObject* SynchronousLoadAsset(const FSoftObjectPath& AssetPath);
@@ -100,7 +101,6 @@ TSubclassOf<AssetType> USpyAssetManager::GetSubclassByPath(const TSoftClassPtr<A
 
 		if (LoadedSubclass && bKeepInMemory)
 		{
-			// Added to loaded asset list.
 			Get().AddLoadedAsset(Cast<UObject>(LoadedSubclass));
 		}
 	}
@@ -115,6 +115,8 @@ TSubclassOf<AssetType> USpyAssetManager::GetSubclassByName(const FName& AssetNam
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(AssetName);
 
 	FString AssetPathString = AssetPath.GetAssetPathString();
+	AssetPathString.Append(TEXT("_C"));
+
 	FSoftClassPath ClassPath(AssetPathString);
 	TSoftClassPtr<AssetType> ClassPtr(ClassPath);
 	return GetSubclassByPath<AssetType>(ClassPtr, bKeepInMemory);

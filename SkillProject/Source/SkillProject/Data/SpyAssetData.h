@@ -13,9 +13,6 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly)
 	FSoftObjectPath AssetPath;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FName> AssetLabels;
 };
 
 USTRUCT()
@@ -44,7 +41,6 @@ protected:
 	
 public:
 	FSoftObjectPath GetAssetPathByName(const FName& AssetName) const;
-	const FAssetSet& GetAssetSetByLabel(const FName& Label) const;
 	
 private:
 	UPROPERTY(EditDefaultsOnly)
@@ -52,7 +48,4 @@ private:
 	
 	UPROPERTY()
 	TMap<FName, FSoftObjectPath> AssetNameToPath;
-
-	UPROPERTY()
-	TMap<FName, FAssetSet> AssetLabelToSet;
 };

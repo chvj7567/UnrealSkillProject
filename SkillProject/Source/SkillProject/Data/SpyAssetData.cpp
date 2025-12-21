@@ -19,7 +19,6 @@ void USpyAssetData::PreSave(FObjectPreSaveContext ObjectSaveContext)
 	Super::PreSave(ObjectSaveContext);
 
 	AssetNameToPath.Empty();
-	AssetLabelToSet.Empty();
 
 	AssetGroupNameToSet.KeySort([](const FName& A, const FName& B)
 	{
@@ -32,11 +31,6 @@ void USpyAssetData::PreSave(FObjectPreSaveContext ObjectSaveContext)
 		for (FAssetEntry AssetEntry : AssetSet.AssetEntries)
 		{
 			AssetNameToPath.Emplace(AssetEntry.AssetName, AssetEntry.AssetPath);
-
-			for (const FName& Label : AssetEntry.AssetLabels)
-			{
-				AssetLabelToSet.FindOrAdd(Label).AssetEntries.Emplace(AssetEntry);
-			}
 		}
 	}
 }
@@ -74,11 +68,4 @@ FSoftObjectPath USpyAssetData::GetAssetPathByName(const FName& AssetName) const
 	const FSoftObjectPath* AssetPath = AssetNameToPath.Find(AssetName);
 	ensureAlwaysMsgf(AssetPath, TEXT("Can't find Asset Path from Asset Name [%s]."), *AssetName.ToString());
 	return *AssetPath;
-}
-
-const FAssetSet& USpyAssetData::GetAssetSetByLabel(const FName& Label) const
-{
-	const FAssetSet* AssetSet = AssetLabelToSet.Find(Label);
-	ensureAlwaysMsgf(AssetSet, TEXT("Can't find Asset Set from Label [%s]."), *Label.ToString());
-	return *AssetSet;
 }

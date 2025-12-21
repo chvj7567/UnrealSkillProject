@@ -4,11 +4,14 @@
 #include "AbilitySystem/Ability/SpyGameplayAbility_SkillA.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "Character/SpyCharacter.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/SpyGameplayEffectContext.h"
 #include "AbilitySystemComponent.h"
+#include "Character/SpyCharacter.h"
+#include "Manager/SpyAssetManager.h"
+#include "Data/SpyCharacterAssetData.h"
+#include "Util/DefineEnum.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_SkillA)
 
@@ -69,12 +72,18 @@ void USpyGameplayAbility_SkillA::ActivateAbility(const FGameplayAbilitySpecHandl
             WaitTask->ReadyForActivation();
         }
 
-        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
+        USpyAssetManager& AssetManager = USpyAssetManager::Get();
+        const USpyCharacterAssetData& CharacterData = AssetManager.GetCharacterAssetData();
+        FName SkillAName = CharacterData.Get().GetSkillAssetNameByType(ESpyCharacterType::Normal, ESpySkillType::SkillA);
+        if (UAnimMontage* Montage = AssetManager.GetAssetByName<UAnimMontage>(SkillAName))
         {
-            MontageTask->OnCompleted.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCompleted);
-            MontageTask->OnInterrupted.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCancelled);
-            MontageTask->OnCancelled.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCancelled);
-            MontageTask->ReadyForActivation();
+            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, Montage))
+            {
+                MontageTask->OnCompleted.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCompleted);
+                MontageTask->OnInterrupted.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCancelled);
+                MontageTask->OnCancelled.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCancelled);
+                MontageTask->ReadyForActivation();
+            }
         }
     }
     else

@@ -4,7 +4,6 @@
 #include "Manager/SpyUIManager.h"
 #include "Manager/SpyAssetManager.h"
 #include "Blueprint/UserWidget.h"
-#include "UI/SpyUIDataAsset.h"
 #include "UI/SpyUserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Data/SpyAssetData.h"
@@ -133,8 +132,7 @@ void USpyUIManager::OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetCompone
 		return;
 
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
-	UClass* UI = AssetManager.GetAssetByName<UClass>(*EnumName);
-	if (UI)
+	if (TSubclassOf<USpyUserWidget> UI = AssetManager.GetSubclassByName<USpyUserWidget>(*EnumName))
 	{
 		WidgetComponent->SetWidgetClass(UI);
 		WidgetComponent->SetWidgetSpace(Space);

@@ -26,6 +26,22 @@ ENUM_CLASS_FLAGS(ESpyPlayerStateFlags);
 UENUM(BlueprintType)
 enum class ECustomMovementMode : uint8
 {
-    MOVE_Default          UMETA(DisplayName = "Default"),
+    MOVE_Default       UMETA(DisplayName = "Default"),
     MOVE_WallClimb     UMETA(DisplayName = "Wall Climb"),
+};
+
+UENUM(BlueprintType)
+enum class ESpyCharacterType : uint8
+{
+    Normal         UMETA(DisplayName = "Normal"),
+};
+
+UENUM(BlueprintType)
+enum class ESpySkillType : uint8
+{
+    SkillA         UMETA(DisplayName = "SkillA"),
+    SkillB         UMETA(DisplayName = "SkillB"),
+    SkillC         UMETA(DisplayName = "SkillC"),
+    SkillD         UMETA(DisplayName = "SkillD"),
+    SkillE         UMETA(DisplayName = "SkillE"),
 };

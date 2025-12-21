@@ -3,7 +3,7 @@
 
 #include "Manager/SpyAssetManager.h"
 #include "Blueprint/UserWidget.h"
-#include "UI/SpyUIDataAsset.h"
+#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAssetManager)
 
@@ -65,4 +65,20 @@ const USpyAssetData& USpyAssetManager::GetAssetData()
     }
 
     return *CastChecked<USpyAssetData>(AssetPtr.Get());
+}
+
+const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
+{
+    FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyCharacterAssetData"), TEXT("SpyCharacterAssetData"));
+
+    USpyAssetManager& AssetManager = USpyAssetManager::Get();
+
+    FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(AssetId));
+
+    if (AssetPtr.IsPending())
+    {
+        AssetPtr.LoadSynchronous();
+    }
+
+    return *CastChecked<USpyCharacterAssetData>(AssetPtr.Get());
 }
