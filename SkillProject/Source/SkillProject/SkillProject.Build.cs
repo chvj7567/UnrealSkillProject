@@ -23,7 +23,8 @@ public class SkillProject : ModuleRules
             "ModularGameplay",
             "UMG",
             "Slate",
-            "SlateCore"
+            "SlateCore",
+            "Niagara"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[]
