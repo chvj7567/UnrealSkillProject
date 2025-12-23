@@ -39,10 +39,8 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 
 void USpyUIManager::OpenUI(ESpyUIType UIType)
 {
-	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
-	if (TSubclassOf<USpyUserWidget> UI = AssetManager.GetSubclassByName<USpyUserWidget>(*EnumName))
+	if (TSubclassOf<USpyUserWidget> UI = USpyAssetManager::GetSubclassByName<USpyUserWidget>(*EnumName))
 	{
 		//# 이미 열려있는 UI 확인
 		const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
@@ -132,7 +130,7 @@ void USpyUIManager::OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetCompone
 		return;
 
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
-	if (TSubclassOf<USpyUserWidget> UI = AssetManager.GetSubclassByName<USpyUserWidget>(*EnumName))
+	if (TSubclassOf<USpyUserWidget> UI = USpyAssetManager::GetSubclassByName<USpyUserWidget>(*EnumName))
 	{
 		WidgetComponent->SetWidgetClass(UI);
 		WidgetComponent->SetWidgetSpace(Space);

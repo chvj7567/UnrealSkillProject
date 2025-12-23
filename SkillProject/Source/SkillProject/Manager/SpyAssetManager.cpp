@@ -54,10 +54,7 @@ void USpyAssetManager::AddLoadedAsset(const UObject* Asset)
 const USpyAssetData& USpyAssetManager::GetAssetData()
 {
     FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyAssetData"), TEXT("SpyAssetData"));
-
-    USpyAssetManager& AssetManager = USpyAssetManager::Get();
-
-    FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(AssetId));
+    FSoftObjectPtr AssetPtr(Get().GetPrimaryAssetPath(AssetId));
 
     if (AssetPtr.IsPending())
     {
@@ -70,10 +67,7 @@ const USpyAssetData& USpyAssetManager::GetAssetData()
 const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
 {
     FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyCharacterAssetData"), TEXT("SpyCharacterAssetData"));
-
-    USpyAssetManager& AssetManager = USpyAssetManager::Get();
-
-    FSoftObjectPtr AssetPtr(AssetManager.GetPrimaryAssetPath(AssetId));
+    FSoftObjectPtr AssetPtr(Get().GetPrimaryAssetPath(AssetId));
 
     if (AssetPtr.IsPending())
     {
@@ -81,4 +75,9 @@ const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
     }
 
     return *CastChecked<USpyCharacterAssetData>(AssetPtr.Get());
+}
+
+FName USpyAssetManager::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType)
+{
+    return Get().GetCharacterAssetData().GetSkillAssetNameByType(InCharacterType, InSkillType);
 }

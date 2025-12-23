@@ -5,6 +5,7 @@
 #include "Engine/AssetManager.h"
 #include "Templates/SubclassOf.h"
 #include "Data/SpyAssetData.h"
+#include "Util/DefineEnum.h"
 
 #include "SpyAssetManager.generated.h"
 
@@ -36,6 +37,9 @@ public:
 public:
 	const USpyAssetData& GetAssetData();
 	const USpyCharacterAssetData& GetCharacterAssetData();
+
+public:
+	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType);
 
 protected:
 	static UObject* SynchronousLoadAsset(const FSoftObjectPath& AssetPath);

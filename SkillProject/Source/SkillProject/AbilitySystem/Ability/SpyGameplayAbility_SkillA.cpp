@@ -72,10 +72,8 @@ void USpyGameplayAbility_SkillA::ActivateAbility(const FGameplayAbilitySpecHandl
             WaitTask->ReadyForActivation();
         }
 
-        USpyAssetManager& AssetManager = USpyAssetManager::Get();
-        const USpyCharacterAssetData& CharacterData = AssetManager.GetCharacterAssetData();
-        FName SkillAName = CharacterData.Get().GetSkillAssetNameByType(ESpyCharacterType::Normal, ESpySkillType::SkillA);
-        if (UAnimMontage* Montage = AssetManager.GetAssetByName<UAnimMontage>(SkillAName))
+        FName SkillAName = USpyAssetManager::Get().GetSkillAssetNameByType(ESpyCharacterType::Normal, ESpySkillType::SkillA);
+        if (UAnimMontage* Montage = USpyAssetManager::GetAssetByName<UAnimMontage>(SkillAName))
         {
             if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, Montage))
             {
