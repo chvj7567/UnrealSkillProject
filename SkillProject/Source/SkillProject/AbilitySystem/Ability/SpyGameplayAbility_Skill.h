@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Ability/SpyGameplayAbility.h"
+#include "Util/DefineEnum.h"
 
-#include "SpyGameplayAbility_SkillA.generated.h"
+#include "SpyGameplayAbility_Skill.generated.h"
 
 UCLASS()
-class SKILLPROJECT_API USpyGameplayAbility_SkillA : public USpyGameplayAbility
+class SKILLPROJECT_API USpyGameplayAbility_Skill : public USpyGameplayAbility
 {
 	GENERATED_BODY()
 	
@@ -23,4 +24,11 @@ public:
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
+
+private:
+    UPROPERTY(EditAnywhere)
+    ESpyCharacterType CharacterType;
+
+    UPROPERTY(EditAnywhere)
+    ESpySkillType SkillType;
 };

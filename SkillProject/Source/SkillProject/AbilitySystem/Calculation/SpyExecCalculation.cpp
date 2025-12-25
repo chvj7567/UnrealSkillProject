@@ -83,7 +83,7 @@ void USpyExecCalculation::Execute_Implementation(const FGameplayEffectCustomExec
 		if (SpecHandle.IsValid())
 		{
 			float RecoveryAmount = Damage * 0.5f;
-			SpecHandle.Data.Get()->SetSetByCallerMagnitude(SpyGameplayTags::Skill_A, -1.0f);
+			SpecHandle.Data.Get()->SetSetByCallerMagnitude(SpyGameplayTags::Skill_A, -10.0f);
 
 			SourceASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}

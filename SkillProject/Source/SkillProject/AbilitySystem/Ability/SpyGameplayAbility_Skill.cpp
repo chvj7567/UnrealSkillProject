@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AbilitySystem/Ability/SpyGameplayAbility_SkillA.h"
+#include "AbilitySystem/Ability/SpyGameplayAbility_Skill.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemGlobals.h"
@@ -11,21 +11,20 @@
 #include "Character/SpyCharacter.h"
 #include "Manager/SpyAssetManager.h"
 #include "Data/SpyCharacterAssetData.h"
-#include "Util/DefineEnum.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_SkillA)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_Skill)
 
-void USpyGameplayAbility_SkillA::OnMontageCompleted()
+void USpyGameplayAbility_Skill::OnMontageCompleted()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USpyGameplayAbility_SkillA::OnMontageCancelled()
+void USpyGameplayAbility_Skill::OnMontageCancelled()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USpyGameplayAbility_SkillA::OnWaitGameplayEvent(FGameplayEventData Payload)
+void USpyGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
     if (GameplayEffectClass == nullptr)
         return;
@@ -56,7 +55,7 @@ void USpyGameplayAbility_SkillA::OnWaitGameplayEvent(FGameplayEventData Payload)
     }
 }
 
-void USpyGameplayAbility_SkillA::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void USpyGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -68,18 +67,18 @@ void USpyGameplayAbility_SkillA::ActivateAbility(const FGameplayAbilitySpecHandl
 
         if (UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitGameplayTag, nullptr, false, false))
         {
-            WaitTask->EventReceived.AddDynamic(this, &USpyGameplayAbility_SkillA::OnWaitGameplayEvent);
+            WaitTask->EventReceived.AddDynamic(this, &USpyGameplayAbility_Skill::OnWaitGameplayEvent);
             WaitTask->ReadyForActivation();
         }
 
-        FName SkillAName = USpyAssetManager::Get().GetSkillAssetNameByType(ESpyCharacterType::Normal, ESpySkillType::SkillA);
+        FName SkillAName = USpyAssetManager::Get().GetSkillAssetNameByType(CharacterType, SkillType);
         if (UAnimMontage* Montage = USpyAssetManager::GetAssetByName<UAnimMontage>(SkillAName))
         {
             if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, Montage))
             {
-                MontageTask->OnCompleted.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCompleted);
-                MontageTask->OnInterrupted.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCancelled);
-                MontageTask->OnCancelled.AddDynamic(this, &USpyGameplayAbility_SkillA::OnMontageCancelled);
+                MontageTask->OnCompleted.AddDynamic(this, &USpyGameplayAbility_Skill::OnMontageCompleted);
+                MontageTask->OnInterrupted.AddDynamic(this, &USpyGameplayAbility_Skill::OnMontageCancelled);
+                MontageTask->OnCancelled.AddDynamic(this, &USpyGameplayAbility_Skill::OnMontageCancelled);
                 MontageTask->ReadyForActivation();
             }
         }

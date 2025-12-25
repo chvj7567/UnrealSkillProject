@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Util/DefineEnum.h"
 
 #include "SpyPlayerController.generated.h"
 
@@ -27,11 +28,16 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	
 protected:
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	void JumpPressed(const FInputActionValue& Value);
-	void JumpReleased(const FInputActionValue& Value);
-	void UseSkill(const FInputActionValue& Value);
+	void Move(const FInputActionValue& InValue);
+	void Look(const FInputActionValue& InValue);
+	void JumpPressed(const FInputActionValue& InValue);
+	void JumpReleased(const FInputActionValue& InValue);
+	
+	void UseSkillA(const FInputActionValue& InValue);
+	void UseSkillB(const FInputActionValue& InValue);
+	void UseSkillC(const FInputActionValue& InValue);
+	void UseSkillD(const FInputActionValue& InValue);
+	void UseSkillE(const FInputActionValue& InValue);
 
 	void SetMappingContext(UInputMappingContext* InMappingContext);
 
@@ -55,5 +61,17 @@ private:
 	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SkillAction;
+	TObjectPtr<UInputAction> SkillAAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> SkillBAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> SkillCAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> SkillDAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> SkillEAction;
 };

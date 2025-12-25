@@ -44,7 +44,11 @@ void ASpyPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASpyPlayerController::JumpPressed);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASpyPlayerController::JumpReleased);
 		
-		EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkill);
+		EnhancedInputComponent->BindAction(SkillAAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillA);
+		EnhancedInputComponent->BindAction(SkillBAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillB);
+		EnhancedInputComponent->BindAction(SkillCAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillC);
+		EnhancedInputComponent->BindAction(SkillDAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillD);
+		EnhancedInputComponent->BindAction(SkillEAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillE);
 	}
 }
 
@@ -58,9 +62,9 @@ void ASpyPlayerController::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 }
 
-void ASpyPlayerController::Move(const FInputActionValue& Value)
+void ASpyPlayerController::Move(const FInputActionValue& InValue)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	FVector2D MovementVector = InValue.Get<FVector2D>();
 
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
@@ -83,9 +87,9 @@ void ASpyPlayerController::Move(const FInputActionValue& Value)
 	}
 }
 
-void ASpyPlayerController::Look(const FInputActionValue& Value)
+void ASpyPlayerController::Look(const FInputActionValue& InValue)
 {
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	FVector2D LookAxisVector = InValue.Get<FVector2D>();
 
 	if (APawn* ControlledPawn = GetPawn())
 	{
@@ -94,7 +98,7 @@ void ASpyPlayerController::Look(const FInputActionValue& Value)
 	}
 }
 
-void ASpyPlayerController::JumpPressed(const FInputActionValue& Value)
+void ASpyPlayerController::JumpPressed(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
@@ -102,7 +106,7 @@ void ASpyPlayerController::JumpPressed(const FInputActionValue& Value)
 	}
 }
 
-void ASpyPlayerController::JumpReleased(const FInputActionValue& Value)
+void ASpyPlayerController::JumpReleased(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
@@ -110,11 +114,43 @@ void ASpyPlayerController::JumpReleased(const FInputActionValue& Value)
 	}
 }
 
-void ASpyPlayerController::UseSkill(const FInputActionValue& Value)
+void ASpyPlayerController::UseSkillA(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
 		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_A);
+	}
+}
+
+void ASpyPlayerController::UseSkillB(const FInputActionValue& InValue)
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_B);
+	}
+}
+
+void ASpyPlayerController::UseSkillC(const FInputActionValue& InValue)
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_C);
+	}
+}
+
+void ASpyPlayerController::UseSkillD(const FInputActionValue& InValue)
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_D);
+	}
+}
+
+void ASpyPlayerController::UseSkillE(const FInputActionValue& InValue)
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_E);
 	}
 }
 

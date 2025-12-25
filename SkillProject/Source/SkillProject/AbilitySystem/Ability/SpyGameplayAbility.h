@@ -15,9 +15,6 @@ class SKILLPROJECT_API USpyGameplayAbility : public UGameplayAbility
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
-    TObjectPtr<UAnimMontage> SkillMontage;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
     FGameplayTag WaitGameplayTag;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
