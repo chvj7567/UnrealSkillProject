@@ -24,9 +24,27 @@ EDataValidationResult USpyCharacterAssetData::IsDataValid(FDataValidationContext
 {
 	EDataValidationResult Result = Super::IsDataValid(Context);
 
+	for (FCharacterAssetEntry AssetEntry : CharacterAssets.AssetEntries)
+	{
+		for (FSkillAssetEntry SkillEntry : AssetEntry.Skills)
+		{
+			if (SkillEntry.Name.IsNone())
+			{
+				Context.AddError(FText::FromString(FString::Printf(TEXT("Skill Name is None : [CharacterType : %s]"), *UEnum::GetValueAsString(AssetEntry.CharacterType))));
+				Result = EDataValidationResult::Invalid;
+			}
+
+			if (SkillEntry.AssetPath.IsValid() == false)
+			{
+				Context.AddError(FText::FromString(FString::Printf(TEXT("Skill Path is Invalid : [CharacterType : %s]"), *UEnum::GetValueAsString(AssetEntry.CharacterType))));
+				Result = EDataValidationResult::Invalid;
+			}
+		}
+	}
+
 	return Result;
 }
-#endif // WITH_EDITOR
+#endif
 
 FName USpyCharacterAssetData::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType) const
 {
