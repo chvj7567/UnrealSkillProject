@@ -22,6 +22,7 @@ class UAbilitySystemComponent;
 class USpyAttributeSet;
 class USpyAnimManagerComponent;
 class USpyParkourManagerComponent;
+class ASpyWeapon;
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
@@ -105,5 +106,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpyCharacterMovementComponent> SpyCharacterMovementCompnent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<ASpyWeapon> SpyWeaponClass;
 };
 

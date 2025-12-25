@@ -19,9 +19,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	ESpySkillType SkillType;
-
-	UPROPERTY(EditDefaultsOnly)
-	FSoftObjectPath AssetPath;
 };
 
 USTRUCT()
@@ -63,7 +60,6 @@ protected:
 
 public:
 	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType) const;
-	FSoftObjectPath GetSkillAssetPathByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType) const;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

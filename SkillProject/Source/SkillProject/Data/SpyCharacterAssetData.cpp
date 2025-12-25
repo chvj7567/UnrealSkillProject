@@ -33,12 +33,6 @@ EDataValidationResult USpyCharacterAssetData::IsDataValid(FDataValidationContext
 				Context.AddError(FText::FromString(FString::Printf(TEXT("Skill Name is None : [CharacterType : %s]"), *UEnum::GetValueAsString(AssetEntry.CharacterType))));
 				Result = EDataValidationResult::Invalid;
 			}
-
-			if (SkillEntry.AssetPath.IsValid() == false)
-			{
-				Context.AddError(FText::FromString(FString::Printf(TEXT("Skill Path is Invalid : [CharacterType : %s]"), *UEnum::GetValueAsString(AssetEntry.CharacterType))));
-				Result = EDataValidationResult::Invalid;
-			}
 		}
 	}
 
@@ -63,23 +57,4 @@ FName USpyCharacterAssetData::GetSkillAssetNameByType(ESpyCharacterType InCharac
 	}
 
 	return FName();
-}
-
-FSoftObjectPath USpyCharacterAssetData::GetSkillAssetPathByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType) const
-{
-	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
-	{
-		if (CharacterAsset.CharacterType == InCharacterType)
-		{
-			for (auto& Skill : CharacterAsset.Skills)
-			{
-				if (Skill.SkillType == InSkillType)
-				{
-					return Skill.AssetPath;
-				}
-			}
-		}
-	}
-
-	return FSoftObjectPath();
 }

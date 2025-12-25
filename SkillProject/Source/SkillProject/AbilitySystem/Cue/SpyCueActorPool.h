@@ -27,8 +27,10 @@ protected:
     void ActivateActorFromPool(AActor* Actor, AActor* TargetActor);
 
 protected:
+    UPROPERTY()
     UWorld* World = nullptr;
     
+    UPROPERTY()
     TMap<UClass*, FPoolEntry> Pools;
 
     float UsedIntervalSeconds = 60.f;

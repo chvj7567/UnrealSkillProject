@@ -23,6 +23,7 @@
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyAnimManagerComponent.h"
+#include "Item/SpyWeapon.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -116,6 +117,28 @@ void ASpyCharacter::BeginPlay()
 	{
 		SpyAnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
 	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.Instigator = Cast<APawn>(GetOwner());
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	FVector SpawnLocation = FVector::ZeroVector;
+	FRotator SpawnRotation = FRotator::ZeroRotator;
+	ASpyWeapon* NewWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, SpawnLocation, SpawnRotation, SpawnParams);
+
+	if (!GetMesh()->DoesSocketExist(TEXT("LeftHandSocket")))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Socket 'LeftHandSocket'Not Find"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Socket 'LeftHandSocket' Find"));
+	}
+
+	NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
+	NewWeapon->SetActorRelativeLocation(FVector::ZeroVector);
+	NewWeapon->SetActorRelativeRotation(FRotator::ZeroRotator);
 }
 
 void ASpyCharacter::PostInitializeComponents()
