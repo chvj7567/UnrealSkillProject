@@ -11,15 +11,21 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_D, "Skill.D");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_E, "Skill.E");
 
-	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_A, "SkillDamage.A");
-	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_B, "SkillDamage.B");
-	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_C, "SkillDamage.C");
-	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_D, "SkillDamage.D");
-	UE_DEFINE_GAMEPLAY_TAG(SkillDamage_E, "SkillDamage.E");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_A_Damage, "GameplayCue.A.Damage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_B_Damage, "GameplayCue.B.Damage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_C_Damage, "GameplayCue.C.Damage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_D_Damage, "GameplayCue.D.Damage");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_E_Damage, "GameplayCue.E.Damage");
 
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_A, "GameplayCue.A");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_B, "GameplayCue.B");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_C, "GameplayCue.C");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_D, "GameplayCue.D");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_E, "GameplayCue.E");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_A_Cost, "GameplayCue.A.Cost");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_B_Cost, "GameplayCue.B.Cost");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_C_Cost, "GameplayCue.C.Cost");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_D_Cost, "GameplayCue.D.Cost");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_E_Cost, "GameplayCue.E.Cost");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_A_Cooldown, "GameplayCue.A.Cooldown");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_B_Cooldown, "GameplayCue.B.Cooldown");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_C_Cooldown, "GameplayCue.C.Cooldown");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_D_Cooldown, "GameplayCue.D.Cooldown");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_E_Cooldown, "GameplayCue.E.Cooldown");
 }

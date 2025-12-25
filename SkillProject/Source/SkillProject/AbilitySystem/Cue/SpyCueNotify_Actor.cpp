@@ -77,28 +77,11 @@ bool ASpyCueNotify_Actor::Recycle()
 	return Super::Recycle();
 }
 
-void ASpyCueNotify_Actor::ResetCue()
-{
-	if (ParticleSystemComponent == nullptr)
-		return;
-
-	ParticleSystemComponent->Deactivate();
-	ParticleSystemComponent->OnSystemFinished.Clear();
-}
-
-void ASpyCueNotify_Actor::ReturnToPool()
-{
-	ResetCue();
-
-	// 실제 풀 반환은 GameplayCueManager가 관리
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
-}
-
 void ASpyCueNotify_Actor::OnParticleSystemFinished(UParticleSystemComponent* FinishedComponent)
 {
 	if (FinishedComponent != ParticleSystemComponent)
 		return;
 
-	//ReturnToPool();
+	ParticleSystemComponent->Deactivate();
+	ParticleSystemComponent->OnSystemFinished.Clear();
 }
