@@ -6,6 +6,7 @@
 #include "Templates/SubclassOf.h"
 #include "Data/SpyAssetData.h"
 #include "Util/DefineEnum.h"
+#include "NativeGameplayTags.h"
 
 #include "SpyAssetManager.generated.h"
 
@@ -39,7 +40,7 @@ public:
 	const USpyCharacterAssetData& GetCharacterAssetData();
 
 public:
-	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType);
+	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag);
 
 protected:
 	static UObject* SynchronousLoadAsset(const FSoftObjectPath& AssetPath);

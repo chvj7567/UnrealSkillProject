@@ -25,10 +25,9 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
 
+    void SetWeaponSkillTag();
+
 private:
     UPROPERTY(EditAnywhere)
     ESpyCharacterType CharacterType;
-
-    UPROPERTY(EditAnywhere)
-    ESpySkillType SkillType;
 };

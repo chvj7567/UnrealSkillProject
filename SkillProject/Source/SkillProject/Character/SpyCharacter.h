@@ -47,13 +47,11 @@ public:
 	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
 	FORCEINLINE USpyParkourManagerComponent* GetSpyParkourManagerComponent() const { return SpyParkourManagerComponent; }
 	FORCEINLINE USpyCharacterMovementComponent* GetSpyCharacterMovementComponent() const { return GetCharacterMovement<USpyCharacterMovementComponent>(); }
+	FORCEINLINE ASpyWeapon* GetSpyWeapon() const { return SpyWeapon; }
 
 private:
 	UFUNCTION(BlueprintCallable)
 	void RegisterAbility();
-
-	UFUNCTION(BlueprintCallable)
-	void BindCollision();
 
 public:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
@@ -80,16 +78,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* LeftWeaponCollision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* RightWeaponCollision;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USpyAbilitySystemComponent* AbilitySystemComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	const USpyAttributeSet* CharacterAttributeSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
@@ -107,7 +99,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpyCharacterMovementComponent> SpyCharacterMovementCompnent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<ASpyWeapon> SpyWeaponClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<ASpyWeapon> SpyWeapon;
 };
 

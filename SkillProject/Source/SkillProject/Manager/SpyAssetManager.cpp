@@ -77,7 +77,7 @@ const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
     return *CastChecked<USpyCharacterAssetData>(AssetPtr.Get());
 }
 
-FName USpyAssetManager::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType)
+FName USpyAssetManager::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag)
 {
-    return Get().GetCharacterAssetData().GetSkillAssetNameByType(InCharacterType, InSkillType);
+    return Get().GetCharacterAssetData().GetSkillAssetNameByType(InCharacterType, InSkillTag);
 }

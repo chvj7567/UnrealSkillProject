@@ -35,13 +35,3 @@ enum class ESpyCharacterType : uint8
 {
     Normal         UMETA(DisplayName = "Normal"),
 };
-
-UENUM(BlueprintType)
-enum class ESpySkillType : uint8
-{
-    SkillA         UMETA(DisplayName = "SkillA"),
-    SkillB         UMETA(DisplayName = "SkillB"),
-    SkillC         UMETA(DisplayName = "SkillC"),
-    SkillD         UMETA(DisplayName = "SkillD"),
-    SkillE         UMETA(DisplayName = "SkillE"),
-};

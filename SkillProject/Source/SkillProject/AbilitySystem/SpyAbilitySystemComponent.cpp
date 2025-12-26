@@ -16,7 +16,7 @@ void USpyAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAct
 {
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 
-	UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent InitAbilityActorInfo called"));
+	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent InitAbilityActorInfo called"));
 }
 
 void USpyAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
@@ -43,33 +43,33 @@ void USpyAbilitySystemComponent::NotifyAbilityActivated(const FGameplayAbilitySp
 {
 	Super::NotifyAbilityActivated(Handle, Ability);
 
-	UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent NotifyAbilityActivated called : %s"), *Ability->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent NotifyAbilityActivated called : %s"), *Ability->GetName());
 }
 
 void USpyAbilitySystemComponent::NotifyAbilityFailed(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
 {
 	Super::NotifyAbilityFailed(Handle, Ability, FailureReason);
 
-	UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent NotifyAbilityFailed called : %s"), *Ability->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent NotifyAbilityFailed called : %s"), *Ability->GetName());
 }
 
 void USpyAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, bool bWasCancelled)
 {
 	Super::NotifyAbilityEnded(Handle, Ability, bWasCancelled);
 
-	UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent NotifyAbilityEnded called : %s"), *Ability->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent NotifyAbilityEnded called : %s"), *Ability->GetName());
 }
 
 void USpyAbilitySystemComponent::ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags)
 {
 	Super::ApplyAbilityBlockAndCancelTags(AbilityTags, RequestingAbility, bEnableBlockTags, BlockTags, bExecuteCancelTags, CancelTags);
 
-	UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent ApplyAbilityBlockAndCancelTags : %s called"), *RequestingAbility->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent ApplyAbilityBlockAndCancelTags : %s called"), *RequestingAbility->GetName());
 }
 
 void USpyAbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bCanBeCanceled)
 {
 	Super::HandleChangeAbilityCanBeCanceled(AbilityTags, RequestingAbility, bCanBeCanceled);
 
-	UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent HandleChangeAbilityCanBeCanceled : %s called"), *RequestingAbility->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent HandleChangeAbilityCanBeCanceled : %s called"), *RequestingAbility->GetName());
 }

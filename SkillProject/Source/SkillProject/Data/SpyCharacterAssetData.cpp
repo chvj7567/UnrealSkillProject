@@ -40,7 +40,7 @@ EDataValidationResult USpyCharacterAssetData::IsDataValid(FDataValidationContext
 }
 #endif
 
-FName USpyCharacterAssetData::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType) const
+FName USpyCharacterAssetData::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag) const
 {
 	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
 	{
@@ -48,7 +48,7 @@ FName USpyCharacterAssetData::GetSkillAssetNameByType(ESpyCharacterType InCharac
 		{
 			for (auto& Skill : CharacterAsset.Skills)
 			{
-				if (Skill.SkillType == InSkillType)
+				if (Skill.SkillTag == InSkillTag)
 				{
 					return Skill.Name;
 				}

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Util/DefineEnum.h"
+#include "NativeGameplayTags.h"
 
 #include "SpyCharacterAssetData.generated.h"
 
@@ -18,7 +19,7 @@ public:
 	FName Name;
 
 	UPROPERTY(EditDefaultsOnly)
-	ESpySkillType SkillType;
+	FGameplayTag SkillTag;
 };
 
 USTRUCT()
@@ -59,7 +60,7 @@ protected:
 #endif
 
 public:
-	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, ESpySkillType InSkillType) const;
+	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag) const;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

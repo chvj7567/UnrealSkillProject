@@ -19,11 +19,11 @@
 #include "UI/SpyHPBar.h"
 #include "Character/AnimInstance/SpyCharacterAnimInstance.h"
 #include "System/SpyPlayerState.h"
-#include "Components/BoxComponent.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyAnimManagerComponent.h"
 #include "Item/SpyWeapon.h"
+#include "Manager/SpyAssetManager.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -60,11 +60,6 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	AbilitySystemComponent = CreateDefaultSubobject<USpyAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-
-	LeftWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftWeaponCollision"));
-	RightWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("RightWeaponCollision"));
-	LeftWeaponCollision->SetupAttachment(GetMesh());
-	RightWeaponCollision->SetupAttachment(GetMesh());
 
 	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
 	HPBarComponent->SetupAttachment(GetMesh());
@@ -109,7 +104,6 @@ void ASpyCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	RegisterAbility();
-	BindCollision();
 
 	USpyUIManager::Get(this)->OpenSubUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
 
@@ -118,27 +112,21 @@ void ASpyCharacter::BeginPlay()
 		SpyAnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
 	}
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = GetOwner();
-	SpawnParams.Instigator = Cast<APawn>(GetOwner());
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	FVector SpawnLocation = FVector::ZeroVector;
-	FRotator SpawnRotation = FRotator::ZeroRotator;
-	ASpyWeapon* NewWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, SpawnLocation, SpawnRotation, SpawnParams);
-
-	if (!GetMesh()->DoesSocketExist(TEXT("LeftHandSocket")))
+	if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("TwoHandSword"), false))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Socket 'LeftHandSocket'Not Find"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Socket 'LeftHandSocket' Find"));
-	}
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = this;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
-	NewWeapon->SetActorRelativeLocation(FVector::ZeroVector);
-	NewWeapon->SetActorRelativeRotation(FRotator::ZeroRotator);
+		FVector SpawnLocation = FVector::ZeroVector;
+		FRotator SpawnRotation = FRotator::ZeroRotator;
+
+		SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, SpawnLocation, SpawnRotation, SpawnParams);
+		SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
+		SpyWeapon->SetActorRelativeLocation(FVector::ZeroVector);
+		SpyWeapon->SetActorRelativeRotation(FRotator::ZeroRotator);
+	}
 }
 
 void ASpyCharacter::PostInitializeComponents()
@@ -208,12 +196,6 @@ void ASpyCharacter::RegisterAbility()
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
 		.AddUObject(this, &ASpyCharacter::OnHealthChanged);
-}
-
-void ASpyCharacter::BindCollision()
-{
-	LeftWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASpyCharacter::OnSkillHitOverlap);
-	RightWeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ASpyCharacter::OnSkillHitOverlap);
 }
 
 void ASpyCharacter::TestHit()
@@ -300,7 +282,6 @@ FGameplayTagContainer ASpyCharacter::GetActivatableAbilityTags()
 	{
 		if (Spec.IsActive())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability ½ÇÇà Áß: %s"), *Spec.Ability->GetName());
 			ActivatableTags.AppendTags(Spec.Ability->AbilityTags);
 		}
 	}

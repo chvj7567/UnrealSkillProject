@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "NativeGameplayTags.h"
 
 #include "SpyWeapon.generated.h"
 
+class UBoxComponent;
 class USkeletalMeshComponent;
 
 UCLASS()
@@ -21,10 +23,32 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UFUNCTION()
+	void SetCurrentSkillTag(FGameplayTag InCurrentSkillTag);
+
+public:
+	UFUNCTION()
 	void EquipWeapon();
+
+	UFUNCTION()
 	void UnEquipWeapon();
+
+private:
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UBoxComponent> WeaponCollisionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USkeletalMeshComponent> WeaponSkeletalMeshComponent;
+
+protected:
+	FGameplayTag CurrentSkillTag;
 };

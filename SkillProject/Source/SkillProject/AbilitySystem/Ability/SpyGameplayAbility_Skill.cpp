@@ -9,6 +9,7 @@
 #include "AbilitySystem/SpyGameplayEffectContext.h"
 #include "AbilitySystemComponent.h"
 #include "Character/SpyCharacter.h"
+#include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
 #include "Data/SpyCharacterAssetData.h"
 
@@ -71,7 +72,7 @@ void USpyGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle
             WaitTask->ReadyForActivation();
         }
 
-        FName SkillAName = USpyAssetManager::Get().GetSkillAssetNameByType(CharacterType, SkillType);
+        FName SkillAName = USpyAssetManager::Get().GetSkillAssetNameByType(CharacterType, WaitGameplayTag);
         if (UAnimMontage* Montage = USpyAssetManager::GetAssetByName<UAnimMontage>(SkillAName))
         {
             if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, Montage))
@@ -82,9 +83,22 @@ void USpyGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle
                 MontageTask->ReadyForActivation();
             }
         }
+
+        SetWeaponSkillTag();
     }
     else
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+    }
+}
+
+void USpyGameplayAbility_Skill::SetWeaponSkillTag()
+{
+    if (const ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+    {
+        if (ASpyWeapon* SpyWeapon = SpyCharacter->GetSpyWeapon())
+        {
+            SpyWeapon->SetCurrentSkillTag(WaitGameplayTag);
+        }
     }
 }
