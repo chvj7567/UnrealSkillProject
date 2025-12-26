@@ -13,6 +13,7 @@ ASpyCueNotify_Actor::ASpyCueNotify_Actor()
 	ParticleSystemComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleSystemComponent"));
 	ParticleSystemComponent->SetupAttachment(RootComponent);
 	ParticleSystemComponent->bAutoActivate = false;
+	RootComponent = ParticleSystemComponent;
 
 	bAutoDestroyOnRemove = false;
 	bAllowMultipleOnActiveEvents = false;

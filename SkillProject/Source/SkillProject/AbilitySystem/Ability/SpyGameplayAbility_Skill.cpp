@@ -17,7 +17,7 @@
 
 void USpyGameplayAbility_Skill::OnMontageCompleted()
 {
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USpyGameplayAbility_Skill::OnMontageCancelled()
@@ -46,12 +46,20 @@ void USpyGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
     CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
     CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
 
+    //# GE 적용 로그
+    FDelegateHandle TempHandle = ASC->OnGameplayEffectAppliedDelegateToTarget.AddLambda(
+        [](UAbilitySystemComponent* Target, const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveHandle)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[SERVER] GE Successfully Applied! Effect: %s"), *SpecApplied.Def->GetName());
+        });
+
     FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GameplayEffectClass, GetAbilityLevel(), EffectContext);
     if (SpecHandle.IsValid())
     {
         if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor))
         {
             ASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+            ASC->OnGameplayEffectAppliedDelegateToTarget.Remove(TempHandle);
         }
     }
 }

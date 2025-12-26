@@ -112,20 +112,23 @@ void ASpyCharacter::BeginPlay()
 		SpyAnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
 	}
 
-	if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("TwoHandSword"), false))
+	if (HasAuthority())
 	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = this;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("TwoHandSword"), false))
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = this;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		FVector SpawnLocation = FVector::ZeroVector;
-		FRotator SpawnRotation = FRotator::ZeroRotator;
+			FVector SpawnLocation = FVector::ZeroVector;
+			FRotator SpawnRotation = FRotator::ZeroRotator;
 
-		SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, SpawnLocation, SpawnRotation, SpawnParams);
-		SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
-		SpyWeapon->SetActorRelativeLocation(FVector::ZeroVector);
-		SpyWeapon->SetActorRelativeRotation(FRotator::ZeroRotator);
+			SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, SpawnLocation, SpawnRotation, SpawnParams);
+			SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
+			SpyWeapon->SetActorRelativeLocation(FVector::ZeroVector);
+			SpyWeapon->SetActorRelativeRotation(FRotator::ZeroRotator);
+		}
 	}
 }
 
