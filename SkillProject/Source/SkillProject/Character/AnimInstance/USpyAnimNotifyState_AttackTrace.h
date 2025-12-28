@@ -17,6 +17,20 @@ public:
 	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 private:
+	void SendGameplayEventToOwner(AActor* InOwner);
+
+protected:
+	UPROPERTY(EditAnywhere)
+	FName StartWeaponSocketName;
+
+	UPROPERTY(EditAnywhere)
+	FName EndWeaponSocketName;
+
+	UPROPERTY(EditAnywhere)
+	bool bShowCollision;
+
+private:
+	float Radius = 10.0f;
 	float CumulativeTime = 0.0f;
 	const float CheckInterval = 0.1f;
 };

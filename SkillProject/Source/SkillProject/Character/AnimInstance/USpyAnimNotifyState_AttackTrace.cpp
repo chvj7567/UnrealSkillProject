@@ -22,72 +22,72 @@ void UUSpyAnimNotifyState_AttackTrace::NotifyTick(USkeletalMeshComponent* MeshCo
     {
         CumulativeTime = 0.0f;
 
-        AActor* Owner = MeshComp->GetOwner();
-        if (Owner == nullptr || Owner->HasAuthority() == false)
-            return;
-
-        ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(Owner);
-        if (OwnerCharacter == nullptr)
-            return;
-
-        FVector CenterPos = Owner->GetActorLocation();
-        float Radius = 100.0f;
-
-        TArray<FOverlapResult> OutOverlaps;
-
-        FCollisionShape MySphere = FCollisionShape::MakeSphere(Radius);
-        FCollisionQueryParams QueryParams;
-        QueryParams.AddIgnoredActor(Owner);
-
-        bool bHit = MeshComp->GetWorld()->OverlapMultiByChannel(
-            OutOverlaps,
-            CenterPos,
-            FQuat::Identity,
-            ECC_Pawn,
-            MySphere,
-            QueryParams
-        );
-
-        bool findCharacter = false;
-
-        if (bHit)
-        {
-            for (const FOverlapResult& Overlap : OutOverlaps)
-            {
-                if (AActor* TargetActor = Overlap.GetActor())
-                {
-                    if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(TargetActor))
-                    {
-                        findCharacter = true;
-
-                        ASpyWeapon* SpyWeapon = OwnerCharacter->GetSpyWeapon();
-                        if (SpyWeapon == nullptr)
-                            return;
-
-                        FGameplayEventData Payload;
-                        Payload.EventTag = SpyWeapon->CurrentSkillTag;
-                        Payload.Instigator = Owner;
-                        Payload.Target = SpyCharacter;
-
-                        UE_LOG(LogTemp, Warning, TEXT("OnHit %s %s %s"), *Owner->GetName(), *SpyCharacter->GetName(), *SpyWeapon->CurrentSkillTag.ToString());
-                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Owner, SpyWeapon->CurrentSkillTag, Payload);
-                    }
-                }
-            }
-        }
-        
-        if (findCharacter)
-        {
-            DrawDebugSphere(MeshComp->GetWorld(), CenterPos, Radius, 12, FColor::Red, false, 1.0f);
-        }
-        else
-        {
-            DrawDebugSphere(MeshComp->GetWorld(), CenterPos, Radius, 12, FColor::Green, false, 1.0f);
-        }
+        SendGameplayEventToOwner(MeshComp->GetOwner());
     }
 }
 
 void UUSpyAnimNotifyState_AttackTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
     Super::NotifyEnd(MeshComp, Animation, EventReference);
+}
+
+void UUSpyAnimNotifyState_AttackTrace::SendGameplayEventToOwner(AActor* InOwner)
+{
+    if (InOwner == nullptr)
+        return;
+
+    if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(InOwner))
+    {
+        if (ASpyWeapon* SpyWeapon = OwnerCharacter->GetSpyWeapon())
+        {
+            FVector CenterPos = OwnerCharacter->GetActorLocation();
+            FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
+            FVector CurrentEnd = OwnerCharacter->GetMesh()->GetSocketLocation(EndWeaponSocketName);
+
+            TArray<FHitResult> OutHits;
+            FCollisionShape SweepShape = FCollisionShape::MakeSphere(Radius);
+            FCollisionQueryParams QueryParams;
+            QueryParams.AddIgnoredActor(OwnerCharacter);
+
+            OwnerCharacter->GetWorld()->SweepMultiByChannel(
+                OutHits, CurrentStart, CurrentEnd,
+                FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
+
+            bool bInvalidCharacter = false;
+
+            for (const FHitResult& Overlap : OutHits)
+            {
+                if (AActor* TargetActor = Overlap.GetActor())
+                {
+                    if (ASpyCharacter* TargetCharacter = Cast<ASpyCharacter>(TargetActor))
+                    {
+                        bInvalidCharacter = true;
+
+                        FGameplayEventData Payload;
+                        Payload.EventTag = SpyWeapon->CurrentSkillTag;
+                        Payload.Instigator = OwnerCharacter;
+                        Payload.Target = TargetCharacter;
+
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, SpyWeapon->CurrentSkillTag, Payload);
+                    }
+                }
+            }
+
+            if (bShowCollision)
+            {
+                if (bInvalidCharacter)
+                {
+                    DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
+                        FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
+                        FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Red, false, 1.0f);
+                }
+                else
+                {
+                    DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
+                        FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
+                        FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
+                }
+            }
+        }
+    }
 }

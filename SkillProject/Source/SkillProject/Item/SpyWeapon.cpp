@@ -21,8 +21,6 @@ ASpyWeapon::ASpyWeapon()
 void ASpyWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-
-	WeaponCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ASpyWeapon::OnHit);
 }
 
 void ASpyWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
