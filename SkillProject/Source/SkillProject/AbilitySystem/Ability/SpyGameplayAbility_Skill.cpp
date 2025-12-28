@@ -15,6 +15,14 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_Skill)
 
+USpyGameplayAbility_Skill::USpyGameplayAbility_Skill()
+{
+    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+    NetSecurityPolicy = EGameplayAbilityNetSecurityPolicy::ClientOrServer;
+    ReplicationPolicy = EGameplayAbilityReplicationPolicy::ReplicateNo;
+}
+
 void USpyGameplayAbility_Skill::OnMontageCompleted()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);

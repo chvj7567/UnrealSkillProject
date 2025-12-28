@@ -13,6 +13,9 @@ class SKILLPROJECT_API USpyGameplayAbility_Skill : public USpyGameplayAbility
 {
 	GENERATED_BODY()
 	
+public:
+    USpyGameplayAbility_Skill();
+
 protected:
     virtual void OnMontageCompleted() override;
     virtual void OnMontageCancelled() override;
