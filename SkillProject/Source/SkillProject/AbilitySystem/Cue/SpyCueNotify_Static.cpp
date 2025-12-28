@@ -2,7 +2,7 @@
 
 
 #include "AbilitySystem/Cue/SpyCueNotify_Static.h"
-#include "Character/SpyCharacter.h"
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 
 USpyCueNotify_Static::USpyCueNotify_Static()

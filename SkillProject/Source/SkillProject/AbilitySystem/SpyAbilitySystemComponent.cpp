@@ -2,6 +2,7 @@
 
 
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "AbilitySystem/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAbilitySystemComponent)
 
@@ -72,4 +73,9 @@ void USpyAbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGamepla
 	Super::HandleChangeAbilityCanBeCanceled(AbilityTags, RequestingAbility, bCanBeCanceled);
 
 	//UE_LOG(LogTemp, Warning, TEXT("USpyAbilitySystemComponent HandleChangeAbilityCanBeCanceled : %s called"), *RequestingAbility->GetName());
+}
+
+FGameplayTag USpyAbilitySystemComponent::GetCurrentActiveSkillTag() const
+{
+	return SpyGameplayTags::GetActiveSkillTag(this);
 }

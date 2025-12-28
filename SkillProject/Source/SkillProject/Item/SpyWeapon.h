@@ -21,11 +21,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-public:
-	UFUNCTION()
-	void SetCurrentSkillTag(FGameplayTag InCurrentSkillTag);
 
 public:
 	UFUNCTION()
@@ -34,14 +29,7 @@ public:
 	UFUNCTION()
 	void UnEquipWeapon();
 
-public:
-	UPROPERTY(Replicated)
-	FGameplayTag CurrentSkillTag;
-
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<UBoxComponent> WeaponCollisionComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USkeletalMeshComponent> WeaponSkeletalMeshComponent;
 };

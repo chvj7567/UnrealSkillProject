@@ -8,10 +8,10 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/SpyGameplayEffectContext.h"
 #include "AbilitySystemComponent.h"
-#include "Character/SpyCharacter.h"
-#include "Item/SpyWeapon.h"
-#include "Manager/SpyAssetManager.h"
-#include "Data/SpyCharacterAssetData.h"
+//#include "Character/SpyCharacter.h"
+//#include "Item/SpyWeapon.h"
+//#include "Manager/SpyAssetManager.h"
+//#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_Skill)
 
@@ -88,10 +88,9 @@ void USpyGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle
             WaitTask->ReadyForActivation();
         }
 
-        FName SkillAName = USpyAssetManager::Get().GetSkillAssetNameByType(CharacterType, WaitGameplayTag);
-        if (UAnimMontage* Montage = USpyAssetManager::GetAssetByName<UAnimMontage>(SkillAName))
+        if (SkillMontage)
         {
-            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, Montage))
+            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
             {
                 MontageTask->OnCompleted.AddDynamic(this, &USpyGameplayAbility_Skill::OnMontageCompleted);
                 MontageTask->OnInterrupted.AddDynamic(this, &USpyGameplayAbility_Skill::OnMontageCancelled);
@@ -99,22 +98,9 @@ void USpyGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle
                 MontageTask->ReadyForActivation();
             }
         }
-
-        SetWeaponSkillTag();
     }
     else
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-    }
-}
-
-void USpyGameplayAbility_Skill::SetWeaponSkillTag()
-{
-    if (const ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
-    {
-        if (ASpyWeapon* SpyWeapon = SpyCharacter->GetSpyWeapon())
-        {
-            SpyWeapon->SetCurrentSkillTag(WaitGameplayTag);
-        }
     }
 }

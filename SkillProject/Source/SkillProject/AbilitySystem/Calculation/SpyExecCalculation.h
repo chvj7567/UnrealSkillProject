@@ -4,11 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
+
 #include "SpyExecCalculation.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SKILLPROJECT_API USpyExecCalculation : public UGameplayEffectExecutionCalculation
 {
@@ -21,4 +19,8 @@ public:
 	virtual void Execute_Implementation(
 		const FGameplayEffectCustomExecutionParameters& ExecutionParams,
 		FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
+
+protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> EffectClass;
 };

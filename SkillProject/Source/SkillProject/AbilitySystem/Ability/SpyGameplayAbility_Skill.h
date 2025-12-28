@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Ability/SpyGameplayAbility.h"
-#include "Util/DefineEnum.h"
 
 #include "SpyGameplayAbility_Skill.generated.h"
 
@@ -28,9 +27,10 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
 
-    void SetWeaponSkillTag();
-
 private:
     UPROPERTY(EditAnywhere)
-    ESpyCharacterType CharacterType;
+    FGameplayTag Character;
+
+    UPROPERTY(EditAnywhere)
+    TObjectPtr<UAnimMontage> SkillMontage;
 };

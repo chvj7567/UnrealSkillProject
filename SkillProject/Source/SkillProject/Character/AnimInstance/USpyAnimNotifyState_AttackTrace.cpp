@@ -5,7 +5,6 @@
 #include "Engine/OverlapResult.h"
 #include "Character/SpyCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "Item/SpyWeapon.h"
 
 void UUSpyAnimNotifyState_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -41,7 +40,7 @@ void UUSpyAnimNotifyState_AttackTrace::SendGameplayEventToOwner(AActor* InOwner)
 
     if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(InOwner))
     {
-        if (ASpyWeapon* SpyWeapon = OwnerCharacter->GetSpyWeapon())
+        if (USpyAbilitySystemComponent* OwnerASC = OwnerCharacter->GetSpyAbilitySystemComponent())
         {
             FVector CenterPos = OwnerCharacter->GetActorLocation();
             FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
@@ -67,11 +66,11 @@ void UUSpyAnimNotifyState_AttackTrace::SendGameplayEventToOwner(AActor* InOwner)
                         bInvalidCharacter = true;
 
                         FGameplayEventData Payload;
-                        Payload.EventTag = SpyWeapon->CurrentSkillTag;
+                        Payload.EventTag = OwnerASC->GetCurrentActiveSkillTag();
                         Payload.Instigator = OwnerCharacter;
                         Payload.Target = TargetCharacter;
 
-                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, SpyWeapon->CurrentSkillTag, Payload);
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, Payload.EventTag, Payload);
                     }
                 }
             }

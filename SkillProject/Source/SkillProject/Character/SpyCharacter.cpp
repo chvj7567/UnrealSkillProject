@@ -8,7 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
-#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/SpyGameplayTags.h"
 #include "AbilitySystem/Attribute/SpyAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"

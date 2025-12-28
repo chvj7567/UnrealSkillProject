@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/SpyGameplayTags.h"
 
 struct FPoolEntry
 {

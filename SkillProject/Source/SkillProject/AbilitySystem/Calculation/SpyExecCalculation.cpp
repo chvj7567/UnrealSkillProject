@@ -3,8 +3,7 @@
 
 #include "AbilitySystem/Calculation/SpyExecCalculation.h"
 #include "AbilitySystem/Attribute/SpyAttributeSet.h"
-#include "Manager/SpyAssetManager.h"
-#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/SpyGameplayTags.h"
 #include "AbilitySystem/SpyGameplayEffectContext.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyExecCalculation)
@@ -12,7 +11,6 @@
 struct DamageCapture
 {
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Health);
-
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Mana);
 
 	DamageCapture()
@@ -69,7 +67,6 @@ void USpyExecCalculation::Execute_Implementation(const FGameplayEffectCustomExec
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(GetDamageCapture().HealthProperty, EGameplayModOp::Additive, Damage));
 	//SourceASC->ApplyModToAttribute(USpyAttributeSet::GetManaAttribute(), EGameplayModOp::Additive, -Damage / 2.0f);
 
-	TSubclassOf<UGameplayEffect> EffectClass = USpyAssetManager::GetSubclassByName<UGameplayEffect>(FName("Mana"));
 	if (SourceASC && EffectClass)
 	{
 		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();

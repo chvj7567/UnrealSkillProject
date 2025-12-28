@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/SpyGameplayTags.h"
 
 #include "SpyGameplayAbility.generated.h"
 

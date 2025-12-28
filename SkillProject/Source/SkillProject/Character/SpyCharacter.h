@@ -43,7 +43,7 @@ protected:
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE UAbilitySystemComponent* GetAbilitySystemComponent() const override { return Cast<UAbilitySystemComponent>(AbilitySystemComponent); }
+	FORCEINLINE USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return Cast<USpyAbilitySystemComponent>(AbilitySystemComponent); }
 	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
 	FORCEINLINE USpyParkourManagerComponent* GetSpyParkourManagerComponent() const { return SpyParkourManagerComponent; }
 	FORCEINLINE USpyCharacterMovementComponent* GetSpyCharacterMovementComponent() const { return GetCharacterMovement<USpyCharacterMovementComponent>(); }

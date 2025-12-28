@@ -6,7 +6,7 @@
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Util/SpyGameplayTags.h"
+#include "AbilitySystem/SpyGameplayTags.h"
 #include "UI/SpyUserWidget.h"
 #include "Manager/SpyAssetManager.h"
 #include "Manager/SpyUIManager.h"
