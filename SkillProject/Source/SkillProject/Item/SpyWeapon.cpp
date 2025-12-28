@@ -2,7 +2,6 @@
 
 
 #include "SpyWeapon.h"
-#include "Components/BoxComponent.h"
 #include "Character/SpyCharacter.h"
 
 ASpyWeapon::ASpyWeapon()

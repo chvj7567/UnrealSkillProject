@@ -1,0 +1,29 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "NativeGameplayTags.h"
+
+class UAbilitySystemComponent;
+
+namespace SpyGameplayTags
+{
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_A);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_B);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_C);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_D);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_E);
+
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_A);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_B);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_C);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_D);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_E);
+
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Fire);
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Heal);
+
+	SPYGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Static_Hit);
+
+	SPYGAS_API FGameplayTag GetActiveSkillTag(const UAbilitySystemComponent* ASC);
+}

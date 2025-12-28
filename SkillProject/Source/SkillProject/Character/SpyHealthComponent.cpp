@@ -2,11 +2,10 @@
 
 
 #include "Character/SpyHealthComponent.h"
-#include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "AbilitySystem/Attribute/SpyAttributeSet.h"
+#include "SpyAbilitySystemComponent.h"
+#include "Attribute/SpyAttributeSet.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
-
 
 void USpyHealthComponent::Initialize(USpyAbilitySystemComponent* InASC)
 {

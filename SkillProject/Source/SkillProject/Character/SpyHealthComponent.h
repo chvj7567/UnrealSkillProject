@@ -9,7 +9,7 @@
 #include "SpyHealthComponent.generated.h"
 
 class USpyAbilitySystemComponent;
-class UCharacterAttributeSet;
+
 class USpyAttributeSet;
 struct FGameplayEffectSpec;
 

@@ -10,7 +10,7 @@ public class SkillProject : ModuleRules
 
         PublicIncludePaths.AddRange(new string[]
         {
-            "SkillProject"
+            "SkillProject",
         });
 
         PublicDependencyModuleNames.AddRange(new string[]
@@ -24,14 +24,11 @@ public class SkillProject : ModuleRules
             "UMG",
             "Slate",
             "SlateCore",
-            "Niagara"
-        });
-
-		PrivateDependencyModuleNames.AddRange(new string[]
-        {
+            "Niagara",
             "GameplayAbilities",
             "GameplayTags",
-            "GameplayTasks"
+            "GameplayTasks",
+            "SpyGAS"
         });
-	}
+    }
 }

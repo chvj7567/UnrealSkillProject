@@ -11,5 +11,6 @@ public class SkillProjectTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 		ExtraModuleNames.Add("SkillProject");
+		ExtraModuleNames.Add("SpyGAS");
 	}
 }

@@ -14,6 +14,16 @@
 				"CoreUObject",
 				"UMG"
 			]
+		},
+		{
+			"Name": "SpyGAS",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"AdditionalDependencies": [
+				"GameplayAbilities",
+				"Engine",
+				"CoreUObject"
+			]
 		}
 	],
 	"Plugins": [

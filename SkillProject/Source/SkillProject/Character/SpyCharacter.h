@@ -7,7 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
-#include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "SpyAbilitySystemComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Character/SpyCharacterMovementComponent.h"
 
@@ -18,7 +18,7 @@ class UCameraComponent;
 class UBoxComponent;
 class UWidgetComponent;
 class UGameplayAbility;
-class UAbilitySystemComponent;
+class USpyAbilitySystemComponent;
 class USpyAttributeSet;
 class USpyAnimManagerComponent;
 class USpyParkourManagerComponent;

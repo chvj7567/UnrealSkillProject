@@ -8,12 +8,12 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/SpyGameplayTags.h"
-#include "AbilitySystem/Attribute/SpyAttributeSet.h"
+#include "SpyGameplayTags.h"
+#include "Attribute/SpyAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "SpyAbilitySystemComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Manager/SpyUIManager.h"
 #include "UI/SpyHPBar.h"
@@ -24,6 +24,7 @@
 #include "ManagerComponent/SpyAnimManagerComponent.h"
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -94,9 +95,6 @@ void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
 			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
 		}
 	}
-
-	//# 남은 마나 로그
-	UE_LOG(LogTemp, Warning, TEXT("Mana : %f"), CharacterAttributeSet->GetMana());
 }
 
 void ASpyCharacter::BeginPlay()
@@ -167,14 +165,20 @@ void ASpyCharacter::OnRep_PlayerState()
 
 void ASpyCharacter::RegisterAbility()
 {
-	if (!AbilitySystemComponent)
+	if (AbilitySystemComponent == nullptr)
+	{
+		UE_LOG(LogTemp, Fatal, TEXT("AbilitySystemComponent is nullptr"));
+		UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, true);
 		return;
+	}
 
 	//# 설정한 AttributeSet 가져옴
 	CharacterAttributeSet = AbilitySystemComponent->GetSet<USpyAttributeSet>();
 	if (CharacterAttributeSet == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
+		UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, true);
+		return;
 	}
 	else
 	{
