@@ -121,13 +121,8 @@ void ASpyCharacter::BeginPlay()
 			SpawnParams.Instigator = this;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			FVector SpawnLocation = FVector::ZeroVector;
-			FRotator SpawnRotation = FRotator::ZeroRotator;
-
-			SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, SpawnLocation, SpawnRotation, SpawnParams);
+			SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 			SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
-			SpyWeapon->SetActorRelativeLocation(FVector::ZeroVector);
-			SpyWeapon->SetActorRelativeRotation(FRotator::ZeroRotator);
 		}
 	}
 }
