@@ -145,51 +145,55 @@ void USpyGameplayAbility_Skill::CheckHit()
     float RepeatTime = 0.1f;
     FName StartWeaponSocketName = "LeftWeaponPos0";
     FName EndWeaponSocketName = "LeftWeaponPos1";
+    FGameplayTag SkillTag = OwnerASC->GetCurrentActiveSkillTag();
 
-    FVector CenterPos = OwnerCharacter->GetActorLocation();
-    FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
-    FVector CurrentEnd = OwnerCharacter->GetMesh()->GetSocketLocation(EndWeaponSocketName);
-
-    TArray<FHitResult> OutHits;
-    FCollisionShape SweepShape = FCollisionShape::MakeSphere(Radius);
-    FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(OwnerCharacter);
-
-    OwnerCharacter->GetWorld()->SweepMultiByChannel(
-        OutHits, CurrentStart, CurrentEnd,
-        FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
-
-    bool bInvalidCharacter = false;
-
-    for (const FHitResult& Overlap : OutHits)
+    if (SkillTag != FGameplayTag::EmptyTag)
     {
-        if (AActor* TargetActor = Overlap.GetActor())
+        FVector CenterPos = OwnerCharacter->GetActorLocation();
+        FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
+        FVector CurrentEnd = OwnerCharacter->GetMesh()->GetSocketLocation(EndWeaponSocketName);
+
+        TArray<FHitResult> OutHits;
+        FCollisionShape SweepShape = FCollisionShape::MakeSphere(Radius);
+        FCollisionQueryParams QueryParams;
+        QueryParams.AddIgnoredActor(OwnerCharacter);
+
+        OwnerCharacter->GetWorld()->SweepMultiByChannel(
+            OutHits, CurrentStart, CurrentEnd,
+            FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
+
+        bool bInvalidCharacter = false;
+
+        for (const FHitResult& Overlap : OutHits)
         {
-            if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
+            if (AActor* TargetActor = Overlap.GetActor())
             {
-                bInvalidCharacter = true;
+                if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
+                {
+                    bInvalidCharacter = true;
 
-                FGameplayEventData Payload;
-                Payload.EventTag = OwnerASC->GetCurrentActiveSkillTag();
-                Payload.Instigator = OwnerCharacter;
-                Payload.Target = TargetCharacter;
+                    FGameplayEventData Payload;
+                    Payload.EventTag = SkillTag;
+                    Payload.Instigator = OwnerCharacter;
+                    Payload.Target = TargetCharacter;
 
-                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, Payload.EventTag, Payload);
+                    UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, Payload.EventTag, Payload);
+                }
             }
         }
-    }
 
-    if (bInvalidCharacter)
-    {
-        DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-            FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
-            FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Red, false, 1.0f);
-    }
-    else
-    {
-        DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-            FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
-            FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
+        if (bInvalidCharacter)
+        {
+            DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
+                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
+                FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Red, false, 1.0f);
+        }
+        else
+        {
+            DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
+                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
+                FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
+        }
     }
 
     UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, RepeatTime);
