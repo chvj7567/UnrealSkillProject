@@ -2,9 +2,9 @@
 
 
 #include "Character/AnimInstance/USpyAnimNotifyState_AttackTrace.h"
-#include "Engine/OverlapResult.h"
 #include "Character/SpyCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "SpyGameplayTags.h"
 
 void UUSpyAnimNotifyState_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {

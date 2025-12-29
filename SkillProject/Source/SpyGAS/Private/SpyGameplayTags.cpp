@@ -6,11 +6,7 @@
 
 namespace SpyGameplayTags
 {
-	UE_DEFINE_GAMEPLAY_TAG(Character_A, "Character.A");
-	UE_DEFINE_GAMEPLAY_TAG(Character_B, "Character.B");
-	UE_DEFINE_GAMEPLAY_TAG(Character_C, "Character.C");
-	UE_DEFINE_GAMEPLAY_TAG(Character_D, "Character.D");
-	UE_DEFINE_GAMEPLAY_TAG(Character_E, "Character.E");
+	UE_DEFINE_GAMEPLAY_TAG(Character_Normal, "Character.Normal");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_A, "Skill.A");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_B, "Skill.B");
@@ -18,10 +14,14 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_D, "Skill.D");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_E, "Skill.E");
 
+	UE_DEFINE_GAMEPLAY_TAG(Lock_Move, "Lock.Move");
+	UE_DEFINE_GAMEPLAY_TAG(Lock_Look, "Lock.Look");
+
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Fire, "GameplayCue.Actor.Fire");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Static_Hit, "GameplayCue.Static.Hit");
+
 
 	FGameplayTag SpyGameplayTags::GetActiveSkillTag(const UAbilitySystemComponent* ASC)
 	{

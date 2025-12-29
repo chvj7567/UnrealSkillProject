@@ -68,6 +68,13 @@ void ASpyPlayerController::Move(const FInputActionValue& InValue)
 
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
+		//# Move Lock 확인
+		if (USpyAbilitySystemComponent* ASC = SpyCharacter->GetSpyAbilitySystemComponent())
+		{
+			if (ASC->HasMatchingGameplayTag(SpyGameplayTags::Lock_Move))
+				return;
+		}
+
 		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 		{
 			const FRotator Rotation = SpyCharacter->GetControlRotation();
@@ -91,10 +98,17 @@ void ASpyPlayerController::Look(const FInputActionValue& InValue)
 {
 	FVector2D LookAxisVector = InValue.Get<FVector2D>();
 
-	if (APawn* ControlledPawn = GetPawn())
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		ControlledPawn->AddControllerYawInput(LookAxisVector.X);
-		ControlledPawn->AddControllerPitchInput(LookAxisVector.Y);
+		//# Move Lock 확인
+		if (USpyAbilitySystemComponent* ASC = SpyCharacter->GetSpyAbilitySystemComponent())
+		{
+			if (ASC->HasMatchingGameplayTag(SpyGameplayTags::Lock_Look))
+				return;
+		}
+
+		SpyCharacter->AddControllerYawInput(LookAxisVector.X);
+		SpyCharacter->AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
 
