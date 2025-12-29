@@ -192,6 +192,6 @@ void USpyGameplayAbility_Skill::CheckHit()
     }
 
     UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, 0.1f);
-    DelayTask->OnFinish.AddDynamic(this, &USpyGameplayAbility_Skill::Test);
+    DelayTask->OnFinish.AddDynamic(this, &USpyGameplayAbility_Skill::CheckHit);
     DelayTask->ReadyForActivation();
 }
