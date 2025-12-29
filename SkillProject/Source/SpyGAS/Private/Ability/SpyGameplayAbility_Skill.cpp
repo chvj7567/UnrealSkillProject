@@ -142,8 +142,9 @@ void USpyGameplayAbility_Skill::CheckHit()
         return;
 
     float Radius = 10.f;
+    float RepeatTime = 0.1f;
     FName StartWeaponSocketName = "LeftWeaponPos0";
-    FName EndWeaponSocketName = "LeftWeaponPos0";
+    FName EndWeaponSocketName = "LeftWeaponPos1";
 
     FVector CenterPos = OwnerCharacter->GetActorLocation();
     FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
@@ -191,7 +192,7 @@ void USpyGameplayAbility_Skill::CheckHit()
             FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
     }
 
-    UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, 0.1f);
+    UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, RepeatTime);
     DelayTask->OnFinish.AddDynamic(this, &USpyGameplayAbility_Skill::CheckHit);
     DelayTask->ReadyForActivation();
 }
