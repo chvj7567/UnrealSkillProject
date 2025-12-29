@@ -19,13 +19,15 @@ protected:
     virtual void OnMontageCompleted() override;
     virtual void OnMontageCancelled() override;
     virtual void OnWaitGameplayEvent(FGameplayEventData Payload) override;
-
-public:
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
+
+protected:
+    UFUNCTION()
+    void CheckHit();
 
 private:
     UPROPERTY(EditAnywhere)
