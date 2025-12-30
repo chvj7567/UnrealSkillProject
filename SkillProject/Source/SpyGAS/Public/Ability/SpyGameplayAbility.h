@@ -14,13 +14,6 @@ class SPYGAS_API USpyGameplayAbility : public UGameplayAbility
 	GENERATED_BODY()
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
-    FGameplayTag WaitGameplayTag;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting")
-    TSubclassOf<UGameplayEffect> GameplayEffectClass;
-
-protected:
     UFUNCTION()
     virtual void OnMontageCompleted();
 

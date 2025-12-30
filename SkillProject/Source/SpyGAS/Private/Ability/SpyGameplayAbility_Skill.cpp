@@ -34,7 +34,7 @@ void USpyGameplayAbility_Skill::OnMontageCancelled()
 
 void USpyGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
-    if (GameplayEffectClass == nullptr)
+    if (DamageEffectClass == nullptr)
         return;
 
     UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();
@@ -56,7 +56,7 @@ void USpyGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
     CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
     CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
 
-    FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GameplayEffectClass, GetAbilityLevel(), EffectContext);
+    FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContext);
     if (SpecHandle.IsValid())
     {
         if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor))
@@ -64,29 +64,7 @@ void USpyGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
             FActiveGameplayEffectHandle AppliedHandle = ASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
             if (AppliedHandle.WasSuccessfullyApplied())
             {
-                UE_LOG(LogTemp, Warning, TEXT("[SERVER] %s GE Successfully Applied! Effect: %s"), *Payload.EventTag.ToString(), *SpecHandle.Data.Get()->Def->GetName());
-            }
-            else
-            {
-                // 1. 타겟 액터가 파괴 중인지 확인
-                bool bIsPendingKill = TargetActor->IsPendingKillPending();
-
-                // 2. 타겟의 태그 상태 확인
-                FGameplayTagContainer TargetTags;
-                TargetASC->GetOwnedGameplayTags(TargetTags);
-
-                UE_LOG(LogTemp, Error, TEXT("[FAILED] Target: %s | PendingKill: %d | Tags: %s"),
-                    *TargetActor->GetName(),
-                    bIsPendingKill ? 1 : 0,
-                    *TargetTags.ToString());
-
-                // 3. 만약 서버/클라이언트 문제라면
-                if (!ASC->IsOwnerActorAuthoritative())
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("Warning: Client tried to apply GE but failed (Normal Behavior if Predicted)"));
-                }
-
-                UE_LOG(LogTemp, Error, TEXT("[SERVER] %s GE Application Failed!"), *Payload.EventTag.ToString());
+                UE_LOG(LogTemp, Warning, TEXT("[Server] %s GE Successfully Applied! Effect: %s"), *Payload.EventTag.ToString(), *SpecHandle.Data.Get()->Def->GetName());
             }
         }
     }
@@ -102,7 +80,7 @@ void USpyGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle
         CurrentActorInfo = ActorInfo;
         CurrentActivationInfo = ActivationInfo;
 
-        if (UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitGameplayTag, nullptr, false, false))
+        if (UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitSkillTag, nullptr, false, false))
         {
             WaitTask->EventReceived.AddDynamic(this, &USpyGameplayAbility_Skill::OnWaitGameplayEvent);
             WaitTask->ReadyForActivation();

@@ -29,7 +29,13 @@ protected:
     UFUNCTION()
     void CheckHit();
 
-private:
-    UPROPERTY(EditAnywhere)
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FGameplayTag WaitSkillTag;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<UGameplayEffect> DamageEffectClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TObjectPtr<UAnimMontage> SkillMontage;
 };
