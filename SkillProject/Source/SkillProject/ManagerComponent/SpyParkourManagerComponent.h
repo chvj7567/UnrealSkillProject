@@ -9,6 +9,27 @@
 
 class UCharacterMovementComponent;
 
+USTRUCT(BlueprintType)
+struct FVaultWallInfo {
+
+	GENERATED_BODY()
+
+public:
+	float Distance;
+	float Height;
+	float Depth;
+
+	FVaultWallInfo() {
+		Clear();
+	}
+
+	void Clear() {
+		Distance = 0.f;
+		Height = 0.f;
+		Depth = 0.f;
+	}
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
 {
@@ -28,11 +49,34 @@ public:
 public:
 	void CheckAbleWallClimbing();
 
+public:
+	UFUNCTION(BlueprintCallable)
+	FVaultWallInfo GetVaultWallInfo();
+
 protected:
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UCharacterMovementComponent> MovementComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	FName VaultStartName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	FName VaultEndName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	FVector VaultStartOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	FVector VaultEndOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	float VaildDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	float VaildHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	float VaildDepth;
 
 private:
 	bool bIsWallClimbing;
 	FVector HitNormalVector;
+	FVaultWallInfo VaultWallInfo;
 };

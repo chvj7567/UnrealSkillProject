@@ -25,6 +25,7 @@
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "MotionWarpingComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -53,6 +54,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f;	
 	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->bDoCollisionTest = false;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
@@ -68,6 +70,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SpyAnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("SpyAnimManagerComponent"));
 	SpyParkourManagerComponent = CreateDefaultSubobject<USpyParkourManagerComponent>(TEXT("SpyParkourManagerComponent"));
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
