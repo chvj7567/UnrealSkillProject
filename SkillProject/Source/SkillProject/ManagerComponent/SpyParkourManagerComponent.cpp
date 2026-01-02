@@ -16,19 +16,13 @@ USpyParkourManagerComponent::USpyParkourManagerComponent()
 
     bIsWallClimbing = false;
     HitNormalVector = FVector::ZeroVector;
+
+    VaultWallInfo = FVaultWallInfo();
 }
 
 void USpyParkourManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-}
-
-void USpyParkourManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-    //# 벽 체크
-    //CheckAbleWallClimbing();
 }
 
 void USpyParkourManagerComponent::CheckAbleWallClimbing()
@@ -85,8 +79,6 @@ void USpyParkourManagerComponent::CheckAbleWallClimbing()
     }
 }
 
-
-
 bool USpyParkourManagerComponent::TryVaultAction()
 {
     if (VaultMontage == nullptr)
@@ -96,8 +88,10 @@ bool USpyParkourManagerComponent::TryVaultAction()
     if (OwnerChararacter == nullptr)
         return false;
 
+    //# Vault 가능한 벽 정보 가져옴
     SetVaultWallInfo();
 
+    //# 벽 정보가 세팅되지 않았다면 Vault 불가능한 벽
     if (VaultWallInfo.FrontNormalVector == FVector::ZeroVector &&
         VaultWallInfo.HandPosVector == FVector::ZeroVector &&
         VaultWallInfo.LandPosVector == FVector::ZeroVector)
@@ -106,16 +100,20 @@ bool USpyParkourManagerComponent::TryVaultAction()
     UCharacterMovementComponent* CharacterMovementComponent = OwnerChararacter->GetCharacterMovement();
     UCapsuleComponent* CapsuleComponent = OwnerChararacter->GetCapsuleComponent();
     UAnimInstance* AnimInstance = OwnerChararacter->GetMesh()->GetAnimInstance();
-
     if (CharacterMovementComponent == nullptr || CapsuleComponent == nullptr || AnimInstance == nullptr)
         return false;
 
+    //# Vault 벽 정보를 모션 워핑에 세팅
     SetMotionWarping();
 
+    //# Vault Montage 시작 전 실행
     CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
     CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
+
+    //# Vault Montage 실행
     OwnerChararacter->PlayAnimMontage(VaultMontage);
 
+    //# Vault Montage 끝난 후 실행
     FOnMontageEnded EndDelegate;
     EndDelegate.BindLambda([this, CharacterMovementComponent, CapsuleComponent](UAnimMontage* Montage, bool bInterrupted) {
         if (Montage == VaultMontage)
