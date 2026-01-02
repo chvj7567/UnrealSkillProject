@@ -15,6 +15,9 @@ struct FVaultWallInfo {
 	GENERATED_BODY()
 
 public:
+	FVector FrontNormalVector;
+	FVector HandPosVector;
+	FVector LandPosVector;
 	float Distance;
 	float Height;
 	float Depth;
@@ -24,6 +27,9 @@ public:
 	}
 
 	void Clear() {
+		FrontNormalVector = FVector::ZeroVector;
+		HandPosVector = FVector::ZeroVector;
+		LandPosVector = FVector::ZeroVector;
 		Distance = 0.f;
 		Height = 0.f;
 		Depth = 0.f;
@@ -51,9 +57,15 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	FVaultWallInfo GetVaultWallInfo();
+	bool TryVaultAction();
+
+	void SetVaultWallInfo();
+	void SetMotionWarping();
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	TObjectPtr<UAnimMontage> VaultMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
 	FName VaultStartName;
 
@@ -78,5 +90,8 @@ protected:
 private:
 	bool bIsWallClimbing;
 	FVector HitNormalVector;
+
+	//# Vault
 	FVaultWallInfo VaultWallInfo;
+	FOnMontageEnded VaultMontageEndDelegate;
 };
