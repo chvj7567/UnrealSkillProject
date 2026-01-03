@@ -180,7 +180,7 @@ void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingCont
 	}
 }
 
-void ASpyPlayerController::SetMappingContext()
+void ASpyPlayerController::RefreshMappingContext()
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
@@ -192,7 +192,7 @@ void ASpyPlayerController::SetMappingContext()
 				{
 					if (USpyParkourManagerComponent* ParkourComponent = SpyCharacter->GetSpyParkourManagerComponent())
 					{
-						SpyMovementComponent->StartWallClimb(ParkourComponent->GetHitNormalVector());
+						SpyMovementComponent->StartWallClimb(ParkourComponent->GetClimbData(), ParkourComponent->GetClimbWallData());
 					}
 				}
 

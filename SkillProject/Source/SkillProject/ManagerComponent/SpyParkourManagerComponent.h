@@ -10,58 +10,11 @@
 class UCharacterMovementComponent;
 
 USTRUCT(BlueprintType)
-struct FVaultWallInfo {
+struct FVaultData {
 
 	GENERATED_BODY()
 
 public:
-	FVector FrontNormalVector;
-	FVector HandPosVector;
-	FVector LandPosVector;
-	float Distance;
-	float Height;
-	float Depth;
-
-	FVaultWallInfo() {
-		Clear();
-	}
-
-	void Clear() {
-		FrontNormalVector = FVector::ZeroVector;
-		HandPosVector = FVector::ZeroVector;
-		LandPosVector = FVector::ZeroVector;
-		Distance = 0.f;
-		Height = 0.f;
-		Depth = 0.f;
-	}
-};
-
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
-{
-	GENERATED_BODY()
-
-public:	
-	USpyParkourManagerComponent();
-
-protected:
-	virtual void BeginPlay() override;
-
-public:
-	FORCEINLINE bool IsWallClimbing() const { return bIsWallClimbing; }
-	FORCEINLINE FVector GetHitNormalVector() const { return HitNormalVector; }
-
-public:
-	void CheckAbleWallClimbing();
-
-public:
-	UFUNCTION(BlueprintCallable)
-	bool TryVaultAction();
-
-	void SetVaultWallInfo();
-	void SetMotionWarping();
-
-protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
 	TObjectPtr<UAnimMontage> VaultMontage;
 
@@ -78,6 +31,12 @@ protected:
 	FVector VaultEndOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	float RayInterval;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	float RayIntervalReapeatCount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
 	float VaildDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
@@ -85,12 +44,107 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
 	float VaildDepth;
+};
 
-private:
-	bool bIsWallClimbing;
-	FVector HitNormalVector;
+USTRUCT(BlueprintType)
+struct FVaultWallData {
 
-	//# Vault
-	FVaultWallInfo VaultWallInfo;
+	GENERATED_BODY()
+
+public:
+	FVector FrontNormalVector;
+	FVector HandPosVector;
+	FVector LandPosVector;
+	float Distance;
+	float Height;
+	float Depth;
+
+	FVaultWallData() {
+		Clear();
+	}
+
+	void Clear() {
+		FrontNormalVector = FVector::ZeroVector;
+		HandPosVector = FVector::ZeroVector;
+		LandPosVector = FVector::ZeroVector;
+		Distance = 0.f;
+		Height = 0.f;
+		Depth = 0.f;
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FClimbData {
+
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	float DistanceOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	float HandL_ZOffset;
+};
+
+USTRUCT(BlueprintType)
+struct FClimbWallData {
+
+	GENERATED_BODY()
+
+public:
+	FVector NormalVector;
+	FVector HitVector;
+
+	FClimbWallData() {
+		Clear();
+	}
+
+	void Clear() {
+		NormalVector = FVector::ZeroVector;
+		HitVector = FVector::ZeroVector;
+	}
+};
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:	
+	USpyParkourManagerComponent();
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	FORCEINLINE FVaultData GetVaultData() const { return VaultData; }
+	FORCEINLINE FVaultWallData GetVaultWallData() const { return VaultWallData; }
+
+	FORCEINLINE FClimbData GetClimbData() const { return ClimbData; }
+	FORCEINLINE FClimbWallData GetClimbWallData() const { return ClimbWallData; }
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void TryClimbAction();
+
+public:
+	UFUNCTION(BlueprintCallable)
+	bool TryVaultAction();
+
+	void SetVaultWallInfo();
+	void SetMotionWarping();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parkour")
+	FVaultData VaultData;
+
+	FVaultWallData VaultWallData;
 	FOnMontageEnded VaultMontageEndDelegate;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parkour")
+	FClimbData ClimbData;
+
+	FClimbWallData ClimbWallData;
+	
 };

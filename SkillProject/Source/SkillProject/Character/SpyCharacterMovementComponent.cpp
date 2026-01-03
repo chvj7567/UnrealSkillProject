@@ -38,13 +38,13 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (!CharacterOwner || !UpdatedComponent)
 		return;
 
-	const FVector WallNormal = CachedWallNormal;
+	const FVector WallNormal = ClimbWallData.NormalVector;
 	const FVector UpVector = FVector::UpVector;
 
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 
-	const float ClimbSpeed = 100.f;
+	const float ClimbSpeed = 30.f;
 	FVector DesiredVelocity =
 		WallUp * SpyInputVector.Y * ClimbSpeed +
 		WallRight * -SpyInputVector.X * ClimbSpeed;
@@ -57,11 +57,12 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	SafeMoveUpdatedComponent(Delta, UpdatedComponent->GetComponentRotation(), true, Hit);
 }
 
-void USpyCharacterMovementComponent::StartWallClimb(const FVector& WallNormal)
+void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
 {
 	UE_LOG(LogTemp, Warning, TEXT("StartWallClimb"));
 
-	CachedWallNormal = WallNormal;
+	ClimbData = InClimbData;
+	ClimbWallData = InClimbWallData;
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
@@ -69,12 +70,13 @@ void USpyCharacterMovementComponent::StartWallClimb(const FVector& WallNormal)
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
 
-	FVector ForwardDir = -WallNormal;
-	FRotator TargetRot = ForwardDir.Rotation();
-	TargetRot.Pitch = 0.f;
-	TargetRot.Roll = 0.f;
+	FVector TargetLocation = ClimbWallData.HitVector + (ClimbWallData.NormalVector * ClimbData.DistanceOffset);
+	FRotator TargetRotator = (-ClimbWallData.NormalVector).Rotation();
+	TargetRotator.Pitch = 0.f;
+	TargetRotator.Roll = 0.f;
 
-	CharacterOwner->SetActorRotation(TargetRot);
+	CharacterOwner->SetActorLocation(TargetLocation);
+	CharacterOwner->SetActorRotation(TargetRotator);
 }
 
 void USpyCharacterMovementComponent::EndWallClimb()

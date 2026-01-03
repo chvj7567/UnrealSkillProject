@@ -78,19 +78,19 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         IsCrouching = PlayerMovementComponent->IsCrouching();
     }
 
-    //# Set IsDeath
+    //# Set IsDeath And IsClimbing
     {
         if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(Player->GetPlayerState()))
         {
             IsDeath = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive) == false;
-        }
-    }
-
-    //# Set Climbing
-    {
-        if (USpyParkourManagerComponent* SpyParkourComponent = Player->GetSpyParkourManagerComponent())
-        {
-            IsWallClimbing = SpyParkourComponent->IsWallClimbing();
+            IsClimbing = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb);
+            if (IsClimbing)
+            {
+                CalculateBoneOffset(TEXT("hand_l"), ZOffset_HL, DeltaSeconds);
+                CalculateBoneOffset(TEXT("hand_r"), ZOffset_HR, DeltaSeconds);
+                CalculateBoneOffset(TEXT("foot_l"), ZOffset_FL, DeltaSeconds);
+                CalculateBoneOffset(TEXT("foot_r"), ZOffset_FR, DeltaSeconds);
+            }
         }
     }
 }
@@ -116,4 +116,38 @@ void USpyCharacterAnimInstance::AnimNotify_AbleMove(UAnimNotify* Notify)
 {
     IsLanding = false;
     PlayerMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
+float USpyCharacterAnimInstance::GetClosestLadderHeight(float CurrentHeight)
+{
+    TArray<float> Ladder = { 100, 150, 200, 270, 340, 400, 450, 500, 560 };
+
+    // 배열이 비어있는지 확인
+    if (Ladder.Num() == 0) return 0.0f;
+
+    float ClosestValue = Ladder[0];
+    float MinDiff = FMath::Abs(CurrentHeight - Ladder[0]);
+
+    for (int32 i = 1; i < Ladder.Num(); i++)
+    {
+        float CurrentDiff = FMath::Abs(CurrentHeight - Ladder[i]);
+
+        if (CurrentDiff < MinDiff)
+        {
+            MinDiff = CurrentDiff;
+            ClosestValue = Ladder[i];
+        }
+    }
+
+    return ClosestValue;
+}
+
+float USpyCharacterAnimInstance::CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime)
+{
+    FVector AnimBoneLoc = Player->GetMesh()->GetSocketLocation(BoneName);
+    float TargetZ = GetClosestLadderHeight(AnimBoneLoc.Z);
+    float RawOffset = TargetZ - AnimBoneLoc.Z;
+
+    CurrentOffsetVar = FMath::FInterpTo(CurrentOffsetVar, RawOffset, DeltaTime, 0.f);
+    return CurrentOffsetVar;
 }

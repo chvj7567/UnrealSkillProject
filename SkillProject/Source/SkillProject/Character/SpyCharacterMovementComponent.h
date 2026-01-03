@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ManagerComponent/SpyParkourManagerComponent.h"
 
 #include "SpyCharacterMovementComponent.generated.h"
+
+struct FClimbWallData;
 
 UCLASS()
 class SKILLPROJECT_API USpyCharacterMovementComponent : public UCharacterMovementComponent
@@ -23,12 +26,20 @@ public:
 
 public:
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
-	void StartWallClimb(const FVector& WallNormal);
+	void StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& ClimbWallData);
 	void EndWallClimb();
 
 	float GetInputAngleByForward();
 
 protected:
 	FVector2D SpyInputVector;
-	FVector CachedWallNormal;
+	FClimbData ClimbData;
+	FClimbWallData ClimbWallData;
+
+public:
+	// 이전 프레임의 IK 도달 지점을 저장 (떨림 방지용 보간 타겟)
+	float CurrentOffsetHL;
+	float CurrentOffsetHR;
+	float CurrentOffsetFL;
+	float CurrentOffsetFR;
 };

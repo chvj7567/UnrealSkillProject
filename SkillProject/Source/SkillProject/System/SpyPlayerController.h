@@ -42,7 +42,7 @@ protected:
 	void SetMappingContext(UInputMappingContext* InMappingContext);
 
 public:
-	void SetMappingContext();
+	void RefreshMappingContext();
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
