@@ -30,16 +30,23 @@ public:
 	void EndWallClimb();
 
 	float GetInputAngleByForward();
+	float GetClosestLadderHeight(float CurrentHeight);
+	float CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime);
 
 protected:
 	FVector2D SpyInputVector;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float InterpSpeed;
+
 	FClimbData ClimbData;
 	FClimbWallData ClimbWallData;
 
 public:
 	// 이전 프레임의 IK 도달 지점을 저장 (떨림 방지용 보간 타겟)
-	float CurrentOffsetHL;
-	float CurrentOffsetHR;
-	float CurrentOffsetFL;
-	float CurrentOffsetFR;
+	float ZOffsetHL;
+	float ZOffsetHR;
+	float ZOffsetFL;
+	float ZOffsetFR;
 };

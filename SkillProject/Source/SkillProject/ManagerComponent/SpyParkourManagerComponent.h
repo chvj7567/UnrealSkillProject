@@ -83,7 +83,7 @@ public:
 	float DistanceOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
-	float HandL_ZOffset;
+	float Speed;
 };
 
 USTRUCT(BlueprintType)

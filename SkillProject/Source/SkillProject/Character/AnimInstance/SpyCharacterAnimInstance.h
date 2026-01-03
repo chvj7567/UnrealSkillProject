@@ -29,9 +29,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_AbleMove(UAnimNotify* Notify);
 
-	float GetClosestLadderHeight(float CurrentHeight);
-	float CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime);
-
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ASpyCharacter> Player;
@@ -50,7 +47,7 @@ protected:
 	float GroundSpeed;
 
 	UPROPERTY(BlueprintReadOnly)
-	float WallClimbSpeed;
+	float Speed;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool ShouldMove;
@@ -84,4 +81,16 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	float ZOffset_FR;
+
+	UPROPERTY(BlueprintReadOnly)
+	float Weight_HL;
+
+	UPROPERTY(BlueprintReadOnly)
+	float Weight_HR;
+
+	UPROPERTY(BlueprintReadOnly)
+	float Weight_FL;
+
+	UPROPERTY(BlueprintReadOnly)
+	float Weight_FR;
 };

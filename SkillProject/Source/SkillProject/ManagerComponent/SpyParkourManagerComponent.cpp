@@ -251,4 +251,3 @@ void USpyParkourManagerComponent::SetMotionWarping()
         MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultEndName, FinalLandPos, TargetRotator);
     }
 }
-

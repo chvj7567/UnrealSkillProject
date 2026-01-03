@@ -43,18 +43,21 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
-
-	const float ClimbSpeed = 30.f;
+;
 	FVector DesiredVelocity =
-		WallUp * SpyInputVector.Y * ClimbSpeed +
-		WallRight * -SpyInputVector.X * ClimbSpeed;
+		WallUp * SpyInputVector.Y * ClimbData.Speed +
+		WallRight * -SpyInputVector.X * ClimbData.Speed;
 	
 	Velocity = DesiredVelocity;
 
 	FVector Delta = Velocity * DeltaTime;
-
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Delta, UpdatedComponent->GetComponentRotation(), true, Hit);
+
+	CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
+	CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
+	CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
+	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
 }
 
 void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
@@ -90,6 +93,44 @@ void USpyCharacterMovementComponent::EndWallClimb()
 
 float USpyCharacterMovementComponent::GetInputAngleByForward()
 {
-	float Angle = FMath::Atan2(SpyInputVector.X, SpyInputVector.Y);
-	return FMath::RadiansToDegrees(Angle);
+	float Angle = FMath::RadiansToDegrees(FMath::Atan2(SpyInputVector.X, SpyInputVector.Y));
+	return Angle;
+}
+
+float USpyCharacterMovementComponent::GetClosestLadderHeight(float CurrentHeight)
+{
+	TArray<float> Ladder = { 100, 150, 200, 250, 300, 350, 400, 450, 500 };
+
+	// 배열이 비어있는지 확인
+	if (Ladder.Num() == 0) return 0.0f;
+
+	float ClosestValue = Ladder[0];
+	float MinDiff = FMath::Abs(CurrentHeight - Ladder[0]);
+
+	for (int32 i = 1; i < Ladder.Num(); i++)
+	{
+		float CurrentDiff = FMath::Abs(CurrentHeight - Ladder[i]);
+
+		if (CurrentDiff < MinDiff)
+		{
+			MinDiff = CurrentDiff;
+			ClosestValue = Ladder[i];
+		}
+	}
+
+	return ClosestValue;
+}
+
+float USpyCharacterMovementComponent::CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime)
+{
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	if (OwnerCharacter == nullptr)
+		return 0.f;
+
+	FVector AnimBoneLoc = OwnerCharacter->GetMesh()->GetSocketLocation(BoneName);
+	float TargetZ = GetClosestLadderHeight(AnimBoneLoc.Z);
+	float RawOffset = TargetZ - AnimBoneLoc.Z;
+	CurrentOffsetVar = FMath::FInterpTo(CurrentOffsetVar, RawOffset, DeltaTime, InterpSpeed);
+
+	return CurrentOffsetVar;
 }

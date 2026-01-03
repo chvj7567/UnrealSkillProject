@@ -59,7 +59,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
     {
         Velocity = Player->GetVelocity();
         GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
-        WallClimbSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Z, 2));
+        Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
 
         FVector CurrentAcceleration = PlayerMovementComponent->GetCurrentAcceleration();
         if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f && IsLanding == false)
@@ -86,10 +86,22 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
             IsClimbing = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb);
             if (IsClimbing)
             {
-                CalculateBoneOffset(TEXT("hand_l"), ZOffset_HL, DeltaSeconds);
-                CalculateBoneOffset(TEXT("hand_r"), ZOffset_HR, DeltaSeconds);
-                CalculateBoneOffset(TEXT("foot_l"), ZOffset_FL, DeltaSeconds);
-                CalculateBoneOffset(TEXT("foot_r"), ZOffset_FR, DeltaSeconds);
+                ZOffset_HL = PlayerMovementComponent->ZOffsetHL;
+                ZOffset_HR = PlayerMovementComponent->ZOffsetHR;
+                ZOffset_FL = PlayerMovementComponent->ZOffsetFL;
+                ZOffset_FR = PlayerMovementComponent->ZOffsetFR;
+
+                Weight_HL = GetCurveValue(TEXT("IK_Weight_HL"));
+                Weight_HR = GetCurveValue(TEXT("IK_Weight_HR"));
+                Weight_FL = GetCurveValue(TEXT("IK_Weight_FL"));
+                Weight_FR = GetCurveValue(TEXT("IK_Weight_FR"));
+            }
+            else
+            {
+                ZOffset_HL = 0.f;
+                ZOffset_HR = 0.f;
+                ZOffset_FL = 0.f;
+                ZOffset_FR = 0.f;
             }
         }
     }
@@ -116,38 +128,4 @@ void USpyCharacterAnimInstance::AnimNotify_AbleMove(UAnimNotify* Notify)
 {
     IsLanding = false;
     PlayerMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
-}
-
-float USpyCharacterAnimInstance::GetClosestLadderHeight(float CurrentHeight)
-{
-    TArray<float> Ladder = { 100, 150, 200, 270, 340, 400, 450, 500, 560 };
-
-    // 배열이 비어있는지 확인
-    if (Ladder.Num() == 0) return 0.0f;
-
-    float ClosestValue = Ladder[0];
-    float MinDiff = FMath::Abs(CurrentHeight - Ladder[0]);
-
-    for (int32 i = 1; i < Ladder.Num(); i++)
-    {
-        float CurrentDiff = FMath::Abs(CurrentHeight - Ladder[i]);
-
-        if (CurrentDiff < MinDiff)
-        {
-            MinDiff = CurrentDiff;
-            ClosestValue = Ladder[i];
-        }
-    }
-
-    return ClosestValue;
-}
-
-float USpyCharacterAnimInstance::CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime)
-{
-    FVector AnimBoneLoc = Player->GetMesh()->GetSocketLocation(BoneName);
-    float TargetZ = GetClosestLadderHeight(AnimBoneLoc.Z);
-    float RawOffset = TargetZ - AnimBoneLoc.Z;
-
-    CurrentOffsetVar = FMath::FInterpTo(CurrentOffsetVar, RawOffset, DeltaTime, 0.f);
-    return CurrentOffsetVar;
 }
