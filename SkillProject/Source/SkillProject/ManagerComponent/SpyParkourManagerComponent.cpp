@@ -29,34 +29,37 @@ void USpyParkourManagerComponent::TryClimbAction()
     if (OwnerCharacter == nullptr)
         return;
 
-    FVector OwnerLocation = OwnerCharacter->GetActorLocation();
-    FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
-
-    FVector Start = OwnerLocation;
-    FVector End = Start + (OwnerFowardVector * ClimbData.DistanceOffset);
-
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(OwnerCharacter);
-
-    bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
-    DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
-
-    ClimbWallData.HitVector = Hit.Location;
-    ClimbWallData.NormalVector = Hit.ImpactNormal;
-
     ASpyPlayerController* SpyPlayerController = OwnerCharacter->GetController<ASpyPlayerController>();
     ASpyPlayerState* SpyPlayerState = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
     if (SpyPlayerController == nullptr || SpyPlayerState == nullptr)
         return;
 
-    if (bHit)
+    if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb))
     {
-        SpyPlayerState->AddState(ESpyPlayerStateFlags::IsClimb);
+        SpyPlayerState->RemoveState(ESpyPlayerStateFlags::IsClimb);
     }
     else
     {
-        SpyPlayerState->RemoveState(ESpyPlayerStateFlags::IsClimb);
+        FVector OwnerLocation = OwnerCharacter->GetActorLocation();
+        FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
+
+        FVector Start = OwnerLocation;
+        FVector End = Start + (OwnerFowardVector * ClimbData.DistanceOffset);
+
+        FHitResult Hit;
+        FCollisionQueryParams Params;
+        Params.AddIgnoredActor(OwnerCharacter);
+
+        bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
+        DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
+
+        ClimbWallData.HitVector = Hit.Location;
+        ClimbWallData.NormalVector = Hit.ImpactNormal;
+
+        if (bHit)
+        {
+            SpyPlayerState->AddState(ESpyPlayerStateFlags::IsClimb);
+        }
     }
 
     SpyPlayerController->RefreshMappingContext();

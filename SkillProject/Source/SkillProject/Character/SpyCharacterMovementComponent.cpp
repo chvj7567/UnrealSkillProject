@@ -54,10 +54,10 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Delta, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
-	CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
-	CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
-	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
+	//CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
+	//CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
+	//CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
+	//CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
 }
 
 void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
@@ -127,9 +127,10 @@ float USpyCharacterMovementComponent::CalculateBoneOffset(FName BoneName, float&
 	if (OwnerCharacter == nullptr)
 		return 0.f;
 
-	FVector AnimBoneLoc = OwnerCharacter->GetMesh()->GetSocketLocation(BoneName);
-	float TargetZ = GetClosestLadderHeight(AnimBoneLoc.Z);
-	float RawOffset = TargetZ - AnimBoneLoc.Z;
+	FVector AnimBoneLocation = OwnerCharacter->GetMesh()->GetSocketLocation(BoneName);
+	float TargetZ = GetClosestLadderHeight(AnimBoneLocation.Z);
+	float RawOffset = TargetZ - AnimBoneLocation.Z;
+
 	CurrentOffsetVar = FMath::FInterpTo(CurrentOffsetVar, RawOffset, DeltaTime, InterpSpeed);
 
 	return CurrentOffsetVar;
