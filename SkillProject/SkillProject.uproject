@@ -7,23 +7,12 @@
 		{
 			"Name": "SkillProject",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"GameplayAbilities",
-				"Engine",
-				"CoreUObject",
-				"UMG"
-			]
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "SpyGAS",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault",
-			"AdditionalDependencies": [
-				"GameplayAbilities",
-				"Engine",
-				"CoreUObject"
-			]
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

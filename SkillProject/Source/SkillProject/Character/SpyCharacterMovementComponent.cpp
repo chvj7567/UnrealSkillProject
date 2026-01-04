@@ -54,10 +54,10 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Delta, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	//CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
-	//CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
-	//CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
-	//CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
+	CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
+	CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
+	CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
+	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
 }
 
 void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
