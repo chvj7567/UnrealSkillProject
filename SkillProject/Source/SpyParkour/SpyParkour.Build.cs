@@ -18,9 +18,7 @@ public class SpyParkour : ModuleRules
 			{
                 "Core",
 				"CoreUObject",
-				"Engine",
-                "Slate",
-                "SlateCore"
+				"Engine"
             });
 	}
 }

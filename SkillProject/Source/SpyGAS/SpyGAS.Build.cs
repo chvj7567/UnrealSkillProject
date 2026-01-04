@@ -19,8 +19,6 @@ public class SpyGAS : ModuleRules
                 "Core",
 				"CoreUObject",
 				"Engine",
-                "Slate",
-                "SlateCore",
                 "GameplayAbilities",
                 "GameplayTags",
                 "GameplayTasks"
