@@ -12,5 +12,6 @@ public class SkillProjectTarget : TargetRules
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 		ExtraModuleNames.Add("SkillProject");
 		ExtraModuleNames.Add("SpyGAS");
+		ExtraModuleNames.Add("SpyParkour");
 	}
 }
