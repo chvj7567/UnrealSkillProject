@@ -28,9 +28,8 @@ public class SkillProject : ModuleRules
             "GameplayAbilities",
             "GameplayTags",
             "GameplayTasks",
-            "MotionWarping",
             "SpyGAS",
-            "SpyParkour"
+            "MotionWarping"
         });
     }
 }
