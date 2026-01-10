@@ -166,6 +166,11 @@ void ASpyCharacter::OnRep_PlayerState()
 	}
 }
 
+UAbilitySystemComponent* ASpyCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
 void ASpyCharacter::RegisterAbility()
 {
 	if (AbilitySystemComponent == nullptr)

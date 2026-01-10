@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
-#include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
+#include "SKAbilitySystemGlobals.h"
 #include "SKAbilitySystemComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Character/SpyCharacterMovementComponent.h"
@@ -24,6 +24,7 @@ class USpyAnimManagerComponent;
 class USpyParkourManagerComponent;
 class UMotionWarpingComponent;
 class ASpyWeapon;
+class UAbilitySystemComponent;
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
@@ -41,9 +42,12 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
 	FORCEINLINE USKAbilitySystemComponent* GetSKAbilitySystemComponent() const { return Cast<USKAbilitySystemComponent>(AbilitySystemComponent); }
 	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
 	FORCEINLINE USpyParkourManagerComponent* GetSpyParkourManagerComponent() const { return SpyParkourManagerComponent; }
