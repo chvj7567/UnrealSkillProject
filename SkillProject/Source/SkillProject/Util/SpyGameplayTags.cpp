@@ -17,7 +17,8 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_C, "Skill.Action.C");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_D, "Skill.Action.D");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_E, "Skill.Action.E");
-	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_Vault, "Skill.Action.Vault");
+
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Vault, "Skill.Move.Vault");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Fire, "GameplayCue.Actor.Fire");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Ability/SKGameplayAbility_Skill.h"
+#include "Ability/SKGameplayAbility_SkillActionRange.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
@@ -12,9 +12,9 @@
 #include "SKAbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility_Skill)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility_SkillActionRange)
 
-USKGameplayAbility_Skill::USKGameplayAbility_Skill()
+USKGameplayAbility_SkillActionRange::USKGameplayAbility_SkillActionRange()
 {
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
@@ -22,17 +22,17 @@ USKGameplayAbility_Skill::USKGameplayAbility_Skill()
     ReplicationPolicy = EGameplayAbilityReplicationPolicy::ReplicateNo;
 }
 
-void USKGameplayAbility_Skill::OnMontageCompleted()
+void USKGameplayAbility_SkillActionRange::OnMontageCompleted()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-void USKGameplayAbility_Skill::OnMontageCancelled()
+void USKGameplayAbility_SkillActionRange::OnMontageCancelled()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USKGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
+void USKGameplayAbility_SkillActionRange::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
     if (DamageEffectClass == nullptr)
         return;
@@ -64,13 +64,13 @@ void USKGameplayAbility_Skill::OnWaitGameplayEvent(FGameplayEventData Payload)
             FActiveGameplayEffectHandle AppliedHandle = ASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
             if (AppliedHandle.WasSuccessfullyApplied())
             {
-                UE_LOG(LogTemp, Warning, TEXT("[Server] %s GE Successfully Applied! Effect: %s"), *Payload.EventTag.ToString(), *SpecHandle.Data.Get()->Def->GetName());
+                UE_LOG(LogTemp, Warning, TEXT("# [Server] %s GE Successfully Applied! Effect: %s"), *Payload.EventTag.ToString(), *SpecHandle.Data.Get()->Def->GetName());
             }
         }
     }
 }
 
-void USKGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void USKGameplayAbility_SkillActionRange::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -82,7 +82,7 @@ void USKGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle 
 
         if (UAbilityTask_WaitGameplayEvent* WaitTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitSkillTag, nullptr, false, false))
         {
-            WaitTask->EventReceived.AddDynamic(this, &USKGameplayAbility_Skill::OnWaitGameplayEvent);
+            WaitTask->EventReceived.AddDynamic(this, &USKGameplayAbility_SkillActionRange::OnWaitGameplayEvent);
             WaitTask->ReadyForActivation();
         }
 
@@ -90,9 +90,9 @@ void USKGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle 
         {
             if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
             {
-                MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_Skill::OnMontageCompleted);
-                MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_Skill::OnMontageCancelled);
-                MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_Skill::OnMontageCancelled);
+                MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillActionRange::OnMontageCompleted);
+                MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillActionRange::OnMontageCancelled);
+                MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillActionRange::OnMontageCancelled);
                 MontageTask->ReadyForActivation();
             }
         }
@@ -108,7 +108,7 @@ void USKGameplayAbility_Skill::ActivateAbility(const FGameplayAbilitySpecHandle 
     }
 }
 
-void USKGameplayAbility_Skill::CheckHit()
+void USKGameplayAbility_SkillActionRange::CheckHit()
 {
     if (IsActive() == false)
         return;
@@ -175,6 +175,6 @@ void USKGameplayAbility_Skill::CheckHit()
     }
 
     UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, RepeatTime);
-    DelayTask->OnFinish.AddDynamic(this, &USKGameplayAbility_Skill::CheckHit);
+    DelayTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillActionRange::CheckHit);
     DelayTask->ReadyForActivation();
 }

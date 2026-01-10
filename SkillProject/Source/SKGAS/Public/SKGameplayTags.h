@@ -17,6 +17,9 @@ namespace SKGameplayTags
 	//# 액션 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Action);
 
+	//# 이동 스킬
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move);
+
 	//# 버프 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Buff);
 

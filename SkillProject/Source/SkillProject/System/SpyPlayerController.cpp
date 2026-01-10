@@ -183,7 +183,7 @@ void ASpyPlayerController::TryVault(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_TryVault();
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Move_Vault);
 	}
 }
 

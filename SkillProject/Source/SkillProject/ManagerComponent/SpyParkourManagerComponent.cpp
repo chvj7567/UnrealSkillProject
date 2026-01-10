@@ -100,18 +100,17 @@ void USpyParkourManagerComponent::OnRep_ClimbData()
         if (USpyCharacterMovementComponent* MoveComp = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
         {
             MoveComp->StartWallClimb(ClimbData);
-            UE_LOG(LogTemp, Warning, TEXT("Client: Data Synced and StartWallClimb Updated!"));
         }
     }
 }
 
-bool USpyParkourManagerComponent::TryVaultAction()
+bool USpyParkourManagerComponent::CanVaultAction()
 {
     if (VaultData.VaultMontage == nullptr)
         return false;
 
-    ACharacter* OwnerChararacter = Cast<ACharacter>(GetOwner());
-    if (OwnerChararacter == nullptr)
+    ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+    if (OwnerCharacter == nullptr)
         return false;
 
     //# Vault 가능한 벽 정보 가져옴
@@ -119,39 +118,12 @@ bool USpyParkourManagerComponent::TryVaultAction()
 
     //# 벽 정보가 세팅되지 않았다면 Vault 불가능한 벽
     if (VaultWallData.FrontNormalVector == FVector::ZeroVector &&
-        VaultWallData.HandPosVector == FVector::ZeroVector &&
-        VaultWallData.LandPosVector == FVector::ZeroVector)
-        return false;
-
-    UCharacterMovementComponent* CharacterMovementComponent = OwnerChararacter->GetCharacterMovement();
-    UCapsuleComponent* CapsuleComponent = OwnerChararacter->GetCapsuleComponent();
-    UAnimInstance* AnimInstance = OwnerChararacter->GetMesh()->GetAnimInstance();
-    if (CharacterMovementComponent == nullptr || CapsuleComponent == nullptr || AnimInstance == nullptr)
+        VaultWallData.HandLocVector == FVector::ZeroVector &&
+        VaultWallData.LandLocVector == FVector::ZeroVector)
         return false;
 
     //# Vault 벽 정보를 모션 워핑에 세팅
-    SetMotionWarping();
-
-    //# Vault Montage 시작 전 실행
-    CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
-    CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
-
-    //# Vault Montage 실행
-    OwnerChararacter->PlayAnimMontage(VaultData.VaultMontage);
-
-    //# Vault Montage 끝난 후 실행
-    FOnMontageEnded EndDelegate;
-    EndDelegate.BindLambda([this, CharacterMovementComponent, CapsuleComponent](UAnimMontage* Montage, bool bInterrupted) {
-        if (Montage == VaultData.VaultMontage)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Montage End"));
-            CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
-            CharacterMovementComponent->StopMovementImmediately();
-            CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-        }
-        });
-
-    AnimInstance->Montage_SetEndDelegate(EndDelegate, VaultData.VaultMontage);
+    //SetMotionWarping();
 
     return true;
 }
@@ -216,7 +188,7 @@ void USpyParkourManagerComponent::SetVaultWallInfo()
                 if (CheckHeight == false)
                 {
                     CheckHeight = true;
-                    VaultWallData.HandPosVector = HitResult.Location;
+                    VaultWallData.HandLocVector = HitResult.Location;
                     VaultWallData.Height = FVector::Distance(HitResult.Location, End);
                 }
             }
@@ -224,7 +196,7 @@ void USpyParkourManagerComponent::SetVaultWallInfo()
             else
             {
                 //# 다음 반복문 End 위치가 착지 지점
-                VaultWallData.LandPosVector = Start + -WallNormalVector * VaultData.RayInterval + (FVector::DownVector * VaultData.VaildHeight);
+                VaultWallData.LandLocVector = Start + -WallNormalVector * VaultData.RayInterval + (FVector::DownVector * VaultData.VaildHeight);
 
                 //# Z축 다시 캐릭터 Z축으로 
                 End.Z = OwnerLocation.Z;
@@ -260,37 +232,45 @@ void USpyParkourManagerComponent::SetVaultWallInfo()
     }
 }
 
-void USpyParkourManagerComponent::SetMotionWarping()
+FVaultMotionWarpingData USpyParkourManagerComponent::GetVaultMotionWarpingData()
 {
     ACharacter* OwnerChararacter = Cast<ACharacter>(GetOwner());
     if (OwnerChararacter == nullptr)
-        return;
+        return FVaultMotionWarpingData();
 
-    UMotionWarpingComponent* MotionWarpingComponent = OwnerChararacter->FindComponentByClass<UMotionWarpingComponent>();
+    //# 벽 노말 벡터 기준으로 계산
+    FRotator TargetRotator = VaultWallData.FrontNormalVector.GetSafeNormal2D().Rotation() - FRotator(0, 180.f, 0);
+    FVector RightVector = FVector::CrossProduct(FVector::UpVector, -VaultWallData.FrontNormalVector);
+    FVector ForwardVector = -VaultWallData.FrontNormalVector;
+    FVector UpVector = FVector::UpVector;
+
+    //# 애니메이션에 따라 오프셋 적용
+    FVector FinalHandLoc = VaultWallData.HandLocVector +
+        (RightVector * VaultData.VaultStartOffset.X) + //# X Offset
+        (ForwardVector * VaultData.VaultStartOffset.Y) + //# Y Offset
+        (UpVector * VaultData.VaultStartOffset.Z); //# Z Offset
+
+    FVector FinalLandLoc = VaultWallData.LandLocVector +
+        (RightVector * VaultData.VaultEndOffset.X) + //# X Offset
+        (ForwardVector * VaultData.VaultEndOffset.Y) + //# Y Offset
+        (UpVector * VaultData.VaultEndOffset.Z); //# Z Offset
+
+    //# 디버그는 Offset 적용 안함
+    DrawDebugSphere(GetWorld(), VaultWallData.HandLocVector, 10.f, 12, FColor::Yellow, false, 1.f);
+    DrawDebugSphere(GetWorld(), VaultWallData.LandLocVector, 10.f, 12, FColor::Green, false, 1.f);
+
+    FVaultMotionWarpingData Data;
+    Data.StartLoc = FinalHandLoc;
+    Data.StartRot = TargetRotator;
+    Data.EndLoc = FinalLandLoc;
+    Data.EndRot = TargetRotator;
+
+    /*UMotionWarpingComponent* MotionWarpingComponent = OwnerChararacter->FindComponentByClass<UMotionWarpingComponent>();
     if (MotionWarpingComponent != nullptr)
     {
-        //# 벽 노말 벡터 기준으로 계산
-        FRotator TargetRotator = VaultWallData.FrontNormalVector.GetSafeNormal2D().Rotation() - FRotator(0, 180.f, 0);
-        FVector RightVector = FVector::CrossProduct(FVector::UpVector, -VaultWallData.FrontNormalVector);
-        FVector ForwardVector = -VaultWallData.FrontNormalVector;
-        FVector UpVector = FVector::UpVector;
+        MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultStartName, FinalHandLoc, TargetRotator);
+        MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultEndName, FinalLandLoc, TargetRotator);
+    }*/
 
-        //# 애니메이션에 따라 오프셋 적용
-        FVector FinalHandPos = VaultWallData.HandPosVector +
-            (RightVector * VaultData.VaultStartOffset.X) + //# X Offset
-            (ForwardVector * VaultData.VaultStartOffset.Y) + //# Y Offset
-            (UpVector * VaultData.VaultStartOffset.Z); //# Z Offset
-
-        FVector FinalLandPos = VaultWallData.LandPosVector +
-            (RightVector * VaultData.VaultEndOffset.X) + //# X Offset
-            (ForwardVector * VaultData.VaultEndOffset.Y) + //# Y Offset
-            (UpVector * VaultData.VaultEndOffset.Z); //# Z Offset
-
-        //# 디버그는 Offset 적용 안함
-        DrawDebugSphere(GetWorld(), VaultWallData.HandPosVector, 10.f, 12, FColor::Yellow, false, 1.f);
-        DrawDebugSphere(GetWorld(), VaultWallData.LandPosVector, 10.f, 12, FColor::Green, false, 1.f);
-
-        MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultStartName, FinalHandPos, TargetRotator);
-        MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultEndName, FinalLandPos, TargetRotator);
-    }
+    return Data;
 }

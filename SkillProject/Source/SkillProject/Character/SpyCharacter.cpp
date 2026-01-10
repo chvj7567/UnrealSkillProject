@@ -180,8 +180,8 @@ void ASpyCharacter::RegisterAbility()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
 		.AddUObject(this, &ASpyCharacter::OnHealthChanged);
 
-	AbilitySystemComponent->RegisterGameplayTagEvent(SpyGameplayTags::Character_State_Movement_Climb, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &ASpyCharacter::OnClimbTagChanged);
+	/*AbilitySystemComponent->RegisterGameplayTagEvent(SpyGameplayTags::Character_State_Movement_Climb, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &ASpyCharacter::OnClimbTagChanged);*/
 }
 
 void ASpyCharacter::OnClimbTagChanged(const FGameplayTag Tag, int32 NewCount)
@@ -271,12 +271,4 @@ void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
 			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
 		}
 	}
-}
-
-void ASpyCharacter::Server_TryVault_Implementation()
-{
-	if (HasAuthority() == false)
-		return;
-
-	SpyParkourManagerComponent->TryVaultAction();
 }

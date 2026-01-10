@@ -5,15 +5,15 @@
 #include "CoreMinimal.h"
 #include "Ability/SKGameplayAbility.h"
 
-#include "SKGameplayAbility_Skill.generated.h"
+#include "SKGameplayAbility_SkillActionRange.generated.h"
 
 UCLASS()
-class SKGAS_API USKGameplayAbility_Skill : public USKGameplayAbility
+class SKGAS_API USKGameplayAbility_SkillActionRange : public USKGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-    USKGameplayAbility_Skill();
+    USKGameplayAbility_SkillActionRange();
 
 protected:
     virtual void OnMontageCompleted() override;

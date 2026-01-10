@@ -53,8 +53,8 @@ struct FVaultWallData {
 
 public:
 	FVector FrontNormalVector;
-	FVector HandPosVector;
-	FVector LandPosVector;
+	FVector HandLocVector;
+	FVector LandLocVector;
 	float Distance;
 	float Height;
 	float Depth;
@@ -65,8 +65,8 @@ public:
 
 	void Clear() {
 		FrontNormalVector = FVector::ZeroVector;
-		HandPosVector = FVector::ZeroVector;
-		LandPosVector = FVector::ZeroVector;
+		HandLocVector = FVector::ZeroVector;
+		LandLocVector = FVector::ZeroVector;
 		Distance = 0.f;
 		Height = 0.f;
 		Depth = 0.f;
@@ -114,6 +114,17 @@ public:
 	}
 };
 
+USTRUCT()
+struct FVaultMotionWarpingData
+{
+	GENERATED_BODY()
+
+	FVector StartLoc;
+	FRotator StartRot;
+	FVector EndLoc;
+	FRotator EndRot;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
 {
@@ -139,17 +150,16 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	bool TryVaultAction();
+	bool CanVaultAction();
 
 	void SetVaultWallInfo();
-	void SetMotionWarping();
+	FVaultMotionWarpingData GetVaultMotionWarpingData();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVaultData VaultData;
 
 	FVaultWallData VaultWallData;
-	FOnMontageEnded VaultMontageEndDelegate;
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_ClimbData, EditAnywhere, BlueprintReadWrite)
