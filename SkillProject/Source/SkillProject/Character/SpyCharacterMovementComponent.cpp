@@ -28,6 +28,23 @@ void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteration
 	}
 }
 
+void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
+{
+	switch (CustomMovementMode)
+	{
+	case (uint8)ECustomMovementMode::MOVE_WallClimb:
+	{
+		return;
+	}
+	break;
+	default:
+	{
+		Super::PhysicsRotation(DeltaTime);
+	}
+	break;
+	}
+}
+
 void USpyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
@@ -38,14 +55,8 @@ void USpyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PrevMov
 	FString CurrentModeName = ModeEnum->GetValueAsString(MovementMode);
 
 	UE_LOG(LogTemp, Warning, TEXT("Movement Mode Changed!"));
-	UE_LOG(LogTemp, Log, TEXT("Before: %s (Custom: %d)"), *PrevModeName, PreviousCustomMode);
-	UE_LOG(LogTemp, Log, TEXT("After:  %s (Custom: %d)"), *CurrentModeName, CustomMovementMode);
-
-	if (PrevMovementMode == MOVE_Custom)
-	{
-		// 누가 모드를 바꿨는지 호출 경로를 전부 출력합니다.
-		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
-	}
+	UE_LOG(LogTemp, Log, TEXT("Before: %s (Custom: %d) %s"), *PrevModeName, PreviousCustomMode, *GetOwner()->GetName());
+	UE_LOG(LogTemp, Log, TEXT("After:  %s (Custom: %d) %s"), *CurrentModeName, CustomMovementMode, *GetOwner()->GetName());
 }
 
 void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterations)
@@ -53,7 +64,7 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
-	const FVector WallNormal = ClimbWallData.NormalVector;
+	const FVector WallNormal = ClimbData.WallData.NormalVector;
 	const FVector UpVector = FVector::UpVector;
 
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
@@ -75,31 +86,39 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
 }
 
-void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
+void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("StartWallClimb"));
+	UE_LOG(LogTemp, Warning, TEXT("StartWallClimb %s"), *GetOwner()->GetName());
 
 	ClimbData = InClimbData;
-	ClimbWallData = InClimbWallData;
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
+	CharacterOwner->bUseControllerRotationYaw = false;
+
 	GravityScale = 0.0f;
+	bUseControllerDesiredRotation = false;
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
 
-	FVector TargetLocation = ClimbWallData.HitVector + (ClimbWallData.NormalVector * ClimbData.DistanceOffset);
-	FRotator TargetRotator = (-ClimbWallData.NormalVector).Rotation();
+	FVector TargetLocation = ClimbData.WallData.HitVector + (ClimbData.WallData.NormalVector * ClimbData.DistanceOffset);
+	FRotator TargetRotator = (-ClimbData.WallData.NormalVector).Rotation();
 	TargetRotator.Pitch = 0.f;
 	TargetRotator.Roll = 0.f;
 
-	CharacterOwner->SetActorLocation(TargetLocation);
-	CharacterOwner->SetActorRotation(TargetRotator);
+	UpdatedComponent->SetWorldLocationAndRotation(TargetLocation, TargetRotator, false, nullptr, ETeleportType::TeleportPhysics);
+
+	bForceNextFloorCheck = false;
+
+	if (GetOwner()->HasAuthority())
+	{
+		CurrentFloor.Clear();
+	}
 }
 
 void USpyCharacterMovementComponent::EndWallClimb()
 {
-	UE_LOG(LogTemp, Warning, TEXT("EndWallClimb"));
+	UE_LOG(LogTemp, Warning, TEXT("EndWallClimb %s"), *GetOwner()->GetName());
 
 	GravityScale = 1.0f;
 	bOrientRotationToMovement = true;

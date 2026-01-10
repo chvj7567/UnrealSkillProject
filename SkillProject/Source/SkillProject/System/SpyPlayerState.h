@@ -9,6 +9,7 @@
 #include "SpyPlayerState.generated.h"
 
 class ASpyCharacter;
+struct FGameplayTag;
 
 UCLASS()
 class SKILLPROJECT_API ASpyPlayerState : public APlayerState
@@ -19,24 +20,18 @@ public:
     ASpyPlayerState();
 
 public:
-    virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
-
-public:
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_Death();
 
 public:
-    void Initialize(ASpyCharacter* SpyCharacter);
+    void Initialize();
 
-    bool HasState(ESpyPlayerStateFlags Flag) const;
-    void AddState(ESpyPlayerStateFlags Flag);
-    void RemoveState(ESpyPlayerStateFlags Flag);
-    void ToggleState(ESpyPlayerStateFlags Flag);
+    bool HasState(FGameplayTag Tag);
+    void AddState(FGameplayTag Tag);
+    void RemoveState(FGameplayTag Tag);
+    void ToggleState(FGameplayTag Tag);
 
 protected:
     UPROPERTY()
-    TObjectPtr<ASpyCharacter> SpyCharacter;
-
-    UPROPERTY(Replicated)
-    ESpyPlayerStateFlags PlayerFlags;
+    TObjectPtr<ASpyCharacter> OwnerCharacter;
 };

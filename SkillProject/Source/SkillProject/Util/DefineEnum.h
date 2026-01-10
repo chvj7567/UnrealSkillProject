@@ -14,15 +14,6 @@ enum class ESpyUIType : uint8
     Menu            UMETA(DisplayName = "Menu"),
 };
 
-UENUM(BlueprintType, meta = (Bitflags))
-enum class ESpyPlayerStateFlags : uint8
-{
-    None = 0,
-    IsAlive = 1 << 0,
-    IsClimb = 1 << 1,
-};
-ENUM_CLASS_FLAGS(ESpyPlayerStateFlags);
-
 UENUM(BlueprintType)
 enum class ECustomMovementMode : uint8
 {

@@ -11,6 +11,9 @@ namespace SKGameplayTags
 	//# 캐릭터 클래스
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class);
 
+	//# 캐릭터 상태
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State);
+
 	//# 액션 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Action);
 

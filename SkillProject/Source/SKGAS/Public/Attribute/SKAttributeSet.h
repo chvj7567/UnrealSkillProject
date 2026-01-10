@@ -58,4 +58,6 @@ protected:
 public:
 	mutable FSKAttributeEvent OnHealthChanged;
 	mutable FSKAttributeEvent OnMaxHealthChanged;
+	mutable FSKAttributeEvent OnManaChanged;
+	mutable FSKAttributeEvent OnMaxManaChanged;
 };

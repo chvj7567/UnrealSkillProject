@@ -10,12 +10,19 @@ void UUSpyAnimNotifyState_AttackTrace::NotifyBegin(USkeletalMeshComponent* MeshC
 {
     Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
-	if (MeshComp && MeshComp->GetOwner())
+	if (MeshComp == nullptr)
+		return;
+
+	AActor* Owner = MeshComp->GetOwner();
+	if (Owner == nullptr)
+		return;
+
+	if (Owner->HasAuthority() == false)
+		return;
+
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Owner))
 	{
-		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(MeshComp->GetOwner()))
-		{
-			ASC->AddLooseGameplayTag(SkillTag);
-		}
+		ASC->AddReplicatedLooseGameplayTag(SkillTag);
 	}
 }
 
@@ -23,11 +30,18 @@ void UUSpyAnimNotifyState_AttackTrace::NotifyEnd(USkeletalMeshComponent* MeshCom
 {
     Super::NotifyEnd(MeshComp, Animation, EventReference);
 
-	if (MeshComp && MeshComp->GetOwner())
+	if (MeshComp == nullptr)
+		return;
+
+	AActor* Owner = MeshComp->GetOwner();
+	if (Owner == nullptr)
+		return;
+
+	if (Owner->HasAuthority() == false)
+		return;
+
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Owner))
 	{
-		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(MeshComp->GetOwner()))
-		{
-			ASC->RemoveLooseGameplayTag(SkillTag);
-		}
+		ASC->RemoveReplicatedLooseGameplayTag(SkillTag);
 	}
 }

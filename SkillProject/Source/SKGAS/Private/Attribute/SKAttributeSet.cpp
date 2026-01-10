@@ -16,27 +16,28 @@ void USKAttributeSet::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Ou
 
 void USKAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, Health, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USKAttributeSet, Health, OldValue);
 
-	const float CurrentHealth = GetHealth();
-	const float EstimatedMagnitude = CurrentHealth - OldValue.GetCurrentValue();
-
-	OnHealthChanged.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHealth);
+	OnHealthChanged.Broadcast(nullptr, nullptr, nullptr, GetHealth() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetHealth());
 }
 
 void USKAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, MaxHealth, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USKAttributeSet, MaxHealth, OldValue);
 
 	OnMaxHealthChanged.Broadcast(nullptr, nullptr, nullptr, GetMaxHealth() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetMaxHealth());
 }
 
 void USKAttributeSet::OnRep_Mana(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, Mana, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USKAttributeSet, Mana, OldValue);
+
+	OnMaxHealthChanged.Broadcast(nullptr, nullptr, nullptr, GetMana() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetMana());
 }
 
 void USKAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, MaxMana, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USKAttributeSet, MaxMana, OldValue);
+
+	OnMaxHealthChanged.Broadcast(nullptr, nullptr, nullptr, GetMaxMana() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetMaxMana());
 }

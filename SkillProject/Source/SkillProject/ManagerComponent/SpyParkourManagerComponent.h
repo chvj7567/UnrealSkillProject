@@ -74,25 +74,14 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FClimbData {
-
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
-	float DistanceOffset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
-	float Speed;
-};
-
-USTRUCT(BlueprintType)
 struct FClimbWallData {
 
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(VisibleAnywhere)
 	FVector NormalVector;
+	UPROPERTY(VisibleAnywhere)
 	FVector HitVector;
 
 	FClimbWallData() {
@@ -105,6 +94,26 @@ public:
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FClimbData {
+
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	float DistanceOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	float Speed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	FClimbWallData WallData;
+
+	void Clear() {
+		WallData.Clear();
+	}
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
 {
@@ -113,19 +122,20 @@ class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
 public:	
 	USpyParkourManagerComponent();
 
-protected:
-	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
 	FORCEINLINE FVaultData GetVaultData() const { return VaultData; }
 	FORCEINLINE FVaultWallData GetVaultWallData() const { return VaultWallData; }
 
 	FORCEINLINE FClimbData GetClimbData() const { return ClimbData; }
-	FORCEINLINE FClimbWallData GetClimbWallData() const { return ClimbWallData; }
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void TryClimbAction();
+	bool TryToggleClimbAction();
+
+	UFUNCTION()
+	void OnRep_ClimbData();
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -135,16 +145,13 @@ public:
 	void SetMotionWarping();
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parkour")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVaultData VaultData;
 
 	FVaultWallData VaultWallData;
 	FOnMontageEnded VaultMontageEndDelegate;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parkour")
+	UPROPERTY(ReplicatedUsing = OnRep_ClimbData, EditAnywhere, BlueprintReadWrite)
 	FClimbData ClimbData;
-
-	FClimbWallData ClimbWallData;
-	
 };

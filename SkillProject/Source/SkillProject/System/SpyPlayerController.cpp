@@ -50,6 +50,8 @@ void ASpyPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SkillCAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillC);
 		EnhancedInputComponent->BindAction(SkillDAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillD);
 		EnhancedInputComponent->BindAction(SkillEAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillE);
+
+		EnhancedInputComponent->BindAction(TryVaultAction, ETriggerEvent::Started, this, &ASpyPlayerController::TryVault);
 	}
 }
 
@@ -169,6 +171,22 @@ void ASpyPlayerController::UseSkillE(const FInputActionValue& InValue)
 	}
 }
 
+void ASpyPlayerController::TryClimb(const FInputActionValue& InValue)
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		//SpyCharacter->Server_TryClimb();
+	}
+}
+
+void ASpyPlayerController::TryVault(const FInputActionValue& InValue)
+{
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	{
+		SpyCharacter->Server_TryVault();
+	}
+}
+
 void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingContext)
 {
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
@@ -176,6 +194,7 @@ void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingCont
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
+			Subsystem->ClearAllMappings();
 			Subsystem->AddMappingContext(InMappingContext, 0);
 		}
 	}
@@ -187,25 +206,12 @@ void ASpyPlayerController::RefreshMappingContext()
 	{
 		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 		{
-			if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb))
+			if (SpyPlayerState->HasState(SpyGameplayTags::Character_State_Movement_Climb))
 			{
-				if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
-				{
-					if (USpyParkourManagerComponent* ParkourComponent = SpyCharacter->GetSpyParkourManagerComponent())
-					{
-						SpyMovementComponent->StartWallClimb(ParkourComponent->GetClimbData(), ParkourComponent->GetClimbWallData());
-					}
-				}
-
 				SetMappingContext(WallClimbMappingContext);
 			}
 			else
 			{
-				if (USpyCharacterMovementComponent* SpyMovementComponent = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
-				{
-					SpyMovementComponent->EndWallClimb();
-				}
-
 				SetMappingContext(DefaultMappingContext);
 			}
 		}

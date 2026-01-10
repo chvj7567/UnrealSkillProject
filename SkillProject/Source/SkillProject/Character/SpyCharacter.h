@@ -56,26 +56,20 @@ public:
 	FORCEINLINE UMotionWarpingComponent* GetMotionWarpingComponent() const { return MotionWarpingComponent; }
 
 private:
-	UFUNCTION(BlueprintCallable)
 	void RegisterAbility();
+	void OnClimbTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 public:
 	void OnHealthChanged(const struct FOnAttributeChangeData& Data);
 	void Death();
-	void TestHit();
 	struct FGameplayTagContainer GetActivatableAbilityTags();
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void OnSkillHitOverlap(UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult);
-
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_UseSkill(FGameplayTag SkillTag);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_TryVault();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -110,7 +104,5 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<ASpyWeapon> SpyWeapon;
-
-
 };
 

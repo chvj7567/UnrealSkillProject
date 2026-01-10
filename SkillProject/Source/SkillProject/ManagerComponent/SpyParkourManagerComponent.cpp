@@ -2,67 +2,107 @@
 
 
 #include "SpyParkourManagerComponent.h"
-#include "Util/DefineEnum.h"
+#include "Util/SpyGameplayTags.h"
 #include "GameFramework/Character.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "System/SpyPlayerController.h"
 #include "System/SpyPlayerState.h"
+#include "Character/SpyCharacter.h"
 #include "MotionWarpingComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Net/UnrealNetwork.h"
 
 USpyParkourManagerComponent::USpyParkourManagerComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
-    ClimbWallData = FClimbWallData();
+    SetIsReplicatedByDefault(true);
+
+    ClimbData = FClimbData();
     VaultWallData = FVaultWallData();
 }
 
-void USpyParkourManagerComponent::BeginPlay()
+void USpyParkourManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::BeginPlay();
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(USpyParkourManagerComponent, ClimbData);
 }
 
-void USpyParkourManagerComponent::TryClimbAction()
+bool USpyParkourManagerComponent::TryToggleClimbAction()
 {
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
     if (OwnerCharacter == nullptr)
-        return;
+        return false;
+
+    //# 서버만 실행
+    if (OwnerCharacter->HasAuthority() == false)
+        return false;
+
+    UE_LOG(LogTemp, Log, TEXT("# Server TryToggleClimbAction Name: %s, Role: %d"), *GetOwner()->GetName(), (int32)GetOwner()->GetLocalRole());
+
+    ASpyPlayerState* SpyPlayerState = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
+    if (SpyPlayerState == nullptr)
+    {
+        UE_LOG(LogTemp, Log, TEXT("# Server SpyPlayerState Is Null"));
+        return false;
+    }
 
     ASpyPlayerController* SpyPlayerController = OwnerCharacter->GetController<ASpyPlayerController>();
-    ASpyPlayerState* SpyPlayerState = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
-    if (SpyPlayerController == nullptr || SpyPlayerState == nullptr)
-        return;
-
-    if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb))
+    if (SpyPlayerController == nullptr)
     {
-        SpyPlayerState->RemoveState(ESpyPlayerStateFlags::IsClimb);
+        UE_LOG(LogTemp, Log, TEXT("# Server SpyPlayerController Is Null"));
+        return false;
     }
-    else
+
+    //# 이미 Climb 상태이므로 해제
+    if (SpyPlayerState->HasState(SpyGameplayTags::Character_State_Movement_Climb))
     {
-        FVector OwnerLocation = OwnerCharacter->GetActorLocation();
-        FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
+        SpyPlayerState->RemoveState(SpyGameplayTags::Character_State_Movement_Climb);
+        return true;
+    }
 
-        FVector Start = OwnerLocation;
-        FVector End = Start + (OwnerFowardVector * ClimbData.DistanceOffset);
+    FVector OwnerLocation = OwnerCharacter->GetActorLocation();
+    FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
 
-        FHitResult Hit;
-        FCollisionQueryParams Params;
-        Params.AddIgnoredActor(OwnerCharacter);
+    FVector Start = OwnerLocation;
+    FVector End = Start + (OwnerFowardVector * ClimbData.DistanceOffset);
 
-        bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
-        DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
+    FHitResult Hit;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(OwnerCharacter);
 
-        ClimbWallData.HitVector = Hit.Location;
-        ClimbWallData.NormalVector = Hit.ImpactNormal;
+    bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
+    DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
 
-        if (bHit)
+    FClimbWallData WallData = FClimbWallData();
+    WallData.HitVector = Hit.Location;
+    WallData.NormalVector = Hit.ImpactNormal;
+
+    //# 감지된 벽이 없음
+    if (bHit == false)
+    {
+        UE_LOG(LogTemp, Log, TEXT("# Server Wall Is Null"));
+        return false;
+    }
+
+    SpyPlayerState->AddState(SpyGameplayTags::Character_State_Movement_Climb);
+
+    ClimbData.WallData = WallData;
+
+    return true;
+}
+
+void USpyParkourManagerComponent::OnRep_ClimbData()
+{
+    if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetOwner()))
+    {
+        if (USpyCharacterMovementComponent* MoveComp = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
         {
-            SpyPlayerState->AddState(ESpyPlayerStateFlags::IsClimb);
+            MoveComp->StartWallClimb(ClimbData);
+            UE_LOG(LogTemp, Warning, TEXT("Client: Data Synced and StartWallClimb Updated!"));
         }
     }
-
-    SpyPlayerController->RefreshMappingContext();
 }
 
 bool USpyParkourManagerComponent::TryVaultAction()

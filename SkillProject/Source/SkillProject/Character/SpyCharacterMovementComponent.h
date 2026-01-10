@@ -19,6 +19,7 @@ public:
 	USpyCharacterMovementComponent();
 
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
+	virtual void PhysicsRotation(float DeltaTime) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
 public:
@@ -26,7 +27,7 @@ public:
 
 public:
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
-	void StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& ClimbWallData);
+	void StartWallClimb(const FClimbData& InClimbData);
 	void EndWallClimb();
 
 	float GetInputAngleByForward();
@@ -41,7 +42,6 @@ protected:
 	float InterpSpeed;
 
 	FClimbData ClimbData;
-	FClimbWallData ClimbWallData;
 
 public:
 	//# 이전 프레임의 IK 도달 지점을 저장 (떨림 방지용 보간 타겟)

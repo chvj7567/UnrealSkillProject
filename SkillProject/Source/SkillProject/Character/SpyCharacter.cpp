@@ -8,7 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
-#include "SKGameplayTags.h"
+#include "Util/SpyGameplayTags.h"
 #include "Attribute/SKAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"
@@ -26,6 +26,7 @@
 #include "Manager/SpyAssetManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "MotionWarpingComponent.h"
+#include "System/SpyPlayerController.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -73,33 +74,6 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
-void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
-{
-	if (HasAuthority() == false)
-		return;
-
-	//# 사용할 스킬 태그 등록
-	FGameplayTagContainer TagContaingers;
-	TagContaingers.AddTag(SkillTag);
-
-	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
-	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
-	AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
-
-	//# 가져온 능력 실행
-	for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
-	{
-		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillTag.ToString());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
-		}
-	}
-}
-
 void ASpyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -144,10 +118,10 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 
 	if (HasAuthority())
 	{
-		if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
+		if (ASpyPlayerState* SpyPlayerState = GetPlayerState<ASpyPlayerState>())
 		{
-			SpyPlayerState->Initialize(this);
-			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
+			SpyPlayerState->Initialize();
+			SpyPlayerState->AddState(SpyGameplayTags::Character_State_Survival_Alive);
 		}
 	}
 }
@@ -158,10 +132,9 @@ void ASpyCharacter::OnRep_PlayerState()
 
 	if (HasAuthority() == false)
 	{
-		if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
+		if (ASpyPlayerState* SpyPlayerState = GetPlayerState<ASpyPlayerState>())
 		{
-			SpyPlayerState->Initialize(this);
-			SpyPlayerState->AddState(ESpyPlayerStateFlags::IsAlive);
+			SpyPlayerState->Initialize();
 		}
 	}
 }
@@ -206,20 +179,21 @@ void ASpyCharacter::RegisterAbility()
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
 		.AddUObject(this, &ASpyCharacter::OnHealthChanged);
+
+	AbilitySystemComponent->RegisterGameplayTagEvent(SpyGameplayTags::Character_State_Movement_Climb, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &ASpyCharacter::OnClimbTagChanged);
 }
 
-void ASpyCharacter::TestHit()
+void ASpyCharacter::OnClimbTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	FGameplayAttribute HealthAttr = USKAttributeSet::GetHealthAttribute();
-	float CurrentHealth = AbilitySystemComponent->GetNumericAttribute(HealthAttr);
-	float NewHealth = CurrentHealth - 10.f;
-
-	NewHealth = FMath::Max(NewHealth, 0.f);
-	AbilitySystemComponent->SetNumericAttributeBase(HealthAttr, NewHealth);
-
-	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+	if (IsLocallyControlled())
 	{
-		HpBar->UpdateHP(NewHealth, CharacterAttributeSet->GetMaxHealth());
+		if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(GetController()))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("# Local on: %s, Count: %d"), *GetName(), NewCount);
+
+			PC->RefreshMappingContext();
+		}
 	}
 }
 
@@ -231,7 +205,7 @@ void ASpyCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 		{
 			if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
 			{
-				if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive))
+				if (SpyPlayerState->HasState(SpyGameplayTags::Character_State_Survival_Alive))
 				{
 					SpyPlayerState->Multicast_Death();
 				}
@@ -255,33 +229,6 @@ void ASpyCharacter::Death()
 	}
 }
 
-void ASpyCharacter::OnSkillHitOverlap(
-	UPrimitiveComponent* OverlappedComp,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult)
-{
-	if (HasAuthority() == false)
-		return;
-
-	ASpyCharacter* OtherCharacter = Cast<ASpyCharacter>(OtherActor);
-	if (OtherCharacter == nullptr)
-		return;
-
-	FGameplayTagContainer EventTags = GetActivatableAbilityTags();
-	for (FGameplayTag EventTag : EventTags.GetGameplayTagArray())
-	{
-		FGameplayEventData Payload;
-		Payload.EventTag = EventTag;
-		Payload.Instigator = this;
-		Payload.Target = OtherActor;
-
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, Payload);
-	}
-}
-
 FGameplayTagContainer ASpyCharacter::GetActivatableAbilityTags()
 {
 	TArray<FGameplayAbilitySpec> Abilities;
@@ -297,4 +244,39 @@ FGameplayTagContainer ASpyCharacter::GetActivatableAbilityTags()
 	}
 
 	return ActivatableTags;
+}
+
+void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
+{
+	if (HasAuthority() == false)
+		return;
+
+	//# 사용할 스킬 태그 등록
+	FGameplayTagContainer TagContaingers;
+	TagContaingers.AddTag(SkillTag);
+
+	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
+	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
+	AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
+
+	//# 가져온 능력 실행
+	for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
+	{
+		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillTag.ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
+		}
+	}
+}
+
+void ASpyCharacter::Server_TryVault_Implementation()
+{
+	if (HasAuthority() == false)
+		return;
+
+	SpyParkourManagerComponent->TryVaultAction();
 }

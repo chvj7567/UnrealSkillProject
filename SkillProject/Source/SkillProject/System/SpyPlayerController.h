@@ -38,6 +38,8 @@ protected:
 	void UseSkillC(const FInputActionValue& InValue);
 	void UseSkillD(const FInputActionValue& InValue);
 	void UseSkillE(const FInputActionValue& InValue);
+	void TryClimb(const FInputActionValue& InValue);
+	void TryVault(const FInputActionValue& InValue);
 
 	void SetMappingContext(UInputMappingContext* InMappingContext);
 
@@ -74,4 +76,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SkillEAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> TryVaultAction;
 };

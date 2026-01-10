@@ -6,6 +6,7 @@
 #include "Character/SpyCharacter.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
+#include "Util/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
 
@@ -80,10 +81,10 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 
     //# Set IsDeath And IsClimbing
     {
-        if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(Player->GetPlayerState()))
+        if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
         {
-            IsDeath = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsAlive) == false;
-            IsClimbing = SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb);
+            IsDeath = SpyPlayerState->HasState(SpyGameplayTags::Character_State_Survival_Alive) == false;
+            IsClimbing = SpyPlayerState->HasState(SpyGameplayTags::Character_State_Movement_Climb);
             if (IsClimbing)
             {
                 ZOffset_HL = PlayerMovementComponent->ZOffsetHL;

@@ -6,55 +6,77 @@
 #include "Character/SpyCharacter.h"
 #include "UI/SpyHPBar.h"
 #include "UI/SpyUserWidget.h"
+#include "Util/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerState)
 
 ASpyPlayerState::ASpyPlayerState()
 {
-	PlayerFlags = ESpyPlayerStateFlags::None;
-}
-
-void ASpyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ASpyPlayerState, PlayerFlags);
 }
 
 void ASpyPlayerState::Multicast_Death_Implementation()
 {
-	RemoveState(ESpyPlayerStateFlags::IsAlive);
-	SpyCharacter->Death();
+	RemoveState(SpyGameplayTags::Character_State_Survival_Alive);
+	OwnerCharacter->Death();
 }
 
-void ASpyPlayerState::Initialize(ASpyCharacter* Character)
+void ASpyPlayerState::Initialize()
 {
-	SpyCharacter = Character;
-}
-
-bool ASpyPlayerState::HasState(ESpyPlayerStateFlags Flag) const
-{
-	return EnumHasAllFlags(PlayerFlags, Flag);
-}
-
-void ASpyPlayerState::AddState(ESpyPlayerStateFlags Flag)
-{
-	PlayerFlags |= Flag;
-}
-
-void ASpyPlayerState::RemoveState(ESpyPlayerStateFlags Flag)
-{
-	PlayerFlags &= ~Flag;
-}
-
-void ASpyPlayerState::ToggleState(ESpyPlayerStateFlags Flag)
-{
-	if (HasState(Flag))
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		RemoveState(Flag);
+		OwnerCharacter = SpyCharacter;
+	}
+}
+
+bool ASpyPlayerState::HasState(FGameplayTag Tag)
+{
+	if (OwnerCharacter == nullptr)
+		return false;
+
+	if (OwnerCharacter->GetSKAbilitySystemComponent()->HasMatchingGameplayTag(Tag))
+		return true;
+
+	return false;
+}
+
+void ASpyPlayerState::AddState(FGameplayTag Tag)
+{
+	if (OwnerCharacter == nullptr)
+		return;
+
+	if (OwnerCharacter->HasAuthority() == false)
+		return;
+
+	if (HasState(Tag))
+		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("# Server AddState %s"), *Tag.ToString());
+	OwnerCharacter->GetSKAbilitySystemComponent()->AddReplicatedLooseGameplayTag(Tag);
+}
+
+void ASpyPlayerState::RemoveState(FGameplayTag Tag)
+{
+	if (OwnerCharacter == nullptr)
+		return;
+
+	if (OwnerCharacter->HasAuthority() == false)
+		return;
+
+	if (HasState(Tag) == false)
+		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("# Server RemoveState %s"), * Tag.ToString());
+	OwnerCharacter->GetSKAbilitySystemComponent()->RemoveReplicatedLooseGameplayTag(Tag);
+}
+
+void ASpyPlayerState::ToggleState(FGameplayTag Tag)
+{
+	if (HasState(Tag))
+	{
+		RemoveState(Tag);
 	}
 	else
 	{
-		AddState(Flag);
+		AddState(Tag);
 	}
 }
