@@ -10,7 +10,7 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "SpyGAS",
+			"Name": "SKGAS",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

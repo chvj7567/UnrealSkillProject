@@ -31,11 +31,26 @@ void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteration
 void USpyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	const UEnum* ModeEnum = StaticEnum<EMovementMode>();
+
+	FString PrevModeName = ModeEnum->GetValueAsString(PrevMovementMode);
+	FString CurrentModeName = ModeEnum->GetValueAsString(MovementMode);
+
+	UE_LOG(LogTemp, Warning, TEXT("Movement Mode Changed!"));
+	UE_LOG(LogTemp, Log, TEXT("Before: %s (Custom: %d)"), *PrevModeName, PreviousCustomMode);
+	UE_LOG(LogTemp, Log, TEXT("After:  %s (Custom: %d)"), *CurrentModeName, CustomMovementMode);
+
+	if (PrevMovementMode == MOVE_Custom)
+	{
+		// 누가 모드를 바꿨는지 호출 경로를 전부 출력합니다.
+		FDebug::DumpStackTraceToLog(ELogVerbosity::Error);
+	}
 }
 
 void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterations)
 {
-	if (!CharacterOwner || !UpdatedComponent)
+	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
 	const FVector WallNormal = ClimbWallData.NormalVector;
@@ -99,9 +114,9 @@ float USpyCharacterMovementComponent::GetInputAngleByForward()
 
 float USpyCharacterMovementComponent::GetClosestLadderHeight(float CurrentHeight)
 {
+	//# Temp
 	TArray<float> Ladder = { 100, 150, 200, 250, 300, 350, 400, 450, 500 };
 
-	// 배열이 비어있는지 확인
 	if (Ladder.Num() == 0) return 0.0f;
 
 	float ClosestValue = Ladder[0];

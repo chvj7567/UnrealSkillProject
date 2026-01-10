@@ -62,7 +62,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
 
         FVector CurrentAcceleration = PlayerMovementComponent->GetCurrentAcceleration();
-        if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f && IsLanding == false)
+        if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f)
         {
             ShouldMove = true;
         }
@@ -90,11 +90,6 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
                 ZOffset_HR = PlayerMovementComponent->ZOffsetHR;
                 ZOffset_FL = PlayerMovementComponent->ZOffsetFL;
                 ZOffset_FR = PlayerMovementComponent->ZOffsetFR;
-
-                Weight_HL = GetCurveValue(TEXT("IK_Weight_HL"));
-                Weight_HR = GetCurveValue(TEXT("IK_Weight_HR"));
-                Weight_FL = GetCurveValue(TEXT("IK_Weight_FL"));
-                Weight_FR = GetCurveValue(TEXT("IK_Weight_FR"));
             }
             else
             {
@@ -110,22 +105,4 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 void USpyCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
 {
     //Player->TestHit();
-}
-
-void USpyCharacterAnimInstance::AnimNotify_DisableMove(UAnimNotify* Notify)
-{
-    if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(Player->GetPlayerState()))
-    {
-        if (SpyPlayerState->HasState(ESpyPlayerStateFlags::IsClimb) == false)
-        {
-            IsLanding = true;
-            PlayerMovementComponent->DisableMovement();
-        }
-    }
-}
-
-void USpyCharacterAnimInstance::AnimNotify_AbleMove(UAnimNotify* Notify)
-{
-    IsLanding = false;
-    PlayerMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
 }

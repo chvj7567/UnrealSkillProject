@@ -6,7 +6,8 @@
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "SpyGameplayTags.h"
+#include "Util/SpyGameplayTags.h"
+#include "SKGameplayTags.h"
 #include "UI/SpyUserWidget.h"
 #include "Manager/SpyAssetManager.h"
 #include "Manager/SpyUIManager.h"
@@ -69,9 +70,9 @@ void ASpyPlayerController::Move(const FInputActionValue& InValue)
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
 		//# Move Lock 확인
-		if (USpyAbilitySystemComponent* ASC = SpyCharacter->GetSpyAbilitySystemComponent())
+		if (USKAbilitySystemComponent* ASC = SpyCharacter->GetSKAbilitySystemComponent())
 		{
-			if (ASC->HasMatchingGameplayTag(SpyGameplayTags::Lock_Move))
+			if (ASC->HasMatchingGameplayTag(SKGameplayTags::Lock_Move))
 				return;
 		}
 
@@ -101,9 +102,9 @@ void ASpyPlayerController::Look(const FInputActionValue& InValue)
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
 		//# Move Lock 확인
-		if (USpyAbilitySystemComponent* ASC = SpyCharacter->GetSpyAbilitySystemComponent())
+		if (USKAbilitySystemComponent* ASC = SpyCharacter->GetSKAbilitySystemComponent())
 		{
-			if (ASC->HasMatchingGameplayTag(SpyGameplayTags::Lock_Look))
+			if (ASC->HasMatchingGameplayTag(SKGameplayTags::Lock_Look))
 				return;
 		}
 
@@ -132,7 +133,7 @@ void ASpyPlayerController::UseSkillA(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_A);
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Action_A);
 	}
 }
 
@@ -140,7 +141,7 @@ void ASpyPlayerController::UseSkillB(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_B);
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Action_B);
 	}
 }
 
@@ -148,7 +149,7 @@ void ASpyPlayerController::UseSkillC(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_C);
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Action_C);
 	}
 }
 
@@ -156,7 +157,7 @@ void ASpyPlayerController::UseSkillD(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_D);
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Action_D);
 	}
 }
 
@@ -164,7 +165,7 @@ void ASpyPlayerController::UseSkillE(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_E);
+		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Action_E);
 	}
 }
 

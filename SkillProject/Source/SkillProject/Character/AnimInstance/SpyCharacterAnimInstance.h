@@ -23,12 +23,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_AttackHit(UAnimNotify* Notify);
 
-	UFUNCTION(BlueprintCallable)
-	void AnimNotify_DisableMove(UAnimNotify* Notify);
-
-	UFUNCTION(BlueprintCallable)
-	void AnimNotify_AbleMove(UAnimNotify* Notify);
-
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ASpyCharacter> Player;
@@ -56,9 +50,6 @@ protected:
 	bool IsCrouching;
 
 	UPROPERTY(BlueprintReadOnly)
-	bool IsLanding;
-
-	UPROPERTY(BlueprintReadOnly)
 	bool IsFalling;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -81,16 +72,4 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	float ZOffset_FR;
-
-	UPROPERTY(BlueprintReadOnly)
-	float Weight_HL;
-
-	UPROPERTY(BlueprintReadOnly)
-	float Weight_HR;
-
-	UPROPERTY(BlueprintReadOnly)
-	float Weight_FL;
-
-	UPROPERTY(BlueprintReadOnly)
-	float Weight_FR;
 };

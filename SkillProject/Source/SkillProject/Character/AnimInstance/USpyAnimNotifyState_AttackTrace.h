@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
-#include "SpyGameplayTags.h"
+#include "SKGameplayTags.h"
 #include "USpyAnimNotifyState_AttackTrace.generated.h"
 
 UCLASS()

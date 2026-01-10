@@ -7,7 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemInterface.h"
-#include "SpyAbilitySystemComponent.h"
+#include "SKAbilitySystemComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Character/SpyCharacterMovementComponent.h"
 
@@ -18,8 +18,8 @@ class UCameraComponent;
 class UBoxComponent;
 class UWidgetComponent;
 class UGameplayAbility;
-class USpyAbilitySystemComponent;
-class USpyAttributeSet;
+class USKAbilitySystemComponent;
+class USKAttributeSet;
 class USpyAnimManagerComponent;
 class USpyParkourManagerComponent;
 class UMotionWarpingComponent;
@@ -44,7 +44,7 @@ protected:
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return Cast<USpyAbilitySystemComponent>(AbilitySystemComponent); }
+	FORCEINLINE USKAbilitySystemComponent* GetSKAbilitySystemComponent() const { return Cast<USKAbilitySystemComponent>(AbilitySystemComponent); }
 	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
 	FORCEINLINE USpyParkourManagerComponent* GetSpyParkourManagerComponent() const { return SpyParkourManagerComponent; }
 	FORCEINLINE USpyCharacterMovementComponent* GetSpyCharacterMovementComponent() const { return GetCharacterMovement<USpyCharacterMovementComponent>(); }
@@ -81,10 +81,10 @@ protected:
 	TObjectPtr<UCameraComponent> FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
-	TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<USKAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
-	const USpyAttributeSet* CharacterAttributeSet;
+	const USKAttributeSet* CharacterAttributeSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	TArray<TSubclassOf<UGameplayAbility>> AbilityClasses;

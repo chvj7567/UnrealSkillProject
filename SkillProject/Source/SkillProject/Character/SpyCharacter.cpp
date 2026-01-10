@@ -8,12 +8,12 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "AbilitySystemComponent.h"
-#include "SpyGameplayTags.h"
-#include "Attribute/SpyAttributeSet.h"
+#include "SKGameplayTags.h"
+#include "Attribute/SKAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "SpyAbilitySystemComponent.h"
+#include "SKAbilitySystemComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Manager/SpyUIManager.h"
 #include "UI/SpyHPBar.h"
@@ -60,7 +60,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	AbilitySystemComponent = CreateDefaultSubobject<USpyAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<USKAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
@@ -176,7 +176,7 @@ void ASpyCharacter::RegisterAbility()
 	}
 
 	//# 설정한 AttributeSet 가져옴
-	CharacterAttributeSet = AbilitySystemComponent->GetSet<USpyAttributeSet>();
+	CharacterAttributeSet = AbilitySystemComponent->GetSet<USKAttributeSet>();
 	if (CharacterAttributeSet == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
@@ -205,7 +205,7 @@ void ASpyCharacter::RegisterAbility()
 
 void ASpyCharacter::TestHit()
 {
-	FGameplayAttribute HealthAttr = USpyAttributeSet::GetHealthAttribute();
+	FGameplayAttribute HealthAttr = USKAttributeSet::GetHealthAttribute();
 	float CurrentHealth = AbilitySystemComponent->GetNumericAttribute(HealthAttr);
 	float NewHealth = CurrentHealth - 10.f;
 

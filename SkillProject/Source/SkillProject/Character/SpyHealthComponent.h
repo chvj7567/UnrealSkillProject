@@ -8,9 +8,9 @@
 
 #include "SpyHealthComponent.generated.h"
 
-class USpyAbilitySystemComponent;
+class USKAbilitySystemComponent;
 
-class USpyAttributeSet;
+class USKAttributeSet;
 struct FGameplayEffectSpec;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyHealth_AttributeChanged, USpyHealthComponent*, HealthComponent, float, OldValue, float, NewValue, AActor*, Instigator);
@@ -25,13 +25,13 @@ protected:
 
 protected:
 	UPROPERTY()
-	TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<USKAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()
-	TObjectPtr<const USpyAttributeSet> HealthSet;
+	TObjectPtr<const USKAttributeSet> HealthSet;
 	
 public:
-	void Initialize(USpyAbilitySystemComponent* InASC);
+	void Initialize(USKAbilitySystemComponent* InASC);
 	void UnInitialize();
 	float GetHealth() const;
 	float GetMaxHealth() const;
