@@ -118,7 +118,7 @@ void USKGameplayAbility_SkillActionRange::CheckHit()
     if (OwnerCharacter == nullptr || OwnerASC == nullptr)
         return;
 
-    FGameplayTag SkillTag = OwnerASC->GetSkillActionTag();
+    FGameplayTag SkillTag = OwnerASC->GetEffectSkillActionTag();
 
     if (SkillTag != FGameplayTag::EmptyTag)
     {

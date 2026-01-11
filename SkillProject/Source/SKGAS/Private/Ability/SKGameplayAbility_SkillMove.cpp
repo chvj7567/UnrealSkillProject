@@ -18,6 +18,7 @@
 
 USKGameplayAbility_SkillMove::USKGameplayAbility_SkillMove()
 {
+    bIsCollide = false;
 }
 
 void USKGameplayAbility_SkillMove::OnMontageCompleted()

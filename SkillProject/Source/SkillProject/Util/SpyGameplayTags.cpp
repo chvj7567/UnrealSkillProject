@@ -14,7 +14,10 @@ namespace SpyGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_A, "Skill.Action.A");
 	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_A, "Effect.Skill.Action.A");
+
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_B, "Skill.Action.B");
+	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_B, "Effect.Skill.Action.B");
+
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_C, "Skill.Action.C");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_D, "Skill.Action.D");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_E, "Skill.Action.E");
