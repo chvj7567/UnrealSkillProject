@@ -119,20 +119,17 @@ void USKGameplayAbility_SkillActionWeapon::CheckHit()
     if (OwnerCharacter == nullptr || OwnerASC == nullptr)
         return;
 
-    float Radius = 10.f;
-    float RepeatTime = 0.1f;
-    FName StartWeaponSocketName = "LeftWeaponPos0";
-    FName EndWeaponSocketName = "LeftWeaponPos1";
     FGameplayTag SkillTag = OwnerASC->GetCurrentActiveSkillTag();
 
     if (SkillTag != FGameplayTag::EmptyTag)
     {
-        FVector CenterPos = OwnerCharacter->GetActorLocation();
+        OwnerCharacter->GetMesh()->RefreshBoneTransforms();
+
         FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
         FVector CurrentEnd = OwnerCharacter->GetMesh()->GetSocketLocation(EndWeaponSocketName);
 
         TArray<FHitResult> OutHits;
-        FCollisionShape SweepShape = FCollisionShape::MakeSphere(Radius);
+        FCollisionShape SweepShape = FCollisionShape::MakeSphere(SphereRadius);
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(OwnerCharacter);
 
@@ -163,18 +160,18 @@ void USKGameplayAbility_SkillActionWeapon::CheckHit()
         if (bInvalidCharacter)
         {
             DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
+                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + SphereRadius, SphereRadius,
                 FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Red, false, 1.0f);
         }
         else
         {
             DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
+                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + SphereRadius, SphereRadius,
                 FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
         }
     }
 
-    UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, RepeatTime);
+    UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, IntervalTime);
     DelayTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillActionWeapon::CheckHit);
     DelayTask->ReadyForActivation();
 }
