@@ -75,7 +75,12 @@ void USKAbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGameplay
 	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent HandleChangeAbilityCanBeCanceled : %s called"), *RequestingAbility->GetName());
 }
 
-FGameplayTag USKAbilitySystemComponent::GetCurrentActiveSkillTag() const
+FGameplayTag USKAbilitySystemComponent::GetSkillActionTag() const
 {
-	return SKGameplayTags::GetActionSkillTag(this);
+	return SKGameplayTags::GetSkillActionTag(this);
+}
+
+FGameplayTag USKAbilitySystemComponent::GetEffectSkillActionTag() const
+{
+	return SKGameplayTags::GetEffectSkillActionTag(this);
 }

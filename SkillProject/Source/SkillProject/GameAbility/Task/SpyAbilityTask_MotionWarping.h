@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/Tasks/AbilityTask.h"
+#include "ManagerComponent/SpyParkourManagerComponent.h"
 
 #include "SpyAbilityTask_MotionWarping.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSyncMotionWarpingDataDelegate, FVector, StartLoc, FRotator, StartRot, FVector, EndLoc, FRotator, EndRot);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FVaultMotionWarpingData, InVaultData);
 
 UCLASS()
 class SKILLPROJECT_API USpyAbilityTask_MotionWarping : public UAbilityTask
@@ -15,23 +16,20 @@ class SKILLPROJECT_API USpyAbilityTask_MotionWarping : public UAbilityTask
 	GENERATED_BODY()
 	
 public:
+    USpyAbilityTask_MotionWarping(const FObjectInitializer& ObjectInitializer);
+
     UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
-    static USpyAbilityTask_MotionWarping* CreateMotionWarpingSyncTask(UGameplayAbility* OwningAbility, FVector SLoc, FRotator SRot, FVector ELoc, FRotator ERot);
+    static USpyAbilityTask_MotionWarping* CreateMotionWarpingSyncTask(UGameplayAbility* OwningAbility, FVaultMotionWarpingData InVaultData);
 
     virtual void Activate() override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
     UFUNCTION(NetMulticast, Reliable)
-    void Multicast_SendMotionWarpingData(FVector StartLoc, FRotator StartRot, FVector EndLoc, FRotator EndRot);
+    void BroadcastData(FVaultMotionWarpingData InVaultData);
 
 public:
-    UPROPERTY(BlueprintAssignable)
-    FSyncMotionWarpingDataDelegate OnSyncMotionWarpingData;
 
-private:
-    FVector SavedStartLoc;
-    FRotator SavedStartRot;
-    FVector SavedEndLoc;
-    FRotator SavedEndRot;
-
+protected:
+    FVaultMotionWarpingData VaultData;
 };

@@ -69,6 +69,9 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_UseSkill(FGameplayTag SkillTag);
 
+	UFUNCTION(BlueprintCallable)
+	void UseSkill(FGameplayTag SkillTag);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;

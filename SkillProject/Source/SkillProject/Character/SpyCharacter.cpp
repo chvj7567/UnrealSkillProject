@@ -164,10 +164,10 @@ void ASpyCharacter::RegisterAbility()
 	}
 	else
 	{
+		GetCharacterMovement()->MaxWalkSpeed = CharacterAttributeSet->GetMoveNormalSpeed();
+
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = CharacterAttributeSet->GetMoveNormalSpeed();
-
 			//# 캐릭터에 등록된 스킬 부여
 			for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
 			{
@@ -247,6 +247,20 @@ FGameplayTagContainer ASpyCharacter::GetActivatableAbilityTags()
 	}
 
 	return ActivatableTags;
+}
+
+void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
+{
+	FGameplayEventData EventData;
+	EventData.Instigator = this;
+	EventData.EventTag = SkillTag;
+
+	FGameplayAbilityTargetData_LocationInfo* LocData = new FGameplayAbilityTargetData_LocationInfo();
+	LocData->TargetLocation.LocationType = EGameplayAbilityTargetingLocationType::LiteralTransform;
+	LocData->TargetLocation.LiteralTransform = GetActorTransform();
+	EventData.TargetData.Add(LocData);
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, SkillTag, EventData);
 }
 
 void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)

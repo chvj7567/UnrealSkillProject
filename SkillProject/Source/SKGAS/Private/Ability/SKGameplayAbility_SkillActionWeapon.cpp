@@ -16,10 +16,6 @@
 
 USKGameplayAbility_SkillActionWeapon::USKGameplayAbility_SkillActionWeapon()
 {
-    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
-    NetSecurityPolicy = EGameplayAbilityNetSecurityPolicy::ClientOrServer;
-    ReplicationPolicy = EGameplayAbilityReplicationPolicy::ReplicateNo;
 }
 
 void USKGameplayAbility_SkillActionWeapon::OnMontageCompleted()
@@ -119,9 +115,9 @@ void USKGameplayAbility_SkillActionWeapon::CheckHit()
     if (OwnerCharacter == nullptr || OwnerASC == nullptr)
         return;
 
-    FGameplayTag SkillTag = OwnerASC->GetCurrentActiveSkillTag();
+    FGameplayTag EffectSkillActionTag = OwnerASC->GetEffectSkillActionTag();
 
-    if (SkillTag != FGameplayTag::EmptyTag)
+    if (EffectSkillActionTag != FGameplayTag::EmptyTag)
     {
         OwnerCharacter->GetMesh()->RefreshBoneTransforms();
 
@@ -148,7 +144,7 @@ void USKGameplayAbility_SkillActionWeapon::CheckHit()
                     bInvalidCharacter = true;
 
                     FGameplayEventData Payload;
-                    Payload.EventTag = SkillTag;
+                    Payload.EventTag = EffectSkillActionTag;
                     Payload.Instigator = OwnerCharacter;
                     Payload.Target = TargetCharacter;
 

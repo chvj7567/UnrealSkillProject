@@ -16,8 +16,10 @@ namespace SKGameplayTags
 
 	//# 액션 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Action);
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Effect_Skill_Action);
 
 	//# 이동 스킬
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move);
 
 	//# 버프 스킬
@@ -37,5 +39,6 @@ namespace SKGameplayTags
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Static);
 
 
-	SKGAS_API FGameplayTag GetActionSkillTag(const UAbilitySystemComponent* ASC);
+	SKGAS_API FGameplayTag GetSkillActionTag(const UAbilitySystemComponent* ASC);
+	SKGAS_API FGameplayTag GetEffectSkillActionTag(const UAbilitySystemComponent* ASC);
 }

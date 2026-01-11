@@ -30,7 +30,10 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	FGameplayTag GetCurrentActiveSkillTag() const;
+	FGameplayTag GetSkillActionTag() const;
+
+	UFUNCTION(BlueprintCallable)
+	FGameplayTag GetEffectSkillActionTag() const;
 
 public:
 	FAbilityChangedDelegate AbilityChangedDelegate;

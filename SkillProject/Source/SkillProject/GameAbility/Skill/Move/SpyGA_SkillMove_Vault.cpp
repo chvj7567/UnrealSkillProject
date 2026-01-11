@@ -11,44 +11,59 @@ bool USpyGA_SkillMove_Vault::CommitAbility(const FGameplayAbilitySpecHandle Hand
 {
 	bool Result = Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
 
-	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
-	{
-		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
-		{
-			return Result && ParkourComponent->CanVaultAction();
-		}
-	}
-
-	return Result;
-}
-
-void USpyGA_SkillMove_Vault::PrePlayMontage()
-{
+	//# 서버에서만 Vault 정보 계산
 	if (HasAuthority(&CurrentActivationInfo))
 	{
 		if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 		{
 			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
 			{
-				FVaultMotionWarpingData MotionWarpingData = ParkourComponent->GetVaultMotionWarpingData();
-
-				USpyAbilityTask_MotionWarping* SyncTask = USpyAbilityTask_MotionWarping::CreateMotionWarpingSyncTask(
-					this, MotionWarpingData.StartLoc, MotionWarpingData.StartRot, MotionWarpingData.EndLoc, MotionWarpingData.EndRot);
-				SyncTask->OnSyncMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
-				SyncTask->ReadyForActivation();
+				return Result && ParkourComponent->CanVaultAction();
 			}
+		}
+	}
+
+	return Result;
+}
+
+void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+	{
+		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
+		{
+			ParkourComponent->OnVaultMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
+
+			SetMoveState(true);
+			FVaultMotionWarpingData MotionWarpingData = ParkourComponent->GetVaultMotionWarpingData();
 		}
 	}
 }
 
-void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVector StartLoc, FRotator StartRot, FVector EndLoc, FRotator EndRot)
+void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData)
 {
+
 	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 	{
+		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
+		{
+			ParkourComponent->OnVaultMotionWarpingData.RemoveDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
+		}
+
 		if (UMotionWarpingComponent* MotionWarpingComponent = OwnerCharacter->GetMotionWarpingComponent())
 		{
-			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingStartName, StartLoc, StartRot);
-			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, EndLoc, EndRot);
+			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingStartName, InVaultData.StartLoc, InVaultData.StartRot);
+			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);
 		}
 	}
+
+	PlayMontage();
 }

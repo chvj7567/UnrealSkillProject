@@ -11,6 +11,7 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_State, "Character.State");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action, "Skill.Action");
+	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action, "Effect.Skill.Action");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move, "Skill.Move");
 
@@ -26,7 +27,7 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Static, "GameplayCue.Static");
 
 
-	FGameplayTag SKGameplayTags::GetActionSkillTag(const UAbilitySystemComponent* ASC)
+	FGameplayTag SKGameplayTags::GetSkillActionTag(const UAbilitySystemComponent* ASC)
 	{
 		if (ASC == nullptr)
 			return FGameplayTag::EmptyTag;
@@ -35,6 +36,27 @@ namespace SKGameplayTags
 		ASC->GetOwnedGameplayTags(OwnedTags);
 
 		FGameplayTag ParentTag = FGameplayTag::RequestGameplayTag(FName("Skill.Action"));
+
+		for (const FGameplayTag& Tag : OwnedTags)
+		{
+			if (Tag.MatchesTag(ParentTag))
+			{
+				return Tag;
+			}
+		}
+
+		return FGameplayTag::EmptyTag;
+	}
+
+	FGameplayTag SKGameplayTags::GetEffectSkillActionTag(const UAbilitySystemComponent* ASC)
+	{
+		if (ASC == nullptr)
+			return FGameplayTag::EmptyTag;
+
+		FGameplayTagContainer OwnedTags;
+		ASC->GetOwnedGameplayTags(OwnedTags);
+
+		FGameplayTag ParentTag = FGameplayTag::RequestGameplayTag(FName("Effect.Skill.Action"));
 
 		for (const FGameplayTag& Tag : OwnedTags)
 		{

@@ -38,4 +38,10 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TObjectPtr<UAnimMontage> SkillMontage;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float SphereRadius;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float IntervalTime;
 };

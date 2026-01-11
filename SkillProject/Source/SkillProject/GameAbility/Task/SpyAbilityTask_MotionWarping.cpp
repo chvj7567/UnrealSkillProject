@@ -3,32 +3,49 @@
 
 #include "GameAbility/Task/SpyAbilityTask_MotionWarping.h"
 #include "Character/SpyCharacter.h"
-#include "ManagerComponent/SpyParkourManagerComponent.h"
 
-USpyAbilityTask_MotionWarping* USpyAbilityTask_MotionWarping::CreateMotionWarpingSyncTask(UGameplayAbility* OwningAbility, FVector SLoc, FRotator SRot, FVector ELoc, FRotator ERot)
+#include "Net/UnrealNetwork.h"
+
+USpyAbilityTask_MotionWarping::USpyAbilityTask_MotionWarping(const FObjectInitializer& ObjectInitializer)
 {
-    USpyAbilityTask_MotionWarping* MotionWarpingTask = NewAbilityTask<USpyAbilityTask_MotionWarping>(OwningAbility);
-    MotionWarpingTask->SavedStartLoc = SLoc;
-    MotionWarpingTask->SavedStartRot = SRot;
-    MotionWarpingTask->SavedEndLoc = ELoc;
-    MotionWarpingTask->SavedEndRot = ERot;
-    return MotionWarpingTask;
+}
+
+USpyAbilityTask_MotionWarping* USpyAbilityTask_MotionWarping::CreateMotionWarpingSyncTask(UGameplayAbility* OwningAbility, FVaultMotionWarpingData InVaultData)
+{
+    USpyAbilityTask_MotionWarping* Task = NewAbilityTask<USpyAbilityTask_MotionWarping>(OwningAbility);
+
+    Task->VaultData = InVaultData;
+
+    return Task;
 }
 
 void USpyAbilityTask_MotionWarping::Activate()
 {
-    if (Ability && Ability->GetActorInfo().IsNetAuthority())
+    Super::Activate();
+
+    if (Ability == nullptr)
+        return;
+
+    //# 서버는 이미 CommitAbility에서 값이 세팅됨
+    if (Ability->GetActorInfo().IsNetAuthority())
     {
-        Multicast_SendMotionWarpingData(SavedStartLoc, SavedStartRot, SavedEndLoc, SavedEndRot);
+        UE_LOG(LogTemp, Warning, TEXT("# BroadcastData"));
+        BroadcastData(VaultData);
     }
 }
 
-void USpyAbilityTask_MotionWarping::Multicast_SendMotionWarpingData_Implementation(FVector StartLoc, FRotator StartRot, FVector EndLoc, FRotator EndRot)
+void USpyAbilityTask_MotionWarping::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    if (Ability && Ability->IsActive())
-    {
-        OnSyncMotionWarpingData.Broadcast(StartLoc, StartRot, EndLoc, EndRot);
-    }
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    EndTask();
+    DOREPLIFETIME(USpyAbilityTask_MotionWarping, VaultData);
+}
+
+void USpyAbilityTask_MotionWarping::BroadcastData_Implementation(FVaultMotionWarpingData InVaultData)
+{
+    VaultData = InVaultData;
+
+    //OnSyncMotionWarpingData.Broadcast(VaultData);
+
+    UE_LOG(LogTemp, Warning, TEXT("# BroadcastData_Implementation"));
 }

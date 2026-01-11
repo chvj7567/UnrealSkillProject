@@ -135,7 +135,7 @@ void ASpyPlayerController::UseSkillA(const FInputActionValue& InValue)
 {
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		SpyCharacter->Server_UseSkill(SpyGameplayTags::Skill_Action_A);
+		SpyCharacter->UseSkill(SpyGameplayTags::Skill_Action_A);
 	}
 }
 

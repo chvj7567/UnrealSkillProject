@@ -11,15 +11,14 @@
 #include "SKGameplayEffectContext.h"
 #include "SKAbilitySystemComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/Actor.h"
+#include "Engine/OverlapResult.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility_SkillActionRange)
 
 USKGameplayAbility_SkillActionRange::USKGameplayAbility_SkillActionRange()
 {
-    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
-    NetSecurityPolicy = EGameplayAbilityNetSecurityPolicy::ClientOrServer;
-    ReplicationPolicy = EGameplayAbilityReplicationPolicy::ReplicateNo;
+
 }
 
 void USKGameplayAbility_SkillActionRange::OnMontageCompleted()
@@ -119,30 +118,28 @@ void USKGameplayAbility_SkillActionRange::CheckHit()
     if (OwnerCharacter == nullptr || OwnerASC == nullptr)
         return;
 
-    float Radius = 10.f;
-    float RepeatTime = 0.1f;
-    FName StartWeaponSocketName = "LeftWeaponPos0";
-    FName EndWeaponSocketName = "LeftWeaponPos1";
-    FGameplayTag SkillTag = OwnerASC->GetCurrentActiveSkillTag();
+    FGameplayTag SkillTag = OwnerASC->GetSkillActionTag();
 
     if (SkillTag != FGameplayTag::EmptyTag)
     {
-        FVector CenterPos = OwnerCharacter->GetActorLocation();
-        FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
-        FVector CurrentEnd = OwnerCharacter->GetMesh()->GetSocketLocation(EndWeaponSocketName);
-
-        TArray<FHitResult> OutHits;
-        FCollisionShape SweepShape = FCollisionShape::MakeSphere(Radius);
+        FVector TargetLoc = OwnerCharacter->GetActorLocation();
+        TArray<FOverlapResult> OutHits;
+        FCollisionShape CollisionShape = FCollisionShape::MakeSphere(SphereRadius);
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(OwnerCharacter);
 
-        OwnerCharacter->GetWorld()->SweepMultiByChannel(
-            OutHits, CurrentStart, CurrentEnd,
-            FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
+        OwnerCharacter->GetWorld()->OverlapMultiByChannel(
+            OutHits,
+            TargetLoc,
+            FQuat::Identity,
+            ECC_Pawn,
+            CollisionShape,
+            QueryParams
+        );
 
         bool bInvalidCharacter = false;
 
-        for (const FHitResult& Overlap : OutHits)
+        for (const FOverlapResult& Overlap : OutHits)
         {
             if (AActor* TargetActor = Overlap.GetActor())
             {
@@ -162,19 +159,15 @@ void USKGameplayAbility_SkillActionRange::CheckHit()
 
         if (bInvalidCharacter)
         {
-            DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
-                FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Red, false, 1.0f);
+            DrawDebugSphere(OwnerCharacter->GetWorld(), TargetLoc, SphereRadius, 12, FColor::Red, false, 1.0f);
         }
         else
         {
-            DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-                FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
-                FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
+            DrawDebugSphere(OwnerCharacter->GetWorld(), TargetLoc, SphereRadius, 12, FColor::Green, false, 1.0f);
         }
     }
 
-    UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, RepeatTime);
+    UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, IntervalTime);
     DelayTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillActionRange::CheckHit);
     DelayTask->ReadyForActivation();
 }

@@ -27,6 +27,7 @@ void USpyParkourManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimePro
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(USpyParkourManagerComponent, ClimbData);
+    DOREPLIFETIME(USpyParkourManagerComponent, VaultMotionWarpingData);
 }
 
 bool USpyParkourManagerComponent::TryToggleClimbAction()
@@ -120,6 +121,14 @@ bool USpyParkourManagerComponent::CanVaultAction()
         return false;
 
     return true;
+}
+
+void USpyParkourManagerComponent::OnRep_VaultMotionWarpingData()
+{
+    if (OnVaultMotionWarpingData.IsBound())
+    {
+        OnVaultMotionWarpingData.Broadcast(VaultMotionWarpingData);
+    }
 }
 
 void USpyParkourManagerComponent::SetVaultWallInfo()
@@ -232,6 +241,9 @@ FVaultMotionWarpingData USpyParkourManagerComponent::GetVaultMotionWarpingData()
     if (OwnerChararacter == nullptr)
         return FVaultMotionWarpingData();
 
+    if (GetOwner()->HasAuthority() == false)
+        return FVaultMotionWarpingData();
+
     //# 벽 노말 벡터 기준으로 계산
     FRotator TargetRotator = VaultWallData.FrontNormalVector.GetSafeNormal2D().Rotation() - FRotator(0, 180.f, 0);
     FVector RightVector = FVector::CrossProduct(FVector::UpVector, -VaultWallData.FrontNormalVector);
@@ -259,5 +271,8 @@ FVaultMotionWarpingData USpyParkourManagerComponent::GetVaultMotionWarpingData()
     Data.EndLoc = FinalLandLoc;
     Data.EndRot = TargetRotator;
 
-    return Data;
+    VaultMotionWarpingData = Data;
+    OnVaultMotionWarpingData.Broadcast(VaultMotionWarpingData);
+
+    return VaultMotionWarpingData;
 }

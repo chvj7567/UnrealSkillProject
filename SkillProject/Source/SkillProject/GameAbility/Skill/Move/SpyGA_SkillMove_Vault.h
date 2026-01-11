@@ -19,11 +19,15 @@ protected:
         const FGameplayAbilityActivationInfo ActivationInfo,
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
 
-    virtual void PrePlayMontage() override;
+    virtual void ActivateAbility(
+        const FGameplayAbilitySpecHandle Handle,
+        const FGameplayAbilityActorInfo* ActorInfo,
+        const FGameplayAbilityActivationInfo ActivationInfo,
+        const FGameplayEventData* TriggerEventData) override;
 
 protected:
     UFUNCTION()
-    void OnSyncMotionWarpingData(FVector StartLoc, FRotator StartRot, FVector EndLoc, FRotator EndRot);
+    void OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData);
 
 protected:
     UPROPERTY(EditAnywhere)

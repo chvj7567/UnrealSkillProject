@@ -21,22 +21,25 @@ public:
 protected:
     virtual void OnMontageCompleted() override;
     virtual void OnMontageCancelled() override;
+
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
-    virtual bool CommitAbility(
+
+    virtual void EndAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
-        OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
-
-protected:
-    virtual void PrePlayMontage() {}
+        bool bReplicateEndAbility,
+        bool bWasCancelled) override;
 
 protected:
     UFUNCTION()
+    virtual void PlayMontage();
+
+protected:
     void SetMoveState(bool bActive);
 
 protected:

@@ -54,9 +54,9 @@ void USpyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PrevMov
 	FString PrevModeName = ModeEnum->GetValueAsString(PrevMovementMode);
 	FString CurrentModeName = ModeEnum->GetValueAsString(MovementMode);
 
-	UE_LOG(LogTemp, Warning, TEXT("Movement Mode Changed!"));
-	UE_LOG(LogTemp, Log, TEXT("Before: %s (Custom: %d) %s"), *PrevModeName, PreviousCustomMode, *GetOwner()->GetName());
-	UE_LOG(LogTemp, Log, TEXT("After:  %s (Custom: %d) %s"), *CurrentModeName, CustomMovementMode, *GetOwner()->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("Movement Mode Changed!"));
+	//UE_LOG(LogTemp, Log, TEXT("Before: %s (Custom: %d) %s"), *PrevModeName, PreviousCustomMode, *GetOwner()->GetName());
+	//UE_LOG(LogTemp, Log, TEXT("After:  %s (Custom: %d) %s"), *CurrentModeName, CustomMovementMode, *GetOwner()->GetName());
 }
 
 void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterations)

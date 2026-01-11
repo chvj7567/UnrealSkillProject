@@ -105,16 +105,22 @@ public:
 	}
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FVaultMotionWarpingData
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector StartLoc;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator StartRot;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector EndLoc;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator EndRot;
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FVaultMotionWarpingData, InVaultData);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
@@ -143,8 +149,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool CanVaultAction();
 
+	UFUNCTION()
+	void OnRep_VaultMotionWarpingData();
+
 	void SetVaultWallInfo();
+
 	FVaultMotionWarpingData GetVaultMotionWarpingData();
+
+public:
+	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -152,7 +165,10 @@ protected:
 
 	FVaultWallData VaultWallData;
 
+	UPROPERTY(ReplicatedUsing = OnRep_VaultMotionWarpingData)
+	FVaultMotionWarpingData VaultMotionWarpingData;
+
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_ClimbData, EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(ReplicatedUsing = OnRep_ClimbData)
 	FClimbData ClimbData;
 };

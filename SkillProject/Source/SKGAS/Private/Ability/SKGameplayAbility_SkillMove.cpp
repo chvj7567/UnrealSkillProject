@@ -18,23 +18,15 @@
 
 USKGameplayAbility_SkillMove::USKGameplayAbility_SkillMove()
 {
-    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
-    NetSecurityPolicy = EGameplayAbilityNetSecurityPolicy::ClientOrServer;
-    ReplicationPolicy = EGameplayAbilityReplicationPolicy::ReplicateNo;
 }
 
 void USKGameplayAbility_SkillMove::OnMontageCompleted()
 {
-    SetMoveState(false);
-
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USKGameplayAbility_SkillMove::OnMontageCancelled()
 {
-    SetMoveState(false);
-
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
@@ -42,46 +34,36 @@ void USKGameplayAbility_SkillMove::ActivateAbility(const FGameplayAbilitySpecHan
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    if (CommitAbility(Handle, ActorInfo, ActivationInfo))
+    CurrentSpecHandle = Handle;
+    CurrentActorInfo = ActorInfo;
+    CurrentActivationInfo = ActivationInfo;
+
+    if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
     {
-        CurrentSpecHandle = Handle;
-        CurrentActorInfo = ActorInfo;
-        CurrentActivationInfo = ActivationInfo;
-
-        if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-        {
-            CharacterMovementComponent = OwnerCharacter->GetCharacterMovement();
-            CapsuleComponent = OwnerCharacter->GetCapsuleComponent();
-
-            SetMoveState(true);
-        }
-
-        PrePlayMontage();
-
-        if (SkillMontage)
-        {
-            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
-            {
-                MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCompleted);
-                MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);
-                MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);
-                MontageTask->ReadyForActivation();
-            }
-        }
-        else
-        {
-            SetMoveState(false);
-        }
-    }
-    else
-    {
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        CharacterMovementComponent = OwnerCharacter->GetCharacterMovement();
+        CapsuleComponent = OwnerCharacter->GetCapsuleComponent();
     }
 }
 
-bool USKGameplayAbility_SkillMove::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
+void USKGameplayAbility_SkillMove::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-    return Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
+    SetMoveState(false);
+
+    Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void USKGameplayAbility_SkillMove::PlayMontage()
+{
+    if (SkillMontage)
+    {
+        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
+        {
+            MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCompleted);
+            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);
+            MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);
+            MontageTask->ReadyForActivation();
+        }
+    }
 }
 
 void USKGameplayAbility_SkillMove::SetMoveState(bool bActive)
