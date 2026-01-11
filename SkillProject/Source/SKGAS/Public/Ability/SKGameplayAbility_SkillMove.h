@@ -33,6 +33,9 @@ protected:
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
 
 protected:
+    virtual void PrePlayMontage() {}
+
+protected:
     UFUNCTION()
     void SetMoveState(bool bActive);
 

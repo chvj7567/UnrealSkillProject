@@ -12,9 +12,23 @@ class SKILLPROJECT_API USpyGA_SkillMove_Vault : public USKGameplayAbility_SkillM
 {
 	GENERATED_BODY()
 	
+protected:
     virtual bool CommitAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
+
+    virtual void PrePlayMontage() override;
+
+protected:
+    UFUNCTION()
+    void OnSyncMotionWarpingData(FVector StartLoc, FRotator StartRot, FVector EndLoc, FRotator EndRot);
+
+protected:
+    UPROPERTY(EditAnywhere)
+    FName MotionWarpingStartName;
+
+    UPROPERTY(EditAnywhere)
+    FName MotionWarpingEndName;
 };

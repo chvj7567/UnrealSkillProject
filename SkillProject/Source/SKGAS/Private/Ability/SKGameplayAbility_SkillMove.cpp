@@ -56,6 +56,8 @@ void USKGameplayAbility_SkillMove::ActivateAbility(const FGameplayAbilitySpecHan
             SetMoveState(true);
         }
 
+        PrePlayMontage();
+
         if (SkillMontage)
         {
             if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
