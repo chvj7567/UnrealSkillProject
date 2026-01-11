@@ -14,13 +14,23 @@ namespace SpyGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_A, "Skill.Action.A");
 	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_A, "Effect.Skill.Action.A");
+	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_A, "Notify.Skill.Action.A");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_B, "Skill.Action.B");
 	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_B, "Effect.Skill.Action.B");
+	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_B, "Notify.Skill.Action.B");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_C, "Skill.Action.C");
+	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_C, "Effect.Skill.Action.C");
+	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_C, "Notify.Skill.Action.C");
+
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_D, "Skill.Action.D");
+	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_D, "Effect.Skill.Action.D");
+	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_D, "Notify.Skill.Action.D");
+	
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_E, "Skill.Action.E");
+	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_E, "Effect.Skill.Action.E");
+	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_E, "Notify.Skill.Action.E");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Vault, "Skill.Move.Vault");
 
