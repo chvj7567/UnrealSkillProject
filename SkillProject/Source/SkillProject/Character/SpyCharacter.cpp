@@ -27,6 +27,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "MotionWarpingComponent.h"
 #include "System/SpyPlayerController.h"
+#include "Character/SpyCharacterAttributeSet.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -154,7 +155,7 @@ void ASpyCharacter::RegisterAbility()
 	}
 
 	//# 설정한 AttributeSet 가져옴
-	CharacterAttributeSet = AbilitySystemComponent->GetSet<USKAttributeSet>();
+	CharacterAttributeSet = AbilitySystemComponent->GetSet<USpyCharacterAttributeSet>();
 	if (CharacterAttributeSet == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
@@ -165,6 +166,8 @@ void ASpyCharacter::RegisterAbility()
 	{
 		if (HasAuthority())
 		{
+			GetCharacterMovement()->MaxWalkSpeed = CharacterAttributeSet->GetMoveNormalSpeed();
+
 			//# 캐릭터에 등록된 스킬 부여
 			for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
 			{

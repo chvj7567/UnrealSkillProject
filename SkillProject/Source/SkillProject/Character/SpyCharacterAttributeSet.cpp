@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Data/SpyCharacterAttributeSet.h"
+#include "SpyCharacterAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 
 void USpyCharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

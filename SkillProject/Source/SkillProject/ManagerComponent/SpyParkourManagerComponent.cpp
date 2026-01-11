@@ -106,9 +106,6 @@ void USpyParkourManagerComponent::OnRep_ClimbData()
 
 bool USpyParkourManagerComponent::CanVaultAction()
 {
-    if (VaultData.VaultMontage == nullptr)
-        return false;
-
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
     if (OwnerCharacter == nullptr)
         return false;
@@ -121,9 +118,6 @@ bool USpyParkourManagerComponent::CanVaultAction()
         VaultWallData.HandLocVector == FVector::ZeroVector &&
         VaultWallData.LandLocVector == FVector::ZeroVector)
         return false;
-
-    //# Vault 벽 정보를 모션 워핑에 세팅
-    //SetMotionWarping();
 
     return true;
 }
@@ -264,13 +258,6 @@ FVaultMotionWarpingData USpyParkourManagerComponent::GetVaultMotionWarpingData()
     Data.StartRot = TargetRotator;
     Data.EndLoc = FinalLandLoc;
     Data.EndRot = TargetRotator;
-
-    /*UMotionWarpingComponent* MotionWarpingComponent = OwnerChararacter->FindComponentByClass<UMotionWarpingComponent>();
-    if (MotionWarpingComponent != nullptr)
-    {
-        MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultStartName, FinalHandLoc, TargetRotator);
-        MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(VaultData.VaultEndName, FinalLandLoc, TargetRotator);
-    }*/
 
     return Data;
 }

@@ -16,15 +16,6 @@ struct FVaultData {
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
-	TObjectPtr<UAnimMontage> VaultMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
-	FName VaultStartName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
-	FName VaultEndName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
 	FVector VaultStartOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")

@@ -25,6 +25,7 @@ class USpyParkourManagerComponent;
 class UMotionWarpingComponent;
 class ASpyWeapon;
 class UAbilitySystemComponent;
+class USpyCharacterAttributeSet;
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
@@ -79,7 +80,7 @@ protected:
 	TObjectPtr<USKAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
-	const USKAttributeSet* CharacterAttributeSet;
+	const USpyCharacterAttributeSet* CharacterAttributeSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
 	TArray<TSubclassOf<UGameplayAbility>> AbilityClasses;
