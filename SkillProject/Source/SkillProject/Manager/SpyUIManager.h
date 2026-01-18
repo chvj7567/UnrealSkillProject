@@ -3,51 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "UI/SKUIManager.h"
 #include "Util/DefineEnum.h"
 
 #include "SpyUIManager.generated.h"
 
-class USpyUserWidget;
-class ASkillProjectCharacter;
-class USpyAssetData;
-
 UCLASS()
-class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
+class SKILLPROJECT_API USpyUIManager : public USKUIManager
 {
 	GENERATED_BODY()
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-	
-protected:
-	const int MaxCashingUICount = 5;
-
-protected:
-	UPROPERTY()
-	TArray<TObjectPtr<USpyUserWidget>> OpenUIList;
-
-	UPROPERTY()
-	TArray<TObjectPtr<USpyUserWidget>> CashingUIList;
 
 public:
 	static USpyUIManager* Get(const UObject* WorldContextObject);
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void OpenUI(ESpyUIType UIType);
+	void OpenSpyUI(ESpyUIType UIType);
 
 	UFUNCTION(BlueprintCallable)
-	void CloseUI(ESpyUIType UIType);
+	void CloseSpyUI(ESpyUIType UIType);
 
 	UFUNCTION(BlueprintCallable)
-	void CloseLastUI();
+	void CloseLastSpyUI();
 
 	UFUNCTION(BlueprintCallable)
-	void OpenSubUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
-
-protected:
-	UFUNCTION(BlueprintCallable)
-	void AddCashingUI(USpyUserWidget* UserWidget);
+	void OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
 };

@@ -30,5 +30,5 @@ void USpyMainHUD::NativeDestruct()
 
 void USpyMainHUD::ShowMenu()
 {
-    USpyUIManager::Get(this)->OpenUI(ESpyUIType::Menu);
+    USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::Menu);
 }

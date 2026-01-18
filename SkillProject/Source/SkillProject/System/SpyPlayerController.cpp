@@ -26,7 +26,8 @@ void ASpyPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	bShowMouseCursor = true;
-	USpyUIManager::Get(this)->OpenUI(ESpyUIType::MainHUD);
+
+	USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::MainHUD);
 
 	SetMappingContext(DefaultMappingContext);
 }

@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/SpyUserWidget.h"
+#include "UI/SKUserWidget.h"
 #include "SpyHPBar.generated.h"
 
 class UProgressBar;
 
 UCLASS()
-class SKILLPROJECT_API USpyHPBar : public USpyUserWidget
+class SKILLPROJECT_API USpyHPBar : public USKUserWidget
 {
 	GENERATED_BODY()
 	

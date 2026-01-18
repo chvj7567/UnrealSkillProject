@@ -1,51 +1,17 @@
-﻿#pragma once
+// Fill out your copyright notice in the Description page of Project Settings.
 
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Asset/SKAssetData.h"
 #include "SpyAssetData.generated.h"
 
-USTRUCT()
-struct FAssetEntry
+/**
+ * 
+ */
+UCLASS()
+class SKILLPROJECT_API USpyAssetData : public USKAssetData
 {
 	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	FName AssetName;
 	
-	UPROPERTY(EditDefaultsOnly)
-	FSoftObjectPath AssetPath;
-};
-
-USTRUCT()
-struct FAssetSet
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FAssetEntry> AssetEntries;
-};
-
-UCLASS(Const, CollapseCategories, meta=(DisplayName="Spy Asset Data"))
-class USpyAssetData : public UPrimaryDataAsset
-{
-	GENERATED_BODY()
-
-public:
-	static const USpyAssetData& Get();
-	
-protected:
-#if WITH_EDITOR
-	virtual void PreSave(FObjectPreSaveContext ObjectSaveContext) override;
-	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
-#endif
-	
-public:
-	FSoftObjectPath GetAssetPathByName(const FName& AssetName) const;
-	
-private:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FName, FAssetSet> AssetGroupNameToSet;
-	
-	UPROPERTY()
-	TMap<FName, FSoftObjectPath> AssetNameToPath;
 };

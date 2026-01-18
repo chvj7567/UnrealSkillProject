@@ -14,8 +14,8 @@ class SKILLPROJECT_API USpyMenu : public USpyUserWidget
 	GENERATED_BODY()
 
 protected:
-	void NativeConstruct() override;
-	void NativeDestruct() override;
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))

@@ -25,45 +25,6 @@ USpyAssetManager& USpyAssetManager::Get()
 	return *NewObject<USpyAssetManager>();
 }
 
-UObject* USpyAssetManager::SynchronousLoadAsset(const FSoftObjectPath& AssetPath)
-{
-    if (AssetPath.IsValid())
-    {
-        TUniquePtr<FScopeLogTime> LogTimePtr;
-
-        if (UAssetManager::IsInitialized())
-        {
-            return UAssetManager::GetStreamableManager().LoadSynchronous(AssetPath, false);
-        }
-
-        return AssetPath.TryLoad();
-    }
-
-    return nullptr;
-}
-
-void USpyAssetManager::AddLoadedAsset(const UObject* Asset)
-{
-    if (ensureAlways(Asset))
-    {
-        FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
-        LoadedAssets.Add(Asset);
-    }
-}
-
-const USpyAssetData& USpyAssetManager::GetAssetData()
-{
-    FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyAssetData"), TEXT("SpyAssetData"));
-    FSoftObjectPtr AssetPtr(Get().GetPrimaryAssetPath(AssetId));
-
-    if (AssetPtr.IsPending())
-    {
-        AssetPtr.LoadSynchronous();
-    }
-
-    return *CastChecked<USpyAssetData>(AssetPtr.Get());
-}
-
 const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
 {
     FPrimaryAssetId AssetId = FPrimaryAssetId(TEXT("SpyCharacterAssetData"), TEXT("SpyCharacterAssetData"));

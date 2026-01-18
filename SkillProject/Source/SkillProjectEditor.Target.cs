@@ -12,5 +12,6 @@ public class SkillProjectEditorTarget : TargetRules
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 		ExtraModuleNames.Add("SkillProject");
         ExtraModuleNames.Add("SKGAS");
+        ExtraModuleNames.Add("SKManager");
     }
 }

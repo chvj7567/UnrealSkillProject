@@ -81,7 +81,7 @@ void ASpyCharacter::BeginPlay()
 
 	RegisterAbility();
 
-	USpyUIManager::Get(this)->OpenSubUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
+	USpyUIManager::Get(this)->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
 
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{

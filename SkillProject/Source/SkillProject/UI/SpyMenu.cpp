@@ -3,6 +3,7 @@
 
 #include "UI/SpyMenu.h"
 #include "Components/Button.h"
+#include "UI/SpyUserWidget.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyMenu)
 

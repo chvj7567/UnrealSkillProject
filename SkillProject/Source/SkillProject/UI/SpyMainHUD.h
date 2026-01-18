@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/SpyUserWidget.h"
+
 #include "SpyMainHUD.generated.h"
 
 class UProgressBar;
@@ -15,8 +16,8 @@ class SKILLPROJECT_API USpyMainHUD : public USpyUserWidget
 	GENERATED_BODY()
 
 protected:
-	void NativeConstruct() override;
-	void NativeDestruct() override;
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
