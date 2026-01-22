@@ -9,6 +9,7 @@
 #include "SKAttributeSet.generated.h"
 
 struct FGameplayEffectSpec;
+class USKAbilitySystemComponent;
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName)\
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName)\
@@ -24,8 +25,13 @@ class SKGAS_API USKAttributeSet : public UAttributeSet
 	GENERATED_BODY()
 
 protected:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+	UWorld* GetWorld() const override;
+
+	USKAbilitySystemComponent* GetSKAbilitySystemComponent() const;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData Health;

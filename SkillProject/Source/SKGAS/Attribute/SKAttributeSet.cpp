@@ -3,8 +3,23 @@
 
 #include "Attribute/SKAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "SKAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKAttributeSet)
+
+UWorld* USKAttributeSet::GetWorld() const
+{
+	const UObject* Outer = GetOuter();
+	check(Outer);
+
+	return Outer->GetWorld();
+}
+
+USKAbilitySystemComponent* USKAttributeSet::GetSKAbilitySystemComponent() const
+{
+	return Cast<USKAbilitySystemComponent>(GetOwningAbilitySystemComponent());
+}
+
 
 void USKAttributeSet::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
