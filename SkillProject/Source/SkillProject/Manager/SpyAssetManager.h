@@ -26,5 +26,5 @@ public:
 	const USpyCharacterAssetData& GetCharacterAssetData();
 
 public:
-	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag);
+	FName GetSkillAssetNameByType(FGameplayTag InCharacterType, FGameplayTag InSkillTag);
 };

@@ -24,13 +24,22 @@ EDataValidationResult USpyCharacterAssetData::IsDataValid(FDataValidationContext
 {
 	EDataValidationResult Result = Super::IsDataValid(Context);
 
+	for (FSkillAssetEntry AssetEntry : CharacterAssets.CommonSkills)
+	{
+		if (AssetEntry.Name.IsNone())
+		{
+			Context.AddError(FText::FromString(FString::Printf(TEXT("Common Skill Name is None"))));
+			Result = EDataValidationResult::Invalid;
+		}
+	}
+
 	for (FCharacterAssetEntry AssetEntry : CharacterAssets.AssetEntries)
 	{
-		for (FSkillAssetEntry SkillEntry : AssetEntry.Skills)
+		for (FSkillAssetEntry SkillEntry : AssetEntry.CharacterSkills)
 		{
 			if (SkillEntry.Name.IsNone())
 			{
-				Context.AddError(FText::FromString(FString::Printf(TEXT("Skill Name is None : [CharacterType : %s]"), *UEnum::GetValueAsString(AssetEntry.CharacterType))));
+				Context.AddError(FText::FromString(FString::Printf(TEXT("Character Skill Name is None : [CharacterType : %s]"), *AssetEntry.CharacterType.ToString())));
 				Result = EDataValidationResult::Invalid;
 			}
 		}
@@ -40,13 +49,26 @@ EDataValidationResult USpyCharacterAssetData::IsDataValid(FDataValidationContext
 }
 #endif
 
-FName USpyCharacterAssetData::GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag) const
+FName USpyCharacterAssetData::GetCommonSkillAssetName(FGameplayTag InSkillTag) const
+{
+	for (auto& CommonSkill : CharacterAssets.CommonSkills)
+	{
+		if (CommonSkill.SkillTag == InSkillTag)
+		{
+			return CommonSkill.Name;
+		}
+	}
+
+	return FName();
+}
+
+FName USpyCharacterAssetData::GetCharacterSkillAssetName(FGameplayTag InCharacterType, FGameplayTag InSkillTag) const
 {
 	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
 	{
 		if (CharacterAsset.CharacterType == InCharacterType)
 		{
-			for (auto& Skill : CharacterAsset.Skills)
+			for (auto& Skill : CharacterAsset.CharacterSkills)
 			{
 				if (Skill.SkillTag == InSkillTag)
 				{

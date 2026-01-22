@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "Util/DefineEnum.h"
 #include "NativeGameplayTags.h"
 
 #include "SpyCharacterAssetData.generated.h"
@@ -29,10 +28,10 @@ struct FCharacterAssetEntry
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-	ESpyCharacterType CharacterType;
+	FGameplayTag CharacterType;
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FSkillAssetEntry> Skills;
+	TArray<FSkillAssetEntry> CharacterSkills;
 };
 
 USTRUCT()
@@ -41,6 +40,9 @@ struct FCharacterAssetSet
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FSkillAssetEntry> CommonSkills;
+
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FCharacterAssetEntry> AssetEntries;
 };
@@ -60,7 +62,8 @@ protected:
 #endif
 
 public:
-	FName GetSkillAssetNameByType(ESpyCharacterType InCharacterType, FGameplayTag InSkillTag) const;
+	FName GetCommonSkillAssetName(FGameplayTag InSkillTag) const;
+	FName GetCharacterSkillAssetName(FGameplayTag InCharacterType, FGameplayTag InSkillTag) const;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

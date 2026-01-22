@@ -20,9 +20,3 @@ enum class ECustomMovementMode : uint8
     MOVE_Default       UMETA(DisplayName = "Default"),
     MOVE_WallClimb     UMETA(DisplayName = "Wall Climb"),
 };
-
-UENUM(BlueprintType)
-enum class ESpyCharacterType : uint8
-{
-    Normal         UMETA(DisplayName = "Normal"),
-};
