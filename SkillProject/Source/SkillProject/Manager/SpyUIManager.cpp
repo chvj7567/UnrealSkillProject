@@ -122,7 +122,7 @@ void USpyUIManager::CloseLastUI()
 void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent, EWidgetSpace Space)
 {
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	const USKAssetData* AssetData = AssetManager.GetAssetData();
+	const USKAssetData& AssetData = AssetManager.GetAssetData();
 
 	if (WidgetComponent == nullptr)
 		return;

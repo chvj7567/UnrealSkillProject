@@ -10,7 +10,7 @@
 
 const USKAssetData& USKAssetData::Get()
 {
-	return *USpyAssetManager::Get().GetAssetData();
+	return USpyAssetManager::Get().GetAssetData();
 }
 
 #if WITH_EDITOR

@@ -127,10 +127,15 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 		TSharedPtr<FStreamableHandle> LoadHandle = LoadPrimaryAsset(AssetId, TArray<FName>());
 		if (LoadHandle.IsValid())
 		{
-			UObject* LoadedAsset = LoadHandle->GetLoadedAsset();
-			if (LoadedAsset != nullptr)
+			LoadHandle->WaitUntilComplete(0.0f, false);
+
+			if (UPrimaryDataAsset* Asset = Cast<UPrimaryDataAsset>(LoadHandle->GetLoadedAsset()))
 			{
-				Get().AddLoadedAsset(LoadedAsset);
+				GameDataMap.Add(Asset->GetClass(), Asset);
+
+				FString ClassName = Asset->GetClass()->GetName();
+				FString AssetName = Asset->GetName();
+				UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Sync Load: Class[%s] Asset[%s]"), *ClassName, *AssetName);
 			}
 		}
 
@@ -175,33 +180,56 @@ int32 USpyAssetManager::UnloadPrimaryAssets(const TArray<FPrimaryAssetId>& Asset
 	return UnloadAssetCount;
 }
 
+UPrimaryDataAsset* USpyAssetManager::LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType)
+{
+	//# LoadAllPrimaryAssetsSync에서 일괄 로드 함
+	//# 로드 못한 경우 개별 다운로드 진행
+	UPrimaryDataAsset* Asset = nullptr;
+
+	if (!DataClassPath.IsNull())
+	{
+		if (GIsEditor)
+		{
+			Asset = DataClassPath.LoadSynchronous();
+			LoadPrimaryAssetsWithType(PrimaryAssetType);
+		}
+		else
+		{
+			TSharedPtr<FStreamableHandle> Handle = LoadPrimaryAssetsWithType(PrimaryAssetType);
+			if (Handle.IsValid())
+			{
+				Handle->WaitUntilComplete(0.0f, false);
+
+				Asset = Cast<UPrimaryDataAsset>(Handle->GetLoadedAsset());
+			}
+		}
+	}
+
+	if (Asset)
+	{
+		GameDataMap.Add(DataClass, Asset);
+	}
+
+	return Asset;
+}
+
 void USpyAssetManager::LogProgress(int32 Loaded, int32 Total)
 {
 	const int32 Percent = FMath::Clamp(FMath::RoundToInt((float)Loaded / (float)Total * 100.f), 1, 100);
 	UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Loading %d%% (%d / %d)"), Percent, Loaded, Total);
 }
 
-const USKAssetData* USpyAssetManager::GetAssetData()
+const USpyAssetData& USpyAssetManager::GetAssetData()
 {
-	if (TObjectPtr<UPrimaryDataAsset> const* pResult = GameDataMap.Find(USKAssetData::StaticClass()))
-	{
-		return CastChecked<USKAssetData>(*pResult);
-	}
-
-	return CastChecked<USKAssetData>(SynchronousLoadAsset(AssetDataPath.ToSoftObjectPath()));
+	return GetOrLoadTypedGameData<USpyAssetData>(AssetDataPath);
 }
 
-const USpyCharacterAssetData* USpyAssetManager::GetCharacterAssetData()
+const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
 {
-	if (TObjectPtr<UPrimaryDataAsset> const* pResult = GameDataMap.Find(USKAssetData::StaticClass()))
-	{
-		return CastChecked<USpyCharacterAssetData>(*pResult);
-	}
-
-	return CastChecked<USpyCharacterAssetData>(SynchronousLoadAsset(AssetDataPath.ToSoftObjectPath()));
+	return GetOrLoadTypedGameData<USpyCharacterAssetData>(CharacterAssetDataPath);
 }
 
 FName USpyAssetManager::GetSkillAssetNameByType(FGameplayTag InCharacterType, FGameplayTag InSkillTag)
 {
-	return Get().GetCharacterAssetData()->GetCharacterSkillAssetName(InCharacterType, InSkillTag);
+	return Get().GetCharacterAssetData().GetCharacterSkillAssetName(InCharacterType, InSkillTag);
 }

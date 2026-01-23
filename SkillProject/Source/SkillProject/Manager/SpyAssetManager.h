@@ -3,9 +3,9 @@
 #pragma once
 
 #include "Engine/AssetManager.h"
-#include "Data/SKAssetData.h"
 #include "NativeGameplayTags.h"
 #include "Util/DefineEnum.h"
+#include "Data/SpyAssetData.h"
 
 #include "SpyAssetManager.generated.h"
 
@@ -46,9 +46,23 @@ protected:
 	static UObject* SynchronousLoadAsset(const FSoftObjectPath& AssetPath);
 	void AddLoadedAsset(UObject* Asset);
 
+protected:
+	template <typename GameDataClass>
+	const GameDataClass& GetOrLoadTypedGameData(const TSoftObjectPtr<GameDataClass>& DataPath)
+	{
+		if (TObjectPtr<UPrimaryDataAsset> const* pResult = GameDataMap.Find(GameDataClass::StaticClass()))
+		{
+			return *CastChecked<GameDataClass>(*pResult);
+		}
+
+		return *CastChecked<const GameDataClass>(LoadPrimaryAssetSync(GameDataClass::StaticClass(), DataPath, GameDataClass::StaticClass()->GetFName()));
+	}
+
+	UPrimaryDataAsset* LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType);
+
 public:
-	const USKAssetData* GetAssetData();
-	const USpyCharacterAssetData* GetCharacterAssetData();
+	const USpyAssetData& GetAssetData();
+	const USpyCharacterAssetData& GetCharacterAssetData();
 
 public:
 	FName GetSkillAssetNameByType(FGameplayTag InCharacterType, FGameplayTag InSkillTag);
@@ -62,8 +76,12 @@ private:
 
 	FCriticalSection LoadedAssetsCritical;
 
+private:
 	UPROPERTY(Config)
-	TSoftObjectPtr<USKAssetData> AssetDataPath;
+	TSoftObjectPtr<USpyAssetData> AssetDataPath;
+
+	UPROPERTY(Config)
+	TSoftObjectPtr<USpyCharacterAssetData> CharacterAssetDataPath;
 };
 
 template<typename AssetType>
@@ -94,7 +112,7 @@ AssetType* USpyAssetManager::GetAssetByPath(const TSoftObjectPtr<AssetType>& Ass
 template <typename AssetType>
 AssetType* USpyAssetManager::GetAssetByName(const FName& AssetName, bool bKeepInMemory)
 {
-	const USKAssetData& AssetData = Get().GetAssetData();
+	const USpyAssetData& AssetData = Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(AssetName);
 	TSoftObjectPtr<AssetType> AssetPtr(AssetPath);
 	return GetAssetByPath<AssetType>(AssetPtr, bKeepInMemory);
@@ -128,11 +146,14 @@ TSubclassOf<AssetType> USpyAssetManager::GetSubclassByPath(const TSoftClassPtr<A
 template <typename AssetType>
 TSubclassOf<AssetType> USpyAssetManager::GetSubclassByName(const FName& AssetName, bool bKeepInMemory)
 {
-	const USKAssetData* AssetData = Get().GetAssetData();
-	const FSoftObjectPath& AssetPath = AssetData->GetAssetPathByName(AssetName);
+	const USpyAssetData& AssetData = Get().GetAssetData();
+	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(AssetName);
 
 	FString AssetPathString = AssetPath.GetAssetPathString();
-	AssetPathString.Append(TEXT("_C"));
+	if (AssetPathString.EndsWith("_C") == false)
+	{
+		AssetPathString.Append(TEXT("_C"));
+	}
 
 	FSoftClassPath ClassPath(AssetPathString);
 	TSoftClassPtr<AssetType> ClassPtr(ClassPath);
