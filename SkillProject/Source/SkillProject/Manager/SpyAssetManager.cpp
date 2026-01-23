@@ -30,61 +30,67 @@ USpyAssetManager& USpyAssetManager::Get()
 	return *NewObject<USpyAssetManager>();
 }
 
-UObject* USpyAssetManager::SynchronousLoadAsset(const FSoftObjectPath& AssetPath)
+UObject* USpyAssetManager::LoadAssetSync(const FSoftObjectPath& AssetPath)
 {
+	UObject* Asset = nullptr;
+
 	if (AssetPath.IsValid())
 	{
 		TUniquePtr<FScopeLogTime> LogTimePtr;
 
 		if (UAssetManager::IsInitialized())
 		{
-			return UAssetManager::GetStreamableManager().LoadSynchronous(AssetPath, false);
+			Asset = UAssetManager::GetStreamableManager().LoadSynchronous(AssetPath, false);
 		}
 
-		return AssetPath.TryLoad();
+		Asset = AssetPath.TryLoad();
 	}
 
-	return nullptr;
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Secondary Asset Sync Load Complete %s"), *AssetPath.ToString());
+
+	return Asset;
 }
 
-void USpyAssetManager::AsynchronousLoadAsset(const FSoftObjectPath& AssetPath, const FSimpleDelegate& OnComplete)
+void USpyAssetManager::LoadAssetAsync(const FSoftObjectPath& AssetPath, const FSpyAssetAndDelegate& OnComplete)
 {
 	//# 경로가 유효한지 확인
 	if (AssetPath.IsValid() == false)
 	{
-		OnComplete.ExecuteIfBound();
+		OnComplete.ExecuteIfBound(nullptr);
 		return;
 	}
 
 	//# 이미 로드되어 있는지 확인
-	if (AssetPath.ResolveObject())
+	if (UObject * Asset = AssetPath.ResolveObject())
 	{
-		OnComplete.ExecuteIfBound();
+		OnComplete.ExecuteIfBound(Asset);
 		return;
 	}
 
 	//# 비동기 로드
-	Get().GetStreamableManager().RequestAsyncLoad(AssetPath, FStreamableDelegate::CreateLambda([this, AssetPath, OnComplete]()
+	Get().GetStreamableManager().RequestAsyncLoad(AssetPath, FStreamableDelegate::CreateLambda([AssetPath, OnComplete]()
 		{
 			//# 로드된 에셋이 유효하면 저장
-			if (UObject* LoadedAsset = AssetPath.ResolveObject())
+			if (UObject* Asset = AssetPath.ResolveObject())
 			{
-				Get().AddLoadedAsset(LoadedAsset);
-				UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Async Load Complete: %s"), *AssetPath.ToString());
+				Get().AddLoadedAsset(Asset);
+				OnComplete.ExecuteIfBound(Asset);
+				UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Secondary Asset Async Load Complete: %s"), *AssetPath.ToString());
 			}
-
-			OnComplete.ExecuteIfBound();
+			else
+			{
+				OnComplete.ExecuteIfBound(nullptr);
+			}
 		}));
 }
 
-void USpyAssetManager::AddLoadedAsset(UObject* Asset)
+void USpyAssetManager::UnloadAsset(const FSoftObjectPath& AssetPath)
 {
-	//# 로드된 에셋이 유효하면 저장(GC에 의해 삭제되지 않도록 참조 유지)
-	if (ensureAlways(Asset))
-	{
-		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
-		LoadedAssets.Add(Asset);
-	}
+	UObject* Asset = AssetPath.ResolveObject();
+
+	Get().RemoveLoadedAsset(Asset);
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Asset Unloaded: %s"), *AssetPath.ToString());
 }
 
 void USpyAssetManager::LoadAllPrimaryAssetsSync()
@@ -106,7 +112,7 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 
 		for (const FPrimaryAssetId& AssetID : AssetIds)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SKAssetManager] Scan AssetType: %s, AssetID: %s"), *TypeInfo.PrimaryAssetType.ToString(), *AssetID.ToString());
+			UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Scan AssetType: %s, AssetID: %s"), *TypeInfo.PrimaryAssetType.ToString(), *AssetID.ToString());
 		}
 	}
 
@@ -115,11 +121,11 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 
 	if (TotalCount == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("# [SKAssetManager] No Primary Assets"));
+		UE_LOG(LogTemp, Warning, TEXT("# [SpyAssetManager] No Primary Assets"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Sync Load Start (%d)"), TotalCount);
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Asset Sync Load Start (%d)"), TotalCount);
 
 	for (const FPrimaryAssetId& AssetId : AllAssetIds)
 	{
@@ -131,11 +137,11 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 
 			if (UPrimaryDataAsset* Asset = Cast<UPrimaryDataAsset>(LoadHandle->GetLoadedAsset()))
 			{
-				GameDataMap.Add(Asset->GetClass(), Asset);
+				AddPrimaryAsset(Asset);
 
 				FString ClassName = Asset->GetClass()->GetName();
 				FString AssetName = Asset->GetName();
-				UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Sync Load: Class[%s] Asset[%s]"), *ClassName, *AssetName);
+				UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Asset Sync Load: Class[%s] Asset[%s]"), *ClassName, *AssetName);
 			}
 		}
 
@@ -143,41 +149,7 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 		LogProgress(LoadedCount, TotalCount);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Sync Load Complete"));
-}
-
-void USpyAssetManager::LoadPrimaryAssetsAsync(const TArray<FPrimaryAssetId>& AssetIds, const FSimpleDelegate& OnComplete)
-{
-	if (AssetIds.Num() == 0)
-	{
-		OnComplete.ExecuteIfBound();
-		return;
-	}
-
-	//# 비동기 로드
-	LoadPrimaryAssets(AssetIds, TArray<FName>(), FStreamableDelegate::CreateLambda([this, AssetIds, OnComplete]()
-		{
-			for (const FPrimaryAssetId& AssetID : AssetIds)
-			{
-				if (UObject* LoadedAsset = GetPrimaryAssetObject(AssetID))
-				{
-					Get().AddLoadedAsset(LoadedAsset);
-				}
-			}
-
-			UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Async Load Complete"));
-			OnComplete.ExecuteIfBound();
-		}));
-}
-
-int32 USpyAssetManager::UnloadPrimaryAssets(const TArray<FPrimaryAssetId>& AssetIds)
-{
-	//# 에셋 언로딩
-	int32 UnloadAssetCount = Super::UnloadPrimaryAssets(AssetIds);
-
-	UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Assets %d Unloaded Complete"), UnloadAssetCount);
-
-	return UnloadAssetCount;
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] All Primary Asset Sync Load Complete"));
 }
 
 UPrimaryDataAsset* USpyAssetManager::LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType)
@@ -186,7 +158,7 @@ UPrimaryDataAsset* USpyAssetManager::LoadPrimaryAssetSync(TSubclassOf<UPrimaryDa
 	//# 로드 못한 경우 개별 다운로드 진행
 	UPrimaryDataAsset* Asset = nullptr;
 
-	if (!DataClassPath.IsNull())
+	if (DataClassPath.IsNull() == false)
 	{
 		if (GIsEditor)
 		{
@@ -207,16 +179,112 @@ UPrimaryDataAsset* USpyAssetManager::LoadPrimaryAssetSync(TSubclassOf<UPrimaryDa
 
 	if (Asset)
 	{
-		GameDataMap.Add(DataClass, Asset);
+		AddPrimaryAsset(Asset);
+
+		FString ClassName = Asset->GetClass()->GetName();
+		FString AssetName = Asset->GetName();
+		UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Asset Sync Load: Class[%s] Asset[%s]"), *ClassName, *AssetName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Asset Sync Load Failed: %s"), *DataClass->GetClass()->GetName());
 	}
 
 	return Asset;
 }
 
+void USpyAssetManager::LoadPrimaryAssetsAsync(const TArray<FPrimaryAssetId>& AssetIds, const FSimpleDelegate& OnComplete)
+{
+	if (AssetIds.Num() == 0)
+	{
+		OnComplete.ExecuteIfBound();
+		return;
+	}
+
+	//# 비동기 로드
+	LoadPrimaryAssets(AssetIds, TArray<FName>(), FStreamableDelegate::CreateLambda([this, AssetIds, OnComplete]()
+		{
+			for (const FPrimaryAssetId& AssetID : AssetIds)
+			{
+				if (UObject* Asset = GetPrimaryAssetObject(AssetID))
+				{
+					AddPrimaryAsset(Cast<UPrimaryDataAsset>(Asset));
+				}
+			}
+
+			UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Asset Async Load Complete"));
+			OnComplete.ExecuteIfBound();
+		}));
+}
+
+void USpyAssetManager::UnloadAllPrimaryAssets()
+{
+	//# 캐싱된 모든 PrimaryData 언로드
+	for (auto& Data : GameDataMap)
+	{
+		UPrimaryDataAsset* Asset = Data.Value;
+		UnloadPrimaryAsset(Asset->GetPrimaryAssetId());
+
+		FString ClassName = Asset->GetClass()->GetName();
+		FString AssetName = Asset->GetName();
+		UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Assets Unloaded AssetType: %s, AssetID: %s"), *ClassName, *AssetName);
+	}
+
+	GameDataMap.Empty();
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Primary Assets Unloaded Complete"));
+}
+
+void USpyAssetManager::UnloadAllAssets()
+{
+	//# 일반 에셋은 참조만 끊어주면 다음 GC에 의해 제거됨
+	LoadedAssets.Empty();
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Secondary Assets Unloaded Complete"));
+}
+
 void USpyAssetManager::LogProgress(int32 Loaded, int32 Total)
 {
 	const int32 Percent = FMath::Clamp(FMath::RoundToInt((float)Loaded / (float)Total * 100.f), 1, 100);
-	UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Loading %d%% (%d / %d)"), Percent, Loaded, Total);
+	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Loading %d%% (%d / %d)"), Percent, Loaded, Total);
+}
+
+void USpyAssetManager::AddLoadedAsset(UObject* Asset)
+{
+	//# 로드된 에셋이 유효하면 저장(GC에 의해 삭제되지 않도록 참조 유지)
+	if (ensureAlways(Asset))
+	{
+		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
+		LoadedAssets.Add(Asset);
+	}
+}
+
+void USpyAssetManager::RemoveLoadedAsset(UObject* Asset)
+{
+	if (ensureAlways(Asset))
+	{
+		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
+		LoadedAssets.Remove(Asset);
+	}
+}
+
+void USpyAssetManager::AddPrimaryAsset(UPrimaryDataAsset* Asset)
+{
+	//# 로드된 에셋이 유효하면 저장(GC에 의해 삭제되지 않도록 참조 유지)
+	if (ensureAlways(Asset))
+	{
+		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
+		GameDataMap.Add(Asset->GetClass(), Asset);
+	}
+}
+
+void USpyAssetManager::RemovePrimaryAsset(UPrimaryDataAsset* Asset)
+{
+	if (ensureAlways(Asset))
+	{
+		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
+		GameDataMap.Remove(Asset->GetClass());
+	}
 }
 
 const USpyAssetData& USpyAssetManager::GetAssetData()

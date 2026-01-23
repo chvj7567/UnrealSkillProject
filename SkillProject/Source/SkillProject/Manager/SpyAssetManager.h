@@ -11,6 +11,8 @@
 
 class USpyCharacterAssetData;
 
+DECLARE_DELEGATE_OneParam(FSpyAssetAndDelegate, UObject*);
+
 UCLASS(Config = Game)
 class SKILLPROJECT_API USpyAssetManager : public UAssetManager
 {
@@ -36,15 +38,24 @@ public:
 	template<typename AssetType>
 	static TSubclassOf<AssetType> GetSubclassByName(const FName& AssetName, bool bKeepInMemory = true);
 
+public:
+	static UObject* LoadAssetSync(const FSoftObjectPath& AssetPath);
+	static void LoadAssetAsync(const FSoftObjectPath& AssetPath, const FSpyAssetAndDelegate& OnComplete);
+	static void UnloadAsset(const FSoftObjectPath& AssetPath);
+
+protected:
 	void LoadAllPrimaryAssetsSync();
+	UPrimaryDataAsset* LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType);
 	void LoadPrimaryAssetsAsync(const TArray<FPrimaryAssetId>& AssetIds, const FSimpleDelegate& OnComplete);
-	virtual int32 UnloadPrimaryAssets(const TArray<FPrimaryAssetId>& AssetIds) override;
-	void AsynchronousLoadAsset(const FSoftObjectPath& AssetPath, const FSimpleDelegate& OnComplete);
+	void UnloadAllPrimaryAssets();
+	void UnloadAllAssets();
 
 protected:
 	void LogProgress(int32 Loaded, int32 Total);
-	static UObject* SynchronousLoadAsset(const FSoftObjectPath& AssetPath);
 	void AddLoadedAsset(UObject* Asset);
+	void RemoveLoadedAsset(UObject* Asset);
+	void AddPrimaryAsset(UPrimaryDataAsset* Asset);
+	void RemovePrimaryAsset(UPrimaryDataAsset* Asset);
 
 protected:
 	template <typename GameDataClass>
@@ -57,8 +68,6 @@ protected:
 
 		return *CastChecked<const GameDataClass>(LoadPrimaryAssetSync(GameDataClass::StaticClass(), DataPath, GameDataClass::StaticClass()->GetFName()));
 	}
-
-	UPrimaryDataAsset* LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType);
 
 public:
 	const USpyAssetData& GetAssetData();
@@ -96,8 +105,7 @@ AssetType* USpyAssetManager::GetAssetByPath(const TSoftObjectPtr<AssetType>& Ass
 		LoadedAsset = AssetPointer.Get();
 		if (!LoadedAsset)
 		{
-			LoadedAsset = Cast<AssetType>(SynchronousLoadAsset(AssetPath));
-			ensureAlwaysMsgf(LoadedAsset, TEXT("Failed to load asset [%s]"), *AssetPointer.ToString());
+			LoadedAsset = Cast<AssetType>(LoadAssetSync(AssetPath));
 		}
 
 		if (LoadedAsset && bKeepInMemory)
@@ -130,8 +138,7 @@ TSubclassOf<AssetType> USpyAssetManager::GetSubclassByPath(const TSoftClassPtr<A
 		LoadedSubclass = AssetPointer.Get();
 		if (!LoadedSubclass)
 		{
-			LoadedSubclass = Cast<UClass>(SynchronousLoadAsset(AssetPath));
-			ensureAlwaysMsgf(LoadedSubclass, TEXT("Failed to load asset class [%s]"), *AssetPointer.ToString());
+			LoadedSubclass = Cast<UClass>(LoadAssetSync(AssetPath));
 		}
 
 		if (LoadedSubclass && bKeepInMemory)

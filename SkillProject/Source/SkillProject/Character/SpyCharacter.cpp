@@ -90,16 +90,29 @@ void ASpyCharacter::BeginPlay()
 
 	if (HasAuthority())
 	{
-		if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("TwoHandSword"), false))
-		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;
-			SpawnParams.Instigator = this;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
+		const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("TwoHandSword"));
 
-			SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-			SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
-		}
+		FSpyAssetAndDelegate LoadDelegate;
+		LoadDelegate.BindLambda([this](UObject* LoadedAsset)
+			{
+				if (LoadedAsset == nullptr)
+					return;
+
+				if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("TwoHandSword")))
+				{
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.Owner = this;
+					SpawnParams.Instigator = this;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+					SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+					SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
+				}
+				
+			});
+
+		USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
 	}
 }
 
