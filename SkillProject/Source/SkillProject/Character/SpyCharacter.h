@@ -10,7 +10,7 @@
 #include "SKAbilitySystemComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Character/SpyCharacterMovementComponent.h"
-
+#include "ModularCharacter.h"
 #include "SpyCharacter.generated.h"
 
 class USpringArmComponent;
@@ -29,7 +29,7 @@ class USpyCharacterAttributeSet;
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
-class ASpyCharacter : public ACharacter, public IAbilitySystemInterface
+class ASpyCharacter : public AModularCharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 

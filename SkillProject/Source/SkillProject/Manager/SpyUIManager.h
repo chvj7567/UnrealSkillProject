@@ -3,13 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/SKUIManager.h"
+#include "Subsystems/GameInstanceSubsystem.h"
 #include "Util/DefineEnum.h"
+#include "Components/WidgetComponent.h"
 
 #include "SpyUIManager.generated.h"
 
+class UWidgetComponent;
+class USKUserWidget;
+
 UCLASS()
-class SKILLPROJECT_API USpyUIManager : public USKUIManager
+class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
@@ -22,14 +26,38 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
+	void OpenUI(FName InUIName);
+
+	UFUNCTION(BlueprintCallable)
+	void CloseUI(FName InUIName);
+
+	UFUNCTION(BlueprintCallable)
+	void CloseLastUI();
+
+	UFUNCTION(BlueprintCallable)
+	void OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
+
+	UFUNCTION(BlueprintCallable)
+	void AddCashingUI(USpyUserWidget* UserWidget);
+
+public:
+	UFUNCTION(BlueprintCallable)
 	void OpenSpyUI(ESpyUIType UIType);
 
 	UFUNCTION(BlueprintCallable)
 	void CloseSpyUI(ESpyUIType UIType);
 
 	UFUNCTION(BlueprintCallable)
-	void CloseLastSpyUI();
-
-	UFUNCTION(BlueprintCallable)
 	void OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
+
+protected:
+	const int MaxCashingUICount = 5;
+
+protected:
+	UPROPERTY()
+	TArray<TObjectPtr<USpyUserWidget>> OpenUIList;
+
+	UPROPERTY()
+	TArray<TObjectPtr<USpyUserWidget>> CashingUIList;
+
 };

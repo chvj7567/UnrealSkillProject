@@ -3,12 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Asset/SKAssetData.h"
+#include "Data/SKAssetData.h"
 #include "SpyAssetData.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SKILLPROJECT_API USpyAssetData : public USKAssetData
 {

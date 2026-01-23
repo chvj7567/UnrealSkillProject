@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\tae\\desktop\\myproject\\spyproject\\unrealskillproject\\skillproject\\plugins\\modulargameplayactors\\source\\modulargameplayactors\\private\\modulargameplayactorsmodule.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\tae\\desktop\\myproject\\spyproject\\unrealskillproject\\skillproject\\intermediate\\build\\win64\\x64\\skillprojecteditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "c:\\users\\tae\\desktop\\myproject\\spyproject\\unrealskillproject\\skillproject\\plugins\\modulargameplayactors\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\modulargameplayactors\\definitions.modulargameplayactors.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

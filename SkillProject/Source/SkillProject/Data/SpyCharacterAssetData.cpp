@@ -10,7 +10,7 @@
 
 const USpyCharacterAssetData& USpyCharacterAssetData::Get()
 {
-	return USpyAssetManager::Get().GetCharacterAssetData();
+	return *USpyAssetManager::Get().GetCharacterAssetData();
 }
 
 #if WITH_EDITOR

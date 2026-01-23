@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Util/DefineEnum.h"
+#include "ModularPlayerController.h"
 
 #include "SpyPlayerController.generated.h"
 
@@ -14,7 +15,7 @@ class ASpyPlayerState;
 struct FInputActionValue;
 
 UCLASS()
-class SKILLPROJECT_API ASpyPlayerController : public APlayerController
+class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController
 {
 	GENERATED_BODY()
 	

@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "ModularGameMode.h"
 
 #include "SpyGameMode.generated.h"
 
 UCLASS(minimalapi)
-class ASpyGameMode : public AGameModeBase
+class ASpyGameMode : public AModularGameModeBase
 {
 	GENERATED_BODY()
 

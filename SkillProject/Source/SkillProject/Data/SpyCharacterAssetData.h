@@ -19,6 +19,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag SkillTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag InputTag;
 };
 
 USTRUCT()
