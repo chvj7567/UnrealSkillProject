@@ -44,8 +44,8 @@ public:
 	static void UnloadAsset(const FSoftObjectPath& AssetPath);
 
 protected:
-	void LoadAllPrimaryAssetsSync();
 	UPrimaryDataAsset* LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType);
+	void LoadAllPrimaryAssetsSync();
 	void LoadPrimaryAssetsAsync(const TArray<FPrimaryAssetId>& AssetIds, const FSimpleDelegate& OnComplete);
 	void UnloadAllPrimaryAssets();
 	void UnloadAllAssets();

@@ -10,6 +10,8 @@
 #include "Character/SpyCharacterAttributeSet.h"
 #include "SKAbilitySystemComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "Manager/SpyAssetManager.h"
+#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerState)
 
@@ -43,6 +45,7 @@ void ASpyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ThisClass, PlayerConnectionType);
+	DOREPLIFETIME(ThisClass, CharacterAssetData);
 }
 
 void ASpyPlayerState::Multicast_Death_Implementation()
@@ -188,7 +191,7 @@ void ASpyPlayerState::ToggleState(FGameplayTag Tag)
 	}
 }
 
-void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData)
+void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData& InCharacterAssetData)
 {
 	//# 서버에서만 세팅
 	if (GetLocalRole() != ROLE_Authority)
@@ -201,4 +204,5 @@ void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InChar
 
 void ASpyPlayerState::OnRep_CharacterAssetData()
 {
+	UE_LOG(LogTemp, Log, TEXT("PlayerState: OnRep_CharacterAssetData"));
 }

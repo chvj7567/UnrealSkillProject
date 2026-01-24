@@ -31,7 +31,10 @@ struct FCharacterAssetEntry
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag CharacterType;
+	FGameplayTag ClassType;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TSubclassOf<UActorComponent>> CharacterComponentClasses;
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FSkillAssetEntry> CharacterSkills;
@@ -45,6 +48,9 @@ struct FCharacterAssetSet
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FSkillAssetEntry> CommonSkills;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TSubclassOf<UActorComponent>> CommonComponentClasses;
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FCharacterAssetEntry> AssetEntries;
@@ -66,7 +72,8 @@ protected:
 
 public:
 	FName GetCommonSkillAssetName(FGameplayTag InSkillTag) const;
-	FName GetCharacterSkillAssetName(FGameplayTag InCharacterType, FGameplayTag InSkillTag) const;
+	FName GetCharacterSkillAssetName(FGameplayTag InClassType, FGameplayTag InSkillTag) const;
+	TArray<TSubclassOf<UActorComponent>> GetAllComponentClasses(FGameplayTag InClassType) const;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

@@ -60,7 +60,8 @@ public:
     void ToggleState(FGameplayTag Tag);
 
 public:
-    void SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData);
+    const USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
+    void SetCharacterAssetData(const USpyCharacterAssetData& InCharacterAssetData);
 
 protected:
     UFUNCTION()

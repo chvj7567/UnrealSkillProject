@@ -28,6 +28,7 @@
 #include "MotionWarpingComponent.h"
 #include "System/SpyPlayerController.h"
 #include "Character/SpyCharacterAttributeSet.h"
+#include "Character/SpyPawnExtensionComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -70,6 +71,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	HPBarComponent->SetupAttachment(GetMesh());
 	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
 
+	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
 	SpyAnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("SpyAnimManagerComponent"));
 	SpyParkourManagerComponent = CreateDefaultSubobject<USpyParkourManagerComponent>(TEXT("SpyParkourManagerComponent"));
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));

@@ -5,6 +5,11 @@
 
 namespace SpyGameplayTags
 {
+	UE_DEFINE_GAMEPLAY_TAG(InitState_Spawned, "InitState.Spawned");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_DataAvailable, "InitState.DataAvailable");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_DataInitialized, "InitState.DataInitialized");
+	UE_DEFINE_GAMEPLAY_TAG(InitState_GameplayReady, "InitState.GameplayReady");
+
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class_Normal, "Character.Class.Normal");
 
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Survival_Alive, "Character.State.Survival.Alive");

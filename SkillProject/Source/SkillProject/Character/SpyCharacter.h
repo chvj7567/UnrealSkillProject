@@ -26,6 +26,8 @@ class UMotionWarpingComponent;
 class ASpyWeapon;
 class UAbilitySystemComponent;
 class USpyCharacterAttributeSet;
+class USpyPawnExtensionComponent;
+
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
@@ -92,6 +94,9 @@ protected:
 	TObjectPtr<UWidgetComponent> HPBarComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim")
+	TObjectPtr<USpyPawnExtensionComponent> SpyPawnExtensionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim")
 	TObjectPtr<USpyAnimManagerComponent> SpyAnimManagerComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parkour")
@@ -99,9 +104,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parkour")
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-	TObjectPtr<USpyCharacterMovementComponent> SpyCharacterMovementCompnent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<ASpyWeapon> SpyWeapon;

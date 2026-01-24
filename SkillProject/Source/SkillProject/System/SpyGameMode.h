@@ -8,6 +8,8 @@
 
 #include "SpyGameMode.generated.h"
 
+class USpyCharacterAssetData;
+
 UCLASS(minimalapi)
 class ASpyGameMode : public AModularGameModeBase
 {
@@ -18,6 +20,15 @@ public:
 
 protected:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	virtual void GenericPlayerInitialization(AController* NewPlayer) override;
+	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
+
+protected:
+	void HandleGameStartInitialization();
+
+public:
+	UFUNCTION(BlueprintCallable)
+	const USpyCharacterAssetData* GetCharacterDataForController(const AController* InController) const;
 };
 
 

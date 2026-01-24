@@ -39,7 +39,7 @@ EDataValidationResult USpyCharacterAssetData::IsDataValid(FDataValidationContext
 		{
 			if (SkillEntry.Name.IsNone())
 			{
-				Context.AddError(FText::FromString(FString::Printf(TEXT("Character Skill Name is None : [CharacterType : %s]"), *AssetEntry.CharacterType.ToString())));
+				Context.AddError(FText::FromString(FString::Printf(TEXT("Character Skill Name is None : [CharacterType : %s]"), *AssetEntry.ClassType.ToString())));
 				Result = EDataValidationResult::Invalid;
 			}
 		}
@@ -62,11 +62,11 @@ FName USpyCharacterAssetData::GetCommonSkillAssetName(FGameplayTag InSkillTag) c
 	return FName();
 }
 
-FName USpyCharacterAssetData::GetCharacterSkillAssetName(FGameplayTag InCharacterType, FGameplayTag InSkillTag) const
+FName USpyCharacterAssetData::GetCharacterSkillAssetName(FGameplayTag InClassType, FGameplayTag InSkillTag) const
 {
 	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
 	{
-		if (CharacterAsset.CharacterType == InCharacterType)
+		if (CharacterAsset.ClassType == InClassType)
 		{
 			for (auto& Skill : CharacterAsset.CharacterSkills)
 			{
@@ -79,4 +79,29 @@ FName USpyCharacterAssetData::GetCharacterSkillAssetName(FGameplayTag InCharacte
 	}
 
 	return FName();
+}
+
+TArray<TSubclassOf<UActorComponent>> USpyCharacterAssetData::GetAllComponentClasses(FGameplayTag InClassType) const
+{
+	TArray<TSubclassOf<UActorComponent>> ComponentClasses;
+
+	//# 공통 캐릭터 컴포넌트
+	for (auto& ComponentClass : CharacterAssets.CommonComponentClasses)
+	{
+		ComponentClasses.Add(ComponentClass);
+	}
+
+	//# 전용 캐릭터 컴포넌트
+	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
+	{
+		if (CharacterAsset.ClassType == InClassType)
+		{
+			for (auto& ComponentClass : CharacterAsset.CharacterComponentClasses)
+			{
+				ComponentClasses.Add(ComponentClass);
+			}
+		}
+	}
+
+	return ComponentClasses;
 }
