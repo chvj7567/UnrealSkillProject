@@ -168,6 +168,72 @@ void USpyInputComponent::Look(const FInputActionValue& InValue)
 	}
 }
 
+void USpyInputComponent::UseSkillA(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			SpyCharacter->UseSkill(SpyGameplayTags::Skill_Action_A);
+		}
+	}
+}
+
+void USpyInputComponent::UseSkillB(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			SpyCharacter->UseSkill(SpyGameplayTags::Skill_Action_B);
+		}
+	}
+}
+
+void USpyInputComponent::UseSkillC(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			SpyCharacter->UseSkill(SpyGameplayTags::Skill_Action_C);
+		}
+	}
+}
+
+void USpyInputComponent::UseSkillD(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			SpyCharacter->UseSkill(SpyGameplayTags::Skill_Action_D);
+		}
+	}
+}
+
+void USpyInputComponent::UseSkillE(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			SpyCharacter->UseSkill(SpyGameplayTags::Skill_Action_E);
+		}
+	}
+}
+
+void USpyInputComponent::TryVault(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			SpyCharacter->UseSkill(SpyGameplayTags::Skill_Move_Vault);
+		}
+	}
+}
+
 void USpyInputComponent::OnRegister()
 {
 	Super::OnRegister();
