@@ -178,10 +178,23 @@ void USpyInputComponent::OnRegister()
 
 void USpyInputComponent::BeginPlay()
 {
+	Super::BeginPlay();
+
+	//# 상태 변화 알림 등록
+	BindOnActorInitStateChanged(USpyPawnExtensionComponent::NAME_ActorFeatureName, FGameplayTag(), false);
+
+	//# InitState_Spawned 상태로 변환 시도
+	TryToChangeInitState(SpyGameplayTags::InitState_Spawned);
+
+	CheckDefaultInitialization();
 }
 
 void USpyInputComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	//# 상태 머신 해제
+	UnregisterInitStateFeature();
+
+	Super::EndPlay(EndPlayReason);
 }
 
 bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState) const
@@ -268,8 +281,21 @@ void USpyInputComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 
 void USpyInputComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
+	if (Params.FeatureName == USpyPawnExtensionComponent::NAME_ActorFeatureName)
+	{
+		CheckDefaultInitialization();
+	}
 }
 
 void USpyInputComponent::CheckDefaultInitialization()
 {
+	static const TArray<FGameplayTag> StateChain =
+	{
+		SpyGameplayTags::InitState_Spawned,
+		SpyGameplayTags::InitState_DataAvailable,
+		SpyGameplayTags::InitState_DataInitialized,
+		SpyGameplayTags::InitState_GameplayReady
+	};
+
+	ContinueInitStateChain(StateChain);
 }

@@ -70,6 +70,8 @@ void ASpyPlayerState::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	check(AbilitySystemComponent);
+
+	UE_LOG(LogTemp, Warning, TEXT("# PlayerState: InitAbilityActorInfo"));
 	AbilitySystemComponent->InitAbilityActorInfo(this, GetPawn());
 }
 
@@ -195,6 +197,7 @@ void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InChar
 		}
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("# PlayerState: AbilityReady"));
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_AbilityReady);
 }
 
