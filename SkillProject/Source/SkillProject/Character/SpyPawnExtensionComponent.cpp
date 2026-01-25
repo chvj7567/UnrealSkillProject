@@ -118,7 +118,7 @@ bool USpyPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManag
 
 void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState, FGameplayTag DesiredState)
 {
-	if (DesiredState == SpyGameplayTags::InitState_Spawned)
+	if (CurrentState == SpyGameplayTags::InitState_Spawned)
 	{
 		APawn* Pawn = GetPawn<APawn>();
 		if (Pawn == nullptr || CharacterAssetData == nullptr)
@@ -131,24 +131,25 @@ void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMa
 			if (ComponentClass == nullptr)
 				continue;
 
-			Manager->AddComponentRequest(Pawn->GetClass(), ComponentClass);
+			//# 중복 컴포넌트 방지
+			if (Pawn->GetComponentByClass(ComponentClass) != nullptr)
+				continue;
+			
+			//# 컴포넌트 부착
+			UActorComponent* NewComponent = NewObject<UActorComponent>(Pawn, ComponentClass);
 
-			UE_LOG(LogTemp, Log, TEXT("# Requested Component Attachment: %s"), *ComponentClass->GetName());
+			//# 에디터 디테일 창에 추가
+			Pawn->AddInstanceComponent(NewComponent);
 
-			////# 중복 컴포넌트 방지
-			//if (Pawn->GetComponentByClass(ComponentClass) != nullptr)
-			//	continue;
-			//
-			////# 컴포넌트 부착
-			//UActorComponent* NewComponent = NewObject<UActorComponent>(Pawn, ComponentClass);
+			//# 런타임 컴포넌트 등록
+			NewComponent->RegisterComponent();
 
-			////# 에디터 디테일 창에 추가
-			//Pawn->AddInstanceComponent(NewComponent);
+			if (NewComponent->HasBeenInitialized() == false)
+			{
+				NewComponent->InitializeComponent();
+			}
 
-			////# 런타임 컴포넌트 등록
-			//NewComponent->RegisterComponent();
-
-			//UE_LOG(LogTemp, Log, TEXT("# Success Attach Component: %s"), *ComponentClass->GetName());
+			UE_LOG(LogTemp, Log, TEXT("# Success Attach Component: %s"), *ComponentClass->GetName());
 		}
 	}
 }

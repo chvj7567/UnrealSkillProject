@@ -51,8 +51,5 @@ public:
 	static USpyInputComponent* FindInputComponent(const AActor* Actor) { return (Actor ? Actor->FindComponentByClass<USpyInputComponent>() : nullptr); }
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Input")
-	TMap<TObjectPtr<UInputMappingContext>, int32> DefaultInputMappings;
-
 	bool bIsBindingInput;
 };

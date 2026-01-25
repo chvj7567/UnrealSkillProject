@@ -10,6 +10,7 @@
 
 class USpyAbilityData;
 class USpyInputConfig;
+class UInputMappingContext;
 
 USTRUCT()
 struct FCharacterAssetEntry
@@ -28,6 +29,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USpyInputConfig> InputConfig;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<TObjectPtr<UInputMappingContext>, int32> InputMappingContexts;
 };
 
 USTRUCT()

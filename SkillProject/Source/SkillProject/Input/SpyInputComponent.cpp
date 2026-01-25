@@ -78,23 +78,23 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 	{
 		if (const USpyCharacterAssetData* PawnData = PawnExtComp->GetCharacterAssetData())
 		{
+			for (auto& Pair : PawnData->CharacterAssets.AssetEntries[0].InputMappingContexts)
+			{
+				UInputMappingContext* IMC = Pair.Key;
+				int32 Priority = Pair.Value;
+
+				if (IMC)
+				{
+					//# IMC 변경 시 눌려져 있다면 해당 키를 그대로 바뀐 IMC 입력에 사용
+					FModifyContextOptions Options = {};
+					Options.bIgnoreAllPressedKeysUntilRelease = false;
+
+					Subsystem->AddMappingContext(IMC, Priority, Options);
+				}
+			}
+			
 			if (const USpyInputConfig* InputConfig = PawnData->CharacterAssets.AssetEntries[0].InputConfig)
 			{
-				for (auto& Pair : DefaultInputMappings)
-				{
-					UInputMappingContext* IMC = Pair.Key;
-					int32 Priority = Pair.Value;
-
-					if (IMC)
-					{
-						//# IMC 변경 시 눌려져 있다면 해당 키를 그대로 바뀐 IMC 입력에 사용
-						FModifyContextOptions Options = {};
-						Options.bIgnoreAllPressedKeysUntilRelease = false;
-
-						Subsystem->AddMappingContext(IMC, Priority, Options);
-					}
-				}
-
 				if (USpyEnhancedInputComponent* SpyIC = Cast<USpyEnhancedInputComponent>(PlayerInputComponent))
 				{
 					SpyIC->AddInputMappings(InputConfig, Subsystem);
@@ -213,7 +213,7 @@ bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 		if (GetPlayerState<ASpyPlayerState>() == nullptr)
 			return false;
 
-		//# 자기 혹은 서버인지 확인
+		//# 로컬 플레이어 혹은 서버인지 확인
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
 			AController* Controller = GetController<AController>();
@@ -228,10 +228,12 @@ bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 		const bool bIsBot = Pawn->IsBotControlled();
+
+		//# 봇이 아닌 로컬 플레이어인지 확인
 		if (bIsLocallyControlled && bIsBot == false)
 		{
 			ASpyPlayerController* SpyPC = GetController<ASpyPlayerController>();
-			if (Pawn->InputComponent == false || SpyPC == nullptr || SpyPC->GetLocalPlayer() == nullptr)
+			if (Pawn->InputComponent == nullptr || SpyPC == nullptr || SpyPC->GetLocalPlayer() == nullptr)
 				return false;
 		}
 
