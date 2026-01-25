@@ -46,9 +46,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     bool bIsCollide;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TObjectPtr<UAnimMontage> SkillMontage;
-
     UPROPERTY()
     TObjectPtr<UCharacterMovementComponent> CharacterMovementComponent;
 

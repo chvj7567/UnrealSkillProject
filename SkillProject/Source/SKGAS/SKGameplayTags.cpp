@@ -6,6 +6,8 @@
 
 namespace SKGameplayTags
 {
+	UE_DEFINE_GAMEPLAY_TAG(Lock_Input, "Lock.Input");
+
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class, "Character.Class");
 
 	UE_DEFINE_GAMEPLAY_TAG(Character_State, "Character.State");
@@ -18,9 +20,6 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Buff, "Skill.Buff");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Debuff, "Skill.Debuff");
-
-	UE_DEFINE_GAMEPLAY_TAG(Lock_Move, "Lock.Move");
-	UE_DEFINE_GAMEPLAY_TAG(Lock_Look, "Lock.Look");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor, "GameplayCue.Actor");
 

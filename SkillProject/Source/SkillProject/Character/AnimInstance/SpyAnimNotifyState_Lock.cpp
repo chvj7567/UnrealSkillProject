@@ -4,7 +4,8 @@
 #include "Character/AnimInstance/SpyAnimNotifyState_Lock.h"
 #include "Character/SpyCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "SKGameplayTags.h"
+#include "Util/SpyGameplayTags.h"
+#include "AbilitySystemComponent.h"
 
 void USpyAnimNotifyState_Lock::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -16,12 +17,12 @@ void USpyAnimNotifyState_Lock::NotifyBegin(USkeletalMeshComponent* MeshComp, UAn
 		{
 			if (bLockMove)
 			{
-				ASC->AddLooseGameplayTag(SKGameplayTags::Lock_Move);
+				ASC->AddLooseGameplayTag(SpyGameplayTags::Lock_Input_Move);
 			}
 
 			if (bLockLook)
 			{
-				ASC->AddLooseGameplayTag(SKGameplayTags::Lock_Look);
+				ASC->AddLooseGameplayTag(SpyGameplayTags::Lock_Input_Look);
 			}
 		}
 	}
@@ -37,12 +38,12 @@ void USpyAnimNotifyState_Lock::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnim
 		{
 			if (bLockMove)
 			{
-				ASC->RemoveLooseGameplayTag(SKGameplayTags::Lock_Move);
+				ASC->RemoveLooseGameplayTag(SpyGameplayTags::Lock_Input_Move);
 			}
 
 			if (bLockLook)
 			{
-				ASC->RemoveLooseGameplayTag(SKGameplayTags::Lock_Look);
+				ASC->RemoveLooseGameplayTag(SpyGameplayTags::Lock_Input_Look);
 			}
 		}
 	}

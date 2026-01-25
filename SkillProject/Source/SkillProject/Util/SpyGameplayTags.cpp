@@ -5,6 +5,10 @@
 
 namespace SpyGameplayTags
 {
+	UE_DEFINE_GAMEPLAY_TAG(Lock_Input_All, "Lock.Input.All");
+	UE_DEFINE_GAMEPLAY_TAG(Lock_Input_Move, "Lock.Input.Move");
+	UE_DEFINE_GAMEPLAY_TAG(Lock_Input_Look, "Lock.Input.Look");
+
 	UE_DEFINE_GAMEPLAY_TAG(InitState_Spawned, "InitState.Spawned");
 	UE_DEFINE_GAMEPLAY_TAG(InitState_DataAvailable, "InitState.DataAvailable");
 	UE_DEFINE_GAMEPLAY_TAG(InitState_DataInitialized, "InitState.DataInitialized");
@@ -17,11 +21,14 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Normal, "Character.State.Movement.Normal");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Climb, "Character.State.Movement.Climb");
 
-	UE_DEFINE_GAMEPLAY_TAG(Input_Skill_1, "Input.Skill.1");
-	UE_DEFINE_GAMEPLAY_TAG(Input_Skill_2, "Input.Skill.2");
-	UE_DEFINE_GAMEPLAY_TAG(Input_Skill_3, "Input.Skill.3");
-	UE_DEFINE_GAMEPLAY_TAG(Input_Skill_4, "Input.Skill.4");
-	UE_DEFINE_GAMEPLAY_TAG(Input_Skill_5, "Input.Skill.5");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Move, "Input.Native.Move");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Look, "Input.Native.Look");
+
+	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_1, "Input.Ability.Skill.1");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_2, "Input.Ability.Skill.2");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_3, "Input.Ability.Skill.3");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_4, "Input.Ability.Skill.4");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_5, "Input.Ability.Skill.5");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_A, "Skill.Action.A");
 	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_A, "Effect.Skill.Action.A");

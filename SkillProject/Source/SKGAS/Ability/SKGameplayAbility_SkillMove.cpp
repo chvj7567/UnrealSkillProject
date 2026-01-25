@@ -55,9 +55,9 @@ void USKGameplayAbility_SkillMove::EndAbility(const FGameplayAbilitySpecHandle H
 
 void USKGameplayAbility_SkillMove::PlayMontage()
 {
-    if (SkillMontage)
+    if (AbilityMontage)
     {
-        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
+        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
         {
             MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCompleted);
             MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);

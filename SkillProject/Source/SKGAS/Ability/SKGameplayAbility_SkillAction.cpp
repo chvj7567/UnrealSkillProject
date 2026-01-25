@@ -90,9 +90,9 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
             WaitNotifyTask->ReadyForActivation();
         }
 
-        if (SkillMontage)
+        if (AbilityMontage)
         {
-            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, SkillMontage))
+            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
             {
                 MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
                 MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);

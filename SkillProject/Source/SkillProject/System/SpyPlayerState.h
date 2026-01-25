@@ -5,16 +5,17 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "ModularPlayerState.h"
+#include "SKAbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 
 #include "SpyPlayerState.generated.h"
 
 class ASpyCharacter;
-class USKAbilitySystemComponent;
+class USpyAbilitySystemComponent;
 class USpyCharacterAssetData;
 
 struct FGameplayTag;
 
-/** Defines the types of client connected */
 UENUM()
 enum class EPlayerConnectionType : uint8
 {
@@ -23,13 +24,16 @@ enum class EPlayerConnectionType : uint8
 };
 
 UCLASS()
-class SKILLPROJECT_API ASpyPlayerState : public AModularPlayerState
+class SKILLPROJECT_API ASpyPlayerState : public AModularPlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
 public:
     ASpyPlayerState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+public:
     void SetPlayerConnectionType(EPlayerConnectionType NewType);
     EPlayerConnectionType GetPlayerConnectionType() { return PlayerConnectionType; }
 
@@ -61,12 +65,15 @@ public:
 
 public:
     const USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
-    void SetCharacterAssetData(const USpyCharacterAssetData& InCharacterAssetData);
+    void SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData);
 
+    UFUNCTION(BlueprintPure)
+    USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return AbilitySystemComponent; }
+
+    static const FName NAME_AbilityReady;
 protected:
     UFUNCTION()
     void OnRep_CharacterAssetData();
-
     UPROPERTY(ReplicatedUsing = OnRep_CharacterAssetData)
     TObjectPtr<const USpyCharacterAssetData> CharacterAssetData;
 
@@ -75,14 +82,11 @@ protected:
     TObjectPtr<ASpyCharacter> OwnerCharacter;
 
     UPROPERTY(VisibleAnywhere)
-    TObjectPtr<USKAbilitySystemComponent> AbilitySystemComponent;
+    TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
 
     UPROPERTY()
     TObjectPtr<const class USpyCharacterAttributeSet> CharacterAttributeSet;
 
     UPROPERTY(Replicated)
     EPlayerConnectionType PlayerConnectionType;
-
-protected:
-    static const FName NAME_AbilityReady;
 };

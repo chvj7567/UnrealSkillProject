@@ -29,7 +29,7 @@ void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 	Super::GenericPlayerInitialization(NewPlayer);
 
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	const USpyCharacterAssetData& CharacterAssetData = AssetManager.GetCharacterAssetData();
+	const USpyCharacterAssetData* CharacterAssetData = &AssetManager.GetCharacterAssetData();
 
 	//# PS에 데이터 Set
 	if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
@@ -57,7 +57,7 @@ APawn* ASpyGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
 				//# PawnExtensionComponent에 데이터 Set
 				if (const USpyCharacterAssetData* CharacterAssetData = GetCharacterDataForController(NewPlayer))
 				{
-					PawnExtensionComponent->SetCharacterAssetData(*CharacterAssetData);
+					PawnExtensionComponent->SetCharacterAssetData(CharacterAssetData);
 				}
 			}
 

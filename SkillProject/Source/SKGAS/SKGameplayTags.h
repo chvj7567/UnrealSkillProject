@@ -8,6 +8,9 @@ class UAbilitySystemComponent;
 
 namespace SKGameplayTags
 {
+	//# 잠금 관련
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Input);
+
 	//# 캐릭터 클래스
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class);
 
@@ -27,10 +30,6 @@ namespace SKGameplayTags
 
 	//# 디버프 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Debuff);
-
-	//# Lock
-	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Move);
-	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Look);
 
 	//# Actor 이펙트
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor);

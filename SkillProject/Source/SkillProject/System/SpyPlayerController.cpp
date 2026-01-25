@@ -7,13 +7,13 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Util/SpyGameplayTags.h"
-#include "SKGameplayTags.h"
 #include "UI/SpyUserWidget.h"
 #include "Manager/SpyAssetManager.h"
 #include "Manager/SpyUIManager.h"
 #include "Util/DefineEnum.h"
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacterMovementComponent.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerController)
 
@@ -36,7 +36,7 @@ void ASpyPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	/*if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASpyPlayerController::Move);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASpyPlayerController::Move);
@@ -53,7 +53,7 @@ void ASpyPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(SkillEAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillE);
 
 		EnhancedInputComponent->BindAction(TryVaultAction, ETriggerEvent::Started, this, &ASpyPlayerController::TryVault);
-	}
+	}*/
 }
 
 void ASpyPlayerController::OnPossess(APawn* InPawn)
@@ -66,21 +66,33 @@ void ASpyPlayerController::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 }
 
+void ASpyPlayerController::PreProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+	Super::PreProcessInput(DeltaTime, bGamePaused);
+}
+
+void ASpyPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+	if (USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent())
+	{
+		SpyASC->ProcessAbilityInput(DeltaTime, bGamePaused);
+	}
+
+	Super::PostProcessInput(DeltaTime, bGamePaused);
+}
+
 void ASpyPlayerController::Move(const FInputActionValue& InValue)
 {
 	FVector2D MovementVector = InValue.Get<FVector2D>();
 
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		//# Move Lock 확인
-		if (USKAbilitySystemComponent* ASC = SpyCharacter->GetSKAbilitySystemComponent())
-		{
-			if (ASC->HasMatchingGameplayTag(SKGameplayTags::Lock_Move))
-				return;
-		}
-
 		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 		{
+			//# Move Lock 확인
+			if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Move))
+				return;
+
 			const FRotator Rotation = SpyCharacter->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
 
@@ -104,10 +116,10 @@ void ASpyPlayerController::Look(const FInputActionValue& InValue)
 
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
-		//# Move Lock 확인
-		if (USKAbilitySystemComponent* ASC = SpyCharacter->GetSKAbilitySystemComponent())
+		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 		{
-			if (ASC->HasMatchingGameplayTag(SKGameplayTags::Lock_Look))
+			//# Look Lock 확인
+			if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Look))
 				return;
 		}
 
@@ -217,4 +229,10 @@ void ASpyPlayerController::RefreshMappingContext()
 			}
 		}
 	}
+}
+
+USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent() const
+{
+	const ASpyPlayerState* SpyPS = CastChecked<ASpyPlayerState>(PlayerState, ECastCheckedType::NullAllowed);
+	return (SpyPS ? SpyPS->GetSpyAbilitySystemComponent() : nullptr);
 }

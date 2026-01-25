@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameAbility/Skill/Move/SpyGA_SkillMove_Vault.h"
+#include "SpyGA_SkillMove_Vault.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Character/SpyCharacter.h"
-#include "GameAbility/Task/SpyAbilityTask_MotionWarping.h"
+#include "AbilitySystem/Task/SpyAbilityTask_MotionWarping.h"
 #include "MotionWarpingComponent.h"
 
 bool USpyGA_SkillMove_Vault::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
@@ -16,7 +16,7 @@ bool USpyGA_SkillMove_Vault::CommitAbility(const FGameplayAbilitySpecHandle Hand
 	{
 		if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 		{
-			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
+			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 			{
 				return Result && ParkourComponent->CanVaultAction();
 			}
@@ -38,7 +38,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 	{
-		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
+		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 		{
 			ParkourComponent->OnVaultMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
 
@@ -53,12 +53,12 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InV
 
 	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 	{
-		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->GetSpyParkourManagerComponent())
+		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 		{
 			ParkourComponent->OnVaultMotionWarpingData.RemoveDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
 		}
 
-		if (UMotionWarpingComponent* MotionWarpingComponent = OwnerCharacter->GetMotionWarpingComponent())
+		if (UMotionWarpingComponent* MotionWarpingComponent = OwnerCharacter->FindComponentByClass<UMotionWarpingComponent>())
 		{
 			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingStartName, InVaultData.StartLoc, InVaultData.StartRot);
 			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);

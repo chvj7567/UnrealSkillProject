@@ -73,9 +73,6 @@ public:
 	const USpyAssetData& GetAssetData();
 	const USpyCharacterAssetData& GetCharacterAssetData();
 
-public:
-	FName GetSkillAssetNameByType(FGameplayTag InCharacterType, FGameplayTag InSkillTag);
-
 private:
 	UPROPERTY()
 	TSet<TObjectPtr<const UObject>> LoadedAssets;

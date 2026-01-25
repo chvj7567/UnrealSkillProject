@@ -58,9 +58,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     TSubclassOf<UGameplayEffect> DamageEffectClass;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-    TObjectPtr<UAnimMontage> SkillMontage;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "AttackType == EAttackType::WeaponRange", EditConditionHides))
     FName StartWeaponSocketName;
 

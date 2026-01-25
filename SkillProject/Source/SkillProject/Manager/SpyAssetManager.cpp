@@ -296,8 +296,3 @@ const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
 {
 	return GetOrLoadTypedGameData<USpyCharacterAssetData>(CharacterAssetDataPath);
 }
-
-FName USpyAssetManager::GetSkillAssetNameByType(FGameplayTag InCharacterType, FGameplayTag InSkillTag)
-{
-	return Get().GetCharacterAssetData().GetCharacterSkillAssetName(InCharacterType, InSkillTag);
-}

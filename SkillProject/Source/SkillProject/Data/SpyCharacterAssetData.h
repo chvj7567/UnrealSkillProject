@@ -8,21 +8,8 @@
 
 #include "SpyCharacterAssetData.generated.h"
 
-USTRUCT()
-struct FSkillAssetEntry
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	FName Name;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag SkillTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag InputTag;
-};
+class USpyAbilityData;
+class USpyInputConfig;
 
 USTRUCT()
 struct FCharacterAssetEntry
@@ -37,7 +24,10 @@ public:
 	TArray<TSubclassOf<UActorComponent>> CharacterComponentClasses;
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FSkillAssetEntry> CharacterSkills;
+	TArray<TObjectPtr<USpyAbilityData>> ClassSkills;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<USpyInputConfig> InputConfig;
 };
 
 USTRUCT()
@@ -47,7 +37,7 @@ struct FCharacterAssetSet
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FSkillAssetEntry> CommonSkills;
+	TArray<TObjectPtr<USpyAbilityData>> CommonSkills;
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<TSubclassOf<UActorComponent>> CommonComponentClasses;
@@ -71,11 +61,9 @@ protected:
 #endif
 
 public:
-	FName GetCommonSkillAssetName(FGameplayTag InSkillTag) const;
-	FName GetCharacterSkillAssetName(FGameplayTag InClassType, FGameplayTag InSkillTag) const;
 	TArray<TSubclassOf<UActorComponent>> GetAllComponentClasses(FGameplayTag InClassType) const;
 
-private:
+public:
 	UPROPERTY(EditDefaultsOnly)
 	FCharacterAssetSet CharacterAssets;
 };

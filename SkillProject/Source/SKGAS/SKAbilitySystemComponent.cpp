@@ -17,7 +17,7 @@ void USKAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 {
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 
-	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent InitAbilityActorInfo called"));
+	UE_LOG(LogTemp, Warning, TEXT("InitAbilityActorInfo Called: Owner [%s], Avatar [%s]"), *GetNameSafe(InOwnerActor), *GetNameSafe(InAvatarActor));
 }
 
 void USKAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)

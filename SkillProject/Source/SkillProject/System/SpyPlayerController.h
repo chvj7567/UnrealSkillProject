@@ -12,6 +12,8 @@
 class UInputMappingContext;
 class UInputAction;
 class ASpyPlayerState;
+class USpyAbilitySystemComponent;
+
 struct FInputActionValue;
 
 UCLASS()
@@ -28,6 +30,9 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 	
+	virtual void PreProcessInput(const float DeltaTime, const bool bGamePaused) override;
+	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
+
 protected:
 	void Move(const FInputActionValue& InValue);
 	void Look(const FInputActionValue& InValue);
@@ -46,6 +51,9 @@ protected:
 
 public:
 	void RefreshMappingContext();
+
+	UFUNCTION(BlueprintCallable)
+	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))

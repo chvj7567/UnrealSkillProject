@@ -35,6 +35,9 @@
 ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer.SetDefaultSubobjectClass<USpyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
+	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bStartWithTickEnabled = false;
+
 	bReplicates = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -63,32 +66,23 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	AbilitySystemComponent = CreateDefaultSubobject<USKAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-
 	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
 	HPBarComponent->SetupAttachment(GetMesh());
 	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
 
 	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
-	SpyAnimManagerComponent = CreateDefaultSubobject<USpyAnimManagerComponent>(TEXT("SpyAnimManagerComponent"));
-	SpyParkourManagerComponent = CreateDefaultSubobject<USpyParkourManagerComponent>(TEXT("SpyParkourManagerComponent"));
-	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void ASpyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	RegisterAbility();
-
 	USpyUIManager::Get(this)->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
 
-	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	/*if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
 		SpyAnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
-	}
+	}*/
 
 	if (HasAuthority())
 	{
@@ -118,125 +112,43 @@ void ASpyCharacter::BeginPlay()
 	}
 }
 
-void ASpyCharacter::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-}
-
-void ASpyCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
 void ASpyCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (HasAuthority())
-	{
-		if (ASpyPlayerState* SpyPlayerState = GetPlayerState<ASpyPlayerState>())
-		{
-			SpyPlayerState->Initialize();
-			SpyPlayerState->AddState(SpyGameplayTags::Character_State_Survival_Alive);
-		}
-	}
+	SpyPawnExtensionComponent->HandleControllerChanged();
+}
+
+void ASpyCharacter::UnPossessed()
+{
+	Super::UnPossessed();
+
+	SpyPawnExtensionComponent->HandleControllerChanged();
+}
+
+void ASpyCharacter::OnRep_Controller()
+{
+	Super::OnRep_Controller();
+
+	SpyPawnExtensionComponent->HandleControllerChanged();
 }
 
 void ASpyCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	if (HasAuthority() == false)
-	{
-		if (ASpyPlayerState* SpyPlayerState = GetPlayerState<ASpyPlayerState>())
-		{
-			SpyPlayerState->Initialize();
-		}
-	}
+	SpyPawnExtensionComponent->HandlePlayerStateReplicated();
 }
 
-UAbilitySystemComponent* ASpyCharacter::GetAbilitySystemComponent() const
+void ASpyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	return AbilitySystemComponent;
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	SpyPawnExtensionComponent->SetupPlayerInputComponent();
 }
 
-void ASpyCharacter::RegisterAbility()
+void ASpyCharacter::InitializeGameplayTags()
 {
-	if (AbilitySystemComponent == nullptr)
-	{
-		UE_LOG(LogTemp, Fatal, TEXT("AbilitySystemComponent is nullptr"));
-		UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, true);
-		return;
-	}
-
-	//# 설정한 AttributeSet 가져옴
-	CharacterAttributeSet = AbilitySystemComponent->GetSet<USpyCharacterAttributeSet>();
-	if (CharacterAttributeSet == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CharacterAttributeSet is nullptr"));
-		UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, true);
-		return;
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = CharacterAttributeSet->GetMoveNormalSpeed();
-
-		if (HasAuthority())
-		{
-			//# 캐릭터에 등록된 스킬 부여
-			for (TSubclassOf<UGameplayAbility> AbilityClass : AbilityClasses)
-			{
-				if (AbilityClass)
-				{
-					FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE);
-					AbilitySystemComponent->GiveAbility(AbilitySpec);
-				}
-			}
-		}
-	}
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(CharacterAttributeSet->GetHealthAttribute())
-		.AddUObject(this, &ASpyCharacter::OnHealthChanged);
-
-	/*AbilitySystemComponent->RegisterGameplayTagEvent(SpyGameplayTags::Character_State_Movement_Climb, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &ASpyCharacter::OnClimbTagChanged);*/
-}
-
-void ASpyCharacter::OnClimbTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-	if (IsLocallyControlled())
-	{
-		if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(GetController()))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("# Local on: %s, Count: %d"), *GetName(), NewCount);
-
-			PC->RefreshMappingContext();
-		}
-	}
-}
-
-void ASpyCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
-{
-	if (Data.NewValue <= 0.f)
-	{
-		if (HasAuthority())
-		{
-			if (ASpyPlayerState* SpyPlayerState = Cast<ASpyPlayerState>(GetPlayerState()))
-			{
-				if (SpyPlayerState->HasState(SpyGameplayTags::Character_State_Survival_Alive))
-				{
-					SpyPlayerState->Multicast_Death();
-				}
-			}
-		}
-	}
-	else
-	{
-		if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
-		{
-			HpBar->UpdateHP(Data.NewValue, CharacterAttributeSet->GetMaxHealth());
-		}
-	}
 }
 
 void ASpyCharacter::Death()
@@ -247,27 +159,18 @@ void ASpyCharacter::Death()
 	}
 }
 
-FGameplayTagContainer ASpyCharacter::GetActivatableAbilityTags()
+void ASpyCharacter::OnAbilitySystemInitialized()
 {
-	TArray<FGameplayAbilitySpec> Abilities;
-	Abilities = AbilitySystemComponent->GetActivatableAbilities();
+}
 
-	FGameplayTagContainer ActivatableTags;
-	for (FGameplayAbilitySpec Spec : Abilities)
-	{
-		if (Spec.IsActive())
-		{
-			ActivatableTags.AppendTags(Spec.Ability->AbilityTags);
-		}
-	}
-
-	return ActivatableTags;
+void ASpyCharacter::OnAbilitySystemUninitialized()
+{
 }
 
 void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
 {
 	FGameplayEventData EventData;
-	EventData.Instigator = this;
+	EventData.Instigator = GetPlayerState();
 	EventData.EventTag = SkillTag;
 
 	FGameplayAbilityTargetData_LocationInfo* LocData = new FGameplayAbilityTargetData_LocationInfo();
@@ -275,32 +178,32 @@ void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
 	LocData->TargetLocation.LiteralTransform = GetActorTransform();
 	EventData.TargetData.Add(LocData);
 
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, SkillTag, EventData);
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPlayerState(), SkillTag, EventData);
 }
 
 void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
 {
-	if (HasAuthority() == false)
-		return;
+	//if (HasAuthority() == false)
+	//	return;
 
-	//# 사용할 스킬 태그 등록
-	FGameplayTagContainer TagContaingers;
-	TagContaingers.AddTag(SkillTag);
+	////# 사용할 스킬 태그 등록
+	//FGameplayTagContainer TagContaingers;
+	//TagContaingers.AddTag(SkillTag);
 
-	//# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
-	TArray<FGameplayAbilitySpecHandle> AbilityHandles;
-	AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
+	////# 태그를 통해 ASC에 등록된 능력 핸들 가져옴
+	//TArray<FGameplayAbilitySpecHandle> AbilityHandles;
+	//AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
 
-	//# 가져온 능력 실행
-	for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
-	{
-		if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillTag.ToString());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
-		}
-	}
+	////# 가져온 능력 실행
+	//for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
+	//{
+	//	if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillTag.ToString());
+	//	}
+	//	else
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
+	//	}
+	//}
 }

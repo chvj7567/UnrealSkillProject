@@ -8,10 +8,11 @@
 #include "UI/SpyUserWidget.h"
 #include "Util/SpyGameplayTags.h"
 #include "Character/SpyCharacterAttributeSet.h"
-#include "SKAbilitySystemComponent.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "Manager/SpyAssetManager.h"
 #include "Data/SpyCharacterAssetData.h"
+#include "Data/SpyAbilityData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerState)
 
@@ -25,12 +26,17 @@ ASpyPlayerState::ASpyPlayerState(const FObjectInitializer& ObjectInitializer)
 
 	//# UActorComponent 를 상속 받기에 ObjectInitializer 사용(Actor가 필요함)
 	//# 하위 클래스에서 ObjectInitializer.SetDefaultSubobjectClass<>를 통해 타입 교체 가능
-	AbilitySystemComponent = ObjectInitializer.CreateDefaultSubobject<USKAbilitySystemComponent>(this, TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = ObjectInitializer.CreateDefaultSubobject<USpyAbilitySystemComponent>(this, TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	//# UObject 를 상속 받기에 ObjectInitializer 미사용
 	CharacterAttributeSet = CreateDefaultSubobject<USpyCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
+}
+
+UAbilitySystemComponent* ASpyPlayerState::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void ASpyPlayerState::SetPlayerConnectionType(EPlayerConnectionType NewType)
@@ -140,64 +146,54 @@ void ASpyPlayerState::Initialize()
 
 bool ASpyPlayerState::HasState(FGameplayTag Tag)
 {
-	if (OwnerCharacter == nullptr)
-		return false;
-
-	if (OwnerCharacter->GetSKAbilitySystemComponent()->HasMatchingGameplayTag(Tag))
-		return true;
-
 	return false;
 }
 
 void ASpyPlayerState::AddState(FGameplayTag Tag)
 {
-	if (OwnerCharacter == nullptr)
-		return;
-
-	if (OwnerCharacter->HasAuthority() == false)
-		return;
-
-	if (HasState(Tag))
-		return;
-
-	UE_LOG(LogTemp, Warning, TEXT("# Server AddState %s"), *Tag.ToString());
-	OwnerCharacter->GetSKAbilitySystemComponent()->AddReplicatedLooseGameplayTag(Tag);
+	
 }
 
 void ASpyPlayerState::RemoveState(FGameplayTag Tag)
 {
-	if (OwnerCharacter == nullptr)
-		return;
-
-	if (OwnerCharacter->HasAuthority() == false)
-		return;
-
-	if (HasState(Tag) == false)
-		return;
-
-	UE_LOG(LogTemp, Warning, TEXT("# Server RemoveState %s"), * Tag.ToString());
-	OwnerCharacter->GetSKAbilitySystemComponent()->RemoveReplicatedLooseGameplayTag(Tag);
+	
 }
 
 void ASpyPlayerState::ToggleState(FGameplayTag Tag)
 {
-	if (HasState(Tag))
-	{
-		RemoveState(Tag);
-	}
-	else
-	{
-		AddState(Tag);
-	}
+	
 }
 
-void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData& InCharacterAssetData)
+void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData)
 {
 	//# 서버에서만 세팅
 	if (GetLocalRole() != ROLE_Authority)
 		return;
 
+	//# 이미 세팅됨
+	if (CharacterAssetData)
+		return;
+
 	CharacterAssetData = InCharacterAssetData;
+
+	for (const USpyAbilityData* AbilityData : CharacterAssetData->CharacterAssets.CommonSkills)
+	{
+		if (AbilityData)
+		{
+			AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+		}
+	}
+
+	for (const FCharacterAssetEntry& Entry : CharacterAssetData->CharacterAssets.AssetEntries)
+	{
+		for (const USpyAbilityData* AbilityData : Entry.ClassSkills)
+		{
+			if (AbilityData)
+			{
+				AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+			}
+		}
+	}
 
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_AbilityReady);
 }
