@@ -56,23 +56,24 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
     {
         if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
         {
-            if (AbilitySpec->Ability)
-            {
-                AbilitySpec->InputPressed = true;
+			AbilitySpec->InputPressed = true;
 
-                if (AbilitySpec->IsActive())
-                {
-                    //# 이미 실행 중이면 "눌렸다"는 이벤트만 전달
-                    AbilitySpecInputPressed(*AbilitySpec);
-                }
-                else
-                {
-                    //# 실행 중이 아니면 즉시 실행 시도
-                    TryActivateAbility(AbilitySpec->Handle);
-                }
-            }
+			//# 실행 중이면 "눌렀다"는 이벤트 전달
+			if (AbilitySpec->IsActive())
+			{
+				AbilitySpecInputPressed(*AbilitySpec);
+			}
+			else
+			{
+				AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
+			}
         }
     }
+
+	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
+	{
+		TryActivateAbility(AbilitySpecHandle);
+	}
 
     //# 이번 프레임에 뗀(Released) 어빌리티 처리
     for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
@@ -91,6 +92,8 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
             }
         }
     }
+
+	ClearAbilityInput();
 }
 
 void USpyAbilitySystemComponent::ClearAbilityInput()
