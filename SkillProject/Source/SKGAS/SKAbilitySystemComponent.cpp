@@ -17,12 +17,14 @@ void USKAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 {
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 
-	UE_LOG(LogTemp, Log, TEXT("# InitAbilityActorInfo Called: Owner [%s], Avatar [%s]"), *GetNameSafe(InOwnerActor), *GetNameSafe(InAvatarActor));
+	UE_LOG(LogTemp, Log, TEXT("# [SKASC] InitAbilityActorInfo: Owner [%s], Avatar [%s]"), *GetNameSafe(InOwnerActor), *GetNameSafe(InAvatarActor));
 }
 
 void USKAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
 	Super::OnGiveAbility(AbilitySpec);
+
+	UE_LOG(LogTemp, Log, TEXT("# [SKASC] OnGiveAbility: %s"), *AbilitySpec.Ability->GetName());
 
 	if (AbilityChangedDelegate.IsBound())
 	{
@@ -32,6 +34,8 @@ void USKAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 
 void USKAbilitySystemComponent::OnRemoveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
+	UE_LOG(LogTemp, Log, TEXT("# [SKASC] OnRemoveAbility: %s"), *AbilitySpec.Ability->GetName());
+
 	if (AbilityChangedDelegate.IsBound())
 	{
 		AbilityChangedDelegate.Broadcast(AbilitySpec.Handle, false);
@@ -44,35 +48,35 @@ void USKAbilitySystemComponent::NotifyAbilityActivated(const FGameplayAbilitySpe
 {
 	Super::NotifyAbilityActivated(Handle, Ability);
 
-	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent NotifyAbilityActivated called : %s"), *Ability->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("# [SKASC] NotifyAbilityActivated : %s"), *Ability->GetName());
 }
 
 void USKAbilitySystemComponent::NotifyAbilityFailed(const FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)
 {
 	Super::NotifyAbilityFailed(Handle, Ability, FailureReason);
 
-	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent NotifyAbilityFailed called : %s"), *Ability->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("# [SKASC] NotifyAbilityFailed : %s"), *Ability->GetName());
 }
 
 void USKAbilitySystemComponent::NotifyAbilityEnded(FGameplayAbilitySpecHandle Handle, UGameplayAbility* Ability, bool bWasCancelled)
 {
 	Super::NotifyAbilityEnded(Handle, Ability, bWasCancelled);
 
-	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent NotifyAbilityEnded called : %s"), *Ability->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("# [SKASC] NotifyAbilityEnded : %s"), *Ability->GetName());
 }
 
 void USKAbilitySystemComponent::ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags)
 {
 	Super::ApplyAbilityBlockAndCancelTags(AbilityTags, RequestingAbility, bEnableBlockTags, BlockTags, bExecuteCancelTags, CancelTags);
 
-	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent ApplyAbilityBlockAndCancelTags : %s called"), *RequestingAbility->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("# [SKASC] ApplyAbilityBlockAndCancelTags : %s"), *RequestingAbility->GetName());
 }
 
 void USKAbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bCanBeCanceled)
 {
 	Super::HandleChangeAbilityCanBeCanceled(AbilityTags, RequestingAbility, bCanBeCanceled);
 
-	//UE_LOG(LogTemp, Warning, TEXT("USKAbilitySystemComponent HandleChangeAbilityCanBeCanceled : %s called"), *RequestingAbility->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("# [SKASC] HandleChangeAbilityCanBeCanceled : %s"), *RequestingAbility->GetName());
 }
 
 FGameplayTag USKAbilitySystemComponent::GetSkillActionTag() const
