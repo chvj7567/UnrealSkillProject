@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ModularCharacter.h"
+#include "AbilitySystemInterface.h"
 
 #include "SpyCharacter.generated.h"
 
@@ -20,7 +21,7 @@ class USpyPawnExtensionComponent;
 struct FOnAttributeChangeData;
 
 UCLASS(config=Game)
-class ASpyCharacter : public AModularCharacter
+class ASpyCharacter : public AModularCharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -37,6 +38,9 @@ protected:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	//# IAbilitySystemInterface
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	//# ~IAbilitySystemInterface
 public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }

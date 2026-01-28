@@ -13,7 +13,6 @@
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "SKAbilitySystemComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Manager/SpyUIManager.h"
 #include "UI/SpyHPBar.h"
@@ -25,10 +24,10 @@
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "MotionWarpingComponent.h"
 #include "System/SpyPlayerController.h"
 #include "Character/SpyCharacterAttributeSet.h"
 #include "Character/SpyPawnExtensionComponent.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -145,6 +144,14 @@ void ASpyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	SpyPawnExtensionComponent->SetupPlayerInputComponent();
+}
+
+UAbilitySystemComponent* ASpyCharacter::GetAbilitySystemComponent() const
+{
+	if (SpyPawnExtensionComponent == nullptr)
+		return nullptr;
+
+	return SpyPawnExtensionComponent->GetSpyAbilitySystemComponent();
 }
 
 void ASpyCharacter::InitializeGameplayTags()
