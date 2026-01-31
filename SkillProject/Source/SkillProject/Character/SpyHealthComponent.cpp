@@ -9,13 +9,6 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
 
-void USpyHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(USpyHealthComponent, DeathState);
-}
-
 void USpyHealthComponent::InitializeByAbilitySystem(USpyAbilitySystemComponent* InASC)
 {
 	AActor* Owner = GetOwner();
@@ -79,14 +72,15 @@ void USpyHealthComponent::OnUnregister()
 
 void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
+	if (NewValue <= 0)
+	{
+		OnDeath.Broadcast(DamageInstigator, DamageCauser);
+	}
+
 	OnHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
 }
 
 void USpyHealthComponent::HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
 	OnMaxHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
-}
-
-void USpyHealthComponent::OnRep_DeathState(ESpyDeathState OldDeathState)
-{
 }

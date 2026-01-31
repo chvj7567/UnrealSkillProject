@@ -29,27 +29,6 @@ void USKAttributeSet::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Ou
 	DOREPLIFETIME(USKAttributeSet, MaxMana);
 }
 
-void USKAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
-{
-	Super::PreAttributeChange(Attribute, NewValue);
-
-	if (Attribute == GetMaxHealthAttribute())
-	{
-		NewValue = FMath::Max(NewValue, 1.0f);
-	}
-
-	if (Attribute == GetHealthAttribute())
-	{
-		const float CurrentMaxHealth = GetMaxHealth();
-		NewValue = FMath::Clamp(NewValue, 0.0f, FMath::Max(CurrentMaxHealth, 1.0f));
-	}
-}
-
-void USKAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
-{
-	Super::PostAttributeChange(Attribute, OldValue, NewValue);
-}
-
 void USKAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USKAttributeSet, Health, OldValue);

@@ -76,8 +76,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	SpyHealthComponent = CreateDefaultSubobject<USpyHealthComponent>(TEXT("HealthComponent"));
 	SpyHealthComponent->OnHealthChanged.AddDynamic(this, &ThisClass::OnHealthChanged);
-	SpyHealthComponent->OnDeathStarted.AddDynamic(this, &ThisClass::OnDeathStarted);
-	SpyHealthComponent->OnDeathFinished.AddDynamic(this, &ThisClass::OnDeathFinished);
+	SpyHealthComponent->OnDeath.AddDynamic(this, &ThisClass::OnDeath);
 }
 
 void ASpyCharacter::BeginPlay()
@@ -176,10 +175,11 @@ void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, floa
 	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 	{
 		HpBar->UpdateHP(InNewValue, InHealthComponent->GetMaxHealth());
+		UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnHealthChanged: %f -> %f"), InOldValue, InNewValue);
 	}
 }
 
-void ASpyCharacter::OnDeathStarted(AActor* InOwningActor)
+void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 {
 	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 	{

@@ -8,10 +8,19 @@
 #include "SKGameplayAbility_SkillAction.generated.h"
 
 UENUM(BlueprintType)
-enum class EAttackType : uint8
+enum class EDetectRangeType : uint8
 {
-    WeaponRange,
-    SphereRange,
+    None = 0,
+    Weapon = 1,
+    Sphere = 2,
+};
+
+UENUM(BlueprintType)
+enum class EDetectTargetType : uint8
+{
+    None = 0,
+    IncludeMe = 1,
+    ExcludeMe = 2,
 };
 
 UCLASS()
@@ -34,39 +43,39 @@ protected:
 
 protected:
     UFUNCTION()
-    void CheckHit();
+    void CheckDetect();
 
     UFUNCTION()
-    void ScheduleServerHits();
+    void ScheduleServerDetect();
 
     UFUNCTION()
-    void SendTagToTargetByWeaponRange(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag);
+    void SendTagToTargetByWeapon(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag);
     
     UFUNCTION()
-    void SendTagToTargetBySphereRange(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag);
+    void SendTagToTargetBySphere(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag);
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-    EAttackType AttackType;
+    EDetectRangeType DetectRangeType;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType != EDetectRangeType::None", EditConditionHides))
+    EDetectTargetType DetectTargetType;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType != EDetectRangeType::None", EditConditionHides))
     float Radius;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType != EDetectRangeType::None", EditConditionHides))
     FGameplayTag WaitEffectSkillTag;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-    FGameplayTag WaitNotifyTag;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType != EDetectRangeType::None", EditConditionHides))
     TSubclassOf<UGameplayEffect> DamageEffectClass;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-    TArray<float> HitTimes;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType != EDetectRangeType::None", EditConditionHides))
+    TArray<float> DetectTimes;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "AttackType == EAttackType::WeaponRange", EditConditionHides))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType == EDetectRangeType::Weapon", EditConditionHides))
     FName StartWeaponSocketName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "AttackType == EAttackType::WeaponRange", EditConditionHides))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType == EDetectRangeType::Weapon", EditConditionHides))
     FName EndWeaponSocketName;
 };

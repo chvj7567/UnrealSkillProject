@@ -91,7 +91,7 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
         }
 
         //# 서버에서 Hit 검사
-        ScheduleServerHits();
+        ScheduleServerDetect();
     }
 
     if (AbilityMontage)
@@ -106,7 +106,7 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
     }
 }
 
-void USKGameplayAbility_SkillAction::CheckHit()
+void USKGameplayAbility_SkillAction::CheckDetect()
 {
     if (IsActive() == false)
         return;
@@ -123,29 +123,29 @@ void USKGameplayAbility_SkillAction::CheckHit()
     if (EffectSkillActionTag == FGameplayTag::EmptyTag)
         return;
     
-    switch (AttackType)
+    switch (DetectRangeType)
     {
-        case EAttackType::WeaponRange:
-            SendTagToTargetByWeaponRange(OwnerCharacter, EffectSkillActionTag);
+        case EDetectRangeType::Weapon:
+            SendTagToTargetByWeapon(OwnerCharacter, EffectSkillActionTag);
             break;
-        case EAttackType::SphereRange:
-            SendTagToTargetBySphereRange(OwnerCharacter, EffectSkillActionTag);
+        case EDetectRangeType::Sphere:
+            SendTagToTargetBySphere(OwnerCharacter, EffectSkillActionTag);
             break;
         default:
             break;
     }
 }
 
-void USKGameplayAbility_SkillAction::ScheduleServerHits()
+void USKGameplayAbility_SkillAction::ScheduleServerDetect()
 {
-    if (HitTimes.Num() == 0)
+    if (DetectTimes.Num() == 0)
         return;
 
-    HitTimes.Sort();
+    DetectTimes.Sort();
 
-    for (int32 Index = 0; Index < HitTimes.Num(); ++Index)
+    for (int32 Index = 0; Index < DetectTimes.Num(); ++Index)
     {
-        const float HitTime = HitTimes[Index];
+        const float HitTime = DetectTimes[Index];
 
         UAbilityTask_WaitDelay* WaitTask =
             UAbilityTask_WaitDelay::WaitDelay(this, HitTime);
@@ -153,31 +153,48 @@ void USKGameplayAbility_SkillAction::ScheduleServerHits()
         if (!WaitTask)
             continue;
 
-        WaitTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillAction::CheckHit);
+        WaitTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillAction::CheckDetect);
         WaitTask->ReadyForActivation();
     }
 }
 
-void USKGameplayAbility_SkillAction::SendTagToTargetByWeaponRange(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag)
+void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag)
 {
     FVector CurrentStart = OwnerCharacter->GetMesh()->GetSocketLocation(StartWeaponSocketName);
     FVector CurrentEnd = OwnerCharacter->GetMesh()->GetSocketLocation(EndWeaponSocketName);
 
     TArray<FHitResult> OutHits;
     FCollisionShape SweepShape = FCollisionShape::MakeSphere(Radius);
+
     FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(OwnerCharacter);
+
+    switch (DetectTargetType)
+    {
+        case EDetectTargetType::ExcludeMe:
+            QueryParams.AddIgnoredActor(OwnerCharacter);
+            break;
+        default:
+            break;
+    }
 
     OwnerCharacter->GetWorld()->SweepMultiByChannel(
         OutHits, CurrentStart, CurrentEnd,
         FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
 
+    //# 디버그용
     bool bInvalidCharacter = false;
 
+    //# 중복 액터 체크
+    TArray<AActor*> CheckActors;
     for (const FHitResult& Overlap : OutHits)
     {
         if (AActor* TargetActor = Overlap.GetActor())
         {
+            if (CheckActors.Contains(TargetActor))
+                continue;
+
+            CheckActors.Add(TargetActor);
+
             if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
             {
                 bInvalidCharacter = true;
@@ -206,13 +223,21 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeaponRange(ACharacter* Ow
     }
 }
 
-void USKGameplayAbility_SkillAction::SendTagToTargetBySphereRange(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag)
+void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag)
 {
     FVector TargetLoc = OwnerCharacter->GetActorLocation();
     TArray<FOverlapResult> OutHits;
     FCollisionShape CollisionShape = FCollisionShape::MakeSphere(Radius);
     FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(OwnerCharacter);
+
+    switch (DetectTargetType)
+    {
+        case EDetectTargetType::ExcludeMe:
+            QueryParams.AddIgnoredActor(OwnerCharacter);
+            break;
+        default:
+            break;
+    }
 
     OwnerCharacter->GetWorld()->OverlapMultiByChannel(
         OutHits,
@@ -223,12 +248,20 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphereRange(ACharacter* Ow
         QueryParams
     );
 
+    //# 디버그용
     bool bInvalidCharacter = false;
 
+    //# 중복 액터 체크
+    TArray<AActor*> CheckActors;
     for (const FOverlapResult& Overlap : OutHits)
     {
         if (AActor* TargetActor = Overlap.GetActor())
         {
+            if (CheckActors.Contains(TargetActor))
+                continue;
+
+            CheckActors.Add(TargetActor);
+
             if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
             {
                 bInvalidCharacter = true;

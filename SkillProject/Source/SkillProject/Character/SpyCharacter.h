@@ -58,7 +58,7 @@ public:
 	virtual void OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator);
 
 	UFUNCTION()
-	virtual void OnDeathStarted(AActor* InOwningActor);
+	virtual void OnDeath(AActor* InOwningActor, AActor* InCauserActor);
 
 	UFUNCTION()
 	virtual void OnDeathFinished(AActor* InOwningActor);

@@ -3,18 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayModMagnitudeCalculation.h"
 #include "Calculation/SKBaseMagnitudeCalculation.h"
+#include "SpyDamageCalculation.generated.h"
 
-#include "SKDamageCalculation.generated.h"
-
+/**
+ * 
+ */
 UCLASS()
-class SKGAS_API USKDamageCalculation : public USKBaseMagnitudeCalculation
+class SKILLPROJECT_API USpyDamageCalculation : public USKBaseMagnitudeCalculation
 {
 	GENERATED_BODY()
-	
+
 public:
-	USKDamageCalculation();
+	USpyDamageCalculation();
 
 public:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;

@@ -12,16 +12,8 @@ class USpyAbilitySystemComponent;
 class USpyCharacterAttributeSet;
 struct FGameplayEffectSpec;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpyHealth_DeathEvent, AActor*, OwningActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyHealth_DeathEvent, AActor*, OwningActor, AActor*, CauserActor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyHealth_AttributeChanged, USpyHealthComponent*, HealthComponent, float, OldValue, float, NewValue, AActor*, Instigator);
-
-UENUM(BlueprintType)
-enum class ESpyDeathState : uint8
-{
-	NotDead = 0,
-	DeathStarted,
-	DeathFinished
-};
 
 UCLASS()
 class SKILLPROJECT_API USpyHealthComponent : public UGameFrameworkComponent
@@ -38,17 +30,11 @@ public:
 	float GetMaxHealth() const;
 	float GetHealthNormalized() const;
 
-	UFUNCTION(BlueprintCallable)
-	ESpyDeathState GetDeathState() const { return DeathState; }
-	
 protected:
 	virtual void OnUnregister() override;
 
 	virtual void HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
-
-	UFUNCTION()
-	virtual void OnRep_DeathState(ESpyDeathState OldDeathState);
 
 public:
 	UPROPERTY()
@@ -58,10 +44,7 @@ public:
 	FSpyHealth_AttributeChanged OnMaxHealthChanged;
 
 	UPROPERTY(BlueprintAssignable)
-	FSpyHealth_DeathEvent OnDeathStarted;
-
-	UPROPERTY(BlueprintAssignable)
-	FSpyHealth_DeathEvent OnDeathFinished;
+	FSpyHealth_DeathEvent OnDeath;
 
 protected:
 
@@ -70,7 +53,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<const USpyCharacterAttributeSet> HealthSet;
-
-	UPROPERTY(ReplicatedUsing = OnRep_DeathState)
-	ESpyDeathState DeathState;
 };
