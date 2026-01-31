@@ -34,7 +34,10 @@ protected:
 
 protected:
     UFUNCTION()
-    void CheckHit(FGameplayEventData Payload);
+    void CheckHit();
+
+    UFUNCTION()
+    void ScheduleServerHits();
 
     UFUNCTION()
     void SendTagToTargetByWeaponRange(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag);
@@ -57,6 +60,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     TSubclassOf<UGameplayEffect> DamageEffectClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+    TArray<float> HitTimes;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "AttackType == EAttackType::WeaponRange", EditConditionHides))
     FName StartWeaponSocketName;

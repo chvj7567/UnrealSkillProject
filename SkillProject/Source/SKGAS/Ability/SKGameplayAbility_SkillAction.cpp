@@ -62,7 +62,7 @@ void USKGameplayAbility_SkillAction::OnWaitGameplayEvent(FGameplayEventData Payl
             FActiveGameplayEffectHandle AppliedHandle = ASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
             if (AppliedHandle.WasSuccessfullyApplied())
             {
-                UE_LOG(LogTemp, Warning, TEXT("# [Server] %s GE Successfully Applied! Effect: %s"), *Payload.EventTag.ToString(), *SpecHandle.Data.Get()->Def->GetName());
+                UE_LOG(LogTemp, Warning, TEXT("# [SKSkillAction] %s GE Successfully Applied! Effect: %s"), *Payload.EventTag.ToString(), *SpecHandle.Data.Get()->Def->GetName());
             }
         }
     }
@@ -72,42 +72,41 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    if (CommitAbility(Handle, ActorInfo, ActivationInfo))
+    if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
     {
-        CurrentSpecHandle = Handle;
-        CurrentActorInfo = ActorInfo;
-        CurrentActivationInfo = ActivationInfo;
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        return;
+    }
 
+    CurrentSpecHandle = Handle;
+    CurrentActorInfo = ActorInfo;
+    CurrentActivationInfo = ActivationInfo;
+
+    if (HasAuthority(&CurrentActivationInfo))
+    {
         if (UAbilityTask_WaitGameplayEvent* WaitEffectSkillTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitEffectSkillTag, nullptr, false, false))
         {
             WaitEffectSkillTask->EventReceived.AddDynamic(this, &USKGameplayAbility_SkillAction::OnWaitGameplayEvent);
             WaitEffectSkillTask->ReadyForActivation();
         }
 
-        if (UAbilityTask_WaitGameplayEvent* WaitNotifyTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitNotifyTag, nullptr, false, false))
-        {
-            WaitNotifyTask->EventReceived.AddDynamic(this, &USKGameplayAbility_SkillAction::CheckHit);
-            WaitNotifyTask->ReadyForActivation();
-        }
-
-        if (AbilityMontage)
-        {
-            if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
-            {
-                MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
-                MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
-                MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
-                MontageTask->ReadyForActivation();
-            }
-        }
+        //# 서버에서 Hit 검사
+        ScheduleServerHits();
     }
-    else
+
+    if (AbilityMontage)
     {
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
+        {
+            MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
+            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->ReadyForActivation();
+        }
     }
 }
 
-void USKGameplayAbility_SkillAction::CheckHit(FGameplayEventData Payload)
+void USKGameplayAbility_SkillAction::CheckHit()
 {
     if (IsActive() == false)
         return;
@@ -126,14 +125,36 @@ void USKGameplayAbility_SkillAction::CheckHit(FGameplayEventData Payload)
     
     switch (AttackType)
     {
-    case EAttackType::WeaponRange:
-        SendTagToTargetByWeaponRange(OwnerCharacter, EffectSkillActionTag);
-        break;
-    case EAttackType::SphereRange:
-        SendTagToTargetBySphereRange(OwnerCharacter, EffectSkillActionTag);
-        break;
-    default:
-        break;
+        case EAttackType::WeaponRange:
+            SendTagToTargetByWeaponRange(OwnerCharacter, EffectSkillActionTag);
+            break;
+        case EAttackType::SphereRange:
+            SendTagToTargetBySphereRange(OwnerCharacter, EffectSkillActionTag);
+            break;
+        default:
+            break;
+    }
+}
+
+void USKGameplayAbility_SkillAction::ScheduleServerHits()
+{
+    if (HitTimes.Num() == 0)
+        return;
+
+    HitTimes.Sort();
+
+    for (int32 Index = 0; Index < HitTimes.Num(); ++Index)
+    {
+        const float HitTime = HitTimes[Index];
+
+        UAbilityTask_WaitDelay* WaitTask =
+            UAbilityTask_WaitDelay::WaitDelay(this, HitTime);
+
+        if (!WaitTask)
+            continue;
+
+        WaitTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillAction::CheckHit);
+        WaitTask->ReadyForActivation();
     }
 }
 
