@@ -28,6 +28,7 @@
 #include "Character/SpyCharacterAttributeSet.h"
 #include "Character/SpyPawnExtensionComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Character/SpyHealthComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -70,6 +71,13 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
 
 	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
+	SpyPawnExtensionComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
+	SpyPawnExtensionComponent->OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemUninitialized));
+
+	SpyHealthComponent = CreateDefaultSubobject<USpyHealthComponent>(TEXT("HealthComponent"));
+	SpyHealthComponent->OnHealthChanged.AddDynamic(this, &ThisClass::OnHealthChanged);
+	SpyHealthComponent->OnDeathStarted.AddDynamic(this, &ThisClass::OnDeathStarted);
+	SpyHealthComponent->OnDeathFinished.AddDynamic(this, &ThisClass::OnDeathFinished);
 }
 
 void ASpyCharacter::BeginPlay()
@@ -158,7 +166,20 @@ void ASpyCharacter::InitializeGameplayTags()
 {
 }
 
-void ASpyCharacter::Death()
+USpyAbilitySystemComponent* ASpyCharacter::GetSpyAbilitySystemComponent() const
+{
+	return Cast<USpyAbilitySystemComponent>(GetAbilitySystemComponent());
+}
+
+void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator)
+{
+	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
+	{
+		HpBar->UpdateHP(InNewValue, InHealthComponent->GetMaxHealth());
+	}
+}
+
+void ASpyCharacter::OnDeathStarted(AActor* InOwningActor)
 {
 	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 	{
@@ -166,12 +187,23 @@ void ASpyCharacter::Death()
 	}
 }
 
+void ASpyCharacter::OnDeathFinished(AActor* InOwningActor)
+{
+}
+
 void ASpyCharacter::OnAbilitySystemInitialized()
 {
+	USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent();
+	check(SpyASC);
+
+	SpyHealthComponent->InitializeByAbilitySystem(SpyASC);
+
+	InitializeGameplayTags();
 }
 
 void ASpyCharacter::OnAbilitySystemUninitialized()
 {
+	SpyHealthComponent->UnInitializeByAbilitySystem();
 }
 
 void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
@@ -193,15 +225,15 @@ void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
 	//if (HasAuthority() == false)
 	//	return;
 
-	////# »ç¿ëÇÒ ½ºÅ³ ÅÂ±× µî·Ï
+	////# ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å³ ï¿½Â±ï¿½ ï¿½ï¿½ï¿½
 	//FGameplayTagContainer TagContaingers;
 	//TagContaingers.AddTag(SkillTag);
 
-	////# ÅÂ±×¸¦ ÅëÇØ ASC¿¡ µî·ÏµÈ ´É·Â ÇÚµé °¡Á®¿È
+	////# ï¿½Â±×¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ASCï¿½ï¿½ ï¿½ï¿½Ïµï¿½ ï¿½É·ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	//TArray<FGameplayAbilitySpecHandle> AbilityHandles;
 	//AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
 
-	////# °¡Á®¿Â ´É·Â ½ÇÇà
+	////# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½É·ï¿½ ï¿½ï¿½ï¿½ï¿½
 	//for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
 	//{
 	//	if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))

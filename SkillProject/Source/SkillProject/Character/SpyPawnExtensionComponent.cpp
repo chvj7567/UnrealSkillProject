@@ -297,6 +297,27 @@ void USpyPawnExtensionComponent::SetupPlayerInputComponent()
 	CheckDefaultInitialization();
 }
 
+void USpyPawnExtensionComponent::OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate Delegate)
+{
+	if (OnAbilitySystemInitialized.IsBoundToObject(Delegate.GetUObject()) == false)
+	{
+		OnAbilitySystemInitialized.Add(Delegate);
+	}
+
+	if (AbilitySystemComponent)
+	{
+		Delegate.Execute();
+	}
+}
+
+void USpyPawnExtensionComponent::OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate Delegate)
+{
+	if (OnAbilitySystemUninitialized.IsBoundToObject(Delegate.GetUObject()) == false)
+	{
+		OnAbilitySystemUninitialized.Add(Delegate);
+	}
+}
+
 void USpyPawnExtensionComponent::HandleExtensionEvent(AActor* OwnerActor, FName EventName)
 {
 	UE_LOG(LogTemp, Log, TEXT("%s GameActorReady received by %s"), *EventName.ToString(), *GetName());

@@ -17,6 +17,8 @@ class UBoxComponent;
 class UWidgetComponent;
 class ASpyWeapon;
 class USpyPawnExtensionComponent;
+class USpyHealthComponent;
+class USpyAbilitySystemComponent;
 
 struct FOnAttributeChangeData;
 
@@ -49,7 +51,17 @@ public:
 	FORCEINLINE ASpyWeapon* GetSpyWeapon() const { return SpyWeapon; }
 
 public:
-	void Death();
+	UFUNCTION(BlueprintCallable)
+	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
+
+	UFUNCTION()
+	virtual void OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator);
+
+	UFUNCTION()
+	virtual void OnDeathStarted(AActor* InOwningActor);
+
+	UFUNCTION()
+	virtual void OnDeathFinished(AActor* InOwningActor);
 
 protected:
 	virtual void OnAbilitySystemInitialized();
@@ -74,8 +86,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UWidgetComponent> HPBarComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anim")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PawnExtension")
 	TObjectPtr<USpyPawnExtensionComponent> SpyPawnExtensionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	TObjectPtr<USpyHealthComponent> SpyHealthComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<ASpyWeapon> SpyWeapon;

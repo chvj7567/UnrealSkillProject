@@ -2,19 +2,22 @@
 
 
 #include "Character/SpyHealthComponent.h"
-#include "SKAbilitySystemComponent.h"
-#include "Attribute/SKAttributeSet.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "Character/SpyCharacterAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
 
-void USpyHealthComponent::Initialize(USKAbilitySystemComponent* InASC)
+void USpyHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	if (IsInitialized)
-		return;
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	IsInitialized = true;
+	DOREPLIFETIME(USpyHealthComponent, DeathState);
+}
 
+void USpyHealthComponent::InitializeByAbilitySystem(USpyAbilitySystemComponent* InASC)
+{
 	AActor* Owner = GetOwner();
 	check(Owner);
 
@@ -23,13 +26,16 @@ void USpyHealthComponent::Initialize(USKAbilitySystemComponent* InASC)
 
 	AbilitySystemComponent = InASC;
 
-	HealthSet = AbilitySystemComponent->GetSet<USKAttributeSet>();
+	HealthSet = AbilitySystemComponent->GetSet<USpyCharacterAttributeSet>();
 
 	HealthSet->OnHealthChanged.AddUObject(this, &ThisClass::HandleHealthChanged);
 	HealthSet->OnMaxHealthChanged.AddUObject(this, &ThisClass::HandleMaxHealthChanged);
+
+	OnHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
+	OnMaxHealthChanged.Broadcast(this, HealthSet->GetHealth(), HealthSet->GetHealth(), nullptr);
 }
 
-void USpyHealthComponent::UnInitialize()
+void USpyHealthComponent::UnInitializeByAbilitySystem()
 {
 	if (HealthSet)
 	{
@@ -64,6 +70,13 @@ float USpyHealthComponent::GetHealthNormalized() const
 	return 0.0f;
 }
 
+void USpyHealthComponent::OnUnregister()
+{
+	UnInitializeByAbilitySystem();
+
+	Super::OnUnregister();
+}
+
 void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
 	OnHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
@@ -72,4 +85,8 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 void USpyHealthComponent::HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
 	OnMaxHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void USpyHealthComponent::OnRep_DeathState(ESpyDeathState OldDeathState)
+{
 }

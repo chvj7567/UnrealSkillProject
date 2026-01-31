@@ -57,7 +57,6 @@ void ASpyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 void ASpyPlayerState::Multicast_Death_Implementation()
 {
 	RemoveState(SpyGameplayTags::Character_State_Survival_Alive);
-	OwnerCharacter->Death();
 }
 
 void ASpyPlayerState::PreInitializeComponents()

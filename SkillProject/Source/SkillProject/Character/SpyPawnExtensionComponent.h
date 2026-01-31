@@ -53,17 +53,22 @@ public:
 	void HandlePlayerStateReplicated();
 	void SetupPlayerInputComponent();
 
+	void OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate Delegate);
+	void OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate Delegate);
+
 	UFUNCTION()
 	void HandleExtensionEvent(AActor* OwnerActor, FName EventName);
 
 protected:
 	UFUNCTION()
 	void OnRep_CharacterAssetData();
+
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterAssetData)
 	TObjectPtr<const USpyCharacterAssetData> CharacterAssetData;
 
 	FSimpleMulticastDelegate OnAbilitySystemInitialized;
 	FSimpleMulticastDelegate OnAbilitySystemUninitialized;
+
 	UPROPERTY(Transient)
 	TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
 

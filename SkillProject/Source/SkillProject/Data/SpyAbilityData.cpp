@@ -2,6 +2,7 @@
 
 #include "SpyAbilityData.h"
 #include "SKAbilitySystemComponent.h"
+#include "Attribute/SKAttributeSet.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAbilityData)
 
@@ -73,7 +74,50 @@ void USpyAbilityData::GiveToAbilitySystem(UAbilitySystemComponent* SpyASC, FSpyA
 	if (SpyASC->IsOwnerActorAuthoritative() == false)
 		return;
 
-	//# GameplayAbility 부여
+	//# 1. AttributeSet 부여
+	for (int32 SetIndex = 0; SetIndex < GrantedAttributes.Num(); ++SetIndex)
+	{
+		const FSpyAbilitySet_AttributeSet& SetToGrant = GrantedAttributes[SetIndex];
+
+		//# 유효 확인
+		if (IsValid(SetToGrant.AttributeSet) == false)
+			continue;
+
+		//# 이미 받은 Attribute인지 확인
+		if (SpyASC->GetAttributeSet(SetToGrant.AttributeSet))
+			continue;
+
+		UAttributeSet* NewSet = NewObject<UAttributeSet>(SpyASC->GetOwner(), SetToGrant.AttributeSet);
+		SpyASC->AddAttributeSetSubobject(NewSet);
+
+		UE_LOG(LogTemp, Log, TEXT("[SpyAbilityData] Grant AttributeSet %s"), *NewSet->GetName());
+
+		if (OutGrantedHandles)
+		{
+			OutGrantedHandles->AddAttributeSet(NewSet);
+		}
+	}
+
+	//# 2. GameplayEffect 부여
+	for (int32 EffectIndex = 0; EffectIndex < GrantedGameplayEffects.Num(); ++EffectIndex)
+	{
+		const FSpyAbilitySet_GameplayEffect& EffectToGrant = GrantedGameplayEffects[EffectIndex];
+
+		if (IsValid(EffectToGrant.GameplayEffect) == false)
+			continue;
+
+		const UGameplayEffect* GameplayEffect = EffectToGrant.GameplayEffect->GetDefaultObject<UGameplayEffect>();
+		const FActiveGameplayEffectHandle GameplayEffectHandle = SpyASC->ApplyGameplayEffectToSelf(GameplayEffect, EffectToGrant.EffectLevel, SpyASC->MakeEffectContext());
+
+		UE_LOG(LogTemp, Log, TEXT("[SpyAbilityData] Grant Effect %s"), *GameplayEffect->GetName());
+
+		if (OutGrantedHandles)
+		{
+			OutGrantedHandles->AddGameplayEffectHandle(GameplayEffectHandle);
+		}
+	}
+
+	//# 3. GameplayAbility 부여
 	for (int32 AbilityIndex = 0; AbilityIndex < GrantedGameplayAbilities.Num(); ++AbilityIndex)
 	{
 		const FSpyAbilitySet_GameplayAbility& AbilityToGrant = GrantedGameplayAbilities[AbilityIndex];
@@ -89,49 +133,11 @@ void USpyAbilityData::GiveToAbilitySystem(UAbilitySystemComponent* SpyASC, FSpyA
 
 		const FGameplayAbilitySpecHandle AbilitySpecHandle = SpyASC->GiveAbility(AbilitySpec);
 
-		UE_LOG(LogTemp, Log, TEXT("Grant Ability %s"), *AbilityCDO->GetName());
+		UE_LOG(LogTemp, Log, TEXT("[SpyAbilityData] Grant Ability %s"), *AbilityCDO->GetName());
 
 		if (OutGrantedHandles)
 		{
 			OutGrantedHandles->AddAbilitySpecHandle(AbilitySpecHandle);
-		}
-	}
-
-	//# GameplayEffect 부여
-	for (int32 EffectIndex = 0; EffectIndex < GrantedGameplayEffects.Num(); ++EffectIndex)
-	{
-		const FSpyAbilitySet_GameplayEffect& EffectToGrant = GrantedGameplayEffects[EffectIndex];
-
-		if (IsValid(EffectToGrant.GameplayEffect) == false)
-			continue;
-
-		const UGameplayEffect* GameplayEffect = EffectToGrant.GameplayEffect->GetDefaultObject<UGameplayEffect>();
-		const FActiveGameplayEffectHandle GameplayEffectHandle = SpyASC->ApplyGameplayEffectToSelf(GameplayEffect, EffectToGrant.EffectLevel, SpyASC->MakeEffectContext());
-
-		UE_LOG(LogTemp, Log, TEXT("Grant Effect %s"), *GameplayEffect->GetName());
-
-		if (OutGrantedHandles)
-		{
-			OutGrantedHandles->AddGameplayEffectHandle(GameplayEffectHandle);
-		}
-	}
-
-	//# AttributeSet 부여
-	for (int32 SetIndex = 0; SetIndex < GrantedAttributes.Num(); ++SetIndex)
-	{
-		const FSpyAbilitySet_AttributeSet& SetToGrant = GrantedAttributes[SetIndex];
-
-		if (IsValid(SetToGrant.AttributeSet) == false)
-			continue;
-
-		UAttributeSet* NewSet = NewObject<UAttributeSet>(SpyASC->GetOwner(), SetToGrant.AttributeSet);
-		SpyASC->AddAttributeSetSubobject(NewSet);
-
-		UE_LOG(LogTemp, Log, TEXT("Grant AttributeSet %s"), *NewSet->GetName());
-
-		if (OutGrantedHandles)
-		{
-			OutGrantedHandles->AddAttributeSet(NewSet);
 		}
 	}
 }
