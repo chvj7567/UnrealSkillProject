@@ -256,17 +256,3 @@ void ASpyCharacter::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomM
 		}
 	}
 }
-
-void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
-{
-	FGameplayEventData EventData;
-	EventData.Instigator = GetPlayerState();
-	EventData.EventTag = SkillTag;
-
-	FGameplayAbilityTargetData_LocationInfo* LocData = new FGameplayAbilityTargetData_LocationInfo();
-	LocData->TargetLocation.LocationType = EGameplayAbilityTargetingLocationType::LiteralTransform;
-	LocData->TargetLocation.LiteralTransform = GetActorTransform();
-	EventData.TargetData.Add(LocData);
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPlayerState(), SkillTag, EventData);
-}

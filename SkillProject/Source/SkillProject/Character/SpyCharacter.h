@@ -69,10 +69,6 @@ protected:
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 	void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled);
 
-public:
-	UFUNCTION(BlueprintCallable)
-	void UseSkill(FGameplayTag SkillTag);
-
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;

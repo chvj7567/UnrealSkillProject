@@ -28,32 +28,6 @@ void ASpyPlayerController::BeginPlay()
 	bShowMouseCursor = true;
 
 	USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::MainHUD);
-
-	//SetMappingContext(DefaultMappingContext);
-}
-
-void ASpyPlayerController::SetupInputComponent()
-{
-	Super::SetupInputComponent();
-
-	/*if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASpyPlayerController::Move);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASpyPlayerController::Move);
-
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASpyPlayerController::Look);
-
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASpyPlayerController::JumpPressed);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ASpyPlayerController::JumpReleased);
-		
-		EnhancedInputComponent->BindAction(SkillAAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillA);
-		EnhancedInputComponent->BindAction(SkillBAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillB);
-		EnhancedInputComponent->BindAction(SkillCAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillC);
-		EnhancedInputComponent->BindAction(SkillDAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillD);
-		EnhancedInputComponent->BindAction(SkillEAction, ETriggerEvent::Started, this, &ASpyPlayerController::UseSkillE);
-
-		EnhancedInputComponent->BindAction(TryVaultAction, ETriggerEvent::Started, this, &ASpyPlayerController::TryVault);
-	}*/
 }
 
 void ASpyPlayerController::OnPossess(APawn* InPawn)
@@ -79,61 +53,6 @@ void ASpyPlayerController::PostProcessInput(const float DeltaTime, const bool bG
 	}
 
 	Super::PostProcessInput(DeltaTime, bGamePaused);
-}
-
-void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
-{
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			Subsystem->ClearAllMappings();
-			Subsystem->AddMappingContext(InMappingContext, Priority);
-		}
-	}
-}
-
-void ASpyPlayerController::AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
-{
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			Subsystem->AddMappingContext(InMappingContext, Priority);
-		}
-	}
-}
-
-void ASpyPlayerController::RemoveMappingContext(UInputMappingContext* InMappingContext)
-{
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			Subsystem->RemoveMappingContext(InMappingContext);
-		}
-	}
-}
-
-void ASpyPlayerController::RefreshMappingContext()
-{
-	/*if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
-	{
-		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
-		{
-			if (SpyPlayerState->HasState(SpyGameplayTags::Movement_Mode_WallClimb))
-			{
-				SetMappingContext(WallClimbMappingContext);
-			}
-			else
-			{
-				SetMappingContext(DefaultMappingContext);
-			}
-		}
-	}*/
 }
 
 USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent() const

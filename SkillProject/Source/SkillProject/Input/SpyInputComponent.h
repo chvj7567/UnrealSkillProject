@@ -38,13 +38,6 @@ protected:
 	void MoveEnd(const FInputActionValue& InValue);
 	void Look(const FInputActionValue& InValue);
 
-	void UseSkillA(const FInputActionValue& InValue);
-	void UseSkillB(const FInputActionValue& InValue);
-	void UseSkillC(const FInputActionValue& InValue);
-	void UseSkillD(const FInputActionValue& InValue);
-	void UseSkillE(const FInputActionValue& InValue);
-	void TryVault(const FInputActionValue& InValue);
-
 protected:
 	virtual void OnRegister() override;
 	virtual void BeginPlay() override;

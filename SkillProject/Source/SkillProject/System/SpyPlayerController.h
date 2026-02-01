@@ -26,7 +26,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 	
@@ -34,47 +33,6 @@ protected:
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
 public:
-	void SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
-	void AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
-	void RemoveMappingContext(UInputMappingContext* InMappingContext);
-
-public:
-	void RefreshMappingContext();
-
 	UFUNCTION(BlueprintCallable)
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
-
-private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputMappingContext> DefaultMappingContext;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputMappingContext> WallClimbMappingContext;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> JumpAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> LookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SkillAAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SkillBAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SkillCAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SkillDAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SkillEAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> TryVaultAction;
 };
