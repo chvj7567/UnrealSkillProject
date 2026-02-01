@@ -94,10 +94,7 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
-	CharacterOwner->bUseControllerRotationYaw = false;
-
 	GravityScale = 0.0f;
-	bUseControllerDesiredRotation = false;
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
 
@@ -115,6 +112,7 @@ void USpyCharacterMovementComponent::EndWallClimb()
 
 	GravityScale = 1.0f;
 	bOrientRotationToMovement = true;
+
 	SetMovementMode(MOVE_Walking);
 }
 

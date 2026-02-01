@@ -101,3 +101,38 @@ void USpyAbilitySystemComponent::ClearAbilityInput()
 	InputPressedSpecHandles.Reset();
 	InputReleasedSpecHandles.Reset();
 }
+
+bool USpyAbilitySystemComponent::HasAbilityByTag(const FGameplayTag& AbilityTag) const
+{
+	//# 모든 태그 중에서 현재 태그를 가지고 있는지 확인
+	TArray<FGameplayAbilitySpecHandle> SpecHandles;
+	GetAllAbilities(SpecHandles);
+
+	for (FGameplayAbilitySpecHandle SpecHandle : SpecHandles)
+	{
+		const FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(SpecHandle);
+		if (Spec == nullptr || Spec->Ability == nullptr)
+			continue;
+
+		if (Spec->Ability->AbilityTags.HasTag(AbilityTag))
+			return true;
+	}
+
+	return false;
+}
+
+bool USpyAbilitySystemComponent::IsActiveAbilityByTag(const FGameplayTag& AbilityTag) const
+{
+	//# 활성화 중인 태그 중에서 현재 태그가 있는지 확인
+	const TArray<FGameplayAbilitySpec>& Specs = GetActivatableAbilities();
+	for (const FGameplayAbilitySpec& Spec : Specs)
+	{
+		if (Spec.Ability->AbilityTags.HasTag(AbilityTag))
+		{
+			if (Spec.IsActive())
+				return true;
+		}
+	}
+
+	return false;
+}

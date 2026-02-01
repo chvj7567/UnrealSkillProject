@@ -24,6 +24,10 @@ public:
 	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
 	void ClearAbilityInput();
 
+public:
+	bool HasAbilityByTag(const FGameplayTag& AbilityTag) const;
+	bool IsActiveAbilityByTag(const FGameplayTag& AbilityTag) const;
+
 protected:
 	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;

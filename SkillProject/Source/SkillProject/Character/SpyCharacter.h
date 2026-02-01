@@ -60,19 +60,16 @@ public:
 	UFUNCTION()
 	virtual void OnDeath(AActor* InOwningActor, AActor* InCauserActor);
 
-	UFUNCTION()
-	virtual void OnDeathFinished(AActor* InOwningActor);
-
 protected:
 	virtual void OnAbilitySystemInitialized();
 	virtual void OnAbilitySystemUninitialized();
 
 	void InitializeGameplayTags();
 
-public:
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void Server_UseSkill(FGameplayTag SkillTag);
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
+	void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled);
 
+public:
 	UFUNCTION(BlueprintCallable)
 	void UseSkill(FGameplayTag SkillTag);
 

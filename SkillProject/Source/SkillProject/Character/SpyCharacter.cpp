@@ -163,6 +163,27 @@ UAbilitySystemComponent* ASpyCharacter::GetAbilitySystemComponent() const
 
 void ASpyCharacter::InitializeGameplayTags()
 {
+	if (USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent())
+	{
+		for (const TPair<uint8, FGameplayTag>& TagMapping : SpyGameplayTags::MovementModeTagMap)
+		{
+			if (TagMapping.Value.IsValid())
+			{
+				SpyASC->SetLooseGameplayTagCount(TagMapping.Value, 0);
+			}
+		}
+
+		for (const TPair<uint8, FGameplayTag>& TagMapping : SpyGameplayTags::CustomMovementModeTagMap)
+		{
+			if (TagMapping.Value.IsValid())
+			{
+				SpyASC->SetLooseGameplayTagCount(TagMapping.Value, 0);
+			}
+		}
+
+		USpyCharacterMovementComponent* SpyMoveComp = CastChecked<USpyCharacterMovementComponent>(GetCharacterMovement());
+		SetMovementModeTag(SpyMoveComp->MovementMode, SpyMoveComp->CustomMovementMode, true);
+	}
 }
 
 USpyAbilitySystemComponent* ASpyCharacter::GetSpyAbilitySystemComponent() const
@@ -187,10 +208,6 @@ void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 	}
 }
 
-void ASpyCharacter::OnDeathFinished(AActor* InOwningActor)
-{
-}
-
 void ASpyCharacter::OnAbilitySystemInitialized()
 {
 	USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent();
@@ -206,6 +223,40 @@ void ASpyCharacter::OnAbilitySystemUninitialized()
 	SpyHealthComponent->UnInitializeByAbilitySystem();
 }
 
+void ASpyCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	USpyCharacterMovementComponent* SpyMoveComp = CastChecked<USpyCharacterMovementComponent>(GetCharacterMovement());
+
+	//# 이전 상태는 TagCount 0으로 설정
+	SetMovementModeTag(PrevMovementMode, PreviousCustomMode, false);
+
+	//# 신규 상태는 TagCount 1로 설정
+	SetMovementModeTag(SpyMoveComp->MovementMode, SpyMoveComp->CustomMovementMode, true);
+}
+
+void ASpyCharacter::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled)
+{
+	if (USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent())
+	{
+		const FGameplayTag* MovementModeTag = nullptr;
+		if (MovementMode == MOVE_Custom)
+		{
+			MovementModeTag = SpyGameplayTags::CustomMovementModeTagMap.Find(CustomMovementMode);
+		}
+		else
+		{
+			MovementModeTag = SpyGameplayTags::MovementModeTagMap.Find(MovementMode);
+		}
+
+		if (MovementModeTag && MovementModeTag->IsValid())
+		{
+			SpyASC->SetLooseGameplayTagCount(*MovementModeTag, (bTagEnabled ? 1 : 0));
+		}
+	}
+}
+
 void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
 {
 	FGameplayEventData EventData;
@@ -218,31 +269,4 @@ void ASpyCharacter::UseSkill(FGameplayTag SkillTag)
 	EventData.TargetData.Add(LocData);
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPlayerState(), SkillTag, EventData);
-}
-
-void ASpyCharacter::Server_UseSkill_Implementation(FGameplayTag SkillTag)
-{
-	//if (HasAuthority() == false)
-	//	return;
-
-	////# ����� ��ų �±� ���
-	//FGameplayTagContainer TagContaingers;
-	//TagContaingers.AddTag(SkillTag);
-
-	////# �±׸� ���� ASC�� ��ϵ� �ɷ� �ڵ� ������
-	//TArray<FGameplayAbilitySpecHandle> AbilityHandles;
-	//AbilitySystemComponent->FindAllAbilitiesWithTags(AbilityHandles, TagContaingers);
-
-	////# ������ �ɷ� ����
-	//for (const FGameplayAbilitySpecHandle& AbilityHandle : AbilityHandles)
-	//{
-	//	if (AbilitySystemComponent->TryActivateAbility(AbilityHandle))
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Ability Success %s"), *SkillTag.ToString());
-	//	}
-	//	else
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Ability Failed %s"), *SkillTag.ToString());
-	//	}
-	//}
 }

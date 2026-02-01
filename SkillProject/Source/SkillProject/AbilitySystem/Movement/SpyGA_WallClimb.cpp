@@ -11,6 +11,8 @@
 
 USpyGA_WallClimb::USpyGA_WallClimb()
 {
+    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+    NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 }
 
 void USpyGA_WallClimb::OnMontageCompleted()
@@ -35,6 +37,7 @@ void USpyGA_WallClimb::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
     {
         EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
     }
+
 }
 
 void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -42,6 +45,15 @@ void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const
     EndWallClimb();
 
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void USpyGA_WallClimb::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+{
+    //# 토글 기능
+    if (IsActive() == false)
+        return;
+
+    EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 bool USpyGA_WallClimb::TryToggleClimbAction()

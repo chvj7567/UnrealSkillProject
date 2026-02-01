@@ -40,17 +40,14 @@ void USpyInputComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
 
 void USpyInputComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	const APawn* Pawn = GetPawn<APawn>();
-	if (!Pawn)
+	if (const APawn* Pawn = GetPawn<APawn>())
 	{
-		return;
-	}
-
-	if (const USpyPawnExtensionComponent* PawnExtComp = USpyPawnExtensionComponent::FindPawnExtensionComponent(Pawn))
-	{
-		if (USpyAbilitySystemComponent* SpyASC = PawnExtComp->GetSpyAbilitySystemComponent())
+		if (const USpyPawnExtensionComponent* PawnExtComp = USpyPawnExtensionComponent::FindPawnExtensionComponent(Pawn))
 		{
-			SpyASC->AbilityInputTagReleased(InputTag);
+			if (USpyAbilitySystemComponent* SpyASC = PawnExtComp->GetSpyAbilitySystemComponent())
+			{
+				SpyASC->AbilityInputTagReleased(InputTag);
+			}
 		}
 	}
 }
