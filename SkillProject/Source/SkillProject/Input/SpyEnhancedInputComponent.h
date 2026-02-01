@@ -51,7 +51,7 @@ void USpyEnhancedInputComponent::BindAbilityActions(const USpyInputConfig* Input
 		{
 			if (PressedFunc)
 			{
-				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputTag).GetHandle());
+				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Started, Object, PressedFunc, Action.InputTag).GetHandle());
 			}
 
 			if (ReleasedFunc)

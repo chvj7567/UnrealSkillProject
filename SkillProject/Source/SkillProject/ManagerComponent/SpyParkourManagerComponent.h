@@ -96,13 +96,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
 	float Speed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
-	FClimbWallData WallData;
-
-	void Clear() {
-		WallData.Clear();
-	}
 };
 
 USTRUCT(BlueprintType)
@@ -121,6 +114,7 @@ struct FVaultMotionWarpingData
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FVaultMotionWarpingData, InVaultData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSyncClilmbDataDelegate, const FClimbData&, InClimbData, const FClimbWallData&, InClimbWallData);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
@@ -143,7 +137,7 @@ public:
 	bool TryToggleClimbAction();
 
 	UFUNCTION()
-	void OnRep_ClimbData();
+	void OnRep_ClimbWallData();
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -154,10 +148,11 @@ public:
 
 	void SetVaultWallInfo();
 
-	FVaultMotionWarpingData GetVaultMotionWarpingData();
+	void SetVaultMotionWarpingData();
 
 public:
 	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
+	FSyncClilmbDataDelegate OnClimbData;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -169,6 +164,9 @@ protected:
 	FVaultMotionWarpingData VaultMotionWarpingData;
 
 protected:
-	UPROPERTY(ReplicatedUsing = OnRep_ClimbData)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FClimbData ClimbData;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ClimbWallData)
+	FClimbWallData ClimbWallData;
 };

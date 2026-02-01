@@ -56,12 +56,39 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         AimPitch = FRotator::NormalizeAxis(Rot.Pitch);
     }
 
-    //# Set Velocity, GroundSpeed, WallClimbSpeed, ShouldMove
+    //# Set IsDeath And IsClimbing, Velocity, GroundSpeed, WallClimbSpeed
     {
-        Velocity = Player->GetVelocity();
-        GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
-        Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
+        if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
+        {
+            IsDeath = false/*SpyPlayerState->HasState(SpyGameplayTags::Character_State_Survival_Alive) == false*/;
+            IsClimbing = PlayerMovementComponent->GetMovementName() == TEXT("Custom");
+            if (IsClimbing)
+            {
+                Velocity = PlayerMovementComponent->GetWallClimbSpeed();
+                GroundSpeed = 0.0f;
+                Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
 
+                ZOffset_HL = PlayerMovementComponent->ZOffsetHL;
+                ZOffset_HR = PlayerMovementComponent->ZOffsetHR;
+                ZOffset_FL = PlayerMovementComponent->ZOffsetFL;
+                ZOffset_FR = PlayerMovementComponent->ZOffsetFR;
+            }
+            else
+            {
+                Velocity = Player->GetVelocity();
+                GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
+                Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
+
+                ZOffset_HL = 0.f;
+                ZOffset_HR = 0.f;
+                ZOffset_FL = 0.f;
+                ZOffset_FR = 0.f;
+            }
+        }
+    }
+
+    //# Set ShouldMove
+    {
         FVector CurrentAcceleration = PlayerMovementComponent->GetCurrentAcceleration();
         if (CurrentAcceleration.IsZero() == false && GroundSpeed > 3.f)
         {
@@ -77,29 +104,6 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
     {
         IsFalling = PlayerMovementComponent->IsFalling();
         IsCrouching = PlayerMovementComponent->IsCrouching();
-    }
-
-    //# Set IsDeath And IsClimbing
-    {
-        if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
-        {
-            IsDeath = false/*SpyPlayerState->HasState(SpyGameplayTags::Character_State_Survival_Alive) == false*/;
-            IsClimbing = SpyPlayerState->HasState(SpyGameplayTags::Character_State_Movement_Climb);
-            if (IsClimbing)
-            {
-                ZOffset_HL = PlayerMovementComponent->ZOffsetHL;
-                ZOffset_HR = PlayerMovementComponent->ZOffsetHR;
-                ZOffset_FL = PlayerMovementComponent->ZOffsetFL;
-                ZOffset_FR = PlayerMovementComponent->ZOffsetFR;
-            }
-            else
-            {
-                ZOffset_HL = 0.f;
-                ZOffset_HR = 0.f;
-                ZOffset_FL = 0.f;
-                ZOffset_FR = 0.f;
-            }
-        }
     }
 }
 

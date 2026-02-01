@@ -28,6 +28,11 @@ public:
 
 	FORCEINLINE bool GetIsBindingInput() { return bIsBindingInput; }
 
+public:
+	void SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+	void AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+	void RemoveMappingContext(UInputMappingContext* InMappingContext);
+
 protected:
 	void Move(const FInputActionValue& InValue);
 	void Look(const FInputActionValue& InValue);

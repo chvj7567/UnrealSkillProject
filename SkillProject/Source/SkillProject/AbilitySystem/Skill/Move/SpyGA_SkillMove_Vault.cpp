@@ -43,7 +43,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 			ParkourComponent->OnVaultMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
 
 			SetMoveState(true);
-			FVaultMotionWarpingData MotionWarpingData = ParkourComponent->GetVaultMotionWarpingData();
+			ParkourComponent->SetVaultMotionWarpingData();
 		}
 	}
 }

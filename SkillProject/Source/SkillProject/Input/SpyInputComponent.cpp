@@ -111,8 +111,68 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 
 	bIsBindingInput = true;
 
-	/*UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PC), NAME_BindInputsNow);
-	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APawn*>(Pawn), NAME_BindInputsNow);*/
+	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PC), NAME_ActorFeatureName);
+}
+
+void USpyInputComponent::SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
+{
+	const APawn* Pawn = GetPawn<APawn>();
+	if (Pawn == nullptr)
+		return;
+
+	const APlayerController* PC = GetController<APlayerController>();
+	if (PC == nullptr)
+		return;
+
+	const ULocalPlayer* LP = Cast<ULocalPlayer>(PC->GetLocalPlayer());
+	if (LP == nullptr)
+		return;
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+	{
+		Subsystem->ClearAllMappings();
+		Subsystem->AddMappingContext(InMappingContext, Priority);
+	}
+}
+
+void USpyInputComponent::AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
+{
+	const APawn* Pawn = GetPawn<APawn>();
+	if (Pawn == nullptr)
+		return;
+
+	const APlayerController* PC = GetController<APlayerController>();
+	if (PC == nullptr)
+		return;
+
+	const ULocalPlayer* LP = Cast<ULocalPlayer>(PC->GetLocalPlayer());
+	if (LP == nullptr)
+		return;
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+	{
+		Subsystem->AddMappingContext(InMappingContext, Priority);
+	}
+}
+
+void USpyInputComponent::RemoveMappingContext(UInputMappingContext* InMappingContext)
+{
+	const APawn* Pawn = GetPawn<APawn>();
+	if (Pawn == nullptr)
+		return;
+
+	const APlayerController* PC = GetController<APlayerController>();
+	if (PC == nullptr)
+		return;
+
+	const ULocalPlayer* LP = Cast<ULocalPlayer>(PC->GetLocalPlayer());
+	if (LP == nullptr)
+		return;
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+	{
+		Subsystem->RemoveMappingContext(InMappingContext);
+	}
 }
 
 void USpyInputComponent::Move(const FInputActionValue& InValue)
@@ -140,7 +200,7 @@ void USpyInputComponent::Move(const FInputActionValue& InValue)
 
 				if (USpyCharacterMovementComponent* SpyParkrourComponent = SpyCharacter->GetSpyCharacterMovementComponent())
 				{
-					SpyParkrourComponent->SetInputVector(MovementVector);
+					SpyParkrourComponent->SetWallClimbInput(MovementVector);
 				}
 			}
 		}

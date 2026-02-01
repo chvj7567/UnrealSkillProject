@@ -33,8 +33,10 @@ protected:
 	virtual void PreProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
-protected:
-	void SetMappingContext(UInputMappingContext* InMappingContext);
+public:
+	void SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+	void AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+	void RemoveMappingContext(UInputMappingContext* InMappingContext);
 
 public:
 	void RefreshMappingContext();

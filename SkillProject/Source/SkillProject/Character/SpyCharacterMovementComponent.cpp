@@ -4,18 +4,28 @@
 #include "Character/SpyCharacterMovementComponent.h"
 #include "Util/DefineEnum.h"
 #include "Character/SpyCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
 
 USpyCharacterMovementComponent::USpyCharacterMovementComponent()
 {
+	SetIsReplicatedByDefault(true);
+}
+
+void USpyCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(USpyCharacterMovementComponent, SpyInputVector, COND_SkipOwner);
+	DOREPLIFETIME(USpyCharacterMovementComponent, ClimbData);
+	DOREPLIFETIME(USpyCharacterMovementComponent, ClimbWallData);
 }
 
 void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 {
 	switch (CustomMovementMode)
 	{
-	case (uint8)ECustomMovementMode::MOVE_WallClimb:
+	case ECustomMovementMode::MOVE_WallClimb:
 	{
 		PhysWallClimb(DeltaTime, Iterations);
 	}
@@ -32,7 +42,7 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 {
 	switch (CustomMovementMode)
 	{
-	case (uint8)ECustomMovementMode::MOVE_WallClimb:
+	case ECustomMovementMode::MOVE_WallClimb:
 	{
 		return;
 	}
@@ -64,33 +74,23 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
-	const FVector WallNormal = ClimbData.WallData.NormalVector;
-	const FVector UpVector = FVector::UpVector;
+	Velocity = GetWallClimbSpeed();
 
-	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
-	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
-;
-	FVector DesiredVelocity =
-		WallUp * SpyInputVector.Y * ClimbData.Speed +
-		WallRight * -SpyInputVector.X * ClimbData.Speed;
-	
-	Velocity = DesiredVelocity;
-
-	FVector Delta = Velocity * DeltaTime;
 	FHitResult Hit;
-	SafeMoveUpdatedComponent(Delta, UpdatedComponent->GetComponentRotation(), true, Hit);
+	SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
+	/*CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
 	CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
 	CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
-	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);
+	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);*/
 }
 
-void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData)
+void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
 {
 	UE_LOG(LogTemp, Warning, TEXT("StartWallClimb %s"), *GetOwner()->GetName());
 
 	ClimbData = InClimbData;
+	ClimbWallData = InClimbWallData;
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
@@ -101,19 +101,12 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
 
-	FVector TargetLocation = ClimbData.WallData.HitVector + (ClimbData.WallData.NormalVector * ClimbData.DistanceOffset);
-	FRotator TargetRotator = (-ClimbData.WallData.NormalVector).Rotation();
+	FVector TargetLocation = ClimbWallData.HitVector + (ClimbWallData.NormalVector * ClimbData.DistanceOffset);
+	FRotator TargetRotator = (-ClimbWallData.NormalVector).Rotation();
 	TargetRotator.Pitch = 0.f;
 	TargetRotator.Roll = 0.f;
 
 	UpdatedComponent->SetWorldLocationAndRotation(TargetLocation, TargetRotator, false, nullptr, ETeleportType::TeleportPhysics);
-
-	bForceNextFloorCheck = false;
-
-	if (GetOwner()->HasAuthority())
-	{
-		CurrentFloor.Clear();
-	}
 }
 
 void USpyCharacterMovementComponent::EndWallClimb()
@@ -169,3 +162,34 @@ float USpyCharacterMovementComponent::CalculateBoneOffset(FName BoneName, float&
 
 	return CurrentOffsetVar;
 }
+
+FVector USpyCharacterMovementComponent::GetWallClimbSpeed()
+{
+	const FVector WallNormal = ClimbWallData.NormalVector;
+	const FVector UpVector = FVector::UpVector;
+
+	//# 외적을 통해 벽의 위쪽 오른쪽 벡터 Get
+	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
+	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
+
+	FVector Speed = WallUp * SpyInputVector.Y * ClimbData.Speed +
+		WallRight * -SpyInputVector.X * ClimbData.Speed;
+
+	return Speed;
+}
+
+void USpyCharacterMovementComponent::SetWallClimbInput(FVector2D InputVector)
+{
+	SpyInputVector = InputVector;
+
+	if (PawnOwner && PawnOwner->IsLocallyControlled())
+	{
+		Server_SetWallClimbInput(InputVector);
+	}
+}
+
+void USpyCharacterMovementComponent::Server_SetWallClimbInput_Implementation(FVector2D InputVector)
+{
+	SpyInputVector = InputVector;
+}
+

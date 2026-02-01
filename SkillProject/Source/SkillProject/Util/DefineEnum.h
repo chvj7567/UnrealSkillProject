@@ -6,7 +6,7 @@
 #include "DefineEnum.generated.h"
 
 UENUM(BlueprintType)
-enum class ESpyUIType : uint8
+enum ESpyUIType : uint8
 {
     None            UMETA(DisplayName = "None"),
     MainHUD         UMETA(DisplayName = "MainHUD"),
@@ -15,7 +15,7 @@ enum class ESpyUIType : uint8
 };
 
 UENUM(BlueprintType)
-enum class ECustomMovementMode : uint8
+enum ECustomMovementMode : uint8
 {
     MOVE_Default       UMETA(DisplayName = "Default"),
     MOVE_WallClimb     UMETA(DisplayName = "Wall Climb"),

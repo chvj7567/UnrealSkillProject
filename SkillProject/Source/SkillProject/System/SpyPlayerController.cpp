@@ -29,7 +29,7 @@ void ASpyPlayerController::BeginPlay()
 
 	USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::MainHUD);
 
-	SetMappingContext(DefaultMappingContext);
+	//SetMappingContext(DefaultMappingContext);
 }
 
 void ASpyPlayerController::SetupInputComponent()
@@ -81,7 +81,7 @@ void ASpyPlayerController::PostProcessInput(const float DeltaTime, const bool bG
 	Super::PostProcessInput(DeltaTime, bGamePaused);
 }
 
-void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingContext)
+void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
 {
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
 	{
@@ -89,18 +89,42 @@ void ASpyPlayerController::SetMappingContext(UInputMappingContext* InMappingCont
 			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
 			Subsystem->ClearAllMappings();
-			Subsystem->AddMappingContext(InMappingContext, 0);
+			Subsystem->AddMappingContext(InMappingContext, Priority);
+		}
+	}
+}
+
+void ASpyPlayerController::AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
+{
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			Subsystem->AddMappingContext(InMappingContext, Priority);
+		}
+	}
+}
+
+void ASpyPlayerController::RemoveMappingContext(UInputMappingContext* InMappingContext)
+{
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			Subsystem->RemoveMappingContext(InMappingContext);
 		}
 	}
 }
 
 void ASpyPlayerController::RefreshMappingContext()
 {
-	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
+	/*if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
 	{
 		if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 		{
-			if (SpyPlayerState->HasState(SpyGameplayTags::Character_State_Movement_Climb))
+			if (SpyPlayerState->HasState(SpyGameplayTags::Movement_Mode_WallClimb))
 			{
 				SetMappingContext(WallClimbMappingContext);
 			}
@@ -109,7 +133,7 @@ void ASpyPlayerController::RefreshMappingContext()
 				SetMappingContext(DefaultMappingContext);
 			}
 		}
-	}
+	}*/
 }
 
 USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent() const

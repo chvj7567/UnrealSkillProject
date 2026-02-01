@@ -38,7 +38,7 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateCancelAbility) override;
 
-    //# 능력 발동 시 호출 (조건 체크 O)
+    //# 능력 발동 시 호출 (자원 소모)
     virtual bool CommitAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,

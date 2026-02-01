@@ -23,10 +23,6 @@ namespace SpyGameplayTags
 	//# 캐릭터 생존 상태
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Survival_Alive);
 
-	//# 캐릭터 Movement 상태
-	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Movement_Normal);
-	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Movement_Climb);
-
 	//# 기본 입력 슬롯
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Native_Move);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Native_Look);
@@ -73,4 +69,18 @@ namespace SpyGameplayTags
 
 	//# Static 이펙트
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Static_Hit);
+
+	//# 언리얼 기본 무브먼트
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Walking);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_NavWalking);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Falling);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Swimming);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Flying);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Custom);
+
+	//# 커스텀 무브먼트
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_WallClimb);
+
+	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> MovementModeTagMap;
+	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> CustomMovementModeTagMap;
 }

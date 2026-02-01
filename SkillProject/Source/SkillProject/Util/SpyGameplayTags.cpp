@@ -2,6 +2,7 @@
 
 
 #include "SpyGameplayTags.h"
+#include "Util/DefineEnum.h"
 
 namespace SpyGameplayTags
 {
@@ -61,4 +62,28 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Static_Hit, "GameplayCue.Static.Hit");
+
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_Walking, "Movement.Mode.Walking");
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_NavWalking, "Movement.Mode.NavWalking");
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_Falling, "Movement.Mode.Falling");
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_Swimming, "Movement.Mode.Swimming");
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_Flying, "Movement.Mode.Flying");
+
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_Custom, "Movement.Mode.Custom");
+	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_WallClimb, "Movement.Mode.WallClimb");
+
+	const TMap<uint8, FGameplayTag> MovementModeTagMap =
+	{
+		{ MOVE_Walking, Movement_Mode_Walking },
+		{ MOVE_NavWalking, Movement_Mode_NavWalking },
+		{ MOVE_Falling, Movement_Mode_Falling },
+		{ MOVE_Swimming, Movement_Mode_Swimming },
+		{ MOVE_Flying, Movement_Mode_Flying },
+		{ MOVE_Custom, Movement_Mode_Custom }
+	};
+
+	const TMap<uint8, FGameplayTag> CustomMovementModeTagMap =
+	{
+		{ ECustomMovementMode::MOVE_WallClimb, Movement_Mode_WallClimb }
+	};
 }

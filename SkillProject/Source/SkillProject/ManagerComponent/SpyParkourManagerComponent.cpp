@@ -26,7 +26,7 @@ void USpyParkourManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimePro
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(USpyParkourManagerComponent, ClimbData);
+    DOREPLIFETIME(USpyParkourManagerComponent, ClimbWallData);
     DOREPLIFETIME(USpyParkourManagerComponent, VaultMotionWarpingData);
 }
 
@@ -36,31 +36,20 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
     if (OwnerCharacter == nullptr)
         return false;
 
-    //# 서버만 실행
-    if (OwnerCharacter->HasAuthority() == false)
-        return false;
-
-    UE_LOG(LogTemp, Log, TEXT("# Server TryToggleClimbAction Name: %s, Role: %d"), *GetOwner()->GetName(), (int32)GetOwner()->GetLocalRole());
+    UE_LOG(LogTemp, Log, TEXT("# [Parkour] TryToggleClimbAction Name: %s, Role: %d"), *GetOwner()->GetName(), (int32)GetOwner()->GetLocalRole());
 
     ASpyPlayerState* SpyPlayerState = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
     if (SpyPlayerState == nullptr)
     {
-        UE_LOG(LogTemp, Log, TEXT("# Server SpyPlayerState Is Null"));
+        UE_LOG(LogTemp, Log, TEXT("# [Parkour] SpyPlayerState Is Null"));
         return false;
     }
 
     ASpyPlayerController* SpyPlayerController = OwnerCharacter->GetController<ASpyPlayerController>();
     if (SpyPlayerController == nullptr)
     {
-        UE_LOG(LogTemp, Log, TEXT("# Server SpyPlayerController Is Null"));
+        UE_LOG(LogTemp, Log, TEXT("# [Parkour] SpyPlayerController Is Null"));
         return false;
-    }
-
-    //# 이미 Climb 상태이므로 해제
-    if (SpyPlayerState->HasState(SpyGameplayTags::Character_State_Movement_Climb))
-    {
-        SpyPlayerState->RemoveState(SpyGameplayTags::Character_State_Movement_Climb);
-        return true;
     }
 
     FVector OwnerLocation = OwnerCharacter->GetActorLocation();
@@ -80,28 +69,21 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
     WallData.HitVector = Hit.Location;
     WallData.NormalVector = Hit.ImpactNormal;
 
-    //# 감지된 벽이 없음
-    if (bHit == false)
+    //# 서버만 실행
+    if (OwnerCharacter->HasAuthority())
     {
-        UE_LOG(LogTemp, Log, TEXT("# Server Wall Is Null"));
-        return false;
+        ClimbWallData = WallData;
+        OnRep_ClimbWallData();
     }
 
-    SpyPlayerState->AddState(SpyGameplayTags::Character_State_Movement_Climb);
-
-    ClimbData.WallData = WallData;
-
-    return true;
+    return bHit;
 }
 
-void USpyParkourManagerComponent::OnRep_ClimbData()
+void USpyParkourManagerComponent::OnRep_ClimbWallData()
 {
-    if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetOwner()))
+    if (OnClimbData.IsBound())
     {
-        if (USpyCharacterMovementComponent* MoveComp = Cast<USpyCharacterMovementComponent>(SpyCharacter->GetCharacterMovement()))
-        {
-            MoveComp->StartWallClimb(ClimbData);
-        }
+        OnClimbData.Broadcast(ClimbData, ClimbWallData);
     }
 }
 
@@ -235,14 +217,15 @@ void USpyParkourManagerComponent::SetVaultWallInfo()
     }
 }
 
-FVaultMotionWarpingData USpyParkourManagerComponent::GetVaultMotionWarpingData()
+void USpyParkourManagerComponent::SetVaultMotionWarpingData()
 {
-    ACharacter* OwnerChararacter = Cast<ACharacter>(GetOwner());
-    if (OwnerChararacter == nullptr)
-        return FVaultMotionWarpingData();
+    ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+    if (OwnerCharacter == nullptr)
+        return;
 
+    //# 서버만 계산
     if (GetOwner()->HasAuthority() == false)
-        return FVaultMotionWarpingData();
+        return;
 
     //# 벽 노말 벡터 기준으로 계산
     FRotator TargetRotator = VaultWallData.FrontNormalVector.GetSafeNormal2D().Rotation() - FRotator(0, 180.f, 0);
@@ -272,7 +255,6 @@ FVaultMotionWarpingData USpyParkourManagerComponent::GetVaultMotionWarpingData()
     Data.EndRot = TargetRotator;
 
     VaultMotionWarpingData = Data;
-    OnVaultMotionWarpingData.Broadcast(VaultMotionWarpingData);
 
-    return VaultMotionWarpingData;
+    OnVaultMotionWarpingData.Broadcast(VaultMotionWarpingData);
 }
