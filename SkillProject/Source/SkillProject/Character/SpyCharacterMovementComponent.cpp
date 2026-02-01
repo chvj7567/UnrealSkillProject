@@ -25,16 +25,16 @@ void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteration
 {
 	switch (CustomMovementMode)
 	{
-	case ECustomMovementMode::MOVE_WallClimb:
-	{
-		PhysWallClimb(DeltaTime, Iterations);
-	}
-	break;
-	default:
-	{
-		Super::PhysCustom(DeltaTime, Iterations);
-	}
-	break;
+		case ECustomMovementMode::MOVE_WallClimb:
+		{
+			PhysWallClimb(DeltaTime, Iterations);
+		}
+		break;
+		default:
+		{
+			Super::PhysCustom(DeltaTime, Iterations);
+		}
+		break;
 	}
 }
 
@@ -42,31 +42,17 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 {
 	switch (CustomMovementMode)
 	{
-	case ECustomMovementMode::MOVE_WallClimb:
-	{
-		return;
+		case ECustomMovementMode::MOVE_WallClimb:
+		{
+			return;
+		}
+		break;
+		default:
+		{
+			Super::PhysicsRotation(DeltaTime);
+		}
+		break;
 	}
-	break;
-	default:
-	{
-		Super::PhysicsRotation(DeltaTime);
-	}
-	break;
-	}
-}
-
-void USpyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
-{
-	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
-
-	const UEnum* ModeEnum = StaticEnum<EMovementMode>();
-
-	FString PrevModeName = ModeEnum->GetValueAsString(PrevMovementMode);
-	FString CurrentModeName = ModeEnum->GetValueAsString(MovementMode);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Movement Mode Changed!"));
-	//UE_LOG(LogTemp, Log, TEXT("Before: %s (Custom: %d) %s"), *PrevModeName, PreviousCustomMode, *GetOwner()->GetName());
-	//UE_LOG(LogTemp, Log, TEXT("After:  %s (Custom: %d) %s"), *CurrentModeName, CustomMovementMode, *GetOwner()->GetName());
 }
 
 void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterations)

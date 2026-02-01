@@ -35,6 +35,7 @@ public:
 
 protected:
 	void Move(const FInputActionValue& InValue);
+	void MoveEnd(const FInputActionValue& InValue);
 	void Look(const FInputActionValue& InValue);
 
 	void UseSkillA(const FInputActionValue& InValue);

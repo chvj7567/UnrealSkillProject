@@ -100,6 +100,7 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 					SpyIC->BindAbilityActions(InputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
 
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Move, ETriggerEvent::Triggered, this, &ThisClass::Move);
+					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Move, ETriggerEvent::Completed, this, &ThisClass::MoveEnd);
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Look, ETriggerEvent::Triggered, this, &ThisClass::Look);
 				}
 			}
@@ -194,11 +195,25 @@ void USpyInputComponent::Move(const FInputActionValue& InValue)
 
 				SpyCharacter->AddMovementInput(ForwardDirection, MovementVector.Y);
 				SpyCharacter->AddMovementInput(RightDirection, MovementVector.X);
+			}
 
-				if (USpyCharacterMovementComponent* SpyParkrourComponent = SpyCharacter->GetSpyCharacterMovementComponent())
-				{
-					SpyParkrourComponent->SetWallClimbInput(MovementVector);
-				}
+			if (USpyCharacterMovementComponent* SpyParkrourComponent = SpyCharacter->GetSpyCharacterMovementComponent())
+			{
+				SpyParkrourComponent->SetWallClimbInput(MovementVector);
+			}
+		}
+	}
+}
+
+void USpyInputComponent::MoveEnd(const FInputActionValue& InValue)
+{
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			if (USpyCharacterMovementComponent* SpyParkrourComponent = SpyCharacter->GetSpyCharacterMovementComponent())
+			{
+				SpyParkrourComponent->SetWallClimbInput(FVector2D::Zero());
 			}
 		}
 	}

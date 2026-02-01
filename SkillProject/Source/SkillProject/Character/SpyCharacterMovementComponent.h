@@ -21,7 +21,6 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
 	virtual void PhysicsRotation(float DeltaTime) override;
-	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
 public:
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
@@ -34,6 +33,7 @@ public:
 
 	FVector GetWallClimbSpeed();
 	void SetWallClimbInput(FVector2D InputVector);
+
 	UFUNCTION(Server, Unreliable)
     void Server_SetWallClimbInput(FVector2D InputVector);
 
