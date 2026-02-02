@@ -146,7 +146,7 @@ public:
 	UFUNCTION()
 	void OnRep_VaultMotionWarpingData();
 
-	void SetVaultWallInfo();
+	void SetVaultWallData();
 
 	void SetVaultMotionWarpingData();
 

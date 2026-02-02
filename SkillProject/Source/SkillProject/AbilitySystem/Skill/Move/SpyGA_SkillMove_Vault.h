@@ -13,12 +13,6 @@ class SKILLPROJECT_API USpyGA_SkillMove_Vault : public USKGameplayAbility_SkillM
 	GENERATED_BODY()
 	
 protected:
-    virtual bool CommitAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
-
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,

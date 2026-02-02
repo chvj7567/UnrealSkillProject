@@ -7,25 +7,6 @@
 #include "AbilitySystem/Task/SpyAbilityTask_MotionWarping.h"
 #include "MotionWarpingComponent.h"
 
-bool USpyGA_SkillMove_Vault::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
-{
-	bool Result = Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
-
-	//# 서버에서만 Vault 정보 계산
-	if (HasAuthority(&CurrentActivationInfo))
-	{
-		if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
-		{
-			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
-			{
-				return Result && ParkourComponent->CanVaultAction();
-			}
-		}
-	}
-
-	return Result;
-}
-
 void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
@@ -40,17 +21,21 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	{
 		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 		{
-			ParkourComponent->OnVaultMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
-
-			SetMoveState(true);
-			ParkourComponent->SetVaultMotionWarpingData();
+			if (ParkourComponent->CanVaultAction())
+			{
+				ParkourComponent->OnVaultMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
+				ParkourComponent->SetVaultMotionWarpingData();
+			}
+			else
+			{
+				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			}
 		}
 	}
 }
 
 void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData)
 {
-
 	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 	{
 		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
@@ -63,7 +48,8 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InV
 			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingStartName, InVaultData.StartLoc, InVaultData.StartRot);
 			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);
 		}
-	}
 
-	PlayMontage();
+		SetMoveState(true);
+		PlayMontage();
+	}
 }

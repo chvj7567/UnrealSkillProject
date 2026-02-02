@@ -94,7 +94,7 @@ bool USpyParkourManagerComponent::CanVaultAction()
         return false;
 
     //# Vault 가능한 벽 정보 가져옴
-    SetVaultWallInfo();
+    SetVaultWallData();
 
     //# 벽 정보가 세팅되지 않았다면 Vault 불가능한 벽
     if (VaultWallData.FrontNormalVector == FVector::ZeroVector &&
@@ -113,7 +113,7 @@ void USpyParkourManagerComponent::OnRep_VaultMotionWarpingData()
     }
 }
 
-void USpyParkourManagerComponent::SetVaultWallInfo()
+void USpyParkourManagerComponent::SetVaultWallData()
 {
     VaultWallData.Clear();
 
@@ -223,10 +223,6 @@ void USpyParkourManagerComponent::SetVaultMotionWarpingData()
     if (OwnerCharacter == nullptr)
         return;
 
-    //# 서버만 계산
-    if (GetOwner()->HasAuthority() == false)
-        return;
-
     //# 벽 노말 벡터 기준으로 계산
     FRotator TargetRotator = VaultWallData.FrontNormalVector.GetSafeNormal2D().Rotation() - FRotator(0, 180.f, 0);
     FVector RightVector = FVector::CrossProduct(FVector::UpVector, -VaultWallData.FrontNormalVector);
@@ -256,5 +252,5 @@ void USpyParkourManagerComponent::SetVaultMotionWarpingData()
 
     VaultMotionWarpingData = Data;
 
-    OnVaultMotionWarpingData.Broadcast(VaultMotionWarpingData);
+    OnRep_VaultMotionWarpingData();
 }
