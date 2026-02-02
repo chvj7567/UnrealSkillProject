@@ -219,6 +219,26 @@ void USpyInputComponent::MoveEnd(const FInputActionValue& InValue)
 	}
 }
 
+void USpyInputComponent::Look(const FInputActionValue& InValue)
+{
+	FVector2D LookAxisVector = InValue.Get<FVector2D>();
+
+	if (APawn* Pawn = GetPawn<APawn>())
+	{
+		if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn))
+		{
+			if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
+			{
+				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Look))
+					return;
+			}
+
+			SpyCharacter->AddControllerYawInput(LookAxisVector.X);
+			SpyCharacter->AddControllerPitchInput(LookAxisVector.Y);
+		}
+	}
+}
+
 void USpyInputComponent::OnRegister()
 {
 	Super::OnRegister();
