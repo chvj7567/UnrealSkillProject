@@ -252,5 +252,8 @@ void USpyParkourManagerComponent::SetVaultMotionWarpingData()
 
     VaultMotionWarpingData = Data;
 
-    OnRep_VaultMotionWarpingData();
+    if (OwnerCharacter->HasAuthority())
+    {
+        OnRep_VaultMotionWarpingData();
+    }
 }
