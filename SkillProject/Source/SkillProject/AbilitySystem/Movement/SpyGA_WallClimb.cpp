@@ -9,6 +9,8 @@
 #include "System/SpyPlayerController.h"
 #include "Input/SpyInputComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_WallClimb)
+
 USpyGA_WallClimb::USpyGA_WallClimb()
 {
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;

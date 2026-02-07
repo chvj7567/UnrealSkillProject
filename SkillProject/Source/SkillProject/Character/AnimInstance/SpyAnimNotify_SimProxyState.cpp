@@ -7,6 +7,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Util/SpyGameplayTags.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAnimNotify_SimProxyState)
+
 void USpyAnimNotify_SimProxyState::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation, EventReference);

@@ -1,8 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/AnimInstance/SpyAnimNotify_Attack.h"
+#include "SpyAnimNotify_Attack.h"
 #include "AbilitySystemBlueprintLibrary.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAnimNotify_Attack)
 
 void USpyAnimNotify_Attack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {

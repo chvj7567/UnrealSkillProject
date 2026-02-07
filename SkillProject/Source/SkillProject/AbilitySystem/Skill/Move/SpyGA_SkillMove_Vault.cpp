@@ -7,6 +7,8 @@
 #include "AbilitySystem/Task/SpyAbilityTask_MotionWarping.h"
 #include "MotionWarpingComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_SkillMove_Vault)
+
 void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);

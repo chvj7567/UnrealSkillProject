@@ -1,11 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/AnimInstance/SpyAnimNotifyState_Lock.h"
+#include "SpyAnimNotifyState_Lock.h"
 #include "Character/SpyCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Util/SpyGameplayTags.h"
 #include "AbilitySystemComponent.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAnimNotifyState_Lock)
 
 void USpyAnimNotifyState_Lock::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {

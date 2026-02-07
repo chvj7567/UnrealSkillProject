@@ -12,6 +12,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Net/UnrealNetwork.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyParkourManagerComponent)
+
 USpyParkourManagerComponent::USpyParkourManagerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
