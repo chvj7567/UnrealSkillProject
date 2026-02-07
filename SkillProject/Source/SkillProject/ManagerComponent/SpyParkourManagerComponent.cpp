@@ -36,8 +36,6 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
     if (OwnerCharacter == nullptr)
         return false;
 
-    UE_LOG(LogTemp, Log, TEXT("# [Parkour] TryToggleClimbAction Name: %s, Role: %d"), *GetOwner()->GetName(), (int32)GetOwner()->GetLocalRole());
-
     ASpyPlayerState* SpyPlayerState = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
     if (SpyPlayerState == nullptr)
     {
@@ -65,15 +63,19 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
     bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
     DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
 
-    FClimbWallData WallData = FClimbWallData();
-    WallData.HitVector = Hit.Location;
-    WallData.NormalVector = Hit.ImpactNormal;
-
-    //# 서버만 실행
-    if (OwnerCharacter->HasAuthority())
+    if (bHit)
     {
+        FClimbWallData WallData = FClimbWallData();
+        WallData.HitVector = Hit.Location;
+        WallData.NormalVector = Hit.ImpactNormal;
+
         ClimbWallData = WallData;
-        OnRep_ClimbWallData();
+
+        //# 서버만 실행
+        if (OwnerCharacter->HasAuthority())
+        {
+            OnRep_ClimbWallData();
+        }
     }
 
     return bHit;
