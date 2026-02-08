@@ -5,14 +5,14 @@
 #include "CoreMinimal.h"
 #include "Ability/SKGameplayAbility_SkillMove.h"
 
-#include "SpyGA_SkillMove_Vault.generated.h"
+#include "SpyGA_SkillMove_HangUp.generated.h"
 
 UCLASS()
-class SKILLPROJECT_API USpyGA_SkillMove_Vault : public USKGameplayAbility_SkillMove
+class SKILLPROJECT_API USpyGA_SkillMove_HangUp : public USKGameplayAbility_SkillMove
 {
 	GENERATED_BODY()
-	
-protected:
+
+public:
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
@@ -25,10 +25,6 @@ protected:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
-
-protected:
-    UFUNCTION()
-    void OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData);
 
 protected:
     UPROPERTY(EditAnywhere)

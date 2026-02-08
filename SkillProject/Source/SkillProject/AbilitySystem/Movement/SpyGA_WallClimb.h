@@ -18,9 +18,6 @@ public:
     USpyGA_WallClimb();
 
 protected:
-    virtual void OnMontageCompleted() override;
-    virtual void OnMontageCancelled() override;
-
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,

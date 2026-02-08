@@ -15,25 +15,25 @@ struct FVaultData {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector VaultStartOffset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector VaultEndOffset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RayInterval;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RayIntervalReapeatCount;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float VaildDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float VaildHeight;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vault")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float VaildDepth;
 };
 
@@ -91,11 +91,14 @@ struct FClimbData {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DistanceOffset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Climb")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Speed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector HangUpStartOffset;
 };
 
 USTRUCT(BlueprintType)
@@ -103,13 +106,13 @@ struct FVaultMotionWarpingData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector StartLoc;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator StartRot;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector EndLoc;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator EndRot;
 };
 
@@ -133,13 +136,15 @@ public:
 	FORCEINLINE FClimbData GetClimbData() const { return ClimbData; }
 
 public:
+	UFUNCTION()
+	void OnRep_FreeMoveMode();
+
 	UFUNCTION(BlueprintCallable)
 	bool TryToggleClimbAction();
 
 	UFUNCTION()
 	void OnRep_ClimbWallData();
 
-public:
 	UFUNCTION(BlueprintCallable)
 	bool CanVaultAction();
 
@@ -153,6 +158,9 @@ public:
 public:
 	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
 	FSyncClilmbDataDelegate OnClimbData;
+
+	UPROPERTY(ReplicatedUsing = OnRep_FreeMoveMode)
+	bool bFreeMoveMode;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

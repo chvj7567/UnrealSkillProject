@@ -8,6 +8,8 @@
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "System/SpyPlayerController.h"
 #include "Input/SpyInputComponent.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Util/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_WallClimb)
 
@@ -15,16 +17,6 @@ USpyGA_WallClimb::USpyGA_WallClimb()
 {
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
-}
-
-void USpyGA_WallClimb::OnMontageCompleted()
-{
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-void USpyGA_WallClimb::OnMontageCancelled()
-{
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USpyGA_WallClimb::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -39,12 +31,22 @@ void USpyGA_WallClimb::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
     {
         EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
     }
-
 }
 
 void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
     EndWallClimb();
+
+    if (HasAuthority(&CurrentActivationInfo))
+    {
+        if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+        {
+            if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+            {
+                ParkourComponent->bFreeMoveMode = false;
+            }
+        }
+    }
 
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

@@ -57,6 +57,8 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_E, "Notify.Skill.Action.E");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Vault, "Skill.Move.Vault");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Climb, "Skill.Move.Climb");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_HangUp, "Skill.Move.HangUp");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Fire, "GameplayCue.Actor.Fire");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");

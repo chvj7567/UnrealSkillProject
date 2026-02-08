@@ -30,6 +30,37 @@ void USpyParkourManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimePro
 
     DOREPLIFETIME(USpyParkourManagerComponent, ClimbWallData);
     DOREPLIFETIME(USpyParkourManagerComponent, VaultMotionWarpingData);
+    DOREPLIFETIME(USpyParkourManagerComponent, bFreeMoveMode);
+}
+
+void USpyParkourManagerComponent::OnRep_FreeMoveMode()
+{
+    if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
+    {
+        if (UCharacterMovementComponent* CMC = OwnerCharacter->GetCharacterMovement())
+        {
+            if (bFreeMoveMode)
+            {
+                CMC->SetMovementMode(EMovementMode::MOVE_Flying);
+            }
+            else
+            {
+                CMC->SetMovementMode(EMovementMode::MOVE_Walking);
+            }
+        }
+
+        if (UCapsuleComponent* CC = OwnerCharacter->GetCapsuleComponent())
+        {
+            if (bFreeMoveMode)
+            {
+                CC->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
+            }
+            else
+            {
+                CC->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+            }
+        }
+    }
 }
 
 bool USpyParkourManagerComponent::TryToggleClimbAction()

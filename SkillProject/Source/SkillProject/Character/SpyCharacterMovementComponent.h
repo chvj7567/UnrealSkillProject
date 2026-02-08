@@ -26,6 +26,7 @@ public:
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
 	void StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData);
 	void EndWallClimb();
+	bool CanHangUp();
 
 	float GetInputAngleByForward();
 	float GetClosestLadderHeight(float CurrentHeight);
@@ -56,4 +57,7 @@ public:
 	float ZOffsetHR;
 	float ZOffsetFL;
 	float ZOffsetFR;
+
+private:
+	bool bHangUp;
 };

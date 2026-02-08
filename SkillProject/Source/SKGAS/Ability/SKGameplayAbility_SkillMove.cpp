@@ -76,7 +76,6 @@ void USKGameplayAbility_SkillMove::SetMoveState(bool bActive)
             if (CharacterMovementComponent)
             {
                 CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
-                CharacterMovementComponent->bIgnoreClientMovementErrorChecksAndCorrection = true;
             }
 
             if (CapsuleComponent)
@@ -89,7 +88,6 @@ void USKGameplayAbility_SkillMove::SetMoveState(bool bActive)
             if (CharacterMovementComponent)
             {
                 CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
-                CharacterMovementComponent->bIgnoreClientMovementErrorChecksAndCorrection = false;
             }
 
             if (CapsuleComponent)

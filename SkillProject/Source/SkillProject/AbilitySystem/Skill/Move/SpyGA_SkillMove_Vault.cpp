@@ -3,7 +3,7 @@
 
 #include "SpyGA_SkillMove_Vault.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
-#include "Character/SpyCharacter.h"
+#include "GameFramework/Character.h"
 #include "AbilitySystem/Task/SpyAbilityTask_MotionWarping.h"
 #include "MotionWarpingComponent.h"
 
@@ -19,7 +19,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		return;
 	}
 
-	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+	if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
 		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 		{
@@ -36,13 +36,34 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	}
 }
 
+void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	if (HasAuthority(&CurrentActivationInfo))
+	{
+		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+		{
+			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+			{
+				ParkourComponent->bFreeMoveMode = false;
+			}
+		}
+	}
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+}
+
 void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData)
 {
-	if (ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+	if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
 		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 		{
 			ParkourComponent->OnVaultMotionWarpingData.RemoveDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
+
+			if (HasAuthority(&CurrentActivationInfo))
+			{
+				ParkourComponent->bFreeMoveMode = true;
+			}
 		}
 
 		if (UMotionWarpingComponent* MotionWarpingComponent = OwnerCharacter->FindComponentByClass<UMotionWarpingComponent>())

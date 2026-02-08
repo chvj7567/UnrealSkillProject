@@ -5,12 +5,16 @@
 #include "Util/DefineEnum.h"
 #include "Character/SpyCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Util/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
 
 USpyCharacterMovementComponent::USpyCharacterMovementComponent()
 {
 	SetIsReplicatedByDefault(true);
+
+	bHangUp = false;
 }
 
 void USpyCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -60,10 +64,23 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
+	//# 벽타기 스피드 설정
 	Velocity = GetWallClimbSpeed();
 
+	//# 벽타기 진행 중 위치 계산
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentRotation(), true, Hit);
+
+	//# 한 번만 호출하도록
+	if (CanHangUp() && bHangUp == false)
+	{
+		bHangUp = true;
+
+		FGameplayEventData EventData;
+		EventData.Instigator = GetOwner();
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SpyGameplayTags::Skill_Move_HangUp, EventData);
+	}
 
 	/*CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
 	CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
@@ -77,6 +94,8 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 
 	ClimbData = InClimbData;
 	ClimbWallData = InClimbWallData;
+
+	bHangUp = false;
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
@@ -100,6 +119,28 @@ void USpyCharacterMovementComponent::EndWallClimb()
 	bOrientRotationToMovement = true;
 
 	SetMovementMode(MOVE_Walking);
+}
+
+bool USpyCharacterMovementComponent::CanHangUp()
+{
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	if (OwnerCharacter == nullptr)
+		return false;
+
+	FVector OwnerLocation = OwnerCharacter->GetActorLocation();
+	FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
+
+	UWorld* World = GetWorld();
+	FVector Start = OwnerLocation + ClimbData.HangUpStartOffset;
+	FVector End = Start + OwnerFowardVector * ClimbData.DistanceOffset;
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(OwnerCharacter);
+
+	bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
+	DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
+
+	return bHit == false;
 }
 
 float USpyCharacterMovementComponent::GetInputAngleByForward()
