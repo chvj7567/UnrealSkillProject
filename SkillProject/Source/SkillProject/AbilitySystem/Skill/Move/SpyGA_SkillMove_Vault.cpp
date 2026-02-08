@@ -51,6 +51,7 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InV
 			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);
 		}
 
+		SetMoveState(true);
 		PlayMontage();
 	}
 }

@@ -18,6 +18,7 @@
 
 USKGameplayAbility_SkillMove::USKGameplayAbility_SkillMove()
 {
+    bIsCollide = false;
 }
 
 void USKGameplayAbility_SkillMove::OnMontageCompleted()
@@ -37,6 +38,19 @@ void USKGameplayAbility_SkillMove::ActivateAbility(const FGameplayAbilitySpecHan
     CurrentSpecHandle = Handle;
     CurrentActorInfo = ActorInfo;
     CurrentActivationInfo = ActivationInfo;
+
+    if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+    {
+        CharacterMovementComponent = OwnerCharacter->GetCharacterMovement();
+        CapsuleComponent = OwnerCharacter->GetCapsuleComponent();
+    }
+}
+
+void USKGameplayAbility_SkillMove::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+    SetMoveState(false);
+
+    Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void USKGameplayAbility_SkillMove::PlayMontage()
@@ -49,6 +63,39 @@ void USKGameplayAbility_SkillMove::PlayMontage()
             MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);
             MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillMove::OnMontageCancelled);
             MontageTask->ReadyForActivation();
+        }
+    }
+}
+
+void USKGameplayAbility_SkillMove::SetMoveState(bool bActive)
+{
+    if (bIsCollide == false)
+    {
+        if (bActive)
+        {
+            if (CharacterMovementComponent)
+            {
+                CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
+                CharacterMovementComponent->bIgnoreClientMovementErrorChecksAndCorrection = true;
+            }
+
+            if (CapsuleComponent)
+            {
+                CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
+            }
+        }
+        else
+        {
+            if (CharacterMovementComponent)
+            {
+                CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
+                CharacterMovementComponent->bIgnoreClientMovementErrorChecksAndCorrection = false;
+            }
+
+            if (CapsuleComponent)
+            {
+                CapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+            }
         }
     }
 }

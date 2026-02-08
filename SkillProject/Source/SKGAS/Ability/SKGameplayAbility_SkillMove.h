@@ -28,8 +28,27 @@ protected:
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
 
+    virtual void EndAbility(
+        const FGameplayAbilitySpecHandle Handle,
+        const FGameplayAbilityActorInfo* ActorInfo,
+        const FGameplayAbilityActivationInfo ActivationInfo,
+        bool bReplicateEndAbility,
+        bool bWasCancelled) override;
+
 protected:
     UFUNCTION()
     virtual void PlayMontage();
 
+protected:
+    void SetMoveState(bool bActive);
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bIsCollide;
+
+    UPROPERTY()
+    TObjectPtr<UCharacterMovementComponent> CharacterMovementComponent;
+
+    UPROPERTY()
+    TObjectPtr<UCapsuleComponent> CapsuleComponent;
 };
