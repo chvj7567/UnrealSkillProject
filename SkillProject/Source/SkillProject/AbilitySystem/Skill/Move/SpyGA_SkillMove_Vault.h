@@ -28,7 +28,7 @@ protected:
 
 protected:
     UFUNCTION()
-    void OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData);
+    void OnSyncMotionWarpingData(FMotionWarpingData InVaultData);
 
 protected:
     UPROPERTY(EditAnywhere)

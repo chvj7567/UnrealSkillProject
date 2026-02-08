@@ -27,6 +27,10 @@ public:
         bool bWasCancelled) override;
 
 protected:
+    UFUNCTION()
+    void OnSyncMotionWarpingData(FMotionWarpingData InHangUpData);
+
+protected:
     UPROPERTY(EditAnywhere)
     FName MotionWarpingStartName;
 

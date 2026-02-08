@@ -4,7 +4,6 @@
 #include "SpyGA_SkillMove_Vault.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "GameFramework/Character.h"
-#include "AbilitySystem/Task/SpyAbilityTask_MotionWarping.h"
 #include "MotionWarpingComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_SkillMove_Vault)
@@ -52,7 +51,7 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 }
 
-void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FVaultMotionWarpingData InVaultData)
+void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultData)
 {
 	if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{

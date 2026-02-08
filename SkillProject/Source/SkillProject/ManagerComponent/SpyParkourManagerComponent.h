@@ -65,6 +65,33 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FWallData {
+
+	GENERATED_BODY()
+
+public:
+	FVector NormalVector;
+	FVector HitVector;
+	FVector LandVector;
+	float Distance;
+	float Height;
+	float Depth;
+
+	FWallData() {
+		Clear();
+	}
+
+	void Clear() {
+		NormalVector = FVector::ZeroVector;
+		HitVector = FVector::ZeroVector;
+		LandVector = FVector::ZeroVector;
+		Distance = 0.f;
+		Height = 0.f;
+		Depth = 0.f;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FClimbWallData {
 
 	GENERATED_BODY()
@@ -98,11 +125,11 @@ public:
 	float Speed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector HangUpStartOffset;
+	float CheckHangUpHeight;
 };
 
 USTRUCT(BlueprintType)
-struct FVaultMotionWarpingData
+struct FMotionWarpingData
 {
 	GENERATED_BODY()
 
@@ -116,7 +143,20 @@ struct FVaultMotionWarpingData
 	FRotator EndRot;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FVaultMotionWarpingData, InVaultData);
+USTRUCT(BlueprintType)
+struct FHangUpData {
+
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector HangUpStartOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector HangUpEndOffset;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FMotionWarpingData, InVaultData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSyncClilmbDataDelegate, const FClimbData&, InClimbData, const FClimbWallData&, InClimbWallData);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -151,30 +191,49 @@ public:
 	UFUNCTION()
 	void OnRep_VaultMotionWarpingData();
 
+	UFUNCTION()
+	void OnRep_HangUpMotionWarpingData();
+
 	void SetVaultWallData();
 
 	void SetVaultMotionWarpingData();
 
-public:
-	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
-	FSyncClilmbDataDelegate OnClimbData;
+	bool SetValidWallData(float InValidDistance, float InValidHeight, float InValidDepth, int InRayInterval, int InRayIntervalReapeatCount);
 
+	void SetHangUpMotionWarpingData(const FVector& HitVector);
+
+public: //# 공용 사용
 	UPROPERTY(ReplicatedUsing = OnRep_FreeMoveMode)
 	bool bFreeMoveMode;
 
-protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FWallData WallData;
+
+public: //# 델리게이트
+	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
+	FSyncClilmbDataDelegate OnClimbData;
+	FSyncMotionWarpingDataDelegate OnHangUpMotionWarpingData;
+
+protected: //# 벽 넘기
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVaultData VaultData;
 
 	FVaultWallData VaultWallData;
 
 	UPROPERTY(ReplicatedUsing = OnRep_VaultMotionWarpingData)
-	FVaultMotionWarpingData VaultMotionWarpingData;
+	FMotionWarpingData VaultMotionWarpingData;
 
-protected:
+protected: //# 벽 타기
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FClimbData ClimbData;
 
 	UPROPERTY(ReplicatedUsing = OnRep_ClimbWallData)
 	FClimbWallData ClimbWallData;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FHangUpData HangUpData;
+
+	UPROPERTY(ReplicatedUsing = OnRep_HangUpMotionWarpingData)
+	FMotionWarpingData HangUpMotionWarpingData;
 };

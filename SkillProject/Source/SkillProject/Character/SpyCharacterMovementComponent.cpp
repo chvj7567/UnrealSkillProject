@@ -79,6 +79,26 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 		FGameplayEventData EventData;
 		EventData.Instigator = GetOwner();
 
+		FVector OwnerLocation = GetOwner()->GetActorLocation();
+		FVector OwnerFowardVector = GetOwner()->GetActorForwardVector();
+
+		UWorld* World = GetWorld();
+		FVector Start = OwnerLocation + OwnerFowardVector * (ClimbData.DistanceOffset + 50.f) + FVector::UpVector * 200.f;
+		FVector End = Start + FVector::DownVector * 500.f;
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(GetOwner());
+
+		bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
+		DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, 
+false, 1.f, 0, -1.f);
+
+		FGameplayAbilityTargetData_LocationInfo* LocData = new FGameplayAbilityTargetData_LocationInfo();
+		LocData->TargetLocation.LiteralTransform = FTransform(HitResult.Location);
+		LocData->TargetLocation.LocationType = EGameplayAbilityTargetingLocationType::LiteralTransform;
+
+		EventData.TargetData.Add(LocData);
+
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SpyGameplayTags::Skill_Move_HangUp, EventData);
 	}
 
@@ -131,8 +151,8 @@ bool USpyCharacterMovementComponent::CanHangUp()
 	FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
 
 	UWorld* World = GetWorld();
-	FVector Start = OwnerLocation + ClimbData.HangUpStartOffset;
-	FVector End = Start + OwnerFowardVector * ClimbData.DistanceOffset;
+	FVector Start = OwnerLocation + (FVector::UpVector * ClimbData.CheckHangUpHeight);
+	FVector End = Start + OwnerFowardVector * (ClimbData.DistanceOffset + 100.f);
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(OwnerCharacter);
