@@ -4,6 +4,7 @@
 
 #include "UObject/ConstructorHelpers.h"
 #include "System/SpyPlayerState.h"
+#include "System/SpyGameState.h"
 #include "Character/SpyCharacter.h"
 #include "Manager/SpyAssetManager.h"
 #include "Character/SpyPawnExtensionComponent.h"
@@ -76,6 +77,7 @@ void ASpyGameMode::HandleGameStartInitialization()
 	DefaultPawnClass = USpyAssetManager::GetSubclassByName<APawn>(TEXT("SpyCharacter"));
 	PlayerControllerClass = USpyAssetManager::GetSubclassByName<APlayerController>(TEXT("SpyPlayerController"));
 	PlayerStateClass = ASpyPlayerState::StaticClass();
+	GameStateClass = ASpyGameState::StaticClass();
 }
 
 const USpyCharacterAssetData* ASpyGameMode::GetCharacterDataForController(const AController* InController) const

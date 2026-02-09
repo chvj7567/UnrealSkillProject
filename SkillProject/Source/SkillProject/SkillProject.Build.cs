@@ -31,6 +31,7 @@ public class SkillProject : ModuleRules
             "ModularGameplayActors",
             "MotionWarping",
             "SKGAS",
+            "AIModule",
         });
     }
 }

@@ -18,7 +18,7 @@ class ASpyGameMode : public AModularGameModeBase
 public:
 	ASpyGameMode();
 
-protected:
+public:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void GenericPlayerInitialization(AController* NewPlayer) override;
 	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
