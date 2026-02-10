@@ -6,7 +6,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameState)
 
-ASpyGameState::ASpyGameState()
+ASpyGameState::ASpyGameState(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
 {
 	BotSpawnerComponent = CreateDefaultSubobject<USpySpawnBotManagerComponent>(TEXT("SpySpawnBotManagerComponent"));
 }

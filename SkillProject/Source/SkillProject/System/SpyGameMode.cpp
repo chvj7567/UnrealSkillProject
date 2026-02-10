@@ -77,7 +77,7 @@ void ASpyGameMode::HandleGameStartInitialization()
 	DefaultPawnClass = USpyAssetManager::GetSubclassByName<APawn>(TEXT("SpyCharacter"));
 	PlayerControllerClass = USpyAssetManager::GetSubclassByName<APlayerController>(TEXT("SpyPlayerController"));
 	PlayerStateClass = ASpyPlayerState::StaticClass();
-	GameStateClass = ASpyGameState::StaticClass();
+	GameStateClass = USpyAssetManager::GetSubclassByName<ASpyGameState>(TEXT("SpyGameState"));
 }
 
 const USpyCharacterAssetData* ASpyGameMode::GetCharacterDataForController(const AController* InController) const
