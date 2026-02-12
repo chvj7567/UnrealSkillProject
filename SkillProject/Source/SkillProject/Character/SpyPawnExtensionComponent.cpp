@@ -320,10 +320,10 @@ void USpyPawnExtensionComponent::OnAbilitySystemUninitialized_Register(FSimpleMu
 
 void USpyPawnExtensionComponent::HandleExtensionEvent(AActor* OwnerActor, FName EventName)
 {
-	UE_LOG(LogTemp, Log, TEXT("%s GameActorReady received by %s"), *EventName.ToString(), *GetName());
+	UE_LOG(LogTemp, Log, TEXT("# [PawnExtension] %s received by %s"), *EventName.ToString(), *GetName());
 }
 
 void USpyPawnExtensionComponent::OnRep_CharacterAssetData()
 {
-	UE_LOG(LogTemp, Log, TEXT("PawnExtension: OnRep_CharacterAssetData"));
+	UE_LOG(LogTemp, Log, TEXT("# [PawnExtension] OnRep_CharacterAssetData"));
 }
