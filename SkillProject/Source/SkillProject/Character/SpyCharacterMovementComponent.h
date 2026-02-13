@@ -30,7 +30,7 @@ public:
 
 	float GetInputAngleByForward();
 	float GetClosestLadderHeight(float CurrentHeight);
-	float CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime);
+	FVector CalculateBoneVectorOffset(FName BoneName, FName CurveName, FVector& CurrentOffsetVar, float DeltaTime);
 
 	FVector GetWallClimbSpeed();
 	void SetWallClimbInput(FVector2D InputVector);
@@ -53,10 +53,10 @@ protected:
 
 public:
 	//# 이전 프레임의 IK 도달 지점을 저장 (떨림 방지용 보간 타겟)
-	float ZOffsetHL;
-	float ZOffsetHR;
-	float ZOffsetFL;
-	float ZOffsetFR;
+	FVector CurrentOffsetHL;
+	FVector CurrentOffsetHR;
+	FVector CurrentOffsetFL;
+	FVector CurrentOffsetFR;
 
 private:
 	bool bHangUp;

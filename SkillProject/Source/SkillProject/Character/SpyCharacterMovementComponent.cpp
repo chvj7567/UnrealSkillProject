@@ -102,10 +102,8 @@ false, 1.f, 0, -1.f);
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SpyGameplayTags::Skill_Move_HangUp, EventData);
 	}
 
-	/*CalculateBoneOffset(TEXT("hand_l"), ZOffsetHL, DeltaTime);
-	CalculateBoneOffset(TEXT("hand_r"), ZOffsetHR, DeltaTime);
-	CalculateBoneOffset(TEXT("foot_l"), ZOffsetFL, DeltaTime);
-	CalculateBoneOffset(TEXT("foot_r"), ZOffsetFR, DeltaTime);*/
+	CalculateBoneVectorOffset(TEXT("hand_l"), TEXT("Hand_L_IK_Weight"), CurrentOffsetHL, DeltaTime);
+	CalculateBoneVectorOffset(TEXT("hand_r"), TEXT("Hand_R_IK_Weight"), CurrentOffsetHR, DeltaTime);
 }
 
 void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
@@ -193,17 +191,29 @@ float USpyCharacterMovementComponent::GetClosestLadderHeight(float CurrentHeight
 	return ClosestValue;
 }
 
-float USpyCharacterMovementComponent::CalculateBoneOffset(FName BoneName, float& CurrentOffsetVar, float DeltaTime)
+FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName, FName CurveName, FVector& CurrentOffsetVar, float DeltaTime)
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (OwnerCharacter == nullptr)
-		return 0.f;
+		return FVector::ZeroVector;
 
-	FVector AnimBoneLocation = OwnerCharacter->GetMesh()->GetSocketLocation(BoneName);
-	float TargetZ = GetClosestLadderHeight(AnimBoneLocation.Z);
-	float RawOffset = TargetZ - AnimBoneLocation.Z;
+	USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
+	if (Mesh == nullptr)
+		return FVector::ZeroVector;
 
-	CurrentOffsetVar = FMath::FInterpTo(CurrentOffsetVar, RawOffset, DeltaTime, InterpSpeed);
+	UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
+	if (AnimInstance == nullptr)
+		return FVector::ZeroVector;
+
+	float IKWeight = AnimInstance->GetCurveValue(CurveName);
+	FVector AnimBoneLocation = Mesh->GetSocketLocation(BoneName);
+
+	FVector TargetWorldLocation = FVector(ClimbWallData.HitVector.X - 10.f, AnimBoneLocation.Y, AnimBoneLocation.Z);
+	FVector TargetWorldOffset = (TargetWorldLocation - AnimBoneLocation) * IKWeight;
+
+	FVector TargetMeshOffset = Mesh->GetComponentTransform().InverseTransformVectorNoScale(TargetWorldOffset);
+
+	CurrentOffsetVar = FMath::VInterpTo(CurrentOffsetVar, TargetMeshOffset, DeltaTime, InterpSpeed);
 
 	return CurrentOffsetVar;
 }

@@ -68,10 +68,10 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
                 GroundSpeed = 0.0f;
                 Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
 
-                ZOffset_HL = PlayerMovementComponent->ZOffsetHL;
-                ZOffset_HR = PlayerMovementComponent->ZOffsetHR;
-                ZOffset_FL = PlayerMovementComponent->ZOffsetFL;
-                ZOffset_FR = PlayerMovementComponent->ZOffsetFR;
+                CurrentOffsetHL = PlayerMovementComponent->CurrentOffsetHL;
+                CurrentOffsetHR = PlayerMovementComponent->CurrentOffsetHR;
+                CurrentOffsetFL = PlayerMovementComponent->CurrentOffsetFL;
+                CurrentOffsetFR = PlayerMovementComponent->CurrentOffsetFR;
             }
             else
             {
@@ -79,12 +79,14 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
                 GroundSpeed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2));
                 Speed = FMath::Sqrt(FMath::Pow(Velocity.X, 2) + FMath::Pow(Velocity.Y, 2) + FMath::Pow(Velocity.Z, 2));
 
-                ZOffset_HL = 0.f;
-                ZOffset_HR = 0.f;
-                ZOffset_FL = 0.f;
-                ZOffset_FR = 0.f;
+                CurrentOffsetHL = FVector::Zero();
+                CurrentOffsetHR = FVector::Zero();
+                CurrentOffsetFL = FVector::Zero();
+                CurrentOffsetFR = FVector::Zero();
             }
         }
+
+        UE_LOG(LogTemp, Warning, TEXT("# CurrentOffsetHL X: %f Y: %f, Z: %f"), CurrentOffsetHL.X, CurrentOffsetHL.Y, CurrentOffsetHL.Z);
     }
 
     //# Set ShouldMove

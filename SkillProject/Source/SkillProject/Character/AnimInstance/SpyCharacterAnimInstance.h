@@ -62,14 +62,14 @@ protected:
 	float InputAngle;
 
 	UPROPERTY(BlueprintReadOnly)
-	float ZOffset_HL;
+	FVector CurrentOffsetHL;
 
 	UPROPERTY(BlueprintReadOnly)
-	float ZOffset_HR;
+	FVector CurrentOffsetHR;
 
 	UPROPERTY(BlueprintReadOnly)
-	float ZOffset_FL;
+	FVector CurrentOffsetFL;
 
 	UPROPERTY(BlueprintReadOnly)
-	float ZOffset_FR;
+	FVector CurrentOffsetFR;
 };

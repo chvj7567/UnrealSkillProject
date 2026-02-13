@@ -100,7 +100,7 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
         if (OwnerCharacter->HasAuthority())
         {
             FClimbWallData newWallData = FClimbWallData();
-            newWallData.HitVector = Hit.Location;
+            newWallData.HitVector = Hit.ImpactPoint;
             newWallData.NormalVector = Hit.ImpactNormal;
 
             ClimbWallData = newWallData;
