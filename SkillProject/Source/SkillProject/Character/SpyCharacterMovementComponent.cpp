@@ -210,9 +210,16 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	float IKWeight = AnimInstance->GetCurveValue(CurveName);
 	FVector AnimBoneLocation = Mesh->GetSocketLocation(BoneName);
 
-	FVector TargetWorldLocation = FVector(ClimbWallData.HitVector.X + ClimbWallData.NormalVector.X * Offset, AnimBoneLocation.Y, AnimBoneLocation.Z);
-	FVector TargetWorldOffset = (TargetWorldLocation - AnimBoneLocation) * IKWeight;
+	FVector WallPoint = ClimbWallData.HitVector;
+	FVector WallNormal = ClimbWallData.NormalVector.GetSafeNormal();
 
+	//# 벽 평면까지의 거리 계산
+	float DistanceFromPlane = FVector::DotProduct(AnimBoneLocation - WallPoint, WallNormal);
+
+	//# 목표 오프셋 (벽 법선 기준으로 이동)
+	FVector TargetWorldOffset = (-WallNormal * (DistanceFromPlane - Offset)) * IKWeight;
+
+	//# 월드 -> 메쉬 공간으로 좌표 변환
 	FVector TargetMeshOffset = Mesh->GetComponentTransform().InverseTransformVectorNoScale(TargetWorldOffset);
 
 	CurrentOffsetVar = FMath::VInterpTo(CurrentOffsetVar, TargetMeshOffset, DeltaTime, InterpSpeed);
