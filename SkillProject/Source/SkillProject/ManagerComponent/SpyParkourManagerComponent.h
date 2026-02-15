@@ -122,6 +122,12 @@ public:
 	float DistanceOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HandOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float FootOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Speed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -30,7 +30,7 @@ public:
 
 	float GetInputAngleByForward();
 	float GetClosestLadderHeight(float CurrentHeight);
-	FVector CalculateBoneVectorOffset(FName BoneName, FName CurveName, FVector& CurrentOffsetVar, float DeltaTime);
+	FVector CalculateBoneVectorOffset(FName BoneName, FName CurveName, FVector& CurrentOffsetVar, float DeltaTime, float Offset);
 
 	FVector GetWallClimbSpeed();
 	void SetWallClimbInput(FVector2D InputVector);
