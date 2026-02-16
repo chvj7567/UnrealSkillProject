@@ -34,6 +34,9 @@ protected:
 	TSubclassOf<AAIController> BotControllerClass;
 
 	UPROPERTY(EditAnywhere)
+	TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
+
+	UPROPERTY(EditAnywhere)
 	FString BotNamePrefix = TEXT("Bot_");
 
 	UPROPERTY()

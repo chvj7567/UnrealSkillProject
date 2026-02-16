@@ -4,6 +4,7 @@
 #include "ManagerComponent/SpySpawnBotManagerComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "System/SpyAIController.h"
 #include "System/SpyGameMode.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpySpawnBotManagerComponent)
@@ -48,6 +49,11 @@ void USpySpawnBotManagerComponent::SpawnOneBot()
 			if (APlayerState* PS = NewController->GetPlayerState<APlayerState>())
 			{
 				PS->SetPlayerName(CreateBotName(PS->GetPlayerId()));
+			}
+
+			if (ASpyAIController* SpyAIController = Cast<ASpyAIController>(NewController))
+			{
+				SpyAIController->SetBehaviorTree(BehaviorTreeAsset);
 			}
 
 			//# 봇도 기본적인 컨트롤러 초기화 프로세스

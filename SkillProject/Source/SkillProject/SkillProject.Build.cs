@@ -32,6 +32,7 @@ public class SkillProject : ModuleRules
             "MotionWarping",
             "SKGAS",
             "AIModule",
+            "NavigationSystem",
         });
     }
 }

@@ -20,18 +20,24 @@ public:
 	virtual void InitPlayerState() override;
 	virtual void CleanupPlayerState() override;
 	virtual void OnRep_PlayerState() override;
+	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	//~End of AController interface
 
+public:
+	void SetBehaviorTree(UBehaviorTree* InBehaviorTreeAsset);
+
 protected:
 	void BroadcastOnPlayerStateChanged();
-
+	
 	virtual void OnPlayerStateChanged();
 
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
 
 private:
-	// 이전 PlayerState를 기억하여 변경 사항을 추적함
 	UPROPERTY()
 	TObjectPtr<APlayerState> LastSeenPlayerState;
+
+	UPROPERTY()
+	TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
 };

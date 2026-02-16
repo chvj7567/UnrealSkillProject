@@ -2,6 +2,7 @@
 
 
 #include "System/SpyAIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "SKAbilitySystemGlobals.h"
 #include "GameFramework/PlayerState.h"
@@ -35,6 +36,21 @@ void ASpyAIController::OnRep_PlayerState()
 	//# 클라이언트 측 초기화
 	Super::OnRep_PlayerState();
 	BroadcastOnPlayerStateChanged();
+}
+
+void ASpyAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (BehaviorTreeAsset)
+	{
+		RunBehaviorTree(BehaviorTreeAsset);
+	}
+}
+
+void ASpyAIController::SetBehaviorTree(UBehaviorTree* InBehaviorTreeAsset)
+{
+	BehaviorTreeAsset = InBehaviorTreeAsset;
 }
 
 void ASpyAIController::BroadcastOnPlayerStateChanged()
