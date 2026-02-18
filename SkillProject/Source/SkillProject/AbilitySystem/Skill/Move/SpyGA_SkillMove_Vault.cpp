@@ -5,6 +5,7 @@
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "GameFramework/Character.h"
 #include "MotionWarpingComponent.h"
+#include "Perception/AISense_Hearing.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_SkillMove_Vault)
 
@@ -33,6 +34,18 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 			}
 		}
 	}
+
+	AActor* Avatar = ActorInfo->AvatarActor.Get();
+	if (!Avatar) return;
+
+	UAISense_Hearing::ReportNoiseEvent(
+		Avatar->GetWorld(),
+		Avatar->GetActorLocation(),
+		2.0f,          // 공격은 큰 소리
+		Avatar,
+		0.f,
+		FName("AttackNoise")
+	);
 }
 
 void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

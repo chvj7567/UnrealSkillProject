@@ -94,7 +94,7 @@ void USpySpawnBotManagerComponent::RemoveOneBot()
 void USpySpawnBotManagerComponent::ServerCreateBots_Implementation()
 {
 	// 여기에 실제 봇 스폰 로직을 작성합니다.
-	for (int32 i = 0; i < 2; ++i)
+	for (int32 i = 0; i < 1; ++i)
 	{
 		SpawnOneBot();
 	}

@@ -4,9 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "ModularAIController.h"
+#include "Perception/AIPerceptionTypes.h"
+
 #include "SpyAIController.generated.h"
 
 class USpyAbilitySystemComponent;
+class UAISenseConfig_Sight;
+class UAISenseConfig_Hearing;
+class UAISenseConfig_Damage;
 
 UCLASS()
 class SKILLPROJECT_API ASpyAIController : public AModularAIController
@@ -16,6 +21,9 @@ class SKILLPROJECT_API ASpyAIController : public AModularAIController
 public:
 	ASpyAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+	virtual void Tick(float DeltaSeconds) override;
+
+public:
 	//~AController interface
 	virtual void InitPlayerState() override;
 	virtual void CleanupPlayerState() override;
@@ -33,6 +41,22 @@ protected:
 	virtual void OnPlayerStateChanged();
 
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
+
+protected:
+	UPROPERTY(VisibleAnywhere)
+	UAIPerceptionComponent* AIPerceptionComponent;
+
+	UPROPERTY()
+	UAISenseConfig_Sight* SightConfig;
+
+	UPROPERTY()
+	UAISenseConfig_Hearing* HearingConfig;
+
+	UPROPERTY()
+	UAISenseConfig_Damage* DamageConfig;
+
+	UFUNCTION()
+	void OnTargetDetected(AActor* Actor, FAIStimulus Stimulus);
 
 private:
 	UPROPERTY()
