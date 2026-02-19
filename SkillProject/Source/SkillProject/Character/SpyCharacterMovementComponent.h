@@ -29,7 +29,6 @@ public:
 	bool CanHangUp();
 
 	float GetInputAngleByForward();
-	float GetClosestLadderHeight(float CurrentHeight);
 	FVector CalculateBoneVectorOffset(FName BoneName, FName CurveName, FVector& CurrentOffsetVar, float DeltaTime, float Offset);
 
 	FVector GetWallClimbSpeed();

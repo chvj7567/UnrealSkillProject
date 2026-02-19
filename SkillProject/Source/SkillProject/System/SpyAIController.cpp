@@ -55,74 +55,30 @@ void ASpyAIController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	APawn* ControlledPawn = GetPawn();
-	if (!ControlledPawn) return;
+	if (ControlledPawn == nullptr)
+		return;
 
 	FVector Location = ControlledPawn->GetActorLocation();
 	FVector Forward = ControlledPawn->GetActorForwardVector();
 
 	if (SightConfig)
 	{
-		// Sight Radius
-		DrawDebugSphere(
-			GetWorld(),
-			Location,
-			SightConfig->SightRadius,
-			32,
-			FColor::Green,
-			false,     // ? persistent 아님
-			0.f,
-			0,
-			1.5f
-		);
+		//# 시각 범위
+		DrawDebugSphere(GetWorld(), Location, SightConfig->SightRadius, 32, FColor::Green, false, 0.f, 0, 1.5f);
 
-		// Lose Sight Radius
-		DrawDebugSphere(
-			GetWorld(),
-			Location,
-			SightConfig->LoseSightRadius,
-			32,
-			FColor::Yellow,
-			false,
-			0.f,
-			0,
-			1.f
-		);
+		//# 시야에 타겟이 보이고 나서 어그로 없어지는 시야 범위
+		DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
 
-		// 시야각 콘
-		float HalfAngleRad =
-			FMath::DegreesToRadians(
-				SightConfig->PeripheralVisionAngleDegrees * 0.5f
-			);
+		//# 시야각
+		float HalfAngleRad = FMath::DegreesToRadians(SightConfig->PeripheralVisionAngleDegrees * 0.5f);
 
-		DrawDebugCone(
-			GetWorld(),
-			Location,
-			Forward,
-			SightConfig->SightRadius,
-			HalfAngleRad,
-			HalfAngleRad,
-			32,
-			FColor::Green,
-			false,
-			0.f,
-			0,
-			1.2f
-		);
+		DrawDebugCone(GetWorld(), Location, Forward, SightConfig->SightRadius, HalfAngleRad, HalfAngleRad, 32, FColor::Green, false, 0.f, 0, 1.2f);
 	}
 
 	if (HearingConfig)
 	{
-		DrawDebugSphere(
-			GetWorld(),
-			Location,
-			HearingConfig->HearingRange,
-			32,
-			FColor::Blue,
-			false,
-			0.f,
-			0,
-			1.5f
-		);
+		//# 청각 범위
+		DrawDebugSphere(GetWorld(), Location, HearingConfig->HearingRange, 32, FColor::Blue, false, 0.f, 0, 1.5f );
 	}
 }
 
@@ -188,7 +144,7 @@ void ASpyAIController::BroadcastOnPlayerStateChanged()
 
 void ASpyAIController::OnPlayerStateChanged()
 {
-	// 하위 클래스에서 활용할 수 있도록 비워둠
+	
 }
 
 void ASpyAIController::OnUnPossess()
@@ -215,24 +171,34 @@ USpyAbilitySystemComponent* ASpyAIController::GetSpyAbilitySystemComponent() con
 
 void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 {
-	if (!GetBlackboardComponent()) return;
+	UBlackboardComponent* BlackboardComp = GetBlackboardComponent();
+	if (BlackboardComp == nullptr)
+		return;
 
 	const FName SenseName = Stimulus.Type.Name;
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("# Detected %s by %s"),
-			*Actor->GetName(),
-			*SenseName.ToString());
-
-		GetBlackboardComponent()->SetValueAsObject("TargetActor", Actor);
+		//# 시각 감지
+		if (SenseName.ToString().Contains(TEXT("Sight")))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Detected %s"), *Actor->GetName());
+			BlackboardComp->SetValueAsObject("TargetActor", Actor);
+			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+		}
+		//# 청각 감지
+		else if (SenseName.ToString().Contains(TEXT("Hearing")))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Hearing: Sensed sound at %s"), *Stimulus.StimulusLocation.ToString());
+			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("# Lost %s by %s"),
-			*Actor->GetName(),
-			*SenseName.ToString());
-
-		GetBlackboardComponent()->ClearValue("TargetActor");
+		//# 감지되지 않았을 때
+		if (SenseName.ToString().Contains(TEXT("Sight")))
+		{
+			BlackboardComp->ClearValue("TargetActor");
+		}
 	}
 }

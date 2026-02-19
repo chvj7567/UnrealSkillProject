@@ -169,30 +169,6 @@ float USpyCharacterMovementComponent::GetInputAngleByForward()
 	return Angle;
 }
 
-float USpyCharacterMovementComponent::GetClosestLadderHeight(float CurrentHeight)
-{
-	//# Temp
-	TArray<float> Ladder = { 100, 150, 200, 250, 300, 350, 400, 450, 500 };
-
-	if (Ladder.Num() == 0) return 0.0f;
-
-	float ClosestValue = Ladder[0];
-	float MinDiff = FMath::Abs(CurrentHeight - Ladder[0]);
-
-	for (int32 i = 1; i < Ladder.Num(); i++)
-	{
-		float CurrentDiff = FMath::Abs(CurrentHeight - Ladder[i]);
-
-		if (CurrentDiff < MinDiff)
-		{
-			MinDiff = CurrentDiff;
-			ClosestValue = Ladder[i];
-		}
-	}
-
-	return ClosestValue;
-}
-
 FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName, FName CurveName, FVector& CurrentOffsetVar, float DeltaTime, float Offset)
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());

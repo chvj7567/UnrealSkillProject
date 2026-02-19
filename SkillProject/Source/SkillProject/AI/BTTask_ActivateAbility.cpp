@@ -36,6 +36,7 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
     FGameplayTagContainer TagContainer;
     TagContainer.AddTag(AbilityTag);
 
+    //# 태그를 통해 GA 실행
     bool bActivated = ASC->TryActivateAbilitiesByTag(TagContainer);
 
     return bActivated ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
