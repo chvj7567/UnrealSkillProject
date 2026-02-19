@@ -4,11 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
+
 #include "BTTask_ActivateAbility.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SKILLPROJECT_API UBTTask_ActivateAbility : public UBTTaskNode
 {

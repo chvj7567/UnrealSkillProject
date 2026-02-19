@@ -7,6 +7,8 @@
 #include "NavigationSystem.h"
 #include "GameFramework/Pawn.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_FindRandomPos)
+
 UBTTask_FindRandomPos::UBTTask_FindRandomPos()
 {
     NodeName = "Find Random Position";

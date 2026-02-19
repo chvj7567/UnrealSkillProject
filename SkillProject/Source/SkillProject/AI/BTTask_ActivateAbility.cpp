@@ -7,6 +7,8 @@
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemComponent.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_ActivateAbility)
+
 UBTTask_ActivateAbility::UBTTask_ActivateAbility()
 {
     NodeName = "Activate Ability";
@@ -35,6 +37,18 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
 
     FGameplayTagContainer TagContainer;
     TagContainer.AddTag(AbilityTag);
+
+    TArray<FGameplayAbilitySpec*> ActiveAbilities;
+    ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, ActiveAbilities);
+
+    //# GA 실행 중이면 중복 실행하지 않고 성공 처리
+    for (const FGameplayAbilitySpec* Spec : ActiveAbilities)
+    {
+        if (Spec->IsActive())
+        {
+            return EBTNodeResult::Succeeded;
+        }
+    }
 
     //# 태그를 통해 GA 실행
     bool bActivated = ASC->TryActivateAbilitiesByTag(TagContainer);
