@@ -1,9 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Cue/SKCueNotify_Static.h"
+#include "SKCueNotify_Static.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "SKGameplayEffectContext.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SKCueNotify_Static)
 
 USKCueNotify_Static::USKCueNotify_Static()
 {
@@ -20,13 +23,18 @@ bool USKCueNotify_Static::OnExecute_Implementation(AActor* MyTarget, const FGame
 	if (IsRunningDedicatedServer())
 		return true;
 
-	if (AnimMontage)
-	{
-		if (UAnimInstance* AnimInstance = TargetCharacter->GetMesh()->GetAnimInstance())
-		{
-			AnimInstance->Montage_Play(AnimMontage, 1.0f);
-		}
-	}
+    UParticleSystem* Particle = nullptr;
+    if (FSKGameplayEffectContext* Context = FSKGameplayEffectContext::ExtractEffectContext(Parameters.EffectContext))
+    {
+        if (Context->IsCritical())
+        {
+            Particle = CriticalParticle;
+        }
+        else
+        {
+            Particle = NormalParticle;
+        }
+    }
 
 	if (Particle)
 	{

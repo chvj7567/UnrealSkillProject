@@ -38,10 +38,6 @@ public:
     EPlayerConnectionType GetPlayerConnectionType() { return PlayerConnectionType; }
 
 public:
-    UFUNCTION(NetMulticast, Reliable)
-    void Multicast_Death();
-
-public:
     //# AActor interface
     virtual void PreInitializeComponents() override;
     virtual void PostInitializeComponents() override;

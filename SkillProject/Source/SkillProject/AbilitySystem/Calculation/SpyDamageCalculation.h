@@ -4,11 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Calculation/SKBaseMagnitudeCalculation.h"
+
 #include "SpyDamageCalculation.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class SKILLPROJECT_API USpyDamageCalculation : public USKBaseMagnitudeCalculation
 {

@@ -20,8 +20,8 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> AnimMontage;
+	TObjectPtr<UParticleSystem> NormalParticle;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UParticleSystem> Particle;
+	TObjectPtr<UParticleSystem> CriticalParticle;
 };

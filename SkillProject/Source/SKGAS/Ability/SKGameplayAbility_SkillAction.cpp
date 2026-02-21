@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Ability/SKGameplayAbility_SkillAction.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "SKGameplayAbility_SkillAction.h"
+
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "AbilitySystemGlobals.h"
@@ -13,6 +13,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
 #include "Engine/OverlapResult.h"
+#include "SKGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility_SkillAction)
 
@@ -51,8 +52,10 @@ void USKGameplayAbility_SkillAction::OnWaitGameplayEvent(FGameplayEventData Payl
     if (CustomContext == nullptr)
         return;
 
+    //# Context에 정보 추가
     CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
     CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
+    CustomContext->SetHitDirectionTag(Payload.TargetTags.First());
 
     FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContext);
     if (SpecHandle.IsValid())
@@ -78,10 +81,6 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
         return;
     }
 
-    CurrentSpecHandle = Handle;
-    CurrentActorInfo = ActorInfo;
-    CurrentActivationInfo = ActivationInfo;
-
     if (HasAuthority(&CurrentActivationInfo))
     {
         if (UAbilityTask_WaitGameplayEvent* WaitEffectSkillTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, WaitEffectSkillTag, nullptr, false, false))
@@ -92,17 +91,6 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
 
         //# 서버에서 Hit 검사
         ScheduleServerDetect();
-    }
-
-    if (AbilityMontage)
-    {
-        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
-        {
-            MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
-            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
-            MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
-            MontageTask->ReadyForActivation();
-        }
     }
 }
 
@@ -200,11 +188,11 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                 bInvalidCharacter = true;
 
                 FGameplayEventData Payload;
-                Payload.EventTag = EffectSkillActionTag;
                 Payload.Instigator = OwnerCharacter;
                 Payload.Target = TargetCharacter;
+                Payload.TargetTags.AddTag(SKGameplayTags::Skill_Hit_Front);
 
-                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, Payload.EventTag, Payload);
+                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
             }
         }
     }
@@ -267,11 +255,11 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                 bInvalidCharacter = true;
 
                 FGameplayEventData Payload;
-                Payload.EventTag = EffectSkillActionTag;
                 Payload.Instigator = OwnerCharacter;
                 Payload.Target = TargetCharacter;
+                Payload.TargetTags.AddTag(SKGameplayTags::Skill_Hit_Front);
 
-                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, Payload.EventTag, Payload);
+                UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
             }
         }
     }

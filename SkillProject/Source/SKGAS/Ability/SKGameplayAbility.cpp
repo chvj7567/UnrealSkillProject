@@ -3,43 +3,69 @@
 #include "Ability/SKGameplayAbility.h"
 #include "SKAbilitySourceInterface.h"
 #include "SKGameplayEffectContext.h"
+#include "SKAbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility)
 
 void USKGameplayAbility::OnMontageCompleted()
 {
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility OnMontageCompleted"));
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USKGameplayAbility::OnMontageCancelled()
 {
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility OnMontageCancelled"));
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USKGameplayAbility::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility OnWaitGameplayEvent"));
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USKGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility ActivateAbility called"));
+    CurrentSpecHandle = Handle;
+    CurrentActorInfo = ActorInfo;
+    CurrentActivationInfo = ActivationInfo;
+
+    if (FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("# [SKGameplayAbility] ActivateAbility %s"), *Spec->Ability->AbilityTags.ToString());
+    }
+
+    if (AbilityMontage)
+    {
+        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
+        {
+            MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility::OnMontageCompleted);
+            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility::OnMontageCancelled);
+            MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility::OnMontageCancelled);
+            MontageTask->ReadyForActivation();
+        }
+    }
 }
 
 void USKGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
     Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility CancelAbility called"));
+    if (FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("# [SKGameplayAbility] CancelAbility %s"), *Spec->Ability->AbilityTags.ToString());
+    }
 }
 
 bool USKGameplayAbility::CommitAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, OUT FGameplayTagContainer* OptionalRelevantTags)
 {
     bool bResult = Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
 
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility CommitAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
+    if (FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("# [SKGameplayAbility] CommitAbility %s"), *Spec->Ability->AbilityTags.ToString());
+    }
 
     return bResult;
 }
@@ -48,14 +74,20 @@ void USKGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 {
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility EndAbility called, WasCancelled: %s"), bWasCancelled ? TEXT("true") : TEXT("false"));
+    if (FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("# [SKGameplayAbility] EndAbility %s"), *Spec->Ability->AbilityTags.ToString());
+    }
 }
 
 bool USKGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
     bool bResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility CanActivateAbility called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
+    if (FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("# [SKGameplayAbility] CanActivateAbility %s"), *Spec->Ability->AbilityTags.ToString());
+    }
 
     return bResult;
 }
@@ -64,23 +96,17 @@ bool USKGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, cons
 {
     bool bResult = Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags);
 
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility CheckCost called, returning: %s"), bResult ? TEXT("true") : TEXT("false"));
-
     return bResult;
 }
 
 void USKGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
 {
     Super::ApplyCost(Handle, ActorInfo, ActivationInfo);
-
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility ApplyCost called"));
 }
 
 const FGameplayTagContainer* USKGameplayAbility::GetCooldownTags() const
 {
     const FGameplayTagContainer* Result = Super::GetCooldownTags();
-
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility GetCooldownTags called"));
 
     return Result;
 }
@@ -88,22 +114,16 @@ const FGameplayTagContainer* USKGameplayAbility::GetCooldownTags() const
 void USKGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
     Super::OnGiveAbility(ActorInfo, Spec);
-
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility OnGiveAbility called"));
 }
 
 void USKGameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
     Super::OnRemoveAbility(ActorInfo, Spec);
-
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility OnRemoveAbility called"));
 }
 
 FGameplayEffectContextHandle USKGameplayAbility::MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const
 {
     FGameplayEffectContextHandle ContextHandle = Super::MakeEffectContext(Handle, ActorInfo);
-
-    //UE_LOG(LogTemp, Warning, TEXT("USKGameplayAbility MakeEffectContext called"));
 
     FSKGameplayEffectContext* EffectContext = FSKGameplayEffectContext::ExtractEffectContext(ContextHandle);
     check(EffectContext);

@@ -21,9 +21,16 @@ FSKGameplayEffectContext* FSKGameplayEffectContext::ExtractEffectContext(struct 
 
 bool FSKGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 {
-	FGameplayEffectContext::NetSerialize(Ar, Map, bOutSuccess);
+	//# 부모 클래스 직렬화
+	bool bResult = Super::NetSerialize(Ar, Map, bOutSuccess);
 
-	return true;
+	//# GameplayTag 직렬화
+	HitDirectionTag.NetSerialize(Ar, Map, bOutSuccess);
+
+	//# 일반 변수 직렬화
+	Ar << bIsCritical;
+
+	return bResult;
 }
 
 void FSKGameplayEffectContext::SetAbilitySource(ISKAbilitySourceInterface* InObject, float InAbilityLevel)

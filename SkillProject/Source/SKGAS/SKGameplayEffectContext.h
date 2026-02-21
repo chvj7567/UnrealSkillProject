@@ -5,16 +5,18 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "GameplayEffectTypes.h"
+#include "GameplayTagContainer.h"
 
 #include "SKGameplayEffectContext.generated.h"
 
 class ISKAbilitySourceInterface;
 
 USTRUCT()
-struct FSKGameplayEffectContext : public FGameplayEffectContext
+struct SKGAS_API FSKGameplayEffectContext : public FGameplayEffectContext
 {
 	GENERATED_BODY()
 
+public:
 	FSKGameplayEffectContext()
 		: FGameplayEffectContext()
 	{
@@ -37,7 +39,6 @@ struct FSKGameplayEffectContext : public FGameplayEffectContext
 		*NewContext = *this;
 		if (GetHitResult())
 		{
-			// Does a deep copy of the hit result
 			NewContext->AddHitResult(*GetHitResult(), true);
 		}
 		return NewContext;
@@ -51,6 +52,19 @@ struct FSKGameplayEffectContext : public FGameplayEffectContext
 	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) override;
 
 	const UPhysicalMaterial* GetPhysicalMaterial() const;
+
+	void SetHitDirectionTag(FGameplayTag InTag) { HitDirectionTag = InTag; }
+	FGameplayTag GetHitDirectionTag() const { return HitDirectionTag; }
+
+	void SetIsCritical(bool bInIsCritical) { bIsCritical = bInIsCritical; }
+	bool IsCritical() const { return bIsCritical; }
+
+protected:
+	UPROPERTY()
+	FGameplayTag HitDirectionTag;
+
+	UPROPERTY()
+	bool bIsCritical;
 };
 
 template<>

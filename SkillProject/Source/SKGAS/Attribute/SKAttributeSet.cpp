@@ -4,6 +4,9 @@
 #include "Attribute/SKAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "SKAbilitySystemComponent.h"
+#include "SKGameplayEffectContext.h"
+#include "GameplayEffectExtension.h"
+#include "SKGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKAttributeSet)
 
@@ -27,6 +30,52 @@ void USKAttributeSet::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Ou
 	DOREPLIFETIME(USKAttributeSet, Mana);
 	DOREPLIFETIME(USKAttributeSet, MaxHealth);
 	DOREPLIFETIME(USKAttributeSet, MaxMana);
+}
+
+void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+    Super::PostGameplayEffectExecute(Data);
+
+    //# Health가 변경되었는지 확인
+    if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+    {
+        FGameplayEffectContextHandle ContextHandle = Data.EffectSpec.GetContext();
+        FSKGameplayEffectContext* CustomContext = FSKGameplayEffectContext::ExtractEffectContext(ContextHandle);
+        if (CustomContext)
+        {
+            //# 크리티컬 여부 확인
+            if (CustomContext->IsCritical())
+            {
+                //# TODO
+            }
+
+            //# 피격 방향 태그
+            FGameplayTag HitTag = CustomContext->GetHitDirectionTag();
+            if (HitTag.IsValid())
+            {
+                FGameplayEventData Payload;
+                Payload.EventTag = HitTag;
+                Payload.Instigator = CustomContext->GetInstigator();
+                Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
+
+                FGameplayTagContainer TargetTagContainer;
+                TargetTagContainer.AddTag(HitTag);
+                Data.Target.TryActivateAbilitiesByTag(TargetTagContainer, true);
+            }
+        }
+
+        //# 사망 확인
+        if (GetHealth() <= 0.0f)
+        {
+            FGameplayEventData Payload;
+            Payload.EventTag = SKGameplayTags::Character_State_Death;
+            Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
+
+            FGameplayTagContainer TargetTagContainer;
+            TargetTagContainer.AddTag(SKGameplayTags::Character_State_Death);
+            Data.Target.TryActivateAbilitiesByTag(TargetTagContainer, true);
+        }
+    }
 }
 
 void USKAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
