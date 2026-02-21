@@ -21,16 +21,6 @@ USKGameplayAbility_SkillMove::USKGameplayAbility_SkillMove()
     bIsCollide = false;
 }
 
-void USKGameplayAbility_SkillMove::OnMontageCompleted()
-{
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-void USKGameplayAbility_SkillMove::OnMontageCancelled()
-{
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-}
-
 void USKGameplayAbility_SkillMove::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);

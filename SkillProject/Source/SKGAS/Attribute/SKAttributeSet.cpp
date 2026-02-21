@@ -58,9 +58,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                 Payload.Instigator = CustomContext->GetInstigator();
                 Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
 
-                FGameplayTagContainer TargetTagContainer;
-                TargetTagContainer.AddTag(HitTag);
-                Data.Target.TryActivateAbilitiesByTag(TargetTagContainer, true);
+                Data.Target.HandleGameplayEvent(HitTag, &Payload);
             }
         }
 
@@ -71,9 +69,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
             Payload.EventTag = SKGameplayTags::Character_State_Death;
             Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
 
-            FGameplayTagContainer TargetTagContainer;
-            TargetTagContainer.AddTag(SKGameplayTags::Character_State_Death);
-            Data.Target.TryActivateAbilitiesByTag(TargetTagContainer, true);
+            Data.Target.HandleGameplayEvent(SKGameplayTags::Character_State_Death, &Payload);
         }
     }
 }

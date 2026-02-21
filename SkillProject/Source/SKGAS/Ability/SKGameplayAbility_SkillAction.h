@@ -31,9 +31,7 @@ class SKGAS_API USKGameplayAbility_SkillAction : public USKGameplayAbility
 public:
     USKGameplayAbility_SkillAction();
 
-protected:
-    virtual void OnMontageCompleted() override;
-    virtual void OnMontageCancelled() override;
+public:
     virtual void OnWaitGameplayEvent(FGameplayEventData Payload) override;
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
@@ -55,6 +53,9 @@ protected:
     void SendTagToTargetBySphere(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag);
 
 protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TObjectPtr<UAnimMontage> AbilityMontage;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     EDetectRangeType DetectRangeType;
 

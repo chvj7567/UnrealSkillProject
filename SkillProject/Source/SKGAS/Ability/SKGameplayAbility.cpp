@@ -4,7 +4,6 @@
 #include "SKAbilitySourceInterface.h"
 #include "SKGameplayEffectContext.h"
 #include "SKAbilitySystemComponent.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility)
 
@@ -34,17 +33,6 @@ void USKGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
     if (FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
     {
         UE_LOG(LogTemp, Warning, TEXT("# [SKGameplayAbility] ActivateAbility %s"), *Spec->Ability->AbilityTags.ToString());
-    }
-
-    if (AbilityMontage)
-    {
-        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
-        {
-            MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility::OnMontageCompleted);
-            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility::OnMontageCancelled);
-            MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility::OnMontageCancelled);
-            MontageTask->ReadyForActivation();
-        }
     }
 }
 

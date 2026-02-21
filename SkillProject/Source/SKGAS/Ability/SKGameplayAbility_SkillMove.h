@@ -19,9 +19,6 @@ public:
     USKGameplayAbility_SkillMove();
 
 protected:
-    virtual void OnMontageCompleted() override;
-    virtual void OnMontageCancelled() override;
-
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
@@ -43,6 +40,9 @@ protected:
     void SetMoveState(bool bActive);
 
 protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TObjectPtr<UAnimMontage> AbilityMontage;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     bool bIsCollide;
 

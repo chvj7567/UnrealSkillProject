@@ -2,7 +2,7 @@
 
 
 #include "SKGameplayAbility_SkillAction.h"
-
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "AbilitySystemGlobals.h"
@@ -19,16 +19,6 @@
 
 USKGameplayAbility_SkillAction::USKGameplayAbility_SkillAction()
 {
-}
-
-void USKGameplayAbility_SkillAction::OnMontageCompleted()
-{
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-void USKGameplayAbility_SkillAction::OnMontageCancelled()
-{
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void USKGameplayAbility_SkillAction::OnWaitGameplayEvent(FGameplayEventData Payload)
@@ -91,6 +81,17 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
 
         //# 서버에서 Hit 검사
         ScheduleServerDetect();
+    }
+
+    if (AbilityMontage)
+    {
+        if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
+        {
+            MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
+            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->ReadyForActivation();
+        }
     }
 }
 
@@ -190,7 +191,18 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                 FGameplayEventData Payload;
                 Payload.Instigator = OwnerCharacter;
                 Payload.Target = TargetCharacter;
-                Payload.TargetTags.AddTag(SKGameplayTags::Skill_Hit_Front);
+
+                TArray<FGameplayTag> HitDirectionTags;
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
+
+                //# 랜덤 방향 Hit 태그
+                int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
+                FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
+
+                Payload.TargetTags.AddTag(RandomHitTag);
 
                 UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
             }
@@ -257,7 +269,18 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                 FGameplayEventData Payload;
                 Payload.Instigator = OwnerCharacter;
                 Payload.Target = TargetCharacter;
-                Payload.TargetTags.AddTag(SKGameplayTags::Skill_Hit_Front);
+
+                TArray<FGameplayTag> HitDirectionTags;
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
+                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
+
+                //# 랜덤 방향 Hit 태그
+                int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
+                FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
+
+                Payload.TargetTags.AddTag(RandomHitTag);
 
                 UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
             }
