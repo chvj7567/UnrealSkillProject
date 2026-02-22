@@ -20,6 +20,9 @@ namespace SpyGameplayTags
 	//# 캐릭터 클래스
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class_Normal);
 
+	//# 캐릭터 상태
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_SuperArmor);
+
 	//# 기본 입력 슬롯
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Native_Move);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Native_Look);
