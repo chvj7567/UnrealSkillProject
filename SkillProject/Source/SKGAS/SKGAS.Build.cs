@@ -21,7 +21,8 @@ public class SKGAS : ModuleRules
 				"Engine",
                 "GameplayAbilities",
                 "GameplayTags",
-                "GameplayTasks"
+                "GameplayTasks",
+				"AIModule",
             });
 	}
 }

@@ -7,6 +7,7 @@
 #include "SKGameplayEffectContext.h"
 #include "GameplayEffectExtension.h"
 #include "SKGameplayTags.h"
+#include "Perception/AISense_Damage.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKAttributeSet)
 
@@ -43,6 +44,24 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
         FSKGameplayEffectContext* CustomContext = FSKGameplayEffectContext::ExtractEffectContext(ContextHandle);
         if (CustomContext)
         {
+            const float DeltaValue = Data.EvaluatedData.Magnitude;
+
+            AActor* TargetActor = Data.Target.GetAvatarActor();
+            AActor* InstigatorActor = Data.EffectSpec.GetContext().GetInstigator();
+            AActor* EffectCauser = Data.EffectSpec.GetContext().GetEffectCauser();
+
+            if (TargetActor)
+            {
+                UAISense_Damage::ReportDamageEvent(
+                    GetWorld(),
+                    TargetActor,
+                    InstigatorActor,
+                    DeltaValue,
+                    EffectCauser->GetActorLocation(),
+                    TargetActor->GetActorLocation()
+                );
+            }
+
             //# 크리티컬 여부 확인
             if (CustomContext->IsCritical())
             {

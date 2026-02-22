@@ -48,6 +48,8 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	AIPerceptionComponent->ConfigureSense(*HearingConfig);
 	AIPerceptionComponent->ConfigureSense(*DamageConfig);
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
+	AIPerceptionComponent->SetDominantSense(HearingConfig->GetSenseImplementation());
+	AIPerceptionComponent->SetDominantSense(DamageConfig->GetSenseImplementation());
 }
 
 void ASpyAIController::Tick(float DeltaSeconds)
@@ -180,23 +182,29 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 	if (Stimulus.WasSuccessfullySensed())
 	{
 		//# 시각 감지
-		if (SenseName.ToString().Contains(TEXT("Sight")))
+		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Detected %s"), *Actor->GetName());
 			BlackboardComp->SetValueAsObject("TargetActor", Actor);
 			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
 		}
 		//# 청각 감지
-		else if (SenseName.ToString().Contains(TEXT("Hearing")))
+		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Hearing: Sensed sound at %s"), *Stimulus.StimulusLocation.ToString());
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Hearing: Detected %s"), *Stimulus.StimulusLocation.ToString());
+			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+		}
+		//# 데미지 감지
+		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Damage: Detected %s"), *Stimulus.StimulusLocation.ToString());
 			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
 		}
 	}
 	else
 	{
 		//# 감지되지 않았을 때
-		if (SenseName.ToString().Contains(TEXT("Sight")))
+		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
 			BlackboardComp->ClearValue("TargetActor");
 		}
