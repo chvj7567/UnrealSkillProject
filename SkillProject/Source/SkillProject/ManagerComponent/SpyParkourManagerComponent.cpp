@@ -180,105 +180,6 @@ void USpyParkourManagerComponent::SetVaultWallData()
     VaultWallData.Distance = WallData.Distance;
     VaultWallData.Height = WallData.Height;
     VaultWallData.Depth = WallData.Depth;
-
-    //ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-    //if (OwnerCharacter == nullptr)
-    //    return;
-
-    //FVector OwnerLocation = OwnerCharacter->GetActorLocation();
-    //FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
-
-    ////# 재사용 변수들
-    //UWorld* World = GetWorld();
-    //FVector Start = OwnerLocation;
-    //FVector End = Start + (OwnerFowardVector * VaultData.VaildDistance);
-    //FHitResult HitResult;
-    //FCollisionQueryParams Params;
-    //Params.AddIgnoredActor(OwnerCharacter);
-
-    //bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-    //DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
-
-    //if (bHit)
-    //{
-    //    FVector WallStart = HitResult.Location;
-    //    FVector WallNormalVector = HitResult.ImpactNormal;
-
-    //    VaultWallData.FrontNormalVector = WallNormalVector;
-    //    VaultWallData.Distance = FVector::Distance(Start, HitResult.Location);
-    //    
-    //    FVector FlatLocation = HitResult.Location * FVector(1.f, 1.f, 0.f);
-
-    //    bool CheckHeight = false;
-
-    //    float MaxRayDistance = VaultData.VaildDistance + VaultData.VaildDepth;
-    //    //# VaildHeight 만큼 충분히 높은 위치에서 RayInterval 간격으로 띄워서 반복 트레이스 검사
-    //    for (int i = 1; i <= VaultData.RayIntervalReapeatCount; ++i)
-    //    {
-    //        //# 최대 거리를 넘었으면 두께 초과이니 레이로 확인할 필요가 없음
-    //        if (MaxRayDistance < VaultData.RayInterval * i)
-    //        {
-    //            VaultWallData.Clear();
-    //            break;
-    //        }
-
-    //        //# 캐릭터 기준이 아닌 벽의 노말 벡터 기준으로 함
-    //        FVector Next = -WallNormalVector * VaultData.RayInterval * i;
-    //        Start = FlatLocation + (FVector::UpVector * VaultData.VaildHeight) + Next;
-    //        End = Start + (FVector::DownVector * VaultData.VaildHeight);
-    //        HitResult.Reset();
-
-    //        bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-    //        DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
-
-    //        //# Hit 되면 벽의 높이 검사
-    //        if (bHit)
-    //        {
-    //            if (CheckHeight == false)
-    //            {
-    //                CheckHeight = true;
-    //                VaultWallData.HandLocVector = HitResult.Location;
-    //                VaultWallData.Height = FVector::Distance(HitResult.Location, End);
-    //            }
-    //        }
-    //        //# Hit 되지 않은 트레이스에서 캐릭터 방향으로 역 트레이스 계산하여 벽의 두께 계산
-    //        else
-    //        {
-    //            //# 다음 반복문 End 위치가 착지 지점
-    //            VaultWallData.LandLocVector = Start + -WallNormalVector * VaultData.RayInterval + (FVector::DownVector * VaultData.VaildHeight);
-
-    //            //# Z축 다시 캐릭터 Z축으로 
-    //            End.Z = OwnerLocation.Z;
-    //            
-    //            Start = End;
-    //            End = WallStart;
-    //            HitResult.Reset();
-
-    //            bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-    //            DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
-
-    //            //# Hit 되면 벽의 두께 계산 후 반복문 종료
-    //            if (bHit)
-    //            {
-    //                VaultWallData.Depth = FVector::Distance(WallStart, HitResult.Location);
-    //                
-    //                //# Vault 가능한 두께가 아님
-    //                if (VaultWallData.Depth > VaultData.VaildDepth)
-    //                {
-    //                    VaultWallData.Clear();
-    //                }
-
-    //                return;
-    //            }
-
-    //            break;
-    //        }
-    //    }
-
-    //    //# 벽이 지정한 레이 간격의 반복 횟수보다 더 두꺼움
-    //    VaultWallData.Clear();
-    //    return;
-    //}
 }
 
 void USpyParkourManagerComponent::SetVaultMotionWarpingData()
@@ -395,6 +296,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
         FVector FlatLocation = HitResult.Location * FVector(1.f, 1.f, 0.f);
 
         bool CheckHeight = false;
+        float HeightOffset = 1000.f;
 
         float MaxRayDistance = InValidDistance + InValidDepth;
         //# VaildHeight 만큼 충분히 높은 위치에서 RayInterval 간격으로 띄워서 반복 트레이스 검사
@@ -409,8 +311,10 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
 
             //# 캐릭터 기준이 아닌 벽의 노말 벡터 기준으로 함
             FVector Next = -WallNormalVector * InRayInterval * i;
-            Start = FlatLocation + (FVector::UpVector * InValidHeight) + Next;
-            End = Start + (FVector::DownVector * InValidHeight);
+            
+            //# 충분히 높은 곳에서 레이 발사하여 높이 확인
+            Start = FlatLocation + (FVector::UpVector * (InValidHeight + HeightOffset)) + Next;
+            End = Start + (FVector::DownVector * (InValidHeight + HeightOffset));
             HitResult.Reset();
 
             bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
@@ -424,13 +328,20 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
                     CheckHeight = true;
                     WallData.HitVector = HitResult.Location;
                     WallData.Height = FVector::Distance(HitResult.Location, End);
+
+                    //# 높이 유효성 검사
+                    if (WallData.Height > InValidHeight)
+                    {
+                        WallData.Clear();
+                        return false;
+                    }
                 }
             }
             //# Hit 되지 않은 트레이스에서 캐릭터 방향으로 역 트레이스 계산하여 벽의 두께 계산
             else
             {
                 //# 다음 반복문 End 위치가 착지 지점
-                WallData.LandVector = Start + -WallNormalVector * VaultData.RayInterval + (FVector::DownVector * VaultData.VaildHeight);
+                WallData.LandVector = Start + -WallNormalVector * VaultData.RayInterval + (FVector::DownVector * (VaultData.VaildHeight + HeightOffset));
 
                 //# Z축 다시 캐릭터 Z축으로 
                 End.Z = OwnerLocation.Z;

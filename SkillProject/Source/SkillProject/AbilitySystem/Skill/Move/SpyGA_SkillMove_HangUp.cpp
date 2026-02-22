@@ -26,11 +26,6 @@ void USpyGA_SkillMove_HangUp::ActivateAbility(const FGameplayAbilitySpecHandle H
 		{
 			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 			{
-				if (OwnerCharacter->GetLocalRole() == ROLE_Authority)
-					UE_LOG(LogTemp, Warning, TEXT("## ROLE_Authority"));
-				if (OwnerCharacter->GetLocalRole() == ROLE_AutonomousProxy)
-					UE_LOG(LogTemp, Warning, TEXT("## ROLE_AutonomousProxy"));
-
 				ParkourComponent->OnHangUpMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
 				ParkourComponent->SetHangUpMotionWarpingData(LedgeLocation);
 			}
