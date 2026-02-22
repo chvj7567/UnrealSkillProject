@@ -92,29 +92,7 @@ void ASpyCharacter::BeginPlay()
 
 	if (HasAuthority())
 	{
-		const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
-		const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("TwoHandSword"));
-
-		FSpyAssetAndDelegate LoadDelegate;
-		LoadDelegate.BindLambda([this](UObject* LoadedAsset)
-			{
-				if (LoadedAsset == nullptr)
-					return;
-
-				if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("TwoHandSword")))
-				{
-					FActorSpawnParameters SpawnParams;
-					SpawnParams.Owner = this;
-					SpawnParams.Instigator = this;
-					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-					SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-					SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LeftHandSocket"));
-				}
-				
-			});
-
-		USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
+		GetWorldTimerManager().SetTimer(WeaponSpawnTimerHandle, this, &ASpyCharacter::SpawnAndAttachWeapon, 1.0f, false);
 	}
 }
 
@@ -255,4 +233,31 @@ void ASpyCharacter::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomM
 			SpyASC->SetLooseGameplayTagCount(*MovementModeTag, (bTagEnabled ? 1 : 0));
 		}
 	}
+}
+
+void ASpyCharacter::SpawnAndAttachWeapon()
+{
+	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
+	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("OneHandSword"));
+
+	FSpyAssetAndDelegate LoadDelegate;
+	LoadDelegate.BindLambda([this](UObject* LoadedAsset)
+		{
+			if (LoadedAsset == nullptr)
+				return;
+
+			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("OneHandSword")))
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.Owner = this;
+				SpawnParams.Instigator = this;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+				SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("weapon_socket"));
+			}
+
+		});
+
+	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
 }

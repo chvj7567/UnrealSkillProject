@@ -90,6 +90,7 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
             MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
             MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
             MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->OnBlendOut.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
             MontageTask->ReadyForActivation();
         }
     }
@@ -136,14 +137,13 @@ void USKGameplayAbility_SkillAction::ScheduleServerDetect()
     {
         const float HitTime = DetectTimes[Index];
 
-        UAbilityTask_WaitDelay* WaitTask =
-            UAbilityTask_WaitDelay::WaitDelay(this, HitTime);
+        if (UAbilityTask_WaitDelay* WaitTask = UAbilityTask_WaitDelay::WaitDelay(this, HitTime))
+        {
+            WaitTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillAction::CheckDetect);
+            WaitTask->ReadyForActivation();
 
-        if (!WaitTask)
-            continue;
-
-        WaitTask->OnFinish.AddDynamic(this, &USKGameplayAbility_SkillAction::CheckDetect);
-        WaitTask->ReadyForActivation();
+            UE_LOG(LogTemp, Log, TEXT("# [GA_SkillAction] Server Hit Time %f"), HitTime);
+        }
     }
 }
 
