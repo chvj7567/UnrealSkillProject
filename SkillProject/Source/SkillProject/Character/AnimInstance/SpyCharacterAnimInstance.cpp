@@ -7,12 +7,31 @@
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Util/SpyGameplayTags.h"
+#include "Manager/SpyAssetManager.h"
+#include "Data/SpyAnimAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
 
 void USpyCharacterAnimInstance::NativeBeginPlay()
 {
     Super::NativeBeginPlay();
+
+    if (USpyAnimAssetData* AnimData = USpyAssetManager::GetAssetByName<USpyAnimAssetData>(TEXT("SpyAnimAssetData")))
+    {
+        if (TSoftClassPtr<UAnimInstance> LayerSoftPtr = AnimData->AnimLayerMap.FindRef(TEXT("OHS")))
+        {
+            FSpyAssetAndDelegate LoadDelegate;
+            LoadDelegate.BindLambda([this](UObject* LoadedAsset)
+                {
+                    if (UClass* LoadedClass = Cast<UClass>(LoadedAsset))
+                    {
+                        LinkAnimClassLayers(LoadedClass);
+                    }
+                });
+
+            USpyAssetManager::LoadAssetAsync(LayerSoftPtr.ToSoftObjectPath(), LoadDelegate);
+        }
+    }
 
     APawn* PawnOwner = TryGetPawnOwner();
     if (PawnOwner == nullptr)
