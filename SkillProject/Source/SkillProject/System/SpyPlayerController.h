@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Util/DefineEnum.h"
 #include "ModularPlayerController.h"
+#include "System/SpyTeamAgentInterface.h"
 
 #include "SpyPlayerController.generated.h"
 
@@ -17,7 +18,7 @@ class USpyAbilitySystemComponent;
 struct FInputActionValue;
 
 UCLASS()
-class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController
+class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController, public ISpyTeamAgentInterface
 {
 	GENERATED_BODY()
 	
@@ -32,7 +33,16 @@ protected:
 	virtual void PreProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
+	//~IGenericTeamAgentInterface interface
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	virtual FGenericTeamId GetGenericTeamId() const override;
+	//~End of IGenericTeamAgentInterface interface
+
 public:
 	UFUNCTION(BlueprintCallable)
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
+
+private:
+	UPROPERTY(EditAnywhere)
+	FGenericTeamId TeamID;
 };

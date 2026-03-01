@@ -50,6 +50,8 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
 	AIPerceptionComponent->SetDominantSense(HearingConfig->GetSenseImplementation());
 	AIPerceptionComponent->SetDominantSense(DamageConfig->GetSenseImplementation());
+
+	TeamID = FGenericTeamId(1);
 }
 
 void ASpyAIController::Tick(float DeltaSeconds)
@@ -66,10 +68,10 @@ void ASpyAIController::Tick(float DeltaSeconds)
 	if (SightConfig)
 	{
 		//# 시각 범위
-		DrawDebugSphere(GetWorld(), Location, SightConfig->SightRadius, 32, FColor::Green, false, 0.f, 0, 1.5f);
+		//DrawDebugSphere(GetWorld(), Location, SightConfig->SightRadius, 32, FColor::Green, false, 0.f, 0, 1.5f);
 
 		//# 시야에 타겟이 보이고 나서 어그로 없어지는 시야 범위
-		DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
+		//DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
 
 		//# 시야각
 		float HalfAngleRad = FMath::DegreesToRadians(SightConfig->PeripheralVisionAngleDegrees * 0.5f);
@@ -80,7 +82,7 @@ void ASpyAIController::Tick(float DeltaSeconds)
 	if (HearingConfig)
 	{
 		//# 청각 범위
-		DrawDebugSphere(GetWorld(), Location, HearingConfig->HearingRange, 32, FColor::Blue, false, 0.f, 0, 1.5f );
+		//DrawDebugSphere(GetWorld(), Location, HearingConfig->HearingRange, 32, FColor::Blue, false, 0.f, 0, 1.5f );
 	}
 }
 
@@ -166,6 +168,36 @@ void ASpyAIController::OnUnPossess()
 	Super::OnUnPossess();
 }
 
+void ASpyAIController::SetGenericTeamId(const FGenericTeamId& NewTeamID)
+{
+	TeamID = NewTeamID;
+}
+
+FGenericTeamId ASpyAIController::GetGenericTeamId() const
+{
+	return TeamID;
+}
+
+ETeamAttitude::Type ASpyAIController::GetTeamAttitudeTowards(const AActor& Other) const
+{
+	const APawn* OtherPawn = Cast<APawn>(&Other);
+	if (OtherPawn == nullptr)
+		return ETeamAttitude::Neutral;
+
+	const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(OtherPawn->GetController());
+	if (TeamAgent == nullptr)
+		return ETeamAttitude::Neutral;
+
+	if (TeamAgent->GetGenericTeamId() == GetGenericTeamId())
+	{
+		return ETeamAttitude::Friendly;
+	}
+	else
+	{
+		return ETeamAttitude::Hostile;
+	}
+}
+
 USpyAbilitySystemComponent* ASpyAIController::GetSpyAbilitySystemComponent() const
 {
 	return Cast<USpyAbilitySystemComponent>(USKAbilitySystemGlobals::GetAbilitySystemComponentFromActor(PlayerState));
@@ -177,6 +209,17 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 	if (BlackboardComp == nullptr)
 		return;
 
+	AActor* TargetActor = nullptr;
+	if (APlayerState* PS = Cast<APlayerState>(Actor))
+	{
+		TargetActor = PS->GetPawn();
+	}
+	else
+	{
+		TargetActor = Actor;
+	}
+
+	ETeamAttitude::Type Attitude = GetTeamAttitudeTowards(*Actor);
 	const FName SenseName = Stimulus.Type.Name;
 
 	if (Stimulus.WasSuccessfullySensed())
@@ -184,21 +227,28 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 		//# 시각 감지
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Detected %s"), *Actor->GetName());
-			BlackboardComp->SetValueAsObject("TargetActor", Actor);
-			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+			//# 적일 경우만 타겟팅
+			if (Attitude == ETeamAttitude::Hostile)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Detected %s"), *TargetActor->GetName());
+				BlackboardComp->SetValueAsObject("TargetActor", TargetActor);
+				BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+			}
 		}
 		//# 청각 감지
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Hearing: Detected %s"), *Stimulus.StimulusLocation.ToString());
-			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+			/*if (Attitude == ETeamAttitude::Hostile)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Hearing: Detected %s"), *Stimulus.StimulusLocation.ToString());
+				BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+			}*/
 		}
 		//# 데미지 감지
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Damage: Detected %s"), *Stimulus.StimulusLocation.ToString());
-			BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Damage: Detected %s"), *TargetActor->GetName());
+			BlackboardComp->SetValueAsObject("TargetActor", TargetActor);
 		}
 	}
 	else

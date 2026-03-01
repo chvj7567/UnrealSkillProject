@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ModularAIController.h"
 #include "Perception/AIPerceptionTypes.h"
+#include "System/SpyTeamAgentInterface.h"
 
 #include "SpyAIController.generated.h"
 
@@ -31,6 +32,12 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	//~End of AController interface
+
+	//~IGenericTeamAgentInterface interface
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	virtual FGenericTeamId GetGenericTeamId() const override;
+	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
+	//~End of IGenericTeamAgentInterface interface
 
 public:
 	void SetBehaviorTree(UBehaviorTree* InBehaviorTreeAsset);
@@ -64,4 +71,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
+
+	UPROPERTY(EditAnywhere)
+	FGenericTeamId TeamID;
 };
