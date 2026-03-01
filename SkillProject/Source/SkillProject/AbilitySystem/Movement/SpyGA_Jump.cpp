@@ -5,6 +5,8 @@
 #include "Character/SpyCharacter.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_Jump)
+
 void USpyGA_Jump::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);

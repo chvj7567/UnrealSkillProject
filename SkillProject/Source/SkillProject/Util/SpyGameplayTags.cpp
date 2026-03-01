@@ -18,6 +18,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class_Normal, "Character.Class.Normal");
 
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_SuperArmor, "Character.State.SuperArmor");
+	UE_DEFINE_GAMEPLAY_TAG(Character_State_Death, "Character.State.Death");
 
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Normal, "Character.State.Movement.Normal");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Climb, "Character.State.Movement.Climb");
@@ -60,6 +61,8 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Climb, "Skill.Move.Climb");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_HangUp, "Skill.Move.HangUp");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Jump, "Skill.Move.Jump");
+
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Death, "Skill.Util.Death");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Fire, "GameplayCue.Actor.Fire");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");

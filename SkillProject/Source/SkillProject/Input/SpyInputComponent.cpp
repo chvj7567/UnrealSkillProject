@@ -183,6 +183,10 @@ void USpyInputComponent::Move(const FInputActionValue& InValue)
 		{
 			if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 			{
+				//# Death 확인
+				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Character_State_Death))
+					return;
+
 				//# Move Lock 확인
 				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Move))
 					return;

@@ -52,14 +52,6 @@ public:
     //# End of APlayerState interface
 
 public:
-    void Initialize();
-
-    bool HasState(FGameplayTag Tag);
-    void AddState(FGameplayTag Tag);
-    void RemoveState(FGameplayTag Tag);
-    void ToggleState(FGameplayTag Tag);
-
-public:
     const USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
     void SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData);
 
@@ -74,9 +66,6 @@ protected:
     TObjectPtr<const USpyCharacterAssetData> CharacterAssetData;
 
 protected:
-    UPROPERTY()
-    TObjectPtr<ASpyCharacter> OwnerCharacter;
-
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
 

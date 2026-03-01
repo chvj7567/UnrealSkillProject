@@ -79,7 +79,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
     {
         if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
         {
-            IsDeath = false/*SpyPlayerState->HasState(SpyGameplayTags::Character_State_Survival_Alive) == false*/;
+            IsDeath = SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Character_State_Death);
             IsClimbing = PlayerMovementComponent->GetMovementName() == TEXT("Custom");
             if (IsClimbing)
             {

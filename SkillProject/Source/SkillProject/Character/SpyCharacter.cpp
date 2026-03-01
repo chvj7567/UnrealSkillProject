@@ -183,6 +183,10 @@ void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 	{
 		HpBar->UpdateHP(0, 0);
+
+		FGameplayTagContainer DeathTags;
+		DeathTags.AddTag(SpyGameplayTags::Skill_Util_Death);
+		GetAbilitySystemComponent()->TryActivateAbilitiesByTag(DeathTags, true);
 	}
 }
 

@@ -132,34 +132,6 @@ void ASpyPlayerState::OnReactivated()
 	}
 }
 
-void ASpyPlayerState::Initialize()
-{
-	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetPawn()))
-	{
-		OwnerCharacter = SpyCharacter;
-	}
-}
-
-bool ASpyPlayerState::HasState(FGameplayTag Tag)
-{
-	return false;
-}
-
-void ASpyPlayerState::AddState(FGameplayTag Tag)
-{
-	
-}
-
-void ASpyPlayerState::RemoveState(FGameplayTag Tag)
-{
-	
-}
-
-void ASpyPlayerState::ToggleState(FGameplayTag Tag)
-{
-	
-}
-
 void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData)
 {
 	//# 서버에서만 세팅
