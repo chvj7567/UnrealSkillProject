@@ -21,7 +21,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
-	void SpawnOneBot();
+	void SpawnOneBot(FVector InLocation, FRotator InRotator);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	void RemoveOneBot();

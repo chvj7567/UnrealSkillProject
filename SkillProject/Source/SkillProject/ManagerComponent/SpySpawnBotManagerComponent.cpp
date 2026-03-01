@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerState.h"
 #include "System/SpyAIController.h"
 #include "System/SpyGameMode.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/TargetPoint.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpySpawnBotManagerComponent)
 
@@ -24,7 +26,7 @@ void USpySpawnBotManagerComponent::BeginPlay()
 	}
 }
 
-void USpySpawnBotManagerComponent::SpawnOneBot()
+void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRotator)
 {
 	//# 서버에서만 실행
 	if (GetOwnerRole() < ROLE_Authority)
@@ -41,7 +43,7 @@ void USpySpawnBotManagerComponent::SpawnOneBot()
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
 	//# 컨트롤러 먼저 생성
-	if (AAIController* NewController = World->SpawnActor<AAIController>(BotControllerClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnInfo))
+	if (AAIController* NewController = World->SpawnActor<AAIController>(BotControllerClass, InLocation, InRotator, SpawnInfo))
 	{
 		if (ASpyGameMode* GameMode = Cast<ASpyGameMode>(World->GetAuthGameMode()))
 		{
@@ -59,8 +61,11 @@ void USpySpawnBotManagerComponent::SpawnOneBot()
 			//# 봇도 기본적인 컨트롤러 초기화 프로세스
 			GameMode->GenericPlayerInitialization(NewController);
 
+			//# Tranform 지정
+			FTransform SpawnTransform(InRotator, InLocation, FVector::OneVector);
+
 			//# 폰 생성 및 빙의
-			GameMode->RestartPlayer(NewController);
+			GameMode->RestartPlayerAtTransform(NewController, SpawnTransform);
 		}
 
 		SpawnedBotList.Add(NewController);
@@ -93,10 +98,18 @@ void USpySpawnBotManagerComponent::RemoveOneBot()
 
 void USpySpawnBotManagerComponent::ServerCreateBots_Implementation()
 {
-	// 여기에 실제 봇 스폰 로직을 작성합니다.
-	for (int32 i = 0; i < 1; ++i)
+	TArray<AActor*> SpawnPoints;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("SpawnEnemy"), SpawnPoints);
+
+	for (AActor* SpawnPoint : SpawnPoints)
 	{
-		SpawnOneBot();
+		if (SpawnPoint)
+		{
+			FVector Location = SpawnPoint->GetActorLocation();
+			FRotator Rotation = SpawnPoint->GetActorRotation();
+
+			SpawnOneBot(Location, Rotation);
+		}
 	}
 }
 

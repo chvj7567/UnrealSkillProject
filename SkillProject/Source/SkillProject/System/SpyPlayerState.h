@@ -62,6 +62,7 @@ public:
 protected:
     UFUNCTION()
     void OnRep_CharacterAssetData();
+
     UPROPERTY(ReplicatedUsing = OnRep_CharacterAssetData)
     TObjectPtr<const USpyCharacterAssetData> CharacterAssetData;
 
