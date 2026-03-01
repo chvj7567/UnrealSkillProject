@@ -8,6 +8,7 @@
 #include "Character/SpyCharacter.h"
 #include "Manager/SpyAssetManager.h"
 #include "Character/SpyPawnExtensionComponent.h"
+#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameMode)
 
@@ -30,12 +31,13 @@ void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 	Super::GenericPlayerInitialization(NewPlayer);
 
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	const USpyCharacterAssetData* CharacterAssetData = &AssetManager.GetCharacterAssetData();
-
-	//# PS에 데이터 Set
-	if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
+	if (USpyCharacterAssetData* CharacterAssetData = USpyAssetManager::GetAssetByName<USpyCharacterAssetData>(TEXT("SpyCharacterAssetData")))
 	{
-		PS->SetCharacterAssetData(CharacterAssetData);
+		//# PS에 데이터 Set
+		if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
+		{
+			PS->SetCharacterAssetData(CharacterAssetData);
+		}
 	}
 }
 

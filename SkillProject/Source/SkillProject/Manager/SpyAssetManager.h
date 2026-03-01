@@ -9,8 +9,6 @@
 
 #include "SpyAssetManager.generated.h"
 
-class USpyCharacterAssetData;
-
 DECLARE_DELEGATE_OneParam(FSpyAssetAndDelegate, UObject*);
 
 UCLASS(Config = Game)
@@ -71,7 +69,6 @@ protected:
 
 public:
 	const USpyAssetData& GetAssetData();
-	const USpyCharacterAssetData& GetCharacterAssetData();
 
 private:
 	UPROPERTY()
@@ -85,9 +82,6 @@ private:
 private:
 	UPROPERTY(Config)
 	TSoftObjectPtr<USpyAssetData> AssetDataPath;
-
-	UPROPERTY(Config)
-	TSoftObjectPtr<USpyCharacterAssetData> CharacterAssetDataPath;
 };
 
 template<typename AssetType>

@@ -9,11 +9,6 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAssetData)
 
-const USpyCharacterAssetData& USpyCharacterAssetData::Get()
-{
-	return USpyAssetManager::Get().GetCharacterAssetData();
-}
-
 #if WITH_EDITOR
 void USpyCharacterAssetData::PreSave(FObjectPreSaveContext ObjectSaveContext)
 {

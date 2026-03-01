@@ -3,7 +3,6 @@
 
 #include "Manager/SpyAssetManager.h"
 #include "Blueprint/UserWidget.h"
-#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAssetManager)
 
@@ -290,9 +289,4 @@ void USpyAssetManager::RemovePrimaryAsset(UPrimaryDataAsset* Asset)
 const USpyAssetData& USpyAssetManager::GetAssetData()
 {
 	return GetOrLoadTypedGameData<USpyAssetData>(AssetDataPath);
-}
-
-const USpyCharacterAssetData& USpyAssetManager::GetCharacterAssetData()
-{
-	return GetOrLoadTypedGameData<USpyCharacterAssetData>(CharacterAssetDataPath);
 }

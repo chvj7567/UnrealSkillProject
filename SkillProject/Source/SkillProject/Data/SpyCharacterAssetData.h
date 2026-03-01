@@ -55,9 +55,6 @@ class SKILLPROJECT_API USpyCharacterAssetData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
-public:
-	static const USpyCharacterAssetData& Get();
-
 protected:
 #if WITH_EDITOR
 	virtual void PreSave(FObjectPreSaveContext ObjectSaveContext) override;
