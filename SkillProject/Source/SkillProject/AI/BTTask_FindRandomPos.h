@@ -21,7 +21,7 @@ protected:
         uint8* NodeMemory) override;
 
     UPROPERTY(EditAnywhere, Category = "AI")
-    float SearchRadius = 1000.f;
+    float SearchRadius = 30.f;
 
     UPROPERTY(EditAnywhere, Category = "AI")
     FBlackboardKeySelector TargetLocationKey;

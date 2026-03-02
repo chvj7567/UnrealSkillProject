@@ -7,6 +7,8 @@
 #include "AbilitySystemComponent.h"
 #include "GameFramework/PlayerState.h"
 #include "Util/SpyGameplayTags.h"
+#include "Navigation/PathFollowingComponent.h"
+#include "AITypes.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_MoveToRange)
 
@@ -19,21 +21,56 @@ EBTNodeResult::Type UBTTask_MoveToRange::ExecuteTask(UBehaviorTreeComponent& Own
 {
     AAIController* AIController = OwnerComp.GetAIOwner();
     UBlackboardComponent* BlackBoardComp = OwnerComp.GetBlackboardComponent();
+    FName Key = GetSelectedBlackboardKey();
 
     if (AIController == nullptr || BlackBoardComp == nullptr)
         return EBTNodeResult::Failed;
 
-    AActor* TargetActor = Cast<AActor>(BlackBoardComp->GetValueAsObject(GetSelectedBlackboardKey()));
+    AActor* TargetActor = Cast<AActor>(BlackBoardComp->GetValueAsObject(Key));
     if (TargetActor == nullptr)
         return EBTNodeResult::Failed;
 
     //# 움직일 수 있는 상태인지 확인
     if (CanMove(AIController) == false)
+    {
+        AIController->StopMovement();
         return EBTNodeResult::Failed;
+    }
 
-    AIController->MoveToActor(TargetActor, StoppingDistance);
+    //# 타겟을 향해 바라봄
+    FVector Direction = TargetActor->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
+    Direction.Z = 0.f;
 
-    return Super::ExecuteTask(OwnerComp, NodeMemory);
+    FRotator TargetRot = FRotationMatrix::MakeFromX(Direction).Rotator();
+    AIController->SetControlRotation(TargetRot);
+    AIController->GetPawn()->SetActorRotation(TargetRot);
+
+    //# 타겟과의 거리 확인
+    float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), TargetActor->GetActorLocation());
+    if (Distance <= StoppingDistance)
+    {
+        AIController->StopMovement();
+        return EBTNodeResult::Succeeded;
+    }
+
+    FAIMoveRequest MoveReq(TargetActor);
+    MoveReq.SetAcceptanceRadius(StoppingDistance);
+
+    FPathFollowingRequestResult Result = AIController->MoveTo(MoveReq);
+
+    if (Result.Code == EPathFollowingRequestResult::RequestSuccessful)
+    {
+        const FName MoveFinishedMessage = TEXT("MoveFinished");
+        WaitForMessage(OwnerComp, MoveFinishedMessage);
+
+        return EBTNodeResult::InProgress;
+    }
+    else if (Result.Code == EPathFollowingRequestResult::AlreadyAtGoal)
+    {
+        return EBTNodeResult::Succeeded;
+    }
+
+    return EBTNodeResult::Failed;
 }
 
 bool UBTTask_MoveToRange::CanMove(AAIController* AIController)

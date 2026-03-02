@@ -26,8 +26,8 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	SetPerceptionComponent(*AIPerceptionComponent);
 
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 1500.f;
-	SightConfig->LoseSightRadius = 1700.f;
+	SightConfig->SightRadius = 500.f;
+	SightConfig->LoseSightRadius = 700.f;
 	SightConfig->PeripheralVisionAngleDegrees = 90.f;
 	SightConfig->SetMaxAge(5.f);
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
@@ -35,7 +35,7 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
-	HearingConfig->HearingRange = 1200.f;
+	HearingConfig->HearingRange = 200.f;
 	HearingConfig->SetMaxAge(5.f);
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
@@ -47,9 +47,9 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	AIPerceptionComponent->ConfigureSense(*SightConfig);
 	AIPerceptionComponent->ConfigureSense(*HearingConfig);
 	AIPerceptionComponent->ConfigureSense(*DamageConfig);
+
+	//# 시야를 우선 순위로 둠
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
-	AIPerceptionComponent->SetDominantSense(HearingConfig->GetSenseImplementation());
-	AIPerceptionComponent->SetDominantSense(DamageConfig->GetSenseImplementation());
 
 	TeamID = FGenericTeamId(1);
 }
@@ -74,7 +74,7 @@ void ASpyAIController::Tick(float DeltaSeconds)
 		//DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
 
 		//# 시야각
-		float HalfAngleRad = FMath::DegreesToRadians(SightConfig->PeripheralVisionAngleDegrees * 0.5f);
+		float HalfAngleRad = FMath::DegreesToRadians(SightConfig->PeripheralVisionAngleDegrees);
 
 		DrawDebugCone(GetWorld(), Location, Forward, SightConfig->SightRadius, HalfAngleRad, HalfAngleRad, 32, FColor::Green, false, 0.f, 0, 1.2f);
 	}
@@ -219,6 +219,12 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 		TargetActor = Actor;
 	}
 
+	if (TargetActor == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] TargetActor is Null"));
+		return;
+	}
+
 	ETeamAttitude::Type Attitude = GetTeamAttitudeTowards(*Actor);
 	const FName SenseName = Stimulus.Type.Name;
 
@@ -256,7 +262,8 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 		//# 감지되지 않았을 때
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
-			BlackboardComp->ClearValue("TargetActor");
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Lost %s"), *TargetActor->GetName());
+			//BlackboardComp->ClearValue("TargetActor");
 		}
 	}
 }

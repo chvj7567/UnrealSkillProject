@@ -20,6 +20,10 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
     if (AIController == nullptr)
         return EBTNodeResult::Failed;
 
+    UBlackboardComponent* BlackBoardComp = OwnerComp.GetBlackboardComponent();
+    if (BlackBoardComp == nullptr)
+        return EBTNodeResult::Failed;
+
     APawn* Pawn = AIController->GetPawn();
     if (Pawn == nullptr)
         return EBTNodeResult::Failed;
@@ -34,6 +38,8 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
 
     if (AbilityTag.IsValid() == false)
         return EBTNodeResult::Failed;
+
+    AIController->StopMovement();
 
     FGameplayTagContainer TagContainer;
     TagContainer.AddTag(AbilityTag);

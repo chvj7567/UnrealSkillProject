@@ -109,6 +109,7 @@ void USpySpawnBotManagerComponent::ServerCreateBots_Implementation()
 			FRotator Rotation = SpawnPoint->GetActorRotation();
 
 			SpawnOneBot(Location, Rotation);
+			break;
 		}
 	}
 }

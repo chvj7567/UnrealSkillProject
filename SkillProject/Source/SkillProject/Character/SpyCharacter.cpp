@@ -101,6 +101,15 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	SpyPawnExtensionComponent->HandleControllerChanged();
+
+	//# 조종하는 컨트롤러가 AI인지 확인
+	if (NewController->IsPlayerController() == false)
+	{
+		//# AI 전용 회전 설정
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->RotationRate.Yaw = 1080.f;
+	}
 }
 
 void ASpyCharacter::UnPossessed()
