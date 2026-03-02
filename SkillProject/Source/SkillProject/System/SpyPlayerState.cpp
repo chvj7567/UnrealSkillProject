@@ -132,7 +132,7 @@ void ASpyPlayerState::OnReactivated()
 	}
 }
 
-void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData)
+void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData, bool bInIsBot)
 {
 	//# 서버에서만 세팅
 	if (GetLocalRole() != ROLE_Authority)
@@ -154,11 +154,26 @@ void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InChar
 
 	for (const FCharacterAssetEntry& Entry : CharacterAssetData->CharacterAssets.AssetEntries)
 	{
-		for (const USpyAbilityData* AbilityData : Entry.ClassSkills)
+		//# AI 데이터 세팅
+		if (bInIsBot && Entry.ClassType == SpyGameplayTags::Character_Class_AI)
 		{
-			if (AbilityData)
+			for (const USpyAbilityData* AbilityData : Entry.ClassSkills)
 			{
-				AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+				if (AbilityData)
+				{
+					AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+				}
+			}
+		}
+		//# 임시로 우선 한 개 클래스만 있다고 가정
+		else
+		{
+			for (const USpyAbilityData* AbilityData : Entry.ClassSkills)
+			{
+				if (AbilityData)
+				{
+					AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+				}
 			}
 		}
 	}

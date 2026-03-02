@@ -36,7 +36,7 @@ void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 		//# PS에 데이터 Set
 		if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
 		{
-			PS->SetCharacterAssetData(CharacterAssetData);
+			PS->SetCharacterAssetData(CharacterAssetData, NewPlayer->IsPlayerController());
 		}
 	}
 }

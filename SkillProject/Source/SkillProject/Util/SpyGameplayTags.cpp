@@ -15,6 +15,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InitState_DataInitialized, "InitState.DataInitialized");
 	UE_DEFINE_GAMEPLAY_TAG(InitState_GameplayReady, "InitState.GameplayReady");
 
+	UE_DEFINE_GAMEPLAY_TAG(Character_Class_AI, "Character.Class.AI");
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class_Normal, "Character.Class.Normal");
 
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_SuperArmor, "Character.State.SuperArmor");

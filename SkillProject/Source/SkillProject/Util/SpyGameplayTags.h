@@ -18,6 +18,7 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_GameplayReady);
 
 	//# 캐릭터 클래스
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class_AI);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class_Normal);
 
 	//# 캐릭터 상태
