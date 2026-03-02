@@ -59,6 +59,11 @@ public:
     USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return AbilitySystemComponent; }
 
     static const FName NAME_AbilityReady;
+
+    void InitComboStep() { ComboStep = 0; }
+    int32 GetComboStep() const { return ComboStep; }
+    int32 AddOrGetComboStep() { return ++ComboStep; }
+
 protected:
     UFUNCTION()
     void OnRep_CharacterAssetData();
@@ -75,4 +80,8 @@ protected:
 
     UPROPERTY(Replicated)
     EPlayerConnectionType PlayerConnectionType;
+
+private:
+    int32 ComboStep;
+
 };

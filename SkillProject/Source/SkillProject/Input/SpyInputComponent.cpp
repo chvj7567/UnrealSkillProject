@@ -15,6 +15,7 @@
 #include "Data/SpyCharacterAssetData.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "Character/SpyCharacter.h"
+#include "SKGameplayTags.h"
 
 const FName USpyInputComponent::NAME_ActorFeatureName("Input");
 
@@ -184,7 +185,7 @@ void USpyInputComponent::Move(const FInputActionValue& InValue)
 			if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 			{
 				//# Death 확인
-				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Character_State_Death))
+				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
 					return;
 
 				//# Move Lock 확인

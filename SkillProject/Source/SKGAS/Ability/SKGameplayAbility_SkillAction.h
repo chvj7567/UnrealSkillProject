@@ -33,6 +33,7 @@ public:
 
 public:
     virtual void OnWaitGameplayEvent(FGameplayEventData Payload) override;
+
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,

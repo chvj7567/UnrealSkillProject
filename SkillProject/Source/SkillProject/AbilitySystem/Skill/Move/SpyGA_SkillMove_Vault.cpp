@@ -41,7 +41,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	UAISense_Hearing::ReportNoiseEvent(
 		Avatar->GetWorld(),
 		Avatar->GetActorLocation(),
-		2.0f,          // 공격은 큰 소리
+		2.0f,
 		Avatar,
 		0.f,
 		FName("AttackNoise")
