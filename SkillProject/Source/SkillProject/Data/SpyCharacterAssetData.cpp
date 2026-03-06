@@ -2,6 +2,7 @@
 #include "Manager/SpyAssetManager.h"
 #include "UObject/ObjectSaveContext.h"
 #include "Data/SpyAbilityData.h"
+#include "Data/SpyComboAssetData.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
@@ -47,4 +48,18 @@ TArray<TSubclassOf<UActorComponent>> USpyCharacterAssetData::GetAllComponentClas
 	}
 
 	return ComponentClasses;
+}
+
+FGameplayTag USpyCharacterAssetData::GetComboTag(FGameplayTag InClassType, int ComboStep)
+{
+	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
+	{
+		if (CharacterAsset.ClassType == InClassType)
+		{
+			if (CharacterAsset.ClassCombos != nullptr)
+				return CharacterAsset.ClassCombos->GetComboTag(ComboStep);
+		}
+	}
+
+	return FGameplayTag();
 }

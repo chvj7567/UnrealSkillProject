@@ -132,7 +132,7 @@ void ASpyPlayerState::OnReactivated()
 	}
 }
 
-void ASpyPlayerState::SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData, bool bInIsBot)
+void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsBot)
 {
 	//# 서버에서만 세팅
 	if (GetLocalRole() != ROLE_Authority)

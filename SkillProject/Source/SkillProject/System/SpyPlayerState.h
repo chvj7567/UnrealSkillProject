@@ -52,8 +52,8 @@ public:
     //# End of APlayerState interface
 
 public:
-    const USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
-    void SetCharacterAssetData(const USpyCharacterAssetData* InCharacterAssetData, bool bInIsBot);
+    USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
+    void SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsBot);
 
     UFUNCTION(BlueprintPure)
     USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return AbilitySystemComponent; }
@@ -62,14 +62,14 @@ public:
 
     void InitComboStep() { ComboStep = 0; }
     int32 GetComboStep() const { return ComboStep; }
-    int32 AddOrGetComboStep() { return ++ComboStep; }
+    void AddComboStep() { ++ComboStep; }
 
 protected:
     UFUNCTION()
     void OnRep_CharacterAssetData();
 
     UPROPERTY(ReplicatedUsing = OnRep_CharacterAssetData)
-    TObjectPtr<const USpyCharacterAssetData> CharacterAssetData;
+    TObjectPtr<USpyCharacterAssetData> CharacterAssetData;
 
 protected:
     UPROPERTY(VisibleAnywhere)
@@ -82,6 +82,7 @@ protected:
     EPlayerConnectionType PlayerConnectionType;
 
 private:
-    int32 ComboStep;
+    UPROPERTY(Replicated)
+    int ComboStep;
 
 };

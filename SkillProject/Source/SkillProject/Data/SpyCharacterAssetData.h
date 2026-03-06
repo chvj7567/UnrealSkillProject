@@ -9,6 +9,7 @@
 #include "SpyCharacterAssetData.generated.h"
 
 class USpyAbilityData;
+class USpyComboAssetData;
 class USpyInputConfig;
 class UInputMappingContext;
 
@@ -26,6 +27,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<TObjectPtr<USpyAbilityData>> ClassSkills;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<USpyComboAssetData> ClassCombos;
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USpyInputConfig> InputConfig;
@@ -63,6 +67,8 @@ protected:
 
 public:
 	TArray<TSubclassOf<UActorComponent>> GetAllComponentClasses(FGameplayTag InClassType) const;
+
+	FGameplayTag GetComboTag(FGameplayTag InClassType, int ComboStep);
 
 public:
 	UPROPERTY(EditDefaultsOnly)

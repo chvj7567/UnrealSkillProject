@@ -61,6 +61,9 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Jump, "Skill.Move.Jump");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Death, "Skill.Util.Death");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Combo1, "Skill.Util.Combo1");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Combo2, "Skill.Util.Combo2");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Combo3, "Skill.Util.Combo3");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Fire, "GameplayCue.Actor.Fire");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");
