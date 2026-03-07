@@ -22,6 +22,7 @@ void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHan
     if (OwnerPS == nullptr || OwnerASC == nullptr)
         return;
 
+    //# 콤보 가능 태그 있는지 확인
     if (OwnerASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Combo))
     {
         FGameplayTag MyTag = AbilityTags.GetByIndex(0);
