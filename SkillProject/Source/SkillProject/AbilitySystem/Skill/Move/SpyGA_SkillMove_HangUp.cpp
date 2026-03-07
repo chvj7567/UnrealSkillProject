@@ -14,7 +14,7 @@ void USpyGA_SkillMove_HangUp::ActivateAbility(const FGameplayAbilitySpecHandle H
 
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
@@ -33,7 +33,7 @@ void USpyGA_SkillMove_HangUp::ActivateAbility(const FGameplayAbilitySpecHandle H
 	}
 	else
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}
 }
 
@@ -50,7 +50,7 @@ void USpyGA_SkillMove_HangUp::EndAbility(const FGameplayAbilitySpecHandle Handle
 		}
 	}
 
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 void USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData(FMotionWarpingData InHangUpData)
 {

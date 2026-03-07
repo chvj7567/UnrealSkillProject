@@ -18,7 +18,13 @@ public:
     virtual void OnMontageCompleted();
 
     UFUNCTION()
+    virtual void OnMontageInterrupted();
+
+    UFUNCTION()
     virtual void OnMontageCancelled();
+
+    UFUNCTION()
+    virtual void OnMontageBlendOut();
 
     UFUNCTION()
     virtual void OnWaitGameplayEvent(FGameplayEventData Payload);

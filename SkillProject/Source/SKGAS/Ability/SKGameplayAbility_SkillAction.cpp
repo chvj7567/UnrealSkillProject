@@ -67,7 +67,7 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
 
     if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
     {
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
         return;
     }
 
@@ -88,9 +88,9 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
         if (UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AbilityMontage))
         {
             MontageTask->OnCompleted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCompleted);
-            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->OnInterrupted.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageInterrupted);
             MontageTask->OnCancelled.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
-            MontageTask->OnBlendOut.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageCancelled);
+            MontageTask->OnBlendOut.AddDynamic(this, &USKGameplayAbility_SkillAction::OnMontageBlendOut);
             MontageTask->ReadyForActivation();
         }
     }

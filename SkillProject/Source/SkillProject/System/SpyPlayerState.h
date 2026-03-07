@@ -60,10 +60,6 @@ public:
 
     static const FName NAME_AbilityReady;
 
-    void InitComboStep() { ComboStep = 0; }
-    int32 GetComboStep() const { return ComboStep; }
-    void AddComboStep() { ++ComboStep; }
-
 protected:
     UFUNCTION()
     void OnRep_CharacterAssetData();
@@ -80,9 +76,5 @@ protected:
 
     UPROPERTY(Replicated)
     EPlayerConnectionType PlayerConnectionType;
-
-private:
-    UPROPERTY(Replicated)
-    int ComboStep;
 
 };

@@ -146,8 +146,6 @@ void USKCueManager::HandlePostLoadMap(UWorld* NewWorld)
             PreloadedCueReferencers.Remove(*CueIt);
             CueIt.RemoveCurrent();
         }
-
-        UE_LOG(LogTemp, Error, TEXT("# [SKCueManager] Remove %s"), *(*CueIt)->GetName());
     }
 }
 

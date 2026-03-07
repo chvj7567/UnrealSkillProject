@@ -3,12 +3,14 @@
 
 #include "Data/SpyComboAssetData.h"
 
-FGameplayTag USpyComboAssetData::GetComboTag(int ComboStep)
+FGameplayTag USpyComboAssetData::GetComboTag(FGameplayTag InStartSkillTag)
 {
 	for (FSpyComboSet ComboSet : ComboSets)
 	{
-		if (ComboSet.ComboStep == ComboStep)
-			return ComboSet.ComboTag;
+		if (ComboSet.StartSkillTag != InStartSkillTag)
+			continue;
+
+		return ComboSet.ComboTag;
 	}
 
 	return FGameplayTag();

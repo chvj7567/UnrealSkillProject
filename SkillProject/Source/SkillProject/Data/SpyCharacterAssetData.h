@@ -68,7 +68,7 @@ protected:
 public:
 	TArray<TSubclassOf<UActorComponent>> GetAllComponentClasses(FGameplayTag InClassType) const;
 
-	FGameplayTag GetComboTag(FGameplayTag InClassType, int ComboStep);
+	FGameplayTag GetComboTag(FGameplayTag InClassType, FGameplayTag InStartSkillTag);
 
 public:
 	UPROPERTY(EditDefaultsOnly)

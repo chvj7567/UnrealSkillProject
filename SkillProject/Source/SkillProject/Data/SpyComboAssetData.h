@@ -15,7 +15,7 @@ struct FSpyComboSet
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-	int ComboStep;
+	FGameplayTag StartSkillTag;
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag ComboTag;
@@ -27,7 +27,7 @@ class SKILLPROJECT_API USpyComboAssetData : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
-	FGameplayTag GetComboTag(int ComboStep);
+	FGameplayTag GetComboTag(FGameplayTag InStartSkillTag);
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

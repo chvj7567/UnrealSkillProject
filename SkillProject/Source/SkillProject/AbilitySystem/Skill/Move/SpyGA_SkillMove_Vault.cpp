@@ -15,7 +15,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
@@ -61,7 +61,7 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 		}
 	}
 
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultData)

@@ -49,15 +49,14 @@ TArray<TSubclassOf<UActorComponent>> USpyCharacterAssetData::GetAllComponentClas
 
 	return ComponentClasses;
 }
-
-FGameplayTag USpyCharacterAssetData::GetComboTag(FGameplayTag InClassType, int ComboStep)
+FGameplayTag USpyCharacterAssetData::GetComboTag(FGameplayTag InClassType, FGameplayTag InStartSkillTag)
 {
 	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
 	{
 		if (CharacterAsset.ClassType == InClassType)
 		{
 			if (CharacterAsset.ClassCombos != nullptr)
-				return CharacterAsset.ClassCombos->GetComboTag(ComboStep);
+				return CharacterAsset.ClassCombos->GetComboTag(InStartSkillTag);
 		}
 	}
 
