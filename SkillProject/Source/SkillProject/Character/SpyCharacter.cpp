@@ -180,6 +180,9 @@ USpyAbilitySystemComponent* ASpyCharacter::GetSpyAbilitySystemComponent() const
 
 void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator)
 {
+	if (HasAuthority())
+		return;
+
 	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
 	{
 		HpBar->UpdateHP(InNewValue, InHealthComponent->GetMaxHealth());
@@ -189,14 +192,13 @@ void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, floa
 
 void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 {
-	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
-	{
-		HpBar->UpdateHP(0, 0);
+	FGameplayEventData Payload;
+	Payload.EventTag = SpyGameplayTags::Skill_Util_Death;
+	Payload.Instigator = InCauserActor;
 
-		FGameplayTagContainer DeathTags;
-		DeathTags.AddTag(SpyGameplayTags::Skill_Util_Death);
-		GetAbilitySystemComponent()->TryActivateAbilitiesByTag(DeathTags, true);
-	}
+	GetAbilitySystemComponent()->HandleGameplayEvent(Payload.EventTag, &Payload);
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnDeath: %s"), *GetName());
 }
 
 void ASpyCharacter::OnAbilitySystemInitialized()

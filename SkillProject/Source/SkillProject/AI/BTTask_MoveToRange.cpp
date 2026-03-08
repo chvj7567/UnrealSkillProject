@@ -6,9 +6,11 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/PlayerState.h"
+#include "SKGameplayTags.h"
 #include "Util/SpyGameplayTags.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AITypes.h"
+#include "GameFramework/Character.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_MoveToRange)
 
@@ -19,26 +21,31 @@ UBTTask_MoveToRange::UBTTask_MoveToRange()
 
 EBTNodeResult::Type UBTTask_MoveToRange::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    AAIController* AIController = OwnerComp.GetAIOwner();
-    UBlackboardComponent* BlackBoardComp = OwnerComp.GetBlackboardComponent();
-    FName Key = GetSelectedBlackboardKey();
+    AIController = OwnerComp.GetAIOwner();
+    BlackBoardComp = OwnerComp.GetBlackboardComponent();
+    Key = GetSelectedBlackboardKey();
 
     if (AIController == nullptr || BlackBoardComp == nullptr)
         return EBTNodeResult::Failed;
 
-    AActor* TargetActor = Cast<AActor>(BlackBoardComp->GetValueAsObject(Key));
-    if (TargetActor == nullptr)
-        return EBTNodeResult::Failed;
+    Target = Cast<ACharacter>(BlackBoardComp->GetValueAsObject(Key));
 
-    //# 움직일 수 있는 상태인지 확인
+    //# 내가 움직일 수 있는 상태인지 확인
     if (CanMove(AIController) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
+    //# 타겟을 공격할 수 있는지 확인
+    if (CanTargetAttack(Target) == false)
+    {
+        AIController->StopMovement();
+        return EBTNodeResult::Failed;
+    }
+
     //# 타겟을 향해 바라봄
-    FVector Direction = TargetActor->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
+    FVector Direction = Target->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
     Direction.Z = 0.f;
 
     FRotator TargetRot = FRotationMatrix::MakeFromX(Direction).Rotator();
@@ -46,14 +53,14 @@ EBTNodeResult::Type UBTTask_MoveToRange::ExecuteTask(UBehaviorTreeComponent& Own
     AIController->GetPawn()->SetActorRotation(TargetRot);
 
     //# 타겟과의 거리 확인
-    float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), TargetActor->GetActorLocation());
+    float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), Target->GetActorLocation());
     if (Distance <= StoppingDistance)
     {
         AIController->StopMovement();
         return EBTNodeResult::Succeeded;
     }
 
-    FAIMoveRequest MoveReq(TargetActor);
+    FAIMoveRequest MoveReq(Target);
     MoveReq.SetAcceptanceRadius(StoppingDistance);
 
     FPathFollowingRequestResult Result = AIController->MoveTo(MoveReq);
@@ -73,9 +80,9 @@ EBTNodeResult::Type UBTTask_MoveToRange::ExecuteTask(UBehaviorTreeComponent& Own
     return EBTNodeResult::Failed;
 }
 
-bool UBTTask_MoveToRange::CanMove(AAIController* AIController)
+bool UBTTask_MoveToRange::CanMove(AAIController* InAIController)
 {
-    APawn* Pawn = AIController->GetPawn();
+    APawn* Pawn = InAIController->GetPawn();
     if (Pawn == nullptr)
         return false;
 
@@ -87,8 +94,33 @@ bool UBTTask_MoveToRange::CanMove(AAIController* AIController)
     if (ASC == nullptr)
         return false;
 
+    if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+        return false;
+
     if (ASC->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Move))
         return false;
+
+    return true;
+}
+
+bool UBTTask_MoveToRange::CanTargetAttack(ACharacter* InTarget)
+{
+    if (InTarget == nullptr)
+        return false;
+
+    APlayerState* PS = InTarget->GetPlayerState();
+    if (PS == nullptr)
+        return false;
+
+    UAbilitySystemComponent* ASC = PS->FindComponentByClass<UAbilitySystemComponent>();
+    if (ASC == nullptr)
+        return false;
+
+    if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+    {
+        BlackBoardComp->ClearValue(Key);
+        return false;
+    }
 
     return true;
 }

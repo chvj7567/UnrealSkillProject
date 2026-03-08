@@ -26,5 +26,6 @@ float USpyDamageCalculation::CalculateBaseMagnitude_Implementation(const FGamepl
 		CustomContext->SetIsCritical(bIsCritical);
 	}
 
-	return Health < 1.0f ? -Health : -1.0f;
+	return -100.f;
+	//return Health < 1.0f ? -Health : -1.0f;
 }

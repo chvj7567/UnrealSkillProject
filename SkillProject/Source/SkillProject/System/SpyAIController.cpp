@@ -4,12 +4,16 @@
 #include "System/SpyAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "SKGameplayTags.h"
 #include "SKAbilitySystemGlobals.h"
 #include "GameFramework/PlayerState.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Damage.h"
+#include "Attribute/SKAttributeSet.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAIController)
 
 ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -209,10 +213,33 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 	if (BlackboardComp == nullptr)
 		return;
 
-	AActor* TargetActor = nullptr;
-	if (APlayerState* PS = Cast<APlayerState>(Actor))
+	if (APlayerState* MyPS = Cast<APlayerState>(GetPawn()->GetPlayerState()))
 	{
-		TargetActor = PS->GetPawn();
+		if (UAbilitySystemComponent* MyASC = MyPS->FindComponentByClass<UAbilitySystemComponent>())
+		{
+			bool bIsDead = MyASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.0f;
+			if (bIsDead || MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] MyActor is Die"));
+				return;
+			}
+		}
+	}
+
+	AActor* TargetActor = nullptr;
+	if (APlayerState* TargetPS = Cast<APlayerState>(Actor))
+	{
+		TargetActor = TargetPS->GetPawn();
+
+		if (UAbilitySystemComponent* MyASC = TargetPS->FindComponentByClass<UAbilitySystemComponent>())
+		{
+			bool bIsDead = MyASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.0f;
+			if (bIsDead || MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] TargetActor is Die"));
+				return;
+			}
+		}
 	}
 	else
 	{
