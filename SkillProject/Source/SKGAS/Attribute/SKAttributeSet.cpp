@@ -68,27 +68,32 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                 //# TODO
             }
 
-            //# 피격 방향 태그
-            FGameplayTag HitTag = CustomContext->GetHitDirectionTag();
-            if (HitTag.IsValid())
+            //# 사망 확인
+            if (GetHealth() <= 0.0f)
             {
                 FGameplayEventData Payload;
-                Payload.EventTag = HitTag;
+                Payload.EventTag = SKGameplayTags::Character_State_Death;
                 Payload.Instigator = CustomContext->GetInstigator();
                 Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
 
-                Data.Target.HandleGameplayEvent(HitTag, &Payload);
+                Data.Target.HandleGameplayEvent(Payload.EventTag, &Payload);
+
+                UE_LOG(LogTemp, Warning, TEXT("# [SKAttributeSet] Death %s"), *TargetActor->GetName());
             }
-        }
+            else
+            {
+                //# 피격 방향 태그
+                FGameplayTag HitTag = CustomContext->GetHitDirectionTag();
+                if (HitTag.IsValid())
+                {
+                    FGameplayEventData Payload;
+                    Payload.EventTag = HitTag;
+                    Payload.Instigator = CustomContext->GetInstigator();
+                    Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
 
-        //# 사망 확인
-        if (GetHealth() <= 0.0f)
-        {
-            FGameplayEventData Payload;
-            Payload.EventTag = SKGameplayTags::Character_State_Death;
-            Payload.EventMagnitude = CustomContext->IsCritical() ? 1.0f : 0.0f;
-
-            Data.Target.HandleGameplayEvent(SKGameplayTags::Character_State_Death, &Payload);
+                    Data.Target.HandleGameplayEvent(Payload.EventTag, &Payload);
+                }
+            }
         }
     }
 }

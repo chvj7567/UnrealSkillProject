@@ -16,6 +16,7 @@ namespace SKGameplayTags
 
 	//# 캐릭터 상태
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Alive);
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_DeathStart);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Death);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Skill);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_SuperArmor);

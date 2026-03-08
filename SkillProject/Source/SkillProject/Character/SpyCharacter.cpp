@@ -29,6 +29,7 @@
 #include "Character/SpyPawnExtensionComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Character/SpyHealthComponent.h"
+#include "SKGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -192,12 +193,6 @@ void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, floa
 
 void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 {
-	FGameplayEventData Payload;
-	Payload.EventTag = SpyGameplayTags::Skill_Util_Death;
-	Payload.Instigator = InCauserActor;
-
-	GetAbilitySystemComponent()->HandleGameplayEvent(Payload.EventTag, &Payload);
-
 	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnDeath: %s"), *GetName());
 }
 

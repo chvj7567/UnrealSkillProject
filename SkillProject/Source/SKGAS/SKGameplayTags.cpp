@@ -11,6 +11,7 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class, "Character.Class");
 
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Alive, "Character.State.Alive");
+	UE_DEFINE_GAMEPLAY_TAG(Character_State_DeathStart, "Character.State.DeathStart");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Death, "Character.State.Death");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Skill, "Character.State.Skill");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_SuperArmor, "Character.State.SuperArmor");

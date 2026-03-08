@@ -10,6 +10,7 @@
 #include "Manager/SpyAssetManager.h"
 #include "Data/SpyAnimAssetData.h"
 #include "SKGameplayTags.h"
+#include "Attribute/SKAttributeSet.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
 
@@ -80,7 +81,12 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
     {
         if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
         {
-            IsDeath = SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
+            if (UAbilitySystemComponent* MyASC = SpyPlayerState->FindComponentByClass<UAbilitySystemComponent>())
+            {
+                bool bIsDead = MyASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.0f;
+                IsDeath = /*bIsDead ||*/ SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
+            }
+
             IsClimbing = PlayerMovementComponent->GetMovementName() == TEXT("Custom");
             if (IsClimbing)
             {
