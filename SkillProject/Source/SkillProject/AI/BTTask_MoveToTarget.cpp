@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BTTask_MoveToRange.h"
+#include "BTTask_MoveToTarget.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystemComponent.h"
@@ -12,14 +12,14 @@
 #include "AITypes.h"
 #include "GameFramework/Character.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_MoveToRange)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_MoveToTarget)
 
-UBTTask_MoveToRange::UBTTask_MoveToRange()
+UBTTask_MoveToTarget::UBTTask_MoveToTarget()
 {
-    NodeName = "Move To Range";
+    NodeName = "Move To Target";
 }
 
-EBTNodeResult::Type UBTTask_MoveToRange::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     AIController = OwnerComp.GetAIOwner();
     BlackBoardComp = OwnerComp.GetBlackboardComponent();
@@ -80,7 +80,7 @@ EBTNodeResult::Type UBTTask_MoveToRange::ExecuteTask(UBehaviorTreeComponent& Own
     return EBTNodeResult::Failed;
 }
 
-bool UBTTask_MoveToRange::CanMove(AAIController* InAIController)
+bool UBTTask_MoveToTarget::CanMove(AAIController* InAIController)
 {
     APawn* Pawn = InAIController->GetPawn();
     if (Pawn == nullptr)
@@ -103,7 +103,7 @@ bool UBTTask_MoveToRange::CanMove(AAIController* InAIController)
     return true;
 }
 
-bool UBTTask_MoveToRange::CanTargetAttack(ACharacter* InTarget)
+bool UBTTask_MoveToTarget::CanTargetAttack(ACharacter* InTarget)
 {
     if (InTarget == nullptr)
         return false;

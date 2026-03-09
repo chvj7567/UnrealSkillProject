@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
-#include "BTTask_MoveToRange.generated.h"
+#include "BTTask_MoveToTarget.generated.h"
 
 UCLASS()
-class SKILLPROJECT_API UBTTask_MoveToRange : public UBTTask_MoveTo
+class SKILLPROJECT_API UBTTask_MoveToTarget : public UBTTask_MoveTo
 {
 	GENERATED_BODY()
 	
 public:
-	UBTTask_MoveToRange();
+	UBTTask_MoveToTarget();
 
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
