@@ -1,0 +1,35 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "SpyTargetingManagerComponent.generated.h"
+
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class SKILLPROJECT_API USpyTargetingManagerComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:	
+	USpyTargetingManagerComponent();
+
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void SetCurrentTarget(AActor* NewTarget);
+
+	TWeakObjectPtr<AActor> GetTarget() const { return CurrentTarget; }
+
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	bool IsTargetValid() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void FindTarget(float Radius);
+
+protected:
+	bool IsPotentialTargetValid(AActor* PotentialTarget) const;
+
+protected:
+	UPROPERTY(Replicated)
+	TWeakObjectPtr<AActor> CurrentTarget;
+};

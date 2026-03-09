@@ -50,6 +50,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
+	GetCharacterMovement()->RotationRate.Yaw = 1080.f;
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
@@ -109,7 +110,6 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 		//# AI 전용 회전 설정
 		bUseControllerRotationYaw = true;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
-		GetCharacterMovement()->RotationRate.Yaw = 1080.f;
 	}
 }
 
