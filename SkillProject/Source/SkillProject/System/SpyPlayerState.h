@@ -53,7 +53,7 @@ public:
 
 public:
     USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
-    void SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsBot);
+    void SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsPlayer);
 
     UFUNCTION(BlueprintPure)
     USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return AbilitySystemComponent; }

@@ -217,8 +217,7 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 	{
 		if (UAbilitySystemComponent* MyASC = MyPS->FindComponentByClass<UAbilitySystemComponent>())
 		{
-			bool bIsDead = MyASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.0f;
-			if (bIsDead || MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+			if (MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] MyActor is Die"));
 				return;
