@@ -72,8 +72,8 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Combo4, "Skill.Util.Combo4");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Combo5, "Skill.Util.Combo5");
 
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Fire, "GameplayCue.Actor.Fire");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Heal, "GameplayCue.Actor.Heal");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Attack, "GameplayCue.Actor.Attack");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Target, "GameplayCue.Actor.Target");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Static_Hit, "GameplayCue.Static.Hit");
 

@@ -47,6 +47,18 @@ bool ASKCueNotify_Actor::OnActive_Implementation(AActor* MyTarget, const FGamepl
 
 bool ASKCueNotify_Actor::WhileActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
+	if (UWorld* World = GetWorld())
+	{
+		if (APlayerCameraManager* CameraManager = World->GetFirstPlayerController()->PlayerCameraManager)
+		{
+			FVector CameraLocation = CameraManager->GetCameraLocation();
+			FVector MyLocation = GetActorLocation();
+			FRotator LookAtRotation = FRotationMatrix::MakeFromX(CameraLocation - MyLocation).Rotator();
+
+			SetActorRotation(LookAtRotation);
+		}
+	}
+
 	return Super::WhileActive_Implementation(MyTarget, Parameters);
 }
 

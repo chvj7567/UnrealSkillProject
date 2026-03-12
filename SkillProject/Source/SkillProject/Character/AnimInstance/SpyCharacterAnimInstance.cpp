@@ -81,12 +81,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
     {
         if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
         {
-            if (UAbilitySystemComponent* MyASC = SpyPlayerState->FindComponentByClass<UAbilitySystemComponent>())
-            {
-                bool bIsDead = MyASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.0f;
-                IsDeath = /*bIsDead ||*/ SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
-            }
-
+            IsDeath = SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
             IsClimbing = PlayerMovementComponent->GetMovementName() == TEXT("Custom");
             if (IsClimbing)
             {
