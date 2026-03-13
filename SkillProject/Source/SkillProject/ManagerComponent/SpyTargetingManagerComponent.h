@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "SpyTargetingManagerComponent.generated.h"
 
+class ASpyCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SKILLPROJECT_API USpyTargetingManagerComponent : public UActorComponent
@@ -24,7 +25,7 @@ public:
 	bool IsTargetValid() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	void FindTarget(float Radius);
+	bool FindTarget(float Radius);
 
 protected:
 	bool IsPotentialTargetValid(AActor* PotentialTarget) const;

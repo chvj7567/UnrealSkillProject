@@ -18,4 +18,8 @@ protected:
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<UGameplayEffect> TargetingEffectClass;
 };

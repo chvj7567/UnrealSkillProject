@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "AIController.h"
 #include "Net/UnrealNetwork.h"
+#include "DrawDebugHelpers.h"
 
 USpyTargetingManagerComponent::USpyTargetingManagerComponent()
 {
@@ -43,11 +44,11 @@ bool USpyTargetingManagerComponent::IsTargetValid() const
     return IsPotentialTargetValid(CurrentTarget.Get());
 }
 
-void USpyTargetingManagerComponent::FindTarget(float Radius)
+bool USpyTargetingManagerComponent::FindTarget(float Radius)
 {
     AActor* Owner = GetOwner();
     if (Owner == nullptr)
-        return;
+        return false;
 
     //# 감지할 오브젝트 타입을 Pawn으로 설정
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -67,6 +68,18 @@ void USpyTargetingManagerComponent::FindTarget(float Radius)
         nullptr,
         ActorsToIgnore,
         OutActors
+    );
+
+    DrawDebugSphere(
+        GetWorld(),
+        Owner->GetActorLocation(),
+        Radius,
+        24,                // 세그먼트 수 (구의 디테일)
+        FColor::Blue,       // 선 색상
+        false,             // 영구 지속 여부
+        0.5f,              // 지속 시간 (초)
+        0,                 // Depth Priority
+        1.0f               // 선 두께
     );
 
     AActor* Target = nullptr;
@@ -90,6 +103,8 @@ void USpyTargetingManagerComponent::FindTarget(float Radius)
     }
 
     SetCurrentTarget(Target);
+
+    return Target != nullptr;
 }
 
 bool USpyTargetingManagerComponent::IsPotentialTargetValid(AActor* PotentialTarget) const

@@ -2,8 +2,9 @@
 
 
 #include "SpyGA_Targeting.h"
-#include "GameFramework/Character.h"
+#include "Character/SpyCharacter.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_Targeting)
 
@@ -11,15 +12,52 @@ void USpyGA_Targeting::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (HasAuthority(&CurrentActivationInfo))
+	do
 	{
-		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+		if (HasAuthority(&CurrentActivationInfo) == false)
+			break;
+
+		if (TargetingEffectClass == nullptr)
+			break;
+
+		ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+		if (OwnerCharacter == nullptr)
+			break;
+
+		USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
+		if (TargetingComp == nullptr)
+			break;
+
+		bool bFindTarget = TargetingComp->FindTarget(500.f);
+		if (bFindTarget == false)
+			break;
+
+		TWeakObjectPtr<AActor> Target = TargetingComp->GetTarget();
+		if (Target.IsValid() == false)
+			break;
+
+		ASpyCharacter* TargetCharacter = Cast<ASpyCharacter>(Target.Get());
+		if (TargetCharacter == nullptr)
+			break;
+
+		USpyAbilitySystemComponent* TargetASC = TargetCharacter->GetSpyAbilitySystemComponent();
+		if (TargetASC == nullptr)
+			break;
+
+		FGameplayEffectContextHandle EffectContext = TargetASC->MakeEffectContext();
+		EffectContext.AddInstigator(GetOwningActorFromActorInfo(), GetAvatarActorFromActorInfo());
+
+		FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(TargetingEffectClass, 1.0f, EffectContext);
+		if (SpecHandle.IsValid() == false)
+			break;
+
+		FActiveGameplayEffectHandle AppliedHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		if (AppliedHandle.WasSuccessfullyApplied())
 		{
-			//# 서버에서 타겟 Find
-			if (USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>())
-			{
-				TargetingComp->FindTarget(100.f);
-			}
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyGA_Targeting] GE Successfully Applied! Effect: %s"), *SpecHandle.Data.Get()->Def->GetName());
 		}
-	}
+
+	} while (false);
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

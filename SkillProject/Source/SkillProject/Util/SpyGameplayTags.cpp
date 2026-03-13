@@ -18,6 +18,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class_AI, "Character.Class.AI");
 	UE_DEFINE_GAMEPLAY_TAG(Character_Class_Normal, "Character.Class.Normal");
 
+	UE_DEFINE_GAMEPLAY_TAG(Character_State_Targeting, "Character.State.Targeting");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Normal, "Character.State.Movement.Normal");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Climb, "Character.State.Movement.Climb");
 
