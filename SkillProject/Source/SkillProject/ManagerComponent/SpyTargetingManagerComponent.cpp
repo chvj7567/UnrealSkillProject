@@ -35,14 +35,11 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
     if (SpyCharacter == nullptr)
         return;
 
-    //# 서버만 타겟 세팅
-    /*if (SpyCharacter->HasAuthority() == false)
-        return;*/
-
 	if (NewTarget)
 	{
         if (CurrentTarget.IsValid())
         {
+            //# 이전 타겟 GE 제거
             if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget.Get())->GetSpyAbilitySystemComponent())
             {
                 FGameplayTagContainer TagContainer;

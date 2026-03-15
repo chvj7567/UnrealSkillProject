@@ -85,13 +85,6 @@ void ASpyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	USpyUIManager::Get(this)->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
-
-	/*if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-	{
-		SpyAnimManagerComponent->Initialize(Cast<USpyCharacterAnimInstance>(AnimInstance));
-	}*/
-
 	if (HasAuthority())
 	{
 		GetWorldTimerManager().SetTimer(WeaponSpawnTimerHandle, this, &ASpyCharacter::SpawnAndAttachWeapon, 1.0f, false);
@@ -123,6 +116,8 @@ void ASpyCharacter::UnPossessed()
 void ASpyCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
+
+	USpyUIManager::Get(this)->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
 
 	SpyPawnExtensionComponent->HandleControllerChanged();
 }
