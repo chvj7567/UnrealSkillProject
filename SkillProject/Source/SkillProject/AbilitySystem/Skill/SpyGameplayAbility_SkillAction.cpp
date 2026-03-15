@@ -8,8 +8,40 @@
 #include "System/SpyPlayerState.h"
 #include "GameFramework/Character.h"
 #include "Data/SpyCharacterAssetData.h"
+#include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_SkillAction)
+
+void USpyGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+    do
+    {
+        ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+        if (OwnerCharacter == nullptr)
+            break;
+
+        USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
+        if (TargetingComp == nullptr)
+            break;
+
+        if (TargetingComp->GetTarget().IsValid())
+        {
+            FVector LookDir = TargetingComp->GetTarget()->GetActorLocation() - OwnerCharacter->GetActorLocation();
+            LookDir.Z = 0.f;
+            FRotator TargetRot = LookDir.Rotation();
+
+            OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+
+            OwnerCharacter->SetActorRotation(TargetRot);
+
+            OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
+        }
+
+    } while (false);
+
+    Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+}
 
 void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {

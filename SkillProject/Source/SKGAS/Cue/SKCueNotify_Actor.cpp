@@ -36,11 +36,8 @@ bool ASKCueNotify_Actor::OnActive_Implementation(AActor* MyTarget, const FGamepl
 		return false;
 
 	ParticleSystemComponent->Activate(true);
-
-	if (bLooping == false)
-	{
-		ParticleSystemComponent->OnSystemFinished.AddDynamic(this, &ASKCueNotify_Actor::OnParticleSystemFinished);
-	}
+	ParticleSystemComponent->OnSystemFinished.AddDynamic(this, &ASKCueNotify_Actor::OnParticleSystemFinished);
+	ParticleSystemComponent->AddRelativeLocation(ParticleOffset);
 
 	return true;
 }
@@ -68,11 +65,7 @@ bool ASKCueNotify_Actor::OnRemove_Implementation(AActor* MyTarget, const FGamepl
 		return false;
 
 	ParticleSystemComponent->DeactivateSystem();
-
-	if (bLooping == false)
-	{
-		ParticleSystemComponent->OnSystemFinished.RemoveDynamic(this, &ASKCueNotify_Actor::OnParticleSystemFinished);
-	}
+	ParticleSystemComponent->OnSystemFinished.RemoveDynamic(this, &ASKCueNotify_Actor::OnParticleSystemFinished);
 
 	//# 호출해줘야 풀링 재사용 정상 동작
 	K2_EndGameplayCue();

@@ -34,5 +34,5 @@ public:
 	class UParticleSystemComponent* ParticleSystemComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bLooping = false;
+	FVector ParticleOffset;
 };

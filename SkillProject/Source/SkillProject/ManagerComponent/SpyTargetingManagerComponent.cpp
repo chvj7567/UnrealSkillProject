@@ -8,6 +8,10 @@
 #include "AIController.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
+#include "GameplayTagContainer.h"
+#include "Util/SpyGameplayTags.h"
+#include "Character/SpyCharacter.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 USpyTargetingManagerComponent::USpyTargetingManagerComponent()
 {
@@ -23,12 +27,31 @@ void USpyTargetingManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeP
 
 void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
 {
-    //# 서버만 타겟 세팅
-    if (GetOwner() && GetOwner()->HasAuthority() == false)
+    AActor* MyActor = GetOwner();
+    if (MyActor == nullptr)
         return;
+
+    ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(MyActor);
+    if (SpyCharacter == nullptr)
+        return;
+
+    //# 서버만 타겟 세팅
+    /*if (SpyCharacter->HasAuthority() == false)
+        return;*/
 
 	if (NewTarget)
 	{
+        if (CurrentTarget.IsValid())
+        {
+            if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget.Get())->GetSpyAbilitySystemComponent())
+            {
+                FGameplayTagContainer TagContainer;
+                TagContainer.AddTag(SpyGameplayTags::Character_State_Targeting);
+
+                ASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
+            }
+        }
+
 		CurrentTarget = NewTarget;
 
         UE_LOG(LogTemp, Warning, TEXT("# [SpyTargeting] Target: %s"), *CurrentTarget.Get()->GetName());
@@ -114,8 +137,7 @@ bool USpyTargetingManagerComponent::IsPotentialTargetValid(AActor* PotentialTarg
 
     if (APawn* Pawn = Cast<APawn>(PotentialTarget))
     {
-        AController* Con = Pawn->GetController();
-        return (Con && Con->IsA<AAIController>());
+        return !Pawn->IsPlayerControlled();
     }
 
     return false;

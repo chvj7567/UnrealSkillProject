@@ -14,8 +14,8 @@ void USpyGA_Targeting::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 
 	do
 	{
-		if (HasAuthority(&CurrentActivationInfo) == false)
-			break;
+		/*if (HasAuthority(&CurrentActivationInfo) == false)
+			break;*/
 
 		if (TargetingEffectClass == nullptr)
 			break;

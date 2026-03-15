@@ -13,6 +13,12 @@ class SKILLPROJECT_API USpyGameplayAbility_SkillAction : public USKGameplayAbili
 	GENERATED_BODY()
 	
 public:
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
+
 	virtual void InputPressed(
 		const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
