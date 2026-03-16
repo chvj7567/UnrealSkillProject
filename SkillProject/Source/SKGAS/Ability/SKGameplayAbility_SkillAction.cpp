@@ -193,16 +193,23 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                 Payload.Target = TargetCharacter;
 
                 TArray<FGameplayTag> HitDirectionTags;
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
+                
+                if (bIsHeal)
+                {
+                    Payload.TargetTags.AddTag(SKGameplayTags::Skill_Buff_Heal);
+                }
+                else
+                {
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                //# 랜덤 방향 Hit 태그
-                int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
-                FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
-
-                Payload.TargetTags.AddTag(RandomHitTag);
+                    //# 랜덤 방향 Hit 태그
+                    int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
+                    FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
+                    Payload.TargetTags.AddTag(RandomHitTag);
+                }
 
                 UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
             }
@@ -225,7 +232,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
 
 void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag)
 {
-    FVector TargetLoc = OwnerCharacter->GetActorLocation();
+    FVector TargetLoc = OwnerCharacter->GetActorLocation() + SphereOffset;
     TArray<FOverlapResult> OutHits;
     FCollisionShape CollisionShape = FCollisionShape::MakeSphere(Radius);
     FCollisionQueryParams QueryParams;
@@ -271,16 +278,23 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                 Payload.Target = TargetCharacter;
 
                 TArray<FGameplayTag> HitDirectionTags;
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
-                HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                //# 랜덤 방향 Hit 태그
-                int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
-                FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
+                if (bIsHeal)
+                {
+                    Payload.TargetTags.AddTag(SKGameplayTags::Skill_Buff_Heal);
+                }
+                else
+                {
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
+                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                Payload.TargetTags.AddTag(RandomHitTag);
+                    //# 랜덤 방향 Hit 태그
+                    int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
+                    FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
+                    Payload.TargetTags.AddTag(RandomHitTag);
+                }
 
                 UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
             }

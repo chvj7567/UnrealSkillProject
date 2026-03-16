@@ -29,15 +29,14 @@ float USpyDamageCalculation::CalculateBaseMagnitude_Implementation(const FGamepl
 		CustomContext->SetIsCritical(bIsCritical);
 	}
 
+    //# AI 여부 확인
     bool bIsSourceAI = false;
     if (AActor* Instigator = Spec.GetContext().GetInstigator())
     {
-        // 1. 직접 AIController인지 확인
         if (Cast<AAIController>(Instigator))
         {
             bIsSourceAI = true;
         }
-        // 2. 만약 Instigator가 Pawn(캐릭터)이라면 그 컨트롤러가 AIController인지 확인
         else if (APawn* Pawn = Cast<APawn>(Instigator))
         {
             if (Cast<AAIController>(Pawn->GetController()))
@@ -45,7 +44,6 @@ float USpyDamageCalculation::CalculateBaseMagnitude_Implementation(const FGamepl
                 bIsSourceAI = true;
             }
         }
-        // 3. 만약 Instigator가 PlayerState라면 그 컨트롤러가 AIController인지 확인
         else if (APlayerState* PS = Cast<APlayerState>(Instigator))
         {
             if (Cast<AAIController>(PS->GetPlayerController()) == nullptr && PS->IsABot())

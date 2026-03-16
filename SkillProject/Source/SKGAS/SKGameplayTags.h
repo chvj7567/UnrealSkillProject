@@ -32,6 +32,7 @@ namespace SKGameplayTags
 
 	//# 버프 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Buff);
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Buff_Heal);
 
 	//# 디버프 스킬
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Debuff);

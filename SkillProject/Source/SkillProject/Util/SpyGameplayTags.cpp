@@ -61,6 +61,11 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_E, "Notify.Skill.Action.E");
 	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Skill_Action_E, "Cooldown.Skill.Action.E");
 
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_F, "Skill.Action.F");
+	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_F, "Effect.Skill.Action.F");
+	UE_DEFINE_GAMEPLAY_TAG(Notify_Skill_Action_F, "Notify.Skill.Action.F");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Skill_Action_F, "Cooldown.Skill.Action.F");
+
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Vault, "Skill.Move.Vault");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Climb, "Skill.Move.Climb");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_HangUp, "Skill.Move.HangUp");

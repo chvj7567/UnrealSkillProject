@@ -23,6 +23,7 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move, "Skill.Move");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Buff, "Skill.Buff");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Buff_Heal, "Skill.Buff.Heal");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Debuff, "Skill.Debuff");
 

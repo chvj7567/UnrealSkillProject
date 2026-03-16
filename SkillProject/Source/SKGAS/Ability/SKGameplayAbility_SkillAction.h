@@ -58,6 +58,9 @@ protected:
     TObjectPtr<UAnimMontage> AbilityMontage;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+    bool bIsHeal;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     EDetectRangeType DetectRangeType;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType != EDetectRangeType::None", EditConditionHides))
@@ -80,4 +83,7 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType == EDetectRangeType::Weapon", EditConditionHides))
     FName EndWeaponSocketName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType == EDetectRangeType::Sphere", EditConditionHides))
+    FVector SphereOffset;
 };
