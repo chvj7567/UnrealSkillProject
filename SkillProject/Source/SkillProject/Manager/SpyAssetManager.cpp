@@ -41,8 +41,10 @@ UObject* USpyAssetManager::LoadAssetSync(const FSoftObjectPath& AssetPath)
 		{
 			Asset = UAssetManager::GetStreamableManager().LoadSynchronous(AssetPath, false);
 		}
-
-		Asset = AssetPath.TryLoad();
+		else
+		{
+			Asset = AssetPath.TryLoad();
+		}
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Secondary Asset Sync Load Complete %s"), *AssetPath.ToString());

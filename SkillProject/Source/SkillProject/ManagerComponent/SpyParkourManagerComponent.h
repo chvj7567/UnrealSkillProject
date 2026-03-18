@@ -35,6 +35,28 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float VaildDepth;
+
+	FVaultData()
+		: VaultStartOffset(FVector::ZeroVector)
+		, VaultEndOffset(FVector::ZeroVector)
+		, RayInterval(0.0f)
+		, RayIntervalReapeatCount(0.0f)
+		, VaildDistance(0.0f)
+		, VaildHeight(0.0f)
+		, VaildDepth(0.0f)
+	{
+	}
+
+	void Clear()
+	{
+		VaultStartOffset = FVector::ZeroVector;
+		VaultEndOffset = FVector::ZeroVector;
+		RayInterval = 0.0f;
+		RayIntervalReapeatCount = 0.0f;
+		VaildDistance = 0.0f;
+		VaildHeight = 0.0f;
+		VaildDepth = 0.0f;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -50,8 +72,14 @@ public:
 	float Height;
 	float Depth;
 
-	FVaultWallData() {
-		Clear();
+	FVaultWallData()
+		: FrontNormalVector(FVector::ZeroVector)
+		, HandLocVector(FVector::ZeroVector)
+		, LandLocVector(FVector::ZeroVector)
+		, Distance(0.0f)
+		, Height(0.0f)
+		, Depth(0.0f)
+	{
 	}
 
 	void Clear() {
@@ -77,8 +105,14 @@ public:
 	float Height;
 	float Depth;
 
-	FWallData() {
-		Clear();
+	FWallData()
+		: NormalVector(FVector::ZeroVector)
+		, HitVector(FVector::ZeroVector)
+		, LandVector(FVector::ZeroVector)
+		, Distance(0.0f)
+		, Height(0.0f)
+		, Depth(0.0f)
+	{
 	}
 
 	void Clear() {
@@ -102,8 +136,10 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	FVector HitVector;
 
-	FClimbWallData() {
-		Clear();
+	FClimbWallData()
+		: NormalVector(FVector::ZeroVector)
+		, HitVector(FVector::ZeroVector)
+	{
 	}
 
 	void Clear() {
@@ -132,6 +168,24 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CheckHangUpHeight;
+
+	FClimbData()
+		: DistanceOffset(0.0f)
+		, HandOffset(0.0f)
+		, FootOffset(0.0f)
+		, Speed(0.0f)
+		, CheckHangUpHeight(0.0f)
+	{
+	}
+
+	void Clear()
+	{
+		DistanceOffset = 0.0f;
+		HandOffset = 0.0f;
+		FootOffset = 0.0f;
+		Speed = 0.0f;
+		CheckHangUpHeight = 0.0f;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -147,6 +201,22 @@ struct FMotionWarpingData
 	FVector EndLoc;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator EndRot;
+
+	FMotionWarpingData()
+		: StartLoc(FVector::ZeroVector)
+		, StartRot(FRotator::ZeroRotator)
+		, EndLoc(FVector::ZeroVector)
+		, EndRot(FRotator::ZeroRotator)
+	{
+	}
+
+	void Clear()
+	{
+		StartLoc = FVector::ZeroVector;
+		StartRot = FRotator::ZeroRotator;
+		EndLoc = FVector::ZeroVector;
+		EndRot = FRotator::ZeroRotator;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -160,6 +230,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector HangUpEndOffset;
+
+	FHangUpData()
+		: HangUpStartOffset(FVector::ZeroVector)
+		, HangUpEndOffset(FVector::ZeroVector)
+	{
+	}
+
+	void Clear()
+	{
+		HangUpStartOffset = FVector::ZeroVector;
+		HangUpEndOffset = FVector::ZeroVector;
+	}
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FMotionWarpingData, InVaultData);

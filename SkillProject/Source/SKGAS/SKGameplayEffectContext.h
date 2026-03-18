@@ -19,11 +19,15 @@ struct SKGAS_API FSKGameplayEffectContext : public FGameplayEffectContext
 public:
 	FSKGameplayEffectContext()
 		: FGameplayEffectContext()
+		, HitDirectionTag(FGameplayTag::EmptyTag)
+		, bIsCritical(false)
 	{
 	}
 
 	FSKGameplayEffectContext(AActor* InInstigator, AActor* InEffectCauser)
 		: FGameplayEffectContext(InInstigator, InEffectCauser)
+		, HitDirectionTag(FGameplayTag::EmptyTag)
+		, bIsCritical(false)
 	{
 	}
 	
