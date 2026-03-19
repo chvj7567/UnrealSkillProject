@@ -4,7 +4,7 @@
 #include "SpyTargetingManagerComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "GameFramework/Character.h"
+#include "Character/SpyCharacter.h"
 #include "AIController.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
@@ -12,6 +12,7 @@
 #include "Util/SpyGameplayTags.h"
 #include "Character/SpyCharacter.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "SKGameplayTags.h"
 
 USpyTargetingManagerComponent::USpyTargetingManagerComponent()
 {
@@ -132,9 +133,11 @@ bool USpyTargetingManagerComponent::IsPotentialTargetValid(AActor* PotentialTarg
     if (PotentialTarget == nullptr)
         return false;
 
-    if (APawn* Pawn = Cast<APawn>(PotentialTarget))
+    if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(PotentialTarget))
     {
-        return !Pawn->IsPlayerControlled();
+        bool bIsDeath = SpyCharacter->GetSpyAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
+        bool bIsAI = SpyCharacter->IsPlayerControlled() == false;
+        return bIsDeath == false && bIsAI;
     }
 
     return false;
