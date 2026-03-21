@@ -325,5 +325,6 @@ void USpyPawnExtensionComponent::HandleExtensionEvent(AActor* OwnerActor, FName 
 
 void USpyPawnExtensionComponent::OnRep_CharacterAssetData()
 {
+	CheckDefaultInitialization();
 	UE_LOG(LogTemp, Log, TEXT("# [PawnExtension] OnRep_CharacterAssetData"));
 }
