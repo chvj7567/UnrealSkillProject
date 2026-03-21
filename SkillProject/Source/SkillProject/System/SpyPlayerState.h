@@ -7,6 +7,7 @@
 #include "ModularPlayerState.h"
 #include "SKAbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "System/SpyTeamAgentInterface.h"
 
 #include "SpyPlayerState.generated.h"
 
@@ -24,7 +25,7 @@ enum class EPlayerConnectionType : uint8
 };
 
 UCLASS()
-class SKILLPROJECT_API ASpyPlayerState : public AModularPlayerState, public IAbilitySystemInterface
+class SKILLPROJECT_API ASpyPlayerState : public AModularPlayerState, public IAbilitySystemInterface, public ISpyTeamAgentInterface
 {
 	GENERATED_BODY()
 	
@@ -60,6 +61,11 @@ public:
 
     static const FName NAME_AbilityReady;
 
+    //~IGenericTeamAgentInterface interface
+    virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+    virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }
+    //~End of IGenericTeamAgentInterface interface
+
 protected:
     UFUNCTION()
     void OnRep_CharacterAssetData();
@@ -77,4 +83,6 @@ protected:
     UPROPERTY(Replicated)
     EPlayerConnectionType PlayerConnectionType;
 
+    UPROPERTY(Replicated)
+    FGenericTeamId TeamID;
 };

@@ -3,7 +3,7 @@
 
 #include "ManagerComponent/SpySpawnBotManagerComponent.h"
 #include "GameFramework/GameStateBase.h"
-#include "GameFramework/PlayerState.h"
+#include "System/SpyPlayerState.h"
 #include "System/SpyAIController.h"
 #include "System/SpyGameMode.h"
 #include "Kismet/GameplayStatics.h"
@@ -47,8 +47,8 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 	{
 		if (ASpyGameMode* GameMode = Cast<ASpyGameMode>(World->GetAuthGameMode()))
 		{
-			//# PlayerState 이름 설정
-			if (APlayerState* PS = NewController->GetPlayerState<APlayerState>())
+			//# PlayerState 설정
+			if (ASpyPlayerState* PS = NewController->GetPlayerState<ASpyPlayerState>())
 			{
 				PS->SetPlayerName(CreateBotName(PS->GetPlayerId()));
 			}

@@ -45,6 +45,7 @@ void USKGameplayAbility_SkillAction::OnWaitGameplayEvent(FGameplayEventData Payl
     //# Context에 정보 추가
     CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
     CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
+    CustomContext->AddActors({ TWeakObjectPtr<AActor>(TargetActor) });
     CustomContext->SetHitDirectionTag(Payload.TargetTags.First());
 
     FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContext);

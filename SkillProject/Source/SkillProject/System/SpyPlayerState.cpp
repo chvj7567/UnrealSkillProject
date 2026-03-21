@@ -52,6 +52,7 @@ void ASpyPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(ThisClass, PlayerConnectionType);
 	DOREPLIFETIME(ThisClass, CharacterAssetData);
+	DOREPLIFETIME(ThisClass, TeamID);
 }
 
 void ASpyPlayerState::PreInitializeComponents()
@@ -65,7 +66,6 @@ void ASpyPlayerState::PostInitializeComponents()
 
 	check(AbilitySystemComponent);
 
-	UE_LOG(LogTemp, Warning, TEXT("# PlayerState: InitAbilityActorInfo"));
 	AbilitySystemComponent->InitAbilityActorInfo(this, GetPawn());
 }
 
@@ -94,6 +94,8 @@ void ASpyPlayerState::CopyProperties(APlayerState* PlayerState)
 
 void ASpyPlayerState::OnDeactivated()
 {
+	UE_LOG(LogTemp, Log, TEXT("# SpyPlayerState: OnDeactivated"));
+
 	//# 게임에서 나가거나 연결이 끊겼을 때
 	bool bDestory = false;
 
@@ -126,6 +128,8 @@ void ASpyPlayerState::OnReactivated()
 	//# 게임에 들어오거나 연결이 되었을 때
 	Super::OnReactivated();
 
+	UE_LOG(LogTemp, Log, TEXT("# SpyPlayerState: OnReactivated"));
+
 	if (GetPlayerConnectionType() == EPlayerConnectionType::DeactivePlayer)
 	{
 		SetPlayerConnectionType(EPlayerConnectionType::ActivePlayer);
@@ -143,6 +147,8 @@ void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterA
 		return;
 
 	CharacterAssetData = InCharacterAssetData;
+
+	SetGenericTeamId(bInIsPlayer ? 100 : 1);
 
 	for (const USpyAbilityData* AbilityData : CharacterAssetData->CharacterAssets.CommonSkills)
 	{
@@ -172,11 +178,18 @@ void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterA
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("# PlayerState: AbilityReady"));
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_AbilityReady);
+}
+
+void ASpyPlayerState::SetGenericTeamId(const FGenericTeamId& NewTeamID)
+{
+	if (HasAuthority() == false)
+		return;
+
+	UE_LOG(LogTemp, Log, TEXT("# SpyPlayerState: SetGenericTeamId %d"), NewTeamID.GetId());
+	TeamID = NewTeamID;
 }
 
 void ASpyPlayerState::OnRep_CharacterAssetData()
 {
-	UE_LOG(LogTemp, Log, TEXT("PlayerState: OnRep_CharacterAssetData"));
 }

@@ -6,7 +6,7 @@
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "SKGameplayTags.h"
 #include "SKAbilitySystemGlobals.h"
-#include "GameFramework/PlayerState.h"
+#include "System/SpyPlayerState.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
@@ -184,15 +184,19 @@ FGenericTeamId ASpyAIController::GetGenericTeamId() const
 
 ETeamAttitude::Type ASpyAIController::GetTeamAttitudeTowards(const AActor& Other) const
 {
-	const APawn* OtherPawn = Cast<APawn>(&Other);
-	if (OtherPawn == nullptr)
-		return ETeamAttitude::Neutral;
-
-	const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(OtherPawn->GetController());
-	if (TeamAgent == nullptr)
-		return ETeamAttitude::Neutral;
-
-	if (TeamAgent->GetGenericTeamId() == GetGenericTeamId())
+	const ASpyPlayerState* TargetPS = Cast<ASpyPlayerState>(&Other);
+	if (TargetPS == nullptr)
+	{
+		const APawn* OtherPawn = Cast<APawn>(&Other);
+		if (OtherPawn == nullptr)
+			return ETeamAttitude::Neutral;
+		
+		TargetPS = OtherPawn->GetPlayerState<ASpyPlayerState>();
+		if (TargetPS == nullptr)
+			return ETeamAttitude::Neutral;
+	}
+	
+	if (TargetPS->GetGenericTeamId() == GetGenericTeamId())
 	{
 		return ETeamAttitude::Friendly;
 	}
@@ -279,8 +283,11 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 		//# 데미지 감지
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Damage: Detected %s"), *TargetActor->GetName());
-			BlackboardComp->SetValueAsObject("TargetActor", TargetActor);
+			if (Attitude == ETeamAttitude::Hostile)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Damage: Detected %s"), *TargetActor->GetName());
+				BlackboardComp->SetValueAsObject("TargetActor", TargetActor);
+			}
 		}
 	}
 	else

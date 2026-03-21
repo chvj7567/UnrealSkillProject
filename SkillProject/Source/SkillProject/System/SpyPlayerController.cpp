@@ -19,7 +19,6 @@
 
 ASpyPlayerController::ASpyPlayerController()
 {
-	TeamID = FGenericTeamId(100);
 }
 
 void ASpyPlayerController::BeginPlay()
@@ -60,14 +59,4 @@ USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent()
 {
 	const ASpyPlayerState* SpyPS = CastChecked<ASpyPlayerState>(PlayerState, ECastCheckedType::NullAllowed);
 	return (SpyPS ? SpyPS->GetSpyAbilitySystemComponent() : nullptr);
-}
-
-void ASpyPlayerController::SetGenericTeamId(const FGenericTeamId& NewTeamID)
-{
-	TeamID = NewTeamID;
-}
-
-FGenericTeamId ASpyPlayerController::GetGenericTeamId() const
-{
-	return TeamID;
 }
