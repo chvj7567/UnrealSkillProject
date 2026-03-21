@@ -188,6 +188,11 @@ void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, floa
 
 void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 {
+	if (UCapsuleComponent* CapsuleComp = GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnDeath: %s"), *GetName());
 }
 
