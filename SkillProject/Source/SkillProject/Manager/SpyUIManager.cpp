@@ -39,50 +39,62 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 
 void USpyUIManager::OpenUI(FName InUIName)
 {
-	if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
-	{
-		//# 이미 열려있는 UI 확인
-		const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
-			[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
+	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
+	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(InUIName);
+
+	FSpyAssetAndDelegate LoadDelegate;
+	LoadDelegate.BindLambda([this, InUIName](UObject* LoadedAsset)
+		{
+			if (LoadedAsset == nullptr)
+				return;
+
+			if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
 			{
-				return UserWidget->GetUIName() == InUIName;
-			});
+				//# 이미 열려있는 UI 확인
+				const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
+					[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
+					{
+						return UserWidget->GetUIName() == InUIName;
+					});
 
-		if (FindOpenningUI)
-		{
-			//# 동일한 UI는 중복해서 띄우지 않음
-			UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *InUIName.ToString());
-			return;
-		}
+				if (FindOpenningUI)
+				{
+					//# 동일한 UI는 중복해서 띄우지 않음
+					UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *InUIName.ToString());
+					return;
+				}
 
-		//# 캐싱 중인 UI 확인
-		const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
-			[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
-			{
-				return UserWidget->GetUIName() == InUIName;
-			});
+				//# 캐싱 중인 UI 확인
+				const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
+					[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
+					{
+						return UserWidget->GetUIName() == InUIName;
+					});
 
-		if (FindCashingUI)
-		{
-			//# 캐싱 중인 UI이면 Open
-			OpenUIList.Add(FindCashingUI->Get());
-			FindCashingUI->Get()->AddToViewport();
+				if (FindCashingUI)
+				{
+					//# 캐싱 중인 UI이면 Open
+					OpenUIList.Add(FindCashingUI->Get());
+					FindCashingUI->Get()->AddToViewport();
 
-			UE_LOG(LogTemp, Warning, TEXT("Cashing Opening UI: %s"), *InUIName.ToString());
-			return;
-		}
+					UE_LOG(LogTemp, Warning, TEXT("Cashing Opening UI: %s"), *InUIName.ToString());
+					return;
+				}
 
-		//# UI 생성
-		if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), UI))
-		{
-			UserWidget->SetUIName(InUIName);
-			OpenUIList.Add(UserWidget);
+				//# UI 생성
+				if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), UI))
+				{
+					UserWidget->SetUIName(InUIName);
+					OpenUIList.Add(UserWidget);
 
-			UserWidget->AddToViewport();
+					UserWidget->AddToViewport();
 
-			UE_LOG(LogTemp, Warning, TEXT("New Opening UI: %s"), *InUIName.ToString());
-		}
-	}
+					UE_LOG(LogTemp, Warning, TEXT("New Opening UI: %s"), *InUIName.ToString());
+				}
+			}
+		});
+
+	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
 }
 
 void USpyUIManager::CloseUI(FName InUIName)
@@ -121,20 +133,28 @@ void USpyUIManager::CloseLastUI()
 
 void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent, EWidgetSpace Space)
 {
-	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	const USKAssetData& AssetData = AssetManager.GetAssetData();
+	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
+	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(InUIName);
 
 	if (WidgetComponent == nullptr)
 		return;
 
-	if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
-	{
-		WidgetComponent->SetWidgetClass(UI);
-		WidgetComponent->SetWidgetSpace(Space);
-		WidgetComponent->InitWidget();
-		WidgetComponent->SetVisibility(true);
+	FSpyAssetAndDelegate LoadDelegate;
+	LoadDelegate.BindLambda([InUIName, WidgetComponent, Space](UObject* LoadedAsset)
+		{
+			if (LoadedAsset == nullptr)
+				return;
 
-	}
+			if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
+			{
+				WidgetComponent->SetWidgetClass(UI);
+				WidgetComponent->SetWidgetSpace(Space);
+				WidgetComponent->InitWidget();
+				WidgetComponent->SetVisibility(true);
+			}
+		});
+
+	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
 }
 
 void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
