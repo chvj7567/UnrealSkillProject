@@ -36,13 +36,16 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
     if (ASC == nullptr)
         return EBTNodeResult::Failed;
 
-    if (AbilityTag.IsValid() == false)
+    if (AbilityTags.Num() <= 0)
         return EBTNodeResult::Failed;
 
     AIController->StopMovement();
 
+    int32 RandomIndex = FMath::RandRange(0, AbilityTags.Num() - 1);
+    FGameplayTag RandomTag = AbilityTags[RandomIndex];
+
     FGameplayTagContainer TagContainer;
-    TagContainer.AddTag(AbilityTag);
+    TagContainer.AddTag(RandomTag);
 
     TArray<FGameplayAbilitySpec*> ActiveAbilities;
     ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, ActiveAbilities);
