@@ -233,7 +233,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
 
 void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCharacter, FGameplayTag EffectSkillActionTag)
 {
-    FVector TargetLoc = OwnerCharacter->GetActorLocation() + SphereOffset;
+    FVector TargetLoc = OwnerCharacter->GetActorLocation();
     TArray<FOverlapResult> OutHits;
     FCollisionShape CollisionShape = FCollisionShape::MakeSphere(Radius);
     FCollisionQueryParams QueryParams;
@@ -272,6 +272,13 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
 
             if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
             {
+                FVector TargetVector = TargetCharacter->GetActorLocation() - OwnerCharacter->GetActorLocation();
+                float TargetDegree = FMath::RadiansToDegrees(FMath::Acos(OwnerCharacter->GetActorForwardVector().CosineAngle2D(TargetVector)));
+
+                UE_LOG(LogTemp, Log, TEXT("# [GA_SkillAction] TargetDegree %f"), TargetDegree);
+                if (Degree < TargetDegree)
+                    continue;
+
                 bInvalidCharacter = true;
 
                 FGameplayEventData Payload;

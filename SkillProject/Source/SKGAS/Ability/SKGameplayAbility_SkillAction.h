@@ -85,5 +85,5 @@ protected:
     FName EndWeaponSocketName;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "DetectRangeType == EDetectRangeType::Sphere", EditConditionHides))
-    FVector SphereOffset;
+    float Degree;
 };
