@@ -6,7 +6,7 @@
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Util/SpyGameplayTags.h"
+#include "SKGameplayTags.h"
 #include "UI/SpyUserWidget.h"
 #include "Manager/SpyAssetManager.h"
 #include "Manager/SpyUIManager.h"
@@ -14,6 +14,7 @@
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "ManagerComponent/SpyTargetingManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerController)
 
@@ -33,11 +34,45 @@ void ASpyPlayerController::BeginPlay()
 void ASpyPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
+}
+
+void ASpyPlayerController::AcknowledgePossession(APawn* InPawn)
+{
+	Super::AcknowledgePossession(InPawn);
+
+	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
 }
 
 void ASpyPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+}
+
+void ASpyPlayerController::UpdateRotation(float DeltaTime)
+{
+	if (USpyAbilitySystemComponent* ASC = GetSpyAbilitySystemComponent())
+	{
+		if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+			return;
+	}
+
+	if (TargetingComp != nullptr && TargetingComp->GetTarget().IsValid())
+	{
+		FVector LookDir = TargetingComp->GetTarget()->GetActorLocation() - GetPawn()->GetActorLocation();
+		LookDir.Z -= 100.f;
+
+		FRotator TargetRot = LookDir.Rotation();
+		FRotator CurrentRot = GetControlRotation();
+		FRotator SoftRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 10.f);
+
+		SetControlRotation(SoftRot);
+	}
+	else
+	{
+		Super::UpdateRotation(DeltaTime);
+	}
 }
 
 void ASpyPlayerController::PreProcessInput(const float DeltaTime, const bool bGamePaused)

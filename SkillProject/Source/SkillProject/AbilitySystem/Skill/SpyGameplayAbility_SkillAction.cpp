@@ -17,7 +17,7 @@ void USpyGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpec
 {
     do
     {
-        ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+        /*ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
         if (OwnerCharacter == nullptr)
             break;
 
@@ -32,11 +32,9 @@ void USpyGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpec
             FRotator TargetRot = LookDir.Rotation();
 
             OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
-
             OwnerCharacter->SetActorRotation(TargetRot);
-
             OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
-        }
+        }*/
 
     } while (false);
 

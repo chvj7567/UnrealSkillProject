@@ -9,12 +9,8 @@
 
 #include "SpyPlayerController.generated.h"
 
-class UInputMappingContext;
-class UInputAction;
-class ASpyPlayerState;
 class USpyAbilitySystemComponent;
-
-struct FInputActionValue;
+class USpyTargetingManagerComponent;
 
 UCLASS()
 class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController
@@ -27,12 +23,17 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void AcknowledgePossession(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
-	
+	virtual void UpdateRotation(float DeltaTime) override;
 	virtual void PreProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 
 public:
 	UFUNCTION(BlueprintCallable)
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
+
+protected:
+	UPROPERTY()
+	TObjectPtr<USpyTargetingManagerComponent> TargetingComp;
 };

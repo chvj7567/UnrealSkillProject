@@ -7,6 +7,9 @@
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Util/SpyGameplayTags.h"
+#include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "SKGameplayTags.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
 
@@ -53,6 +56,35 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 		break;
 		default:
 		{
+			ASpyCharacter* OwnerCharacter = Cast<ASpyCharacter>(GetOwner());
+			if (OwnerCharacter == nullptr)
+				break;
+
+			USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
+			if (TargetingComp == nullptr)
+				break;
+
+			if (USpyAbilitySystemComponent* ASC = OwnerCharacter->GetSpyAbilitySystemComponent())
+			{
+				if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+					break;
+			}
+
+			if (TargetingComp->GetTarget().IsValid())
+			{
+				FVector LookDir = TargetingComp->GetTarget()->GetActorLocation() - OwnerCharacter->GetActorLocation();
+				LookDir.Z = 0.f;
+				FRotator TargetRot = LookDir.Rotation();
+
+				OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+				OwnerCharacter->SetActorRotation(TargetRot);
+				break;
+			}
+			else
+			{
+				OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
+			}
+
 			Super::PhysicsRotation(DeltaTime);
 		}
 		break;

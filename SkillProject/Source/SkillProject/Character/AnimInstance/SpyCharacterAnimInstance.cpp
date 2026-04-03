@@ -11,6 +11,8 @@
 #include "Data/SpyAnimAssetData.h"
 #include "SKGameplayTags.h"
 #include "Attribute/SKAttributeSet.h"
+#include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "System/SpyPlayerController.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterAnimInstance)
 
@@ -108,6 +110,22 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         }
 
         //UE_LOG(LogTemp, Warning, TEXT("# CurrentOffsetHL X: %f Y: %f, Z: %f"), CurrentOffsetHL.X, CurrentOffsetHL.Y, CurrentOffsetHL.Z);
+    }
+
+    //# Set IsTargeting
+    {
+        if (USpyTargetingManagerComponent* TargetingComp = Player->FindComponentByClass<USpyTargetingManagerComponent>())
+        {
+            TWeakObjectPtr<AActor> Target = TargetingComp->GetTarget();
+            if (Target.IsValid())
+            {
+                IsTargeting = true;
+            }
+            else
+            {
+                IsTargeting = false;
+            }
+        }
     }
 
     //# Set ShouldMove

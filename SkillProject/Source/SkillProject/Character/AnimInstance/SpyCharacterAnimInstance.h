@@ -59,6 +59,9 @@ protected:
 	bool IsClimbing;
 
 	UPROPERTY(BlueprintReadOnly)
+	bool IsTargeting;
+
+	UPROPERTY(BlueprintReadOnly)
 	float InputAngle;
 
 	UPROPERTY(BlueprintReadOnly)

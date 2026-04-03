@@ -47,6 +47,7 @@ public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
+	FORCEINLINE USpyHealthComponent* GetSpyHealthComponent() const { return SpyHealthComponent; }
 	FORCEINLINE USpyCharacterMovementComponent* GetSpyCharacterMovementComponent() const { return GetCharacterMovement<USpyCharacterMovementComponent>(); }
 	FORCEINLINE ASpyWeapon* GetSpyWeapon() const { return SpyWeapon; }
 

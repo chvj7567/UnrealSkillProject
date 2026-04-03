@@ -30,6 +30,7 @@
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Character/SpyHealthComponent.h"
 #include "SKGameplayTags.h"
+#include "ManagerComponent/SpyTargetingManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -193,6 +194,11 @@ void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 		CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	}
 
+	if (USpyTargetingManagerComponent* TargetingComp = FindComponentByClass<USpyTargetingManagerComponent>())
+	{
+		TargetingComp->SetCurrentTarget(nullptr);
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnDeath: %s"), *GetName());
 }
 
@@ -247,6 +253,7 @@ void ASpyCharacter::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomM
 
 void ASpyCharacter::SpawnAndAttachWeapon()
 {
+	//# Temp
 	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("OneHandSword"));
 

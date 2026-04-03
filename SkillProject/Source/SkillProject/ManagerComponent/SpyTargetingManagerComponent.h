@@ -27,6 +27,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	bool FindTarget(float Radius);
 
+	UFUNCTION(BlueprintCallable, Category = "Targeting")
+	void OnTargetDeath(AActor* InOwningActor, AActor* InCauserActor);
+
 protected:
 	bool IsPotentialTargetValid(AActor* PotentialTarget) const;
 

@@ -10,9 +10,9 @@
 #include "DrawDebugHelpers.h"
 #include "GameplayTagContainer.h"
 #include "Util/SpyGameplayTags.h"
-#include "Character/SpyCharacter.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "SKGameplayTags.h"
+#include "Character/SpyHealthComponent.h"
 
 USpyTargetingManagerComponent::USpyTargetingManagerComponent()
 {
@@ -36,18 +36,31 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
     if (SpyCharacter == nullptr)
         return;
 
+    if (CurrentTarget.IsValid())
+    {
+        if (CurrentTarget == NewTarget)
+            return;
+
+        if (ASpyCharacter* SpyTarget = Cast<ASpyCharacter>(CurrentTarget))
+        {
+            SpyTarget->GetSpyHealthComponent()->OnDeath.RemoveDynamic(this, &ThisClass::OnTargetDeath);
+        }
+
+        //# 이전 타겟 GE 제거
+        if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget.Get())->GetSpyAbilitySystemComponent())
+        {
+            FGameplayTagContainer TagContainer;
+            TagContainer.AddTag(SpyGameplayTags::Character_State_Targeting);
+
+            ASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
+        }
+    }
+
 	if (NewTarget)
 	{
-        if (CurrentTarget.IsValid())
+        if (ASpyCharacter* SpyTarget = Cast<ASpyCharacter>(NewTarget))
         {
-            //# 이전 타겟 GE 제거
-            if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget.Get())->GetSpyAbilitySystemComponent())
-            {
-                FGameplayTagContainer TagContainer;
-                TagContainer.AddTag(SpyGameplayTags::Character_State_Targeting);
-
-                ASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
-            }
+            SpyTarget->GetSpyHealthComponent()->OnDeath.AddDynamic(this, &ThisClass::OnTargetDeath);
         }
 
 		CurrentTarget = NewTarget;
@@ -126,6 +139,11 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
     SetCurrentTarget(Target);
 
     return Target != nullptr;
+}
+
+void USpyTargetingManagerComponent::OnTargetDeath(AActor* InOwningActor, AActor* InCauserActor)
+{
+    SetCurrentTarget(nullptr);
 }
 
 bool USpyTargetingManagerComponent::IsPotentialTargetValid(AActor* PotentialTarget) const
