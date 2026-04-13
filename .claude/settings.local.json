@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls SkillProject/*.md)",
+      "Bash(ls *.md)",
+      "Bash(xargs grep:*)",
+      "Bash(dir tools\\\\unreal-mcp /b)",
+      "Bash(git branch:*)"
+    ]
+  }
+}
