@@ -31,7 +31,6 @@
 | 118 | `50.f` | 클라이밍 레이 시작점 전방 오프셋 |
 | 118 | `200.f` | 클라이밍 레이 시작점 상단 오프셋 |
 | 119 | `500.f` | 클라이밍 레이 하향 거리 |
-| 170 | `1.0f` | 클라이밍 종료 시 GravityScale 복원값 |
 | 187 | `100.f` | HangUp 체크 레이 전방 오프셋 |
 
 ### SpyParkourManagerComponent.cpp
@@ -134,7 +133,7 @@
 | 파일 | 값 | 설명 |
 |------|----|------|
 | `SpySpawnBotManagerComponent.cpp` | `"SpawnEnemy"` | 스폰 포인트 액터 태그 |
-| `SpyGA_SkillMove_Vault.cpp` | `"AttackNoise"` | AI 노이즈 태그 |
+| `SpyGA_SkillMove_Vault.cpp` | `"AttackNoise"` | AI 노이즈 태그 | 
 | `BTTask_MoveToTarget.cpp` | `"MoveFinished"` | AI BT 메시지명 |
 
 ### 애니메이션 관련

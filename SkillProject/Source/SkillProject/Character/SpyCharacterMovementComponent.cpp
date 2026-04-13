@@ -10,6 +10,7 @@
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "SKGameplayTags.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Data/SpyMovementConfig.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
 
@@ -115,8 +116,11 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 		FVector OwnerFowardVector = GetOwner()->GetActorForwardVector();
 
 		UWorld* World = GetWorld();
-		FVector Start = OwnerLocation + OwnerFowardVector * (ClimbData.DistanceOffset + 50.f) + FVector::UpVector * 200.f;
-		FVector End = Start + FVector::DownVector * 500.f;
+		const float HangUpFwdOffset = MovementConfig ? MovementConfig->ClimbHangUpRayForwardOffset : 50.f;
+		const float HangUpUpOffset  = MovementConfig ? MovementConfig->ClimbHangUpRayUpOffset     : 200.f;
+		const float HangUpDownDist  = MovementConfig ? MovementConfig->ClimbHangUpRayDownDistance : 500.f;
+		FVector Start = OwnerLocation + OwnerFowardVector * (ClimbData.DistanceOffset + HangUpFwdOffset) + FVector::UpVector * HangUpUpOffset;
+		FVector End = Start + FVector::DownVector * HangUpDownDist;
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetOwner());
@@ -134,10 +138,18 @@ false, 1.f, 0, -1.f);
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SpyGameplayTags::Skill_Move_HangUp, EventData);
 	}
 
-	CalculateBoneVectorOffset(TEXT("hand_l"), TEXT("Hand_L_IK_Weight"), CurrentOffsetHL, DeltaTime, ClimbData.HandOffset);
-	CalculateBoneVectorOffset(TEXT("hand_r"), TEXT("Hand_R_IK_Weight"), CurrentOffsetHR, DeltaTime, ClimbData.HandOffset);
-	CalculateBoneVectorOffset(TEXT("foot_l"), TEXT("Foot_L_IK_Weight"), CurrentOffsetFL, DeltaTime, ClimbData.FootOffset);
-	CalculateBoneVectorOffset(TEXT("foot_r"), TEXT("Foot_R_IK_Weight"), CurrentOffsetFR, DeltaTime, ClimbData.FootOffset);
+	const FName BoneHL  = MovementConfig ? MovementConfig->IKBoneHandLeft    : FName("hand_l");
+	const FName BoneHR  = MovementConfig ? MovementConfig->IKBoneHandRight   : FName("hand_r");
+	const FName BoneFL  = MovementConfig ? MovementConfig->IKBoneFootLeft    : FName("foot_l");
+	const FName BoneFR  = MovementConfig ? MovementConfig->IKBoneFootRight   : FName("foot_r");
+	const FName CurveHL = MovementConfig ? MovementConfig->IKCurveHandLeft   : FName("Hand_L_IK_Weight");
+	const FName CurveHR = MovementConfig ? MovementConfig->IKCurveHandRight  : FName("Hand_R_IK_Weight");
+	const FName CurveFL = MovementConfig ? MovementConfig->IKCurveFootLeft   : FName("Foot_L_IK_Weight");
+	const FName CurveFR = MovementConfig ? MovementConfig->IKCurveFootRight  : FName("Foot_R_IK_Weight");
+	CalculateBoneVectorOffset(BoneHL, CurveHL, CurrentOffsetHL, DeltaTime, ClimbData.HandOffset);
+	CalculateBoneVectorOffset(BoneHR, CurveHR, CurrentOffsetHR, DeltaTime, ClimbData.HandOffset);
+	CalculateBoneVectorOffset(BoneFL, CurveFL, CurrentOffsetFL, DeltaTime, ClimbData.FootOffset);
+	CalculateBoneVectorOffset(BoneFR, CurveFR, CurrentOffsetFR, DeltaTime, ClimbData.FootOffset);
 }
 
 void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
@@ -185,7 +197,8 @@ bool USpyCharacterMovementComponent::CanHangUp()
 
 	UWorld* World = GetWorld();
 	FVector Start = OwnerLocation + (FVector::UpVector * ClimbData.CheckHangUpHeight);
-	FVector End = Start + OwnerFowardVector * (ClimbData.DistanceOffset + 100.f);
+	const float CheckFwdOffset = MovementConfig ? MovementConfig->HangUpCheckRayForwardOffset : 100.f;
+	FVector End = Start + OwnerFowardVector * (ClimbData.DistanceOffset + CheckFwdOffset);
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(OwnerCharacter);

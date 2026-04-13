@@ -8,6 +8,7 @@
 
 #include "SpyCharacterMovementComponent.generated.h"
 
+class USpyMovementConfig;
 struct FClimbWallData;
 
 UCLASS()
@@ -56,6 +57,9 @@ public:
 	FVector CurrentOffsetHR;
 	FVector CurrentOffsetFL;
 	FVector CurrentOffsetFR;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	TObjectPtr<USpyMovementConfig> MovementConfig;
 
 private:
 	bool bHangUp;
