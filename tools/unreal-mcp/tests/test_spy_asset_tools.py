@@ -58,6 +58,7 @@ class TestAddAssetEntry:
         client = make_client()
         add_asset_entry(client, ASSET_PATH, "Character", "Player", "/Game/BP_Player")
         script = client.execute_python.call_args[0][0]
+        assert ASSET_PATH in script
         assert "Character" in script
         assert "Player" in script
         assert "/Game/BP_Player" in script
