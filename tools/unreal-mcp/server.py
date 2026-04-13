@@ -10,6 +10,11 @@ import tools.asset_tools as asset_tools
 import tools.actor_tools as actor_tools
 import tools.python_exec_tools as python_exec_tools
 import tools.spy_asset_tools as spy_asset_tools
+import tools.blueprint_tools as blueprint_tools
+import tools.ability_data_tools as ability_data_tools
+import tools.anim_asset_tools as anim_asset_tools
+import tools.character_asset_tools as character_asset_tools
+import tools.combo_asset_tools as combo_asset_tools
 
 mcp = FastMCP("unreal")
 _client = UnrealClient()
@@ -134,6 +139,76 @@ def remove_asset_entry(asset_path: str, group_name: str, entry_name: str) -> str
 def save_spy_asset_data(asset_path: str) -> str:
     """SpyAssetData 변경사항을 저장합니다."""
     return _safe(spy_asset_tools.save_spy_asset_data, asset_path)
+
+
+# ── Blueprint CDO 툴 ─────────────────────────────────────
+
+@mcp.tool()
+def get_blueprint_cdo_properties(asset_path: str) -> str:
+    """Blueprint CDO의 모든 프로퍼티를 조회합니다. GA/GE/AttributeSet 등 모든 BP 클래스에 사용 가능."""
+    return _safe(blueprint_tools.get_blueprint_cdo_properties, asset_path)
+
+
+@mcp.tool()
+def set_blueprint_cdo_property(asset_path: str, property_name: str, value: str) -> str:
+    """Blueprint CDO의 특정 프로퍼티를 변경하고 저장합니다."""
+    return _safe(blueprint_tools.set_blueprint_cdo_property, asset_path, property_name, value)
+
+
+# ── SpyAbilityData 툴 ─────────────────────────────────────
+
+@mcp.tool()
+def get_ability_data(asset_path: str) -> str:
+    """USpyAbilityData의 어빌리티/이펙트/어트리뷰트 배열을 조회합니다."""
+    return _safe(ability_data_tools.get_ability_data, asset_path)
+
+
+# ── SpyAnimAssetData 툴 ───────────────────────────────────
+
+@mcp.tool()
+def get_anim_asset_data(asset_path: str) -> str:
+    """USpyAnimAssetData의 AnimLayerMap(이름 → AnimInstance 클래스)을 조회합니다."""
+    return _safe(anim_asset_tools.get_anim_asset_data, asset_path)
+
+
+@mcp.tool()
+def set_anim_layer(asset_path: str, layer_name: str, class_path: str) -> str:
+    """AnimLayerMap에 항목을 추가하거나 덮어씁니다. class_path: /Game/... 형식."""
+    return _safe(anim_asset_tools.set_anim_layer, asset_path, layer_name, class_path)
+
+
+@mcp.tool()
+def remove_anim_layer(asset_path: str, layer_name: str) -> str:
+    """AnimLayerMap에서 항목을 삭제합니다."""
+    return _safe(anim_asset_tools.remove_anim_layer, asset_path, layer_name)
+
+
+# ── SpyCharacterAssetData 툴 ──────────────────────────────
+
+@mcp.tool()
+def get_character_asset_data(asset_path: str) -> str:
+    """USpyCharacterAssetData의 CharacterAssets 전체 구조를 조회합니다."""
+    return _safe(character_asset_tools.get_character_asset_data, asset_path)
+
+
+# ── SpyComboAssetData 툴 ──────────────────────────────────
+
+@mcp.tool()
+def get_combo_asset_data(asset_path: str) -> str:
+    """USpyComboAssetData의 ComboSets(시작태그 → 콤보태그 쌍 배열)을 조회합니다."""
+    return _safe(combo_asset_tools.get_combo_asset_data, asset_path)
+
+
+@mcp.tool()
+def add_combo_set(asset_path: str, start_skill_tag: str, combo_tag: str) -> str:
+    """ComboSets에 새 콤보(시작태그, 콤보태그 쌍)를 추가합니다."""
+    return _safe(combo_asset_tools.add_combo_set, asset_path, start_skill_tag, combo_tag)
+
+
+@mcp.tool()
+def remove_combo_set(asset_path: str, start_skill_tag: str) -> str:
+    """start_skill_tag가 일치하는 콤보를 ComboSets에서 삭제합니다."""
+    return _safe(combo_asset_tools.remove_combo_set, asset_path, start_skill_tag)
 
 
 if __name__ == "__main__":
