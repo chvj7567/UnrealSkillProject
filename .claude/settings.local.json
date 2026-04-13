@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show:*)",
+      "Bash(python:*)",
+      "Bash(python3 -m pip show httpx fastmcp pytest)",
+      "Bash(python3 -m pip install httpx \"fastmcp>=1.0\" pytest)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(python -m pytest tests/test_unreal_client.py -v --tb=short)",
+      "Read(//tmp/**)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(where python:*)",
+      "Bash(cmd:*)",
+      "Bash(ls /c/Users/GVNC/AppData/Roaming/uv/tools/*/bin/uv*)",
+      "Bash(/c/Users/GVNC/.local/bin/uv python:*)",
+      "Bash(/c/Users/GVNC/.local/bin/uv venv:*)",
+      "Bash(/c/Users/GVNC/.local/bin/uv pip:*)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_unreal_client.py -v)",
+      "Bash(python3 -m pytest tests/test_unreal_client.py -v)",
+      "Bash(pip list:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_actor_tools.py -v)",
+      "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_spy_asset_tools.py -v)",
+      "Bash(.venv/Scripts/pytest.exe tests/test_spy_asset_tools.py -v)",
+      "Bash(py --version)",
+      "Bash(python.exe --version)",
+      "Bash(conda run:*)",
+      "Bash(/d/UnrealSkillProject/tools/unreal-mcp/.venv/Scripts/python.exe -c \"import server; print\\('server.py 임포트 성공'\\)\")",
+      "Bash(/d/UnrealSkillProject/tools/unreal-mcp/.venv/Scripts/python.exe -m pytest tests/ -v)",
+      "Skill(update-config)",
+      "Bash(claude mcp:*)",
+      "Bash(echo \"exit_code: $?\")"
+    ]
+  }
+}
