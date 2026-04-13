@@ -54,24 +54,24 @@ UObject* USpyAssetManager::LoadAssetSync(const FSoftObjectPath& AssetPath)
 
 void USpyAssetManager::LoadAssetAsync(const FSoftObjectPath& AssetPath, const FSpyAssetAndDelegate& OnComplete)
 {
-	//# °æ·Î°¡ À¯È¿ÇÑÁö È®ÀÎ
+	//# ê²½ë¡œê°€ ìœ íš¨í•œì§€ í™•ì¸
 	if (AssetPath.IsValid() == false)
 	{
 		OnComplete.ExecuteIfBound(nullptr);
 		return;
 	}
 
-	//# ÀÌ¹Ì ·ÎµåµÇ¾î ÀÖ´ÂÁö È®ÀÎ
+	//# ì´ë¯¸ ë¡œë“œë˜ì–´ ìˆëŠ”ì§€ í™•ì¸
 	if (UObject * Asset = AssetPath.ResolveObject())
 	{
 		OnComplete.ExecuteIfBound(Asset);
 		return;
 	}
 
-	//# ºñµ¿±â ·Îµå
+	//# ë¹„ë™ê¸° ë¡œë“œ
 	Get().GetStreamableManager().RequestAsyncLoad(AssetPath, FStreamableDelegate::CreateLambda([AssetPath, OnComplete]()
 		{
-			//# ·ÎµåµÈ ¿¡¼ÂÀÌ À¯È¿ÇÏ¸é ÀúÀå
+			//# ë¡œë“œëœ ì—ì…‹ì´ ìœ íš¨í•˜ë©´ ì €ì¥
 			if (UObject* Asset = AssetPath.ResolveObject())
 			{
 				Get().AddLoadedAsset(Asset);
@@ -96,17 +96,17 @@ void USpyAssetManager::UnloadAsset(const FSoftObjectPath& AssetPath)
 
 void USpyAssetManager::LoadAllPrimaryAssetsSync()
 {
-	//# ¿¡µğÅÍ ¼³Á¤ Ã¢¿¡¼­ Á¤ÇÑ Å¸ÀÔ Á¤º¸ °¡Á®¿È
+	//# ì—ë””í„° ì„¤ì • ì°½ì—ì„œ ì •í•œ íƒ€ì… ì •ë³´ ê°€ì ¸ì˜´
 	TArray<FPrimaryAssetTypeInfo> TypeInfos;
 	GetPrimaryAssetTypeInfoList(TypeInfos);
 
 	TArray<FPrimaryAssetId> AllAssetIds;
 	for (const FPrimaryAssetTypeInfo& TypeInfo : TypeInfos)
 	{
-		//# ¿¡¼Â ½ºÄµ ÀüÀÌ¹Ç·Î °­Á¦·Î ½ºÄµ
+		//# ì—ì…‹ ìŠ¤ìº” ì „ì´ë¯€ë¡œ ê°•ì œë¡œ ìŠ¤ìº”
 		ScanPathsForPrimaryAssets(TypeInfo.PrimaryAssetType, TypeInfo.AssetScanPaths, TypeInfo.AssetBaseClassLoaded, false);
 
-		//# ¿¡¼Â ¾ÆÀÌµğ °¡Á®¿È
+		//# ì—ì…‹ ì•„ì´ë”” ê°€ì ¸ì˜´
 		TArray<FPrimaryAssetId> AssetIds;
 		GetPrimaryAssetIdList(TypeInfo.PrimaryAssetType, AssetIds);
 		AllAssetIds.Append(AssetIds);
@@ -130,7 +130,7 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 
 	for (const FPrimaryAssetId& AssetId : AllAssetIds)
 	{
-		//# µ¿±â ·Îµå
+		//# ë™ê¸° ë¡œë“œ
 		TSharedPtr<FStreamableHandle> LoadHandle = LoadPrimaryAsset(AssetId, TArray<FName>());
 		if (LoadHandle.IsValid())
 		{
@@ -155,8 +155,8 @@ void USpyAssetManager::LoadAllPrimaryAssetsSync()
 
 UPrimaryDataAsset* USpyAssetManager::LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType)
 {
-	//# LoadAllPrimaryAssetsSync¿¡¼­ ÀÏ°ı ·Îµå ÇÔ
-	//# ·Îµå ¸øÇÑ °æ¿ì °³º° ´Ù¿î·Îµå ÁøÇà
+	//# LoadAllPrimaryAssetsSyncì—ì„œ ì¼ê´„ ë¡œë“œ í•¨
+	//# ë¡œë“œ ëª»í•œ ê²½ìš° ê°œë³„ ë‹¤ìš´ë¡œë“œ ì§„í–‰
 	UPrimaryDataAsset* Asset = nullptr;
 
 	if (DataClassPath.IsNull() == false)
@@ -202,7 +202,7 @@ void USpyAssetManager::LoadPrimaryAssetsAsync(const TArray<FPrimaryAssetId>& Ass
 		return;
 	}
 
-	//# ºñµ¿±â ·Îµå
+	//# ë¹„ë™ê¸° ë¡œë“œ
 	LoadPrimaryAssets(AssetIds, TArray<FName>(), FStreamableDelegate::CreateLambda([this, AssetIds, OnComplete]()
 		{
 			for (const FPrimaryAssetId& AssetID : AssetIds)
@@ -220,7 +220,7 @@ void USpyAssetManager::LoadPrimaryAssetsAsync(const TArray<FPrimaryAssetId>& Ass
 
 void USpyAssetManager::UnloadAllPrimaryAssets()
 {
-	//# Ä³½ÌµÈ ¸ğµç PrimaryData ¾ğ·Îµå
+	//# ìºì‹±ëœ ëª¨ë“  PrimaryData ì–¸ë¡œë“œ
 	for (auto& Data : GameDataMap)
 	{
 		UPrimaryDataAsset* Asset = Data.Value;
@@ -238,7 +238,7 @@ void USpyAssetManager::UnloadAllPrimaryAssets()
 
 void USpyAssetManager::UnloadAllAssets()
 {
-	//# ÀÏ¹İ ¿¡¼ÂÀº ÂüÁ¶¸¸ ²÷¾îÁÖ¸é ´ÙÀ½ GC¿¡ ÀÇÇØ Á¦°ÅµÊ
+	//# ì¼ë°˜ ì—ì…‹ì€ ì°¸ì¡°ë§Œ ëŠì–´ì£¼ë©´ ë‹¤ìŒ GCì— ì˜í•´ ì œê±°ë¨
 	LoadedAssets.Empty();
 
 	UE_LOG(LogTemp, Log, TEXT("# [SpyAssetManager] Secondary Assets Unloaded Complete"));
@@ -252,7 +252,7 @@ void USpyAssetManager::LogProgress(int32 Loaded, int32 Total)
 
 void USpyAssetManager::AddLoadedAsset(UObject* Asset)
 {
-	//# ·ÎµåµÈ ¿¡¼ÂÀÌ À¯È¿ÇÏ¸é ÀúÀå(GC¿¡ ÀÇÇØ »èÁ¦µÇÁö ¾Êµµ·Ï ÂüÁ¶ À¯Áö)
+	//# ë¡œë“œëœ ì—ì…‹ì´ ìœ íš¨í•˜ë©´ ì €ì¥(GCì— ì˜í•´ ì‚­ì œë˜ì§€ ì•Šë„ë¡ ì°¸ì¡° ìœ ì§€)
 	if (ensureAlways(Asset))
 	{
 		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);
@@ -271,7 +271,7 @@ void USpyAssetManager::RemoveLoadedAsset(UObject* Asset)
 
 void USpyAssetManager::AddPrimaryAsset(UPrimaryDataAsset* Asset)
 {
-	//# ·ÎµåµÈ ¿¡¼ÂÀÌ À¯È¿ÇÏ¸é ÀúÀå(GC¿¡ ÀÇÇØ »èÁ¦µÇÁö ¾Êµµ·Ï ÂüÁ¶ À¯Áö)
+	//# ë¡œë“œëœ ì—ì…‹ì´ ìœ íš¨í•˜ë©´ ì €ì¥(GCì— ì˜í•´ ì‚­ì œë˜ì§€ ì•Šë„ë¡ ì°¸ì¡° ìœ ì§€)
 	if (ensureAlways(Asset))
 	{
 		FScopeLock LoadedAssetsLock(&LoadedAssetsCritical);

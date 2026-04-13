@@ -53,7 +53,7 @@ void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const
 
 void USpyGA_WallClimb::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-    //# Åä±Û ±â´É
+    //# í† ê¸€ ê¸°ëŠ¥
     if (IsActive() == false)
         return;
 

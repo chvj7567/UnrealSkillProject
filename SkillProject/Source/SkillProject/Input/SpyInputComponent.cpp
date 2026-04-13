@@ -83,7 +83,7 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 
 				if (IMC)
 				{
-					//# IMC º¯°æ ½Ã ´­·ÁÁ® ÀÖ´Ù¸é ÇØ´ç Å°¸¦ ±×´ë·Î ¹Ù²ï IMC ÀÔ·Â¿¡ »ç¿ë
+					//# IMC ë³€ê²½ ì‹œ ëˆŒë ¤ì ¸ ìˆë‹¤ë©´ í•´ë‹¹ í‚¤ë¥¼ ê·¸ëŒ€ë¡œ ë°”ë€ IMC ì…ë ¥ì— ì‚¬ìš©
 					FModifyContextOptions Options = {};
 					Options.bIgnoreAllPressedKeysUntilRelease = false;
 
@@ -184,11 +184,11 @@ void USpyInputComponent::Move(const FInputActionValue& InValue)
 		{
 			if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 			{
-				//# Death È®ÀÎ
+				//# Death í™•ì¸
 				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
 					return;
 
-				//# Move Lock È®ÀÎ
+				//# Move Lock í™•ì¸
 				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Move))
 					return;
 
@@ -248,7 +248,7 @@ void USpyInputComponent::OnRegister()
 {
 	Super::OnRegister();
 
-	//# »óÅÂ ¸Ó½Å µî·Ï
+	//# ìƒíƒœ ë¨¸ì‹  ë“±ë¡
 	RegisterInitStateFeature();
 }
 
@@ -256,10 +256,10 @@ void USpyInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//# »óÅÂ º¯È­ ¾Ë¸² µî·Ï
+	//# ìƒíƒœ ë³€í™” ì•Œë¦¼ ë“±ë¡
 	BindOnActorInitStateChanged(USpyPawnExtensionComponent::NAME_ActorFeatureName, FGameplayTag(), false);
 
-	//# InitState_Spawned »óÅÂ·Î º¯È¯ ½Ãµµ
+	//# InitState_Spawned ìƒíƒœë¡œ ë³€í™˜ ì‹œë„
 	TryToChangeInitState(SpyGameplayTags::InitState_Spawned);
 
 	CheckDefaultInitialization();
@@ -267,7 +267,7 @@ void USpyInputComponent::BeginPlay()
 
 void USpyInputComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//# »óÅÂ ¸Ó½Å ÇØÁ¦
+	//# ìƒíƒœ ë¨¸ì‹  í•´ì œ
 	UnregisterInitStateFeature();
 
 	Super::EndPlay(EndPlayReason);
@@ -289,7 +289,7 @@ bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 		if (GetPlayerState<ASpyPlayerState>() == nullptr)
 			return false;
 
-		//# ·ÎÄÃ ÇÃ·¹ÀÌ¾î È¤Àº ¼­¹öÀÎÁö È®ÀÎ
+		//# ë¡œì»¬ í”Œë ˆì´ì–´ í˜¹ì€ ì„œë²„ì¸ì§€ í™•ì¸
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
 			AController* Controller = GetController<AController>();
@@ -305,7 +305,7 @@ bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 		const bool bIsBot = Pawn->IsBotControlled();
 
-		//# º¿ÀÌ ¾Æ´Ñ ·ÎÄÃ ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+		//# ë´‡ì´ ì•„ë‹Œ ë¡œì»¬ í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
 		if (bIsLocallyControlled && bIsBot == false)
 		{
 			ASpyPlayerController* SpyPC = GetController<ASpyPlayerController>();

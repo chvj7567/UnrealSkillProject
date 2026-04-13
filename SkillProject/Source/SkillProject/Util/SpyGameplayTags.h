@@ -6,31 +6,31 @@
 
 namespace SpyGameplayTags
 {
-	//# ¿·±› ∞¸∑√
+	//# Ïû†Í∏à Í¥ÄÎ†®
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Input_All);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Input_Move);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Input_Look);
 
-	//# ªÛ≈¬ √ ±‚»≠ ∞¸∑√
+	//# ÏÉÅÌÉú Ï¥àÍ∏∞Ìôî Í¥ÄÎ†®
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_Spawned);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataAvailable);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataInitialized);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_GameplayReady);
 
-	//# ƒ≥∏Ø≈Õ ≈¨∑°Ω∫
+	//# Ï∫êÎ¶≠ÌÑ∞ ÌÅ¥ÎûòÏä§
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class_AI);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class_Normal);
 
-	//# ƒ≥∏Ø≈Õ ªÛ≈¬
+	//# Ï∫êÎ¶≠ÌÑ∞ ÏÉÅÌÉú
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Targeting);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Movement_Normal);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Movement_Climb);
 
-	//# ±‚∫ª ¿‘∑¬ ΩΩ∑‘
+	//# Í∏∞Î≥∏ ÏûÖÎ†• Ïä¨Î°Ø
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Native_Move);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Native_Look);
 
-	//# GAS ¿‘∑¬ ΩΩ∑‘
+	//# GAS ÏûÖÎ†• Ïä¨Î°Ø
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Ability_Skill_1);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Ability_Skill_2);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Ability_Skill_3);
@@ -42,7 +42,7 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Ability_Skill_9);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Ability_Skill_10);
 
-	//# æ◊º« Ω∫≈≥
+	//# Ïï°ÏÖò Ïä§ÌÇ¨
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Action_A);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Effect_Skill_Action_A);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Notify_Skill_Action_A);
@@ -73,13 +73,13 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Notify_Skill_Action_F);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Skill_Action_F);
 
-	//# ¿Ãµø Ω∫≈≥
+	//# Ïù¥Îèô Ïä§ÌÇ¨
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move_Vault);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move_Climb);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move_HangUp);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move_Jump);
 	
-	//# ¿Ø∆ø Ω∫≈≥
+	//# Ïú†Ìã∏ Ïä§ÌÇ¨
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Death);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Combo1);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Combo2);
@@ -87,14 +87,14 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Combo4);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Combo5);
 
-	//# Actor ¿Ã∆Â∆Æ
+	//# Actor Ïù¥ÌéôÌä∏
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Attack);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Target);
 
-	//# Static ¿Ã∆Â∆Æ
+	//# Static Ïù¥ÌéôÌä∏
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Static_Hit);
 
-	//# æ∏ÆæÛ ±‚∫ª π´∫Í∏’∆Æ
+	//# Ïñ∏Î¶¨Ïñº Í∏∞Î≥∏ Î¨¥Î∏åÎ®ºÌä∏
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Walking);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_NavWalking);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Falling);
@@ -102,7 +102,7 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Flying);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_Custom);
 
-	//# ƒøΩ∫≈“ π´∫Í∏’∆Æ
+	//# Ïª§Ïä§ÌÖÄ Î¨¥Î∏åÎ®ºÌä∏
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_WallClimb);
 
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> MovementModeTagMap;

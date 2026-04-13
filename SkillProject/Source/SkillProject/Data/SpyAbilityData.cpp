@@ -74,16 +74,16 @@ void USpyAbilityData::GiveToAbilitySystem(UAbilitySystemComponent* SpyASC, FSpyA
 	if (SpyASC->IsOwnerActorAuthoritative() == false)
 		return;
 
-	//# 1. AttributeSet ºÎ¿©
+	//# 1. AttributeSet ë¶€ì—¬
 	for (int32 SetIndex = 0; SetIndex < GrantedAttributes.Num(); ++SetIndex)
 	{
 		const FSpyAbilitySet_AttributeSet& SetToGrant = GrantedAttributes[SetIndex];
 
-		//# À¯È¿ È®ÀÎ
+		//# ìœ íš¨ í™•ì¸
 		if (IsValid(SetToGrant.AttributeSet) == false)
 			continue;
 
-		//# ÀÌ¹Ì ¹ÞÀº AttributeÀÎÁö È®ÀÎ
+		//# ì´ë¯¸ ë°›ì€ Attributeì¸ì§€ í™•ì¸
 		if (SpyASC->GetAttributeSet(SetToGrant.AttributeSet))
 			continue;
 
@@ -98,7 +98,7 @@ void USpyAbilityData::GiveToAbilitySystem(UAbilitySystemComponent* SpyASC, FSpyA
 		}
 	}
 
-	//# 2. GameplayEffect ºÎ¿©
+	//# 2. GameplayEffect ë¶€ì—¬
 	for (int32 EffectIndex = 0; EffectIndex < GrantedGameplayEffects.Num(); ++EffectIndex)
 	{
 		const FSpyAbilitySet_GameplayEffect& EffectToGrant = GrantedGameplayEffects[EffectIndex];
@@ -117,7 +117,7 @@ void USpyAbilityData::GiveToAbilitySystem(UAbilitySystemComponent* SpyASC, FSpyA
 		}
 	}
 
-	//# 3. GameplayAbility ºÎ¿©
+	//# 3. GameplayAbility ë¶€ì—¬
 	for (int32 AbilityIndex = 0; AbilityIndex < GrantedGameplayAbilities.Num(); ++AbilityIndex)
 	{
 		const FSpyAbilitySet_GameplayAbility& AbilityToGrant = GrantedGameplayAbilities[AbilityIndex];

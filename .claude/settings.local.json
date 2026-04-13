@@ -31,7 +31,13 @@
       "Bash(/d/UnrealSkillProject/tools/unreal-mcp/.venv/Scripts/python.exe -m pytest tests/ -v)",
       "Skill(update-config)",
       "Bash(claude mcp:*)",
-      "Bash(echo \"exit_code: $?\")"
+      "Bash(echo \"exit_code: $?\")",
+      "Bash(python3:*)",
+      "Bash(.venv/Scripts/python.exe -c ':*)",
+      "Bash(file --mime-encoding tools/unreal-mcp/server.py tools/unreal-mcp/unreal_client.py tools/unreal-mcp/tools/*.py tools/unreal-mcp/tests/*.py)",
+      "Bash(powershell -Command \"Get-Item tools/unreal-mcp/server.py | Select-Object -ExpandProperty FullName\")",
+      "Bash(powershell:*)",
+      "Bash(grep -n \"//.*[가-힣]\" SkillProject/Source/SkillProject/AbilitySystem/Calculation/SpyDamageCalculation.cpp)"
     ]
   }
 }

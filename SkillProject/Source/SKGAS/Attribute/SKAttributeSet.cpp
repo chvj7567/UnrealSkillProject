@@ -37,7 +37,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 {
     Super::PostGameplayEffectExecute(Data);
 
-    //# Health∞° ∫Ø∞Êµ«æ˙¥¬¡ˆ »Æ¿Œ
+    //# HealthÍ∞Ä Î≥ÄÍ≤ΩÎêòÏóàÎäîÏßÄ ÌôïÏù∏
     if (Data.EvaluatedData.Attribute == GetHealthAttribute())
     {
         FGameplayEffectContextHandle ContextHandle = Data.EffectSpec.GetContext();
@@ -62,13 +62,13 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                 );
             }
 
-            //# ≈©∏Æ∆ºƒ√ ø©∫Œ »Æ¿Œ
+            //# ÌÅ¨Î¶¨Ìã∞Ïª¨ Ïó¨Î∂Ä ÌôïÏù∏
             if (CustomContext->IsCritical())
             {
                 //# TODO
             }
 
-            //# ªÁ∏¡ »Æ¿Œ
+            //# ÏÇ¨Îßù ÌôïÏù∏
             if (GetHealth() <= 0.0f)
             {
                 FGameplayEventData Payload;
@@ -82,7 +82,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
             }
             else
             {
-                //# ««∞› πÊ«‚ ≈¬±◊
+                //# ÌîºÍ≤© Î∞©Ìñ• ÌÉúÍ∑∏
                 FGameplayTag HitTag = CustomContext->GetHitDirectionTag();
                 if (HitTag.IsValid())
                 {

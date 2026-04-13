@@ -18,22 +18,22 @@ ASpyGameMode::ASpyGameMode()
 
 void ASpyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
-	//# ¸Ê ·ÎµùÀÌ ³¡³­ ÀÌÈÄ °ÔÀÓ ÃÊ±âÈ­ ´Ü°è
+	//# ë§µ ë¡œë”©ì´ ëë‚œ ì´í›„ ê²Œì„ ì´ˆê¸°í™” ë‹¨ê³„
 	Super::InitGame(MapName, Options, ErrorMessage);
 
-	//# LyraÃ³·³ ÇÑ ÇÁ·¹ÀÓ ´ë±âÇÏ¿© ¿¡¼Â ¸Å´ÏÀú¿Í ½Ã½ºÅÛÀÌ ¿ÏÀüÈ÷ ¾ÈÂøµÈ ÈÄ ½ÇÇà
+	//# Lyraì²˜ëŸ¼ í•œ í”„ë ˆì„ ëŒ€ê¸°í•˜ì—¬ ì—ì…‹ ë§¤ë‹ˆì €ì™€ ì‹œìŠ¤í…œì´ ì™„ì „íˆ ì•ˆì°©ëœ í›„ ì‹¤í–‰
 	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleGameStartInitialization);
 }
 
 void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 {
-	//# PlayerController ¹× PlayerState ÃÊ±âÈ­ ÈÄ ´Ü°è
+	//# PlayerController ë° PlayerState ì´ˆê¸°í™” í›„ ë‹¨ê³„
 	Super::GenericPlayerInitialization(NewPlayer);
 
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
 	if (USpyCharacterAssetData* CharacterAssetData = USpyAssetManager::GetAssetByName<USpyCharacterAssetData>(TEXT("SpyCharacterAssetData")))
 	{
-		//# PS¿¡ µ¥ÀÌÅÍ Set
+		//# PSì— ë°ì´í„° Set
 		if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
 		{
 			PS->SetCharacterAssetData(CharacterAssetData, NewPlayer->IsPlayerController());
@@ -47,24 +47,24 @@ APawn* ASpyGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
 	SpawnInfo.Instigator = GetInstigator();
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
-	//# ½ºÆùÀº ÇÏÁö¸¸ »ı¼ºÀÚ ÀÌÈÄ ´Ü°è´Â Àá½Ã Á¤Áö
+	//# ìŠ¤í°ì€ í•˜ì§€ë§Œ ìƒì„±ì ì´í›„ ë‹¨ê³„ëŠ” ì ì‹œ ì •ì§€
 	SpawnInfo.bDeferConstruction = true;
 
 	if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
 	{
-		//# ½ÇÁ¦ Æù »ı¼º ´Ü°è, Lyra ½ÄÀ¸·Î Super È£ÃâÇÏÁö ¾Ê°í Á÷Á¢ »ı¼º
+		//# ì‹¤ì œ í° ìƒì„± ë‹¨ê³„, Lyra ì‹ìœ¼ë¡œ Super í˜¸ì¶œí•˜ì§€ ì•Šê³  ì§ì ‘ ìƒì„±
 		if (APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, SpawnInfo))
 		{
 			if (USpyPawnExtensionComponent* PawnExtensionComponent = USpyPawnExtensionComponent::FindPawnExtensionComponent(SpawnedPawn))
 			{
-				//# PawnExtensionComponent¿¡ µ¥ÀÌÅÍ Set
+				//# PawnExtensionComponentì— ë°ì´í„° Set
 				if (const USpyCharacterAssetData* CharacterAssetData = GetCharacterDataForController(NewPlayer))
 				{
 					PawnExtensionComponent->SetCharacterAssetData(CharacterAssetData);
 				}
 			}
 
-			//# »ı¼ºÀÚ ÀÌÈÄ ´Ü°è ½ÇÇà
+			//# ìƒì„±ì ì´í›„ ë‹¨ê³„ ì‹¤í–‰
 			SpawnedPawn->FinishSpawning(SpawnTransform);
 
 			return SpawnedPawn;
