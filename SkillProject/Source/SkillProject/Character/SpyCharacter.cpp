@@ -31,6 +31,7 @@
 #include "Character/SpyHealthComponent.h"
 #include "SKGameplayTags.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "Data/SpyCharacterConfig.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -42,26 +43,31 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	bReplicates = true;
 
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	if (CharacterConfig)
+	{
+		GetCapsuleComponent()->InitCapsuleSize(CharacterConfig->CapsuleRadius, CharacterConfig->CapsuleHalfHeight);
+	}
+	else
+	{
+		GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	}
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-
-	GetCharacterMovement()->RotationRate.Yaw = 1080.f;
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, CharacterConfig ? CharacterConfig->RotationRateYaw : 1080.f, 0.0f);
+	GetCharacterMovement()->JumpZVelocity = CharacterConfig ? CharacterConfig->JumpZVelocity : 700.f;
+	GetCharacterMovement()->AirControl = CharacterConfig ? CharacterConfig->AirControl : 0.35f;
+	GetCharacterMovement()->MaxWalkSpeed = CharacterConfig ? CharacterConfig->MaxWalkSpeed : 500.f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = CharacterConfig ? CharacterConfig->MinAnalogWalkSpeed : 20.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = CharacterConfig ? CharacterConfig->BrakingDecelerationWalking : 2000.f;
+	GetCharacterMovement()->BrakingDecelerationFalling = CharacterConfig ? CharacterConfig->BrakingDecelerationFalling : 1500.f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f;	
+	CameraBoom->TargetArmLength = CharacterConfig ? CharacterConfig->CameraArmLength : 400.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bDoCollisionTest = false;
 
@@ -71,7 +77,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
 	HPBarComponent->SetupAttachment(GetMesh());
-	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
+	HPBarComponent->SetRelativeLocation(CharacterConfig ? CharacterConfig->HPBarOffset : FVector(0.f, 0.f, 200.f));
 
 	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
 	SpyPawnExtensionComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
@@ -88,7 +94,8 @@ void ASpyCharacter::BeginPlay()
 
 	if (HasAuthority())
 	{
-		GetWorldTimerManager().SetTimer(WeaponSpawnTimerHandle, this, &ASpyCharacter::SpawnAndAttachWeapon, 1.0f, false);
+		const float SpawnDelay = CharacterConfig ? CharacterConfig->WeaponSpawnDelay : 1.0f;
+		GetWorldTimerManager().SetTimer(WeaponSpawnTimerHandle, this, &ASpyCharacter::SpawnAndAttachWeapon, SpawnDelay, false);
 	}
 }
 
