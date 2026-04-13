@@ -96,14 +96,14 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
-	//# º®Å¸±â ½ºÇÇµå ¼³Á¤
+	//# ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½Çµï¿½ ï¿½ï¿½ï¿½ï¿½
 	Velocity = GetWallClimbSpeed();
 
-	//# º®Å¸±â ÁøÇà Áß À§Ä¡ °è»ê
+	//# ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	//# ÇÑ ¹ø¸¸ È£ÃâÇÏµµ·Ï
+	//# ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½
 	if (CanHangUp() && bHangUp == false)
 	{
 		bHangUp = true;
@@ -151,6 +151,7 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
+	CachedGravityScale = GravityScale;
 	GravityScale = 0.0f;
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
@@ -167,7 +168,7 @@ void USpyCharacterMovementComponent::EndWallClimb()
 {
 	UE_LOG(LogTemp, Warning, TEXT("EndWallClimb %s"), *GetOwner()->GetName());
 
-	GravityScale = 1.0f;
+	GravityScale = CachedGravityScale;
 	bOrientRotationToMovement = true;
 
 	SetMovementMode(MOVE_Walking);
@@ -221,13 +222,13 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	FVector WallPoint = ClimbWallData.HitVector;
 	FVector WallNormal = ClimbWallData.NormalVector.GetSafeNormal();
 
-	//# º® Æò¸é±îÁöÀÇ °Å¸® °è»ê
+	//# ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½
 	float DistanceFromPlane = FVector::DotProduct(AnimBoneLocation - WallPoint, WallNormal);
 
-	//# ¸ñÇ¥ ¿ÀÇÁ¼Â (º® ¹ý¼± ±âÁØÀ¸·Î ÀÌµ¿)
+	//# ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½)
 	FVector TargetWorldOffset = (-WallNormal * (DistanceFromPlane - Offset)) * IKWeight;
 
-	//# ¿ùµå -> ¸Þ½¬ °ø°£À¸·Î ÁÂÇ¥ º¯È¯
+	//# ï¿½ï¿½ï¿½ï¿½ -> ï¿½Þ½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½È¯
 	FVector TargetMeshOffset = Mesh->GetComponentTransform().InverseTransformVectorNoScale(TargetWorldOffset);
 
 	CurrentOffsetVar = FMath::VInterpTo(CurrentOffsetVar, TargetMeshOffset, DeltaTime, InterpSpeed);
@@ -240,7 +241,7 @@ FVector USpyCharacterMovementComponent::GetWallClimbSpeed()
 	const FVector WallNormal = ClimbWallData.NormalVector;
 	const FVector UpVector = FVector::UpVector;
 
-	//# ¿ÜÀûÀ» ÅëÇØ º®ÀÇ À§ÂÊ ¿À¸¥ÂÊ º¤ÅÍ Get
+	//# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Get
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 

@@ -51,7 +51,7 @@ protected:
 	FClimbWallData ClimbWallData;
 
 public:
-	//# ÀÌÀü ÇÁ·¹ÀÓÀÇ IK µµ´Þ ÁöÁ¡À» ÀúÀå (¶³¸² ¹æÁö¿ë º¸°£ Å¸°Ù)
+	//# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ IK ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½)
 	FVector CurrentOffsetHL;
 	FVector CurrentOffsetHR;
 	FVector CurrentOffsetFL;
@@ -59,4 +59,5 @@ public:
 
 private:
 	bool bHangUp;
+	float CachedGravityScale;
 };
