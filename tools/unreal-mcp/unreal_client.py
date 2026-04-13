@@ -15,6 +15,12 @@ class UnrealClient:
         self.base_url = base_url.rstrip("/")
         self._http = httpx.Client(timeout=10.0)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self._http.close()
+
     def _check_connection(self) -> None:
         try:
             self._http.get(f"{self.base_url}/remote/info", timeout=2.0)

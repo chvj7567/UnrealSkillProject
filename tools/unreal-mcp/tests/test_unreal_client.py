@@ -55,6 +55,42 @@ class TestGetProperty:
                 client.get_property("/bad/path", "prop")
 
 
+class TestSetProperty:
+    def test_calls_put_endpoint(self):
+        client = make_client()
+        expected = {}
+        with patch.object(client._http, "put", return_value=mock_response(expected)) as mock_put, \
+             patch.object(client, "_check_connection"):
+            result = client.set_property("/Game/Data/DA_Test", "SomeProp", "value")
+        mock_put.assert_called_once_with(
+            f"{BASE_URL}/remote/object/property",
+            json={
+                "objectPath": "/Game/Data/DA_Test",
+                "propertyName": "SomeProp",
+                "propertyValue": {"SomeProp": "value"}
+            }
+        )
+        assert result == expected
+
+
+class TestCallFunction:
+    def test_calls_post_endpoint(self):
+        client = make_client()
+        expected = {"returnValues": {"result": "ok"}}
+        with patch.object(client._http, "post", return_value=mock_response(expected)) as mock_post, \
+             patch.object(client, "_check_connection"):
+            result = client.call_function("/Game/BP_Test", "MyFunc", {"param": 1})
+        mock_post.assert_called_once_with(
+            f"{BASE_URL}/remote/object/call",
+            json={
+                "objectPath": "/Game/BP_Test",
+                "functionName": "MyFunc",
+                "parameters": {"param": 1}
+            }
+        )
+        assert result == expected
+
+
 class TestExecutePython:
     def test_calls_object_call_endpoint(self):
         client = make_client()
