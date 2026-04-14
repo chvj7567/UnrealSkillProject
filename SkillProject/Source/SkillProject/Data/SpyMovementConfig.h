@@ -24,6 +24,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|RayCast")
 	float HangUpCheckRayForwardOffset = 100.f;
 
+	// Climbing movement mode name
+	UPROPERTY(EditDefaultsOnly, Category = "Climbing")
+	FName ClimbingMovementModeName = TEXT("Custom");
+
 	// IK Bone names
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|IK")
 	FName IKBoneHandLeft = TEXT("hand_l");

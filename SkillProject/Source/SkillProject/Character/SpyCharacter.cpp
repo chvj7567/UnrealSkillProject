@@ -32,6 +32,7 @@
 #include "SKGameplayTags.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "Data/SpyCharacterConfig.h"
+#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -260,17 +261,27 @@ void ASpyCharacter::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomM
 
 void ASpyCharacter::SpawnAndAttachWeapon()
 {
-	//# Temp
-	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
-	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("OneHandSword"));
+	const USpyCharacterAssetData* AssetData = SpyPawnExtensionComponent->GetCharacterAssetData();
+	if (AssetData == nullptr || AssetData->CharacterAssets.AssetEntries.IsEmpty())
+		return;
+
+	const FCharacterAssetEntry& Entry = AssetData->CharacterAssets.AssetEntries[0];
+	if (Entry.WeaponAssetName.IsNone())
+		return;
+
+	const FName WeaponAssetName = Entry.WeaponAssetName;
+	const FName WeaponSocketName = Entry.WeaponSocketName.IsNone() ? FName(TEXT("weapon_socket")) : Entry.WeaponSocketName;
+
+	const USpyAssetData& SKAssetData = USpyAssetManager::Get().GetAssetData();
+	const FSoftObjectPath& AssetPath = SKAssetData.GetAssetPathByName(WeaponAssetName);
 
 	FSpyAssetAndDelegate LoadDelegate;
-	LoadDelegate.BindLambda([this](UObject* LoadedAsset)
+	LoadDelegate.BindLambda([this, WeaponAssetName, WeaponSocketName](UObject* LoadedAsset)
 		{
 			if (LoadedAsset == nullptr)
 				return;
 
-			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("OneHandSword")))
+			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(WeaponAssetName))
 			{
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.Owner = this;
@@ -278,9 +289,8 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-				SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("weapon_socket"));
+				SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 			}
-
 		});
 
 	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);

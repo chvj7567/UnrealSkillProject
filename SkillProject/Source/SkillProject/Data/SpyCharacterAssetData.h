@@ -36,6 +36,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TMap<TObjectPtr<UInputMappingContext>, int32> InputMappingContexts;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName WeaponAssetName;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName WeaponSocketName = TEXT("weapon_socket");
 };
 
 USTRUCT()

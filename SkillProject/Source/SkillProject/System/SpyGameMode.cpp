@@ -9,6 +9,7 @@
 #include "Manager/SpyAssetManager.h"
 #include "Character/SpyPawnExtensionComponent.h"
 #include "Data/SpyCharacterAssetData.h"
+#include "Data/SpyAssetNames.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameMode)
 
@@ -18,22 +19,22 @@ ASpyGameMode::ASpyGameMode()
 
 void ASpyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
-	//# ¸Ê ·ÎµùÀÌ ³¡³­ ÀÌÈÄ °ÔÀÓ ÃÊ±âÈ­ ´Ü°è
+	//# ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ ï¿½Ü°ï¿½
 	Super::InitGame(MapName, Options, ErrorMessage);
 
-	//# LyraÃ³·³ ÇÑ ÇÁ·¹ÀÓ ´ë±âÇÏ¿© ¿¡¼Â ¸Å´ÏÀú¿Í ½Ã½ºÅÛÀÌ ¿ÏÀüÈ÷ ¾ÈÂøµÈ ÈÄ ½ÇÇà
+	//# LyraÃ³ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleGameStartInitialization);
 }
 
 void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 {
-	//# PlayerController ¹× PlayerState ÃÊ±âÈ­ ÈÄ ´Ü°è
+	//# PlayerController ï¿½ï¿½ PlayerState ï¿½Ê±ï¿½È­ ï¿½ï¿½ ï¿½Ü°ï¿½
 	Super::GenericPlayerInitialization(NewPlayer);
 
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
-	if (USpyCharacterAssetData* CharacterAssetData = USpyAssetManager::GetAssetByName<USpyCharacterAssetData>(TEXT("SpyCharacterAssetData")))
+	if (USpyCharacterAssetData* CharacterAssetData = USpyAssetManager::GetAssetByName<USpyCharacterAssetData>(SpyAssetNames::CharacterAssetData))
 	{
-		//# PS¿¡ µ¥ÀÌÅÍ Set
+		//# PSï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Set
 		if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
 		{
 			PS->SetCharacterAssetData(CharacterAssetData, NewPlayer->IsPlayerController());
@@ -47,24 +48,24 @@ APawn* ASpyGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
 	SpawnInfo.Instigator = GetInstigator();
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
-	//# ½ºÆùÀº ÇÏÁö¸¸ »ý¼ºÀÚ ÀÌÈÄ ´Ü°è´Â Àá½Ã Á¤Áö
+	//# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ü°ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	SpawnInfo.bDeferConstruction = true;
 
 	if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
 	{
-		//# ½ÇÁ¦ Æù »ý¼º ´Ü°è, Lyra ½ÄÀ¸·Î Super È£ÃâÇÏÁö ¾Ê°í Á÷Á¢ »ý¼º
+		//# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ü°ï¿½, Lyra ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Super È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		if (APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, SpawnInfo))
 		{
 			if (USpyPawnExtensionComponent* PawnExtensionComponent = USpyPawnExtensionComponent::FindPawnExtensionComponent(SpawnedPawn))
 			{
-				//# PawnExtensionComponent¿¡ µ¥ÀÌÅÍ Set
+				//# PawnExtensionComponentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Set
 				if (const USpyCharacterAssetData* CharacterAssetData = GetCharacterDataForController(NewPlayer))
 				{
 					PawnExtensionComponent->SetCharacterAssetData(CharacterAssetData);
 				}
 			}
 
-			//# »ý¼ºÀÚ ÀÌÈÄ ´Ü°è ½ÇÇà
+			//# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ü°ï¿½ ï¿½ï¿½ï¿½ï¿½
 			SpawnedPawn->FinishSpawning(SpawnTransform);
 
 			return SpawnedPawn;
@@ -76,10 +77,10 @@ APawn* ASpyGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
 
 void ASpyGameMode::HandleGameStartInitialization()
 {
-	DefaultPawnClass = USpyAssetManager::GetSubclassByName<APawn>(TEXT("SpyCharacter"));
-	PlayerControllerClass = USpyAssetManager::GetSubclassByName<APlayerController>(TEXT("SpyPlayerController"));
+	DefaultPawnClass = USpyAssetManager::GetSubclassByName<APawn>(SpyAssetNames::DefaultCharacter);
+	PlayerControllerClass = USpyAssetManager::GetSubclassByName<APlayerController>(SpyAssetNames::DefaultPlayerController);
 	PlayerStateClass = ASpyPlayerState::StaticClass();
-	GameStateClass = USpyAssetManager::GetSubclassByName<ASpyGameState>(TEXT("SpyGameState"));
+	GameStateClass = USpyAssetManager::GetSubclassByName<ASpyGameState>(SpyAssetNames::DefaultGameState);
 }
 
 const USpyCharacterAssetData* ASpyGameMode::GetCharacterDataForController(const AController* InController) const

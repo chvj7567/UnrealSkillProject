@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "MotionWarpingComponent.h"
 #include "Perception/AISense_Hearing.h"
+#include "Data/SpyAssetNames.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_SkillMove_Vault)
 
@@ -44,7 +45,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		2.0f,
 		Avatar,
 		0.f,
-		FName("AttackNoise")
+		SpyAINames::AttackNoise
 	);
 }
 

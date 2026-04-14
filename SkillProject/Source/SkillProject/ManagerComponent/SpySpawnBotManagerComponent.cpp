@@ -8,6 +8,7 @@
 #include "System/SpyGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/TargetPoint.h"
+#include "Data/SpyAssetNames.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpySpawnBotManagerComponent)
 
@@ -28,7 +29,7 @@ void USpySpawnBotManagerComponent::BeginPlay()
 
 void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRotator)
 {
-	//# ¼­¹ö¿¡¼­¸¸ ½ÇÇà
+	//# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (GetOwnerRole() < ROLE_Authority)
 		return;
 
@@ -42,12 +43,12 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 	SpawnInfo.OverrideLevel = GetOwner()->GetLevel();
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
-	//# ÄÁÆ®·Ñ·¯ ¸ÕÀú »ý¼º
+	//# ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (AAIController* NewController = World->SpawnActor<AAIController>(BotControllerClass, InLocation, InRotator, SpawnInfo))
 	{
 		if (ASpyGameMode* GameMode = Cast<ASpyGameMode>(World->GetAuthGameMode()))
 		{
-			//# PlayerState ¼³Á¤
+			//# PlayerState ï¿½ï¿½ï¿½ï¿½
 			if (ASpyPlayerState* PS = NewController->GetPlayerState<ASpyPlayerState>())
 			{
 				PS->SetPlayerName(CreateBotName(PS->GetPlayerId()));
@@ -58,13 +59,13 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 				SpyAIController->SetBehaviorTree(BehaviorTreeAsset);
 			}
 
-			//# º¿µµ ±âº»ÀûÀÎ ÄÁÆ®·Ñ·¯ ÃÊ±âÈ­ ÇÁ·Î¼¼½º
+			//# ï¿½ï¿½ï¿½ï¿½ ï¿½âº»ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ ï¿½Ê±ï¿½È­ ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½
 			GameMode->GenericPlayerInitialization(NewController);
 
-			//# Tranform ÁöÁ¤
+			//# Tranform ï¿½ï¿½ï¿½ï¿½
 			FTransform SpawnTransform(InRotator, InLocation, FVector::OneVector);
 
-			//# Æù »ý¼º ¹× ºùÀÇ
+			//# ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			GameMode->RestartPlayerAtTransform(NewController, SpawnTransform);
 		}
 
@@ -82,13 +83,13 @@ void USpySpawnBotManagerComponent::RemoveOneBot()
 
 		if (BotToRemove)
 		{
-			//# Á¶Á¾ ÁßÀÎ Æù ÆÄ±«
+			//# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ä±ï¿½
 			if (APawn* ControlledPawn = BotToRemove->GetPawn())
 			{
 				ControlledPawn->Destroy();
 			}
 
-			//# ÄÁÆ®·Ñ·¯ ÆÄ±« (ÀÌ¶§ ·Î±×¾Æ¿ô Ã³¸®µÊ)
+			//# ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ ï¿½Ä±ï¿½ (ï¿½Ì¶ï¿½ ï¿½Î±×¾Æ¿ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½)
 			BotToRemove->Destroy();
 		}
 
@@ -99,7 +100,7 @@ void USpySpawnBotManagerComponent::RemoveOneBot()
 void USpySpawnBotManagerComponent::ServerCreateBots_Implementation()
 {
 	TArray<AActor*> SpawnPoints;
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("SpawnEnemy"), SpawnPoints);
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), SpyActorTags::SpawnEnemy, SpawnPoints);
 
 	for (AActor* SpawnPoint : SpawnPoints)
 	{

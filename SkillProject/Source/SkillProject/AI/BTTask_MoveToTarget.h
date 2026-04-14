@@ -6,6 +6,11 @@
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
 #include "BTTask_MoveToTarget.generated.h"
 
+namespace BTTaskMessages
+{
+	inline const FName MoveFinished = TEXT("MoveFinished");
+}
+
 UCLASS()
 class SKILLPROJECT_API UBTTask_MoveToTarget : public UBTTask_MoveTo
 {

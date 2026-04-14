@@ -249,6 +249,12 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	return CurrentOffsetVar;
 }
 
+bool USpyCharacterMovementComponent::IsClimbingActive() const
+{
+	const FName ModeName = MovementConfig ? MovementConfig->ClimbingMovementModeName : FName(TEXT("Custom"));
+	return GetMovementName() == ModeName;
+}
+
 FVector USpyCharacterMovementComponent::GetWallClimbSpeed()
 {
 	const FVector WallNormal = ClimbWallData.NormalVector;

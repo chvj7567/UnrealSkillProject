@@ -30,21 +30,21 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
     Target = Cast<ACharacter>(BlackBoardComp->GetValueAsObject(Key));
 
-    //# ³»°¡ ¿òÁ÷ÀÏ ¼ö ÀÖ´Â »óÅÂÀÎÁö È®ÀÎ
+    //# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     if (CanMove(AIController) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    //# Å¸°ÙÀ» °ø°ÝÇÒ ¼ö ÀÖ´ÂÁö È®ÀÎ
+    //# Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     if (CanTargetAttack(Target) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    //# Å¸°ÙÀ» ÇâÇØ ¹Ù¶óº½
+    //# Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶ï¿½
     FVector Direction = Target->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
     Direction.Z = 0.f;
 
@@ -52,7 +52,7 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     AIController->SetControlRotation(TargetRot);
     AIController->GetPawn()->SetActorRotation(TargetRot);
 
-    //# Å¸°Ù°úÀÇ °Å¸® È®ÀÎ
+    //# Å¸ï¿½Ù°ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ È®ï¿½ï¿½
     float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), Target->GetActorLocation());
     if (Distance <= StoppingDistance)
     {
@@ -67,8 +67,7 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
     if (Result.Code == EPathFollowingRequestResult::RequestSuccessful)
     {
-        const FName MoveFinishedMessage = TEXT("MoveFinished");
-        WaitForMessage(OwnerComp, MoveFinishedMessage);
+        WaitForMessage(OwnerComp, BTTaskMessages::MoveFinished);
 
         return EBTNodeResult::InProgress;
     }

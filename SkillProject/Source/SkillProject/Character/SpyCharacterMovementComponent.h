@@ -35,6 +35,8 @@ public:
 	FVector GetWallClimbSpeed();
 	void SetWallClimbInput(FVector2D InputVector);
 
+	bool IsClimbingActive() const;
+
 	UFUNCTION(Server, Unreliable)
     void Server_SetWallClimbInput(FVector2D InputVector);
 
