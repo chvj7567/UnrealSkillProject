@@ -13,6 +13,7 @@ class USpyAbilitySystemComponent;
 class UAISenseConfig_Sight;
 class UAISenseConfig_Hearing;
 class UAISenseConfig_Damage;
+class USpyAIConfig;
 
 UCLASS()
 class SKILLPROJECT_API ASpyAIController : public AModularAIController
@@ -74,4 +75,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	FGenericTeamId TeamID;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TObjectPtr<USpyAIConfig> AIConfig;
 };
