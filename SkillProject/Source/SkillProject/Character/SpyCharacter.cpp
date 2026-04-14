@@ -85,11 +85,6 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 void ASpyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (HasAuthority())
-	{
-		GetWorldTimerManager().SetTimer(WeaponSpawnTimerHandle, this, &ASpyCharacter::SpawnAndAttachWeapon, 1.0f, false);
-	}
 }
 
 void ASpyCharacter::PossessedBy(AController* NewController)
@@ -210,6 +205,11 @@ void ASpyCharacter::OnAbilitySystemInitialized()
 	SpyHealthComponent->InitializeByAbilitySystem(SpyASC);
 
 	InitializeGameplayTags();
+
+	if (HasAuthority())
+	{
+		SpawnAndAttachWeapon();
+	}
 }
 
 void ASpyCharacter::OnAbilitySystemUninitialized()

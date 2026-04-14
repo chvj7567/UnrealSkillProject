@@ -50,7 +50,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 
 			if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
 			{
-				//# ÀÌ¹Ì ¿­·ÁÀÖ´Â UI È®ÀÎ
+				//# ì´ë¯¸ ì—´ë ¤ìˆëŠ” UI í™•ì¸
 				const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
 					[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
 					{
@@ -59,12 +59,12 @@ void USpyUIManager::OpenUI(FName InUIName)
 
 				if (FindOpenningUI)
 				{
-					//# µ¿ÀÏÇÑ UI´Â Áßº¹ÇØ¼­ ¶ç¿ìÁö ¾ÊÀ½
+					//# ë™ì¼í•œ UIëŠ” ì¤‘ë³µí•´ì„œ ë„ìš°ì§€ ì•ŠìŒ
 					UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *InUIName.ToString());
 					return;
 				}
 
-				//# Ä³½Ì ÁßÀÎ UI È®ÀÎ
+				//# ìºì‹± ì¤‘ì¸ UI í™•ì¸
 				const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
 					[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
 					{
@@ -73,7 +73,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 
 				if (FindCashingUI)
 				{
-					//# Ä³½Ì ÁßÀÎ UIÀÌ¸é Open
+					//# ìºì‹± ì¤‘ì¸ UIì´ë©´ Open
 					OpenUIList.Add(FindCashingUI->Get());
 					FindCashingUI->Get()->AddToViewport();
 
@@ -81,7 +81,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 					return;
 				}
 
-				//# UI »ı¼º
+				//# UI ìƒì„±
 				if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), UI))
 				{
 					UserWidget->SetUIName(InUIName);
@@ -104,7 +104,7 @@ void USpyUIManager::CloseUI(FName InUIName)
 	if (OpenUIList.IsEmpty())
 		return;
 
-	//# ÀÌ¹Ì ¿­·ÁÀÖ´Â UI È®ÀÎ
+	//# ì´ë¯¸ ì—´ë ¤ìˆëŠ” UI í™•ì¸
 	const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
 		[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
 		{
@@ -140,17 +140,18 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 		return;
 
 	FSpyAssetAndDelegate LoadDelegate;
-	LoadDelegate.BindLambda([InUIName, WidgetComponent, Space](UObject* LoadedAsset)
+	TWeakObjectPtr<UWidgetComponent> WeakWidget = WidgetComponent;
+	LoadDelegate.BindLambda([InUIName, WeakWidget, Space](UObject* LoadedAsset)
 		{
-			if (LoadedAsset == nullptr)
+			if (LoadedAsset == nullptr || !WeakWidget.IsValid())
 				return;
 
 			if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
 			{
-				WidgetComponent->SetWidgetClass(UI);
-				WidgetComponent->SetWidgetSpace(Space);
-				WidgetComponent->InitWidget();
-				WidgetComponent->SetVisibility(true);
+				WeakWidget->SetWidgetClass(UI);
+				WeakWidget->SetWidgetSpace(Space);
+				WeakWidget->InitWidget();
+				WeakWidget->SetVisibility(true);
 			}
 		});
 
@@ -159,7 +160,7 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 
 void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
 {
-	//# Ä³½Ì ¼ö°¡ Max¶ó¸é ¿À·¡µÈ UI Á¦°Å ÈÄ Ãß°¡
+	//# ìºì‹± ìˆ˜ê°€ Maxë¼ë©´ ì˜¤ë˜ëœ UI ì œê±° í›„ ì¶”ê°€
 	if (MaxCashingUICount > 0)
 	{
 		for (USKUserWidget* CashingUserWIdget : CashingUIList)

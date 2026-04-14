@@ -19,7 +19,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	void SetCurrentTarget(AActor* NewTarget);
 
-	TWeakObjectPtr<AActor> GetTarget() const { return CurrentTarget; }
+	TWeakObjectPtr<AActor> GetTarget() const { return CurrentTarget.Get(); }
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	bool IsTargetValid() const;
@@ -35,5 +35,5 @@ protected:
 
 protected:
 	UPROPERTY(Replicated)
-	TWeakObjectPtr<AActor> CurrentTarget;
+	TObjectPtr<AActor> CurrentTarget;
 };

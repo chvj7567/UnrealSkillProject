@@ -36,7 +36,7 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
     if (SpyCharacter == nullptr)
         return;
 
-    if (CurrentTarget.IsValid())
+    if (CurrentTarget != nullptr)
     {
         if (CurrentTarget == NewTarget)
             return;
@@ -46,8 +46,8 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
             SpyTarget->GetSpyHealthComponent()->OnDeath.RemoveDynamic(this, &ThisClass::OnTargetDeath);
         }
 
-        //# ÀÌÀü Å¸°Ù GE Á¦°Å
-        if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget.Get())->GetSpyAbilitySystemComponent())
+        //# ì´ì „ íƒ€ê²Ÿ GE ì œê±°
+        if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget)->GetSpyAbilitySystemComponent())
         {
             FGameplayTagContainer TagContainer;
             TagContainer.AddTag(SpyGameplayTags::Character_State_Targeting);
@@ -65,17 +65,17 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
 
 		CurrentTarget = NewTarget;
 
-        UE_LOG(LogTemp, Warning, TEXT("# [SpyTargeting] Target: %s"), *CurrentTarget.Get()->GetName());
+        UE_LOG(LogTemp, Warning, TEXT("# [SpyTargeting] Target: %s"), *CurrentTarget->GetName());
 	}
 	else
 	{
-		CurrentTarget.Reset();
+		CurrentTarget = nullptr;
 	}
 }
 
 bool USpyTargetingManagerComponent::IsTargetValid() const
 {
-    return IsPotentialTargetValid(CurrentTarget.Get());
+    return IsPotentialTargetValid(CurrentTarget);
 }
 
 bool USpyTargetingManagerComponent::FindTarget(float Radius)
@@ -84,11 +84,11 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
     if (Owner == nullptr)
         return false;
 
-    //# °¨ÁöÇÒ ¿ÀºêÁ§Æ® Å¸ÀÔÀ» PawnÀ¸·Î ¼³Á¤
+    //# ê°ì§€í•  ì˜¤ë¸Œì íŠ¸ íƒ€ì…ì„ Pawnìœ¼ë¡œ ì„¤ì •
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
 
-    //# ÀÚ±â ÀÚ½Å Á¦¿Ü
+    //# ìê¸° ìì‹  ì œì™¸
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(Owner);
 
@@ -108,12 +108,12 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
         GetWorld(),
         Owner->GetActorLocation(),
         Radius,
-        24,                // ¼¼±×¸ÕÆ® ¼ö (±¸ÀÇ µğÅ×ÀÏ)
-        FColor::Blue,       // ¼± »ö»ó
-        false,             // ¿µ±¸ Áö¼Ó ¿©ºÎ
-        0.5f,              // Áö¼Ó ½Ã°£ (ÃÊ)
+        24,                // ì„¸ê·¸ë¨¼íŠ¸ ìˆ˜ (êµ¬ì˜ ë””í…Œì¼)
+        FColor::Blue,       // ì„  ìƒ‰ìƒ
+        false,             // ì˜êµ¬ ì§€ì† ì—¬ë¶€
+        0.5f,              // ì§€ì† ì‹œê°„ (ì´ˆ)
         0,                 // Depth Priority
-        1.0f               // ¼± µÎ²²
+        1.0f               // ì„  ë‘ê»˜
     );
 
     AActor* Target = nullptr;
@@ -125,7 +125,7 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
         {
             if (IsPotentialTargetValid(FoundActor))
             {
-                //# DistSquared´Â ·çÆ® °è»êÀÌ ¾ø¾î ÀÏ¹İ Distº¸´Ù ºü¸§
+                //# DistSquaredëŠ” ë£¨íŠ¸ ê³„ì‚°ì´ ì—†ì–´ ì¼ë°˜ Distë³´ë‹¤ ë¹ ë¦„
                 float DistSq = FVector::DistSquared(Owner->GetActorLocation(), FoundActor->GetActorLocation());
                 if (DistSq < ClosestDistanceSq)
                 {
