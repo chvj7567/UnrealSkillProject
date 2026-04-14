@@ -148,6 +148,7 @@ void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterA
 
 	CharacterAssetData = InCharacterAssetData;
 
+	//# Temp
 	SetGenericTeamId(bInIsPlayer ? 100 : 1);
 
 	for (const USpyAbilityData* AbilityData : CharacterAssetData->CharacterAssets.CommonSkills)
