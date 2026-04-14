@@ -276,7 +276,7 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 
 	FSpyAssetAndDelegate LoadDelegate;
 	TWeakObjectPtr<ASpyCharacter> WeakThis = this;
-	LoadDelegate.BindLambda([WeakThis](UObject* LoadedAsset)
+	LoadDelegate.BindLambda([WeakThis, WeaponAssetName, WeaponSocketName](UObject* LoadedAsset)
 		{
 			if (WeakThis.IsValid() == false || LoadedAsset == nullptr)
 				return;
