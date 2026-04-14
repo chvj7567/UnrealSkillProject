@@ -177,7 +177,7 @@ USpyAbilitySystemComponent* ASpyCharacter::GetSpyAbilitySystemComponent() const
 
 void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator)
 {
-	if (HasAuthority())
+	if (GetNetMode() == NM_DedicatedServer)
 		return;
 
 	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
@@ -258,20 +258,21 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("OneHandSword"));
 
 	FSpyAssetAndDelegate LoadDelegate;
-	LoadDelegate.BindLambda([this](UObject* LoadedAsset)
+	TWeakObjectPtr<ASpyCharacter> WeakThis = this;
+	LoadDelegate.BindLambda([WeakThis](UObject* LoadedAsset)
 		{
-			if (LoadedAsset == nullptr)
+			if (WeakThis.IsValid() == false || LoadedAsset == nullptr)
 				return;
 
 			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("OneHandSword")))
 			{
 				FActorSpawnParameters SpawnParams;
-				SpawnParams.Owner = this;
-				SpawnParams.Instigator = this;
+				SpawnParams.Owner = WeakThis.Get();
+				SpawnParams.Instigator = WeakThis.Get();
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				SpyWeapon = GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-				SpyWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("weapon_socket"));
+				WeakThis->SpyWeapon = WeakThis->GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+				WeakThis->SpyWeapon->AttachToComponent(WeakThis->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("weapon_socket"));
 			}
 
 		});

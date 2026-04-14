@@ -41,24 +41,23 @@ void USpyAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 
 void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 {
-	//# ÀÔ·Â Lock È®ÀÎ
+	//# ì…ë ¥ Lock í™•ì¸
 	if (HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_All))
 	{
 		ClearAbilityInput();
 		return;
 	}
 
-	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
-	AbilitiesToActivate.Reset();
+	TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
 
-    //# ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ ´­¸°(Pressed) ¾îºô¸®Æ¼ Ã³¸®
+    //# ì´ë²ˆ í”„ë ˆì„ì— ëˆŒë¦°(Pressed) ì–´ë¹Œë¦¬í‹° ì²˜ë¦¬
     for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
     {
         if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
         {
 			AbilitySpec->InputPressed = true;
 
-			//# ½ÇÇà ÁßÀÌ¸é "´­·¶´Ù"´Â ÀÌº¥Æ® Àü´Ş
+			//# ì‹¤í–‰ ì¤‘ì´ë©´ "ëˆŒë €ë‹¤"ëŠ” ì´ë²¤íŠ¸ ì „ë‹¬
 			if (AbilitySpec->IsActive())
 			{
 				AbilitySpecInputPressed(*AbilitySpec);
@@ -70,13 +69,13 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
         }
     }
 
-	//# ½ÇÁ¦ ´É·Â ½ÇÇà
+	//# ì‹¤ì œ ëŠ¥ë ¥ ì‹¤í–‰
 	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
 	{
 		TryActivateAbility(AbilitySpecHandle);
 	}
 
-    //# ÀÌ¹ø ÇÁ·¹ÀÓ¿¡ ¶¾(Released) ¾îºô¸®Æ¼ Ã³¸®
+    //# ì´ë²ˆ í”„ë ˆì„ì— ë—€(Released) ì–´ë¹Œë¦¬í‹° ì²˜ë¦¬
     for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
     {
         if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
@@ -87,7 +86,7 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
 
                 if (AbilitySpec->IsActive())
                 {
-                    //# ½ÇÇà ÁßÀÌ¸é "¶Ã´Ù"´Â ÀÌº¥Æ® Àü´Ş
+                    //# ì‹¤í–‰ ì¤‘ì´ë©´ "ë—ë‹¤"ëŠ” ì´ë²¤íŠ¸ ì „ë‹¬
                     AbilitySpecInputReleased(*AbilitySpec);
                 }
             }
@@ -105,7 +104,7 @@ void USpyAbilitySystemComponent::ClearAbilityInput()
 
 bool USpyAbilitySystemComponent::HasAbilityByTag(const FGameplayTag& AbilityTag) const
 {
-	//# ¸ğµç ÅÂ±× Áß¿¡¼­ ÇöÀç ÅÂ±×¸¦ °¡Áö°í ÀÖ´ÂÁö È®ÀÎ
+	//# ëª¨ë“  íƒœê·¸ ì¤‘ì—ì„œ í˜„ì¬ íƒœê·¸ë¥¼ ê°€ì§€ê³  ìˆëŠ”ì§€ í™•ì¸
 	TArray<FGameplayAbilitySpecHandle> SpecHandles;
 	GetAllAbilities(SpecHandles);
 
@@ -124,7 +123,7 @@ bool USpyAbilitySystemComponent::HasAbilityByTag(const FGameplayTag& AbilityTag)
 
 bool USpyAbilitySystemComponent::IsActiveAbilityByTag(const FGameplayTag& AbilityTag) const
 {
-	//# È°¼ºÈ­ ÁßÀÎ ÅÂ±× Áß¿¡¼­ ÇöÀç ÅÂ±×°¡ ÀÖ´ÂÁö È®ÀÎ
+	//# í™œì„±í™” ì¤‘ì¸ íƒœê·¸ ì¤‘ì—ì„œ í˜„ì¬ íƒœê·¸ê°€ ìˆëŠ”ì§€ í™•ì¸
 	const TArray<FGameplayAbilitySpec>& Specs = GetActivatableAbilities();
 	for (const FGameplayAbilitySpec& Spec : Specs)
 	{
