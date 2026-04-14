@@ -9,6 +9,7 @@
 #include "Util/SpyGameplayTags.h"
 #include "Manager/SpyAssetManager.h"
 #include "Data/SpyAnimAssetData.h"
+#include "Data/SpyAssetNames.h"
 #include "SKGameplayTags.h"
 #include "Attribute/SKAttributeSet.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
@@ -20,9 +21,9 @@ void USpyCharacterAnimInstance::NativeBeginPlay()
 {
     Super::NativeBeginPlay();
 
-    if (USpyAnimAssetData* AnimData = USpyAssetManager::GetAssetByName<USpyAnimAssetData>(TEXT("SpyAnimAssetData")))
+    if (USpyAnimAssetData* AnimData = USpyAssetManager::GetAssetByName<USpyAnimAssetData>(SpyAssetNames::AnimAssetData))
     {
-        if (TSoftClassPtr<UAnimInstance> LayerSoftPtr = AnimData->AnimLayerMap.FindRef(TEXT("OHS")))
+        if (TSoftClassPtr<UAnimInstance> LayerSoftPtr = AnimData->AnimLayerMap.FindRef(SpyAnimLayerKeys::OneHandSword))
         {
             FSpyAssetAndDelegate LoadDelegate;
             LoadDelegate.BindLambda([this](UObject* LoadedAsset)
@@ -67,12 +68,12 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         FRotator Rot;
         if (Player->IsLocallyControlled())
         {
-            //# ·ÎÄÃ ÇÃ·¹ÀÌ¾î -> ÄÁÆ®·Ñ·¯ ±âÁØ
+            //# ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ -> ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ ï¿½ï¿½ï¿½ï¿½
             Rot = Player->GetControlRotation();
         }
         else
         {
-            //# ¼­¹ö/¿ø°Ý -> Ä³¸¯ÅÍ ±âÁØ
+            //# ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ -> Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             Rot = Player->GetBaseAimRotation();
         }
 
@@ -84,7 +85,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         if (ASpyPlayerState* SpyPlayerState = Player->GetPlayerState<ASpyPlayerState>())
         {
             IsDeath = SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
-            IsClimbing = PlayerMovementComponent->GetMovementName() == TEXT("Custom");
+            IsClimbing = PlayerMovementComponent->IsClimbingActive();
             if (IsClimbing)
             {
                 Velocity = PlayerMovementComponent->GetWallClimbSpeed();

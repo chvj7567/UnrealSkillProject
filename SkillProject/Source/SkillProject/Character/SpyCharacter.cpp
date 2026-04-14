@@ -31,6 +31,8 @@
 #include "Character/SpyHealthComponent.h"
 #include "SKGameplayTags.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "Data/SpyCharacterConfig.h"
+#include "Data/SpyCharacterAssetData.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
 
@@ -42,26 +44,31 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	bReplicates = true;
 
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	if (CharacterConfig)
+	{
+		GetCapsuleComponent()->InitCapsuleSize(CharacterConfig->CapsuleRadius, CharacterConfig->CapsuleHalfHeight);
+	}
+	else
+	{
+		GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	}
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-
-	GetCharacterMovement()->RotationRate.Yaw = 1080.f;
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, CharacterConfig ? CharacterConfig->RotationRateYaw : 1080.f, 0.0f);
+	GetCharacterMovement()->JumpZVelocity = CharacterConfig ? CharacterConfig->JumpZVelocity : 700.f;
+	GetCharacterMovement()->AirControl = CharacterConfig ? CharacterConfig->AirControl : 0.35f;
+	GetCharacterMovement()->MaxWalkSpeed = CharacterConfig ? CharacterConfig->MaxWalkSpeed : 500.f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = CharacterConfig ? CharacterConfig->MinAnalogWalkSpeed : 20.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = CharacterConfig ? CharacterConfig->BrakingDecelerationWalking : 2000.f;
+	GetCharacterMovement()->BrakingDecelerationFalling = CharacterConfig ? CharacterConfig->BrakingDecelerationFalling : 1500.f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f;	
+	CameraBoom->TargetArmLength = CharacterConfig ? CharacterConfig->CameraArmLength : 400.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bDoCollisionTest = false;
 
@@ -71,7 +78,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
 	HPBarComponent->SetupAttachment(GetMesh());
-	HPBarComponent->SetRelativeLocation(FVector(0, 0, 200.f));
+	HPBarComponent->SetRelativeLocation(CharacterConfig ? CharacterConfig->HPBarOffset : FVector(0.f, 0.f, 200.f));
 
 	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
 	SpyPawnExtensionComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
@@ -253,9 +260,19 @@ void ASpyCharacter::SetMovementModeTag(EMovementMode MovementMode, uint8 CustomM
 
 void ASpyCharacter::SpawnAndAttachWeapon()
 {
-	//# Temp
-	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
-	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(FName("OneHandSword"));
+	const USpyCharacterAssetData* AssetData = SpyPawnExtensionComponent->GetCharacterAssetData();
+	if (AssetData == nullptr || AssetData->CharacterAssets.AssetEntries.IsEmpty())
+		return;
+
+	const FCharacterAssetEntry& Entry = AssetData->CharacterAssets.AssetEntries[0];
+	if (Entry.WeaponAssetName.IsNone())
+		return;
+
+	const FName WeaponAssetName = Entry.WeaponAssetName;
+	const FName WeaponSocketName = Entry.WeaponSocketName.IsNone() ? FName(TEXT("weapon_socket")) : Entry.WeaponSocketName;
+
+	const USpyAssetData& SKAssetData = USpyAssetManager::Get().GetAssetData();
+	const FSoftObjectPath& AssetPath = SKAssetData.GetAssetPathByName(WeaponAssetName);
 
 	FSpyAssetAndDelegate LoadDelegate;
 	TWeakObjectPtr<ASpyCharacter> WeakThis = this;
@@ -264,7 +281,7 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 			if (WeakThis.IsValid() == false || LoadedAsset == nullptr)
 				return;
 
-			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(FName("OneHandSword")))
+			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(WeaponAssetName))
 			{
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.Owner = WeakThis.Get();
@@ -274,7 +291,6 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 				WeakThis->SpyWeapon = WeakThis->GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 				WeakThis->SpyWeapon->AttachToComponent(WeakThis->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("weapon_socket"));
 			}
-
 		});
 
 	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);

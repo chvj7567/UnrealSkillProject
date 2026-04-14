@@ -2,6 +2,7 @@
 
 
 #include "System/SpyAIController.h"
+#include "Data/SpyAIConfig.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "SKGameplayTags.h"
@@ -30,23 +31,23 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	SetPerceptionComponent(*AIPerceptionComponent);
 
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 500.f;
-	SightConfig->LoseSightRadius = 700.f;
-	SightConfig->PeripheralVisionAngleDegrees = 90.f;
-	SightConfig->SetMaxAge(5.f);
+	SightConfig->SightRadius = AIConfig ? AIConfig->SightRadius : 500.f;
+	SightConfig->LoseSightRadius = AIConfig ? AIConfig->LoseSightRadius : 700.f;
+	SightConfig->PeripheralVisionAngleDegrees = AIConfig ? AIConfig->PeripheralVisionAngleDegrees : 90.f;
+	SightConfig->SetMaxAge(AIConfig ? AIConfig->SightMaxAge : 5.f);
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
-	HearingConfig->HearingRange = 200.f;
-	HearingConfig->SetMaxAge(5.f);
+	HearingConfig->HearingRange = AIConfig ? AIConfig->HearingRange : 200.f;
+	HearingConfig->SetMaxAge(AIConfig ? AIConfig->HearingMaxAge : 5.f);
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
 
 	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
-	DamageConfig->SetMaxAge(5.f);
+	DamageConfig->SetMaxAge(AIConfig ? AIConfig->DamageMaxAge : 5.f);
 
 	AIPerceptionComponent->ConfigureSense(*SightConfig);
 	AIPerceptionComponent->ConfigureSense(*HearingConfig);
@@ -54,8 +55,6 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 
 	//# 시야를 우선 순위로 둠
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
-
-	TeamID = FGenericTeamId(1);
 }
 
 void ASpyAIController::Tick(float DeltaSeconds)

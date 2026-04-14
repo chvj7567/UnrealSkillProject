@@ -8,6 +8,7 @@
 
 #include "SpyCharacterMovementComponent.generated.h"
 
+class USpyMovementConfig;
 struct FClimbWallData;
 
 UCLASS()
@@ -34,6 +35,8 @@ public:
 	FVector GetWallClimbSpeed();
 	void SetWallClimbInput(FVector2D InputVector);
 
+	bool IsClimbingActive() const;
+
 	UFUNCTION(Server, Unreliable)
     void Server_SetWallClimbInput(FVector2D InputVector);
 
@@ -51,12 +54,16 @@ protected:
 	FClimbWallData ClimbWallData;
 
 public:
-	//# ÀÌÀü ÇÁ·¹ÀÓÀÇ IK µµ´Þ ÁöÁ¡À» ÀúÀå (¶³¸² ¹æÁö¿ë º¸°£ Å¸°Ù)
+	//# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ IK ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½)
 	FVector CurrentOffsetHL;
 	FVector CurrentOffsetHR;
 	FVector CurrentOffsetFL;
 	FVector CurrentOffsetFR;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	TObjectPtr<USpyMovementConfig> MovementConfig;
+
 private:
 	bool bHangUp;
+	float CachedGravityScale;
 };

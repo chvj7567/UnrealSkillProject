@@ -11,6 +11,7 @@
 
 #include "SpyCharacter.generated.h"
 
+class USpyCharacterConfig;
 class USpringArmComponent;
 class UCameraComponent;
 class UBoxComponent;
@@ -90,6 +91,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<ASpyWeapon> SpyWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	TObjectPtr<USpyCharacterConfig> CharacterConfig;
 
 private:
 	FTimerHandle WeaponSpawnTimerHandle;

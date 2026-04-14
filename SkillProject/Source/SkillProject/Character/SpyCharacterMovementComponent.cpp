@@ -10,6 +10,7 @@
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "SKGameplayTags.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Data/SpyMovementConfig.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
 
@@ -96,14 +97,14 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
-	//# º®Å¸±â ½ºÇÇµå ¼³Á¤
+	//# ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½Çµï¿½ ï¿½ï¿½ï¿½ï¿½
 	Velocity = GetWallClimbSpeed();
 
-	//# º®Å¸±â ÁøÇà Áß À§Ä¡ °è»ê
+	//# ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	//# ÇÑ ¹ø¸¸ È£ÃâÇÏµµ·Ï
+	//# ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½
 	if (CanHangUp() && bHangUp == false)
 	{
 		bHangUp = true;
@@ -115,8 +116,11 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 		FVector OwnerFowardVector = GetOwner()->GetActorForwardVector();
 
 		UWorld* World = GetWorld();
-		FVector Start = OwnerLocation + OwnerFowardVector * (ClimbData.DistanceOffset + 50.f) + FVector::UpVector * 200.f;
-		FVector End = Start + FVector::DownVector * 500.f;
+		const float HangUpFwdOffset = MovementConfig ? MovementConfig->ClimbHangUpRayForwardOffset : 50.f;
+		const float HangUpUpOffset  = MovementConfig ? MovementConfig->ClimbHangUpRayUpOffset     : 200.f;
+		const float HangUpDownDist  = MovementConfig ? MovementConfig->ClimbHangUpRayDownDistance : 500.f;
+		FVector Start = OwnerLocation + OwnerFowardVector * (ClimbData.DistanceOffset + HangUpFwdOffset) + FVector::UpVector * HangUpUpOffset;
+		FVector End = Start + FVector::DownVector * HangUpDownDist;
 		FHitResult HitResult;
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetOwner());
@@ -134,10 +138,18 @@ false, 1.f, 0, -1.f);
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SpyGameplayTags::Skill_Move_HangUp, EventData);
 	}
 
-	CalculateBoneVectorOffset(TEXT("hand_l"), TEXT("Hand_L_IK_Weight"), CurrentOffsetHL, DeltaTime, ClimbData.HandOffset);
-	CalculateBoneVectorOffset(TEXT("hand_r"), TEXT("Hand_R_IK_Weight"), CurrentOffsetHR, DeltaTime, ClimbData.HandOffset);
-	CalculateBoneVectorOffset(TEXT("foot_l"), TEXT("Foot_L_IK_Weight"), CurrentOffsetFL, DeltaTime, ClimbData.FootOffset);
-	CalculateBoneVectorOffset(TEXT("foot_r"), TEXT("Foot_R_IK_Weight"), CurrentOffsetFR, DeltaTime, ClimbData.FootOffset);
+	const FName BoneHL  = MovementConfig ? MovementConfig->IKBoneHandLeft    : FName("hand_l");
+	const FName BoneHR  = MovementConfig ? MovementConfig->IKBoneHandRight   : FName("hand_r");
+	const FName BoneFL  = MovementConfig ? MovementConfig->IKBoneFootLeft    : FName("foot_l");
+	const FName BoneFR  = MovementConfig ? MovementConfig->IKBoneFootRight   : FName("foot_r");
+	const FName CurveHL = MovementConfig ? MovementConfig->IKCurveHandLeft   : FName("Hand_L_IK_Weight");
+	const FName CurveHR = MovementConfig ? MovementConfig->IKCurveHandRight  : FName("Hand_R_IK_Weight");
+	const FName CurveFL = MovementConfig ? MovementConfig->IKCurveFootLeft   : FName("Foot_L_IK_Weight");
+	const FName CurveFR = MovementConfig ? MovementConfig->IKCurveFootRight  : FName("Foot_R_IK_Weight");
+	CalculateBoneVectorOffset(BoneHL, CurveHL, CurrentOffsetHL, DeltaTime, ClimbData.HandOffset);
+	CalculateBoneVectorOffset(BoneHR, CurveHR, CurrentOffsetHR, DeltaTime, ClimbData.HandOffset);
+	CalculateBoneVectorOffset(BoneFL, CurveFL, CurrentOffsetFL, DeltaTime, ClimbData.FootOffset);
+	CalculateBoneVectorOffset(BoneFR, CurveFR, CurrentOffsetFR, DeltaTime, ClimbData.FootOffset);
 }
 
 void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
@@ -151,6 +163,7 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
+	CachedGravityScale = GravityScale;
 	GravityScale = 0.0f;
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
@@ -167,7 +180,7 @@ void USpyCharacterMovementComponent::EndWallClimb()
 {
 	UE_LOG(LogTemp, Warning, TEXT("EndWallClimb %s"), *GetOwner()->GetName());
 
-	GravityScale = 1.0f;
+	GravityScale = CachedGravityScale;
 	bOrientRotationToMovement = true;
 
 	SetMovementMode(MOVE_Walking);
@@ -184,7 +197,8 @@ bool USpyCharacterMovementComponent::CanHangUp()
 
 	UWorld* World = GetWorld();
 	FVector Start = OwnerLocation + (FVector::UpVector * ClimbData.CheckHangUpHeight);
-	FVector End = Start + OwnerFowardVector * (ClimbData.DistanceOffset + 100.f);
+	const float CheckFwdOffset = MovementConfig ? MovementConfig->HangUpCheckRayForwardOffset : 100.f;
+	FVector End = Start + OwnerFowardVector * (ClimbData.DistanceOffset + CheckFwdOffset);
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(OwnerCharacter);
@@ -221,13 +235,13 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	FVector WallPoint = ClimbWallData.HitVector;
 	FVector WallNormal = ClimbWallData.NormalVector.GetSafeNormal();
 
-	//# º® Æò¸é±îÁöÀÇ °Å¸® °è»ê
+	//# ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½
 	float DistanceFromPlane = FVector::DotProduct(AnimBoneLocation - WallPoint, WallNormal);
 
-	//# ¸ñÇ¥ ¿ÀÇÁ¼Â (º® ¹ý¼± ±âÁØÀ¸·Î ÀÌµ¿)
+	//# ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½)
 	FVector TargetWorldOffset = (-WallNormal * (DistanceFromPlane - Offset)) * IKWeight;
 
-	//# ¿ùµå -> ¸Þ½¬ °ø°£À¸·Î ÁÂÇ¥ º¯È¯
+	//# ï¿½ï¿½ï¿½ï¿½ -> ï¿½Þ½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½È¯
 	FVector TargetMeshOffset = Mesh->GetComponentTransform().InverseTransformVectorNoScale(TargetWorldOffset);
 
 	CurrentOffsetVar = FMath::VInterpTo(CurrentOffsetVar, TargetMeshOffset, DeltaTime, InterpSpeed);
@@ -235,12 +249,18 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	return CurrentOffsetVar;
 }
 
+bool USpyCharacterMovementComponent::IsClimbingActive() const
+{
+	const FName ModeName = MovementConfig ? MovementConfig->ClimbingMovementModeName : FName(TEXT("Custom"));
+	return GetMovementName() == ModeName;
+}
+
 FVector USpyCharacterMovementComponent::GetWallClimbSpeed()
 {
 	const FVector WallNormal = ClimbWallData.NormalVector;
 	const FVector UpVector = FVector::UpVector;
 
-	//# ¿ÜÀûÀ» ÅëÇØ º®ÀÇ À§ÂÊ ¿À¸¥ÂÊ º¤ÅÍ Get
+	//# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Get
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 
