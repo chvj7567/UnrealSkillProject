@@ -20,6 +20,7 @@ void USpyAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inpu
 			if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
 			{
 				InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
+				InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
 			}
 		}
 	}
@@ -34,6 +35,7 @@ void USpyAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 			if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
 			{
 				InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
+				InputHeldSpecHandles.Remove(AbilitySpec.Handle);
 			}
 		}
 	}
@@ -69,6 +71,18 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
         }
     }
 
+	//# 이번 프레임에 꾹 누르고 있는(Held) 어빌리티 처리
+	for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
+	{
+		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+		{
+			if (AbilitySpec->Ability && !AbilitySpec->IsActive())
+			{
+				AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
+			}
+		}
+	}
+
 	//# 실제 능력 실행
 	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
 	{
@@ -100,6 +114,7 @@ void USpyAbilitySystemComponent::ClearAbilityInput()
 {
 	InputPressedSpecHandles.Reset();
 	InputReleasedSpecHandles.Reset();
+	InputHeldSpecHandles.Reset();
 }
 
 bool USpyAbilitySystemComponent::HasAbilityByTag(const FGameplayTag& AbilityTag) const
