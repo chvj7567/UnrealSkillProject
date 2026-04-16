@@ -52,36 +52,29 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
 
 	TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
 
-    //# 이번 프레임에 눌린(Pressed) 어빌리티 처리
-    for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
-    {
-        if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-        {
-			AbilitySpec->InputPressed = true;
-
+	//# 이번 프레임에 눌린(Pressed) 어빌리티 처리
+	ForEachAbilitySpec(InputPressedSpecHandles, [&](FGameplayAbilitySpec& AbilitySpec)
+	{
+		AbilitySpec.InputPressed = true;
+		if (AbilitySpec.IsActive())
+		{
 			//# 실행 중이면 "눌렀다"는 이벤트 전달
-			if (AbilitySpec->IsActive())
-			{
-				AbilitySpecInputPressed(*AbilitySpec);
-			}
-			else
-			{
-				AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
-			}
-        }
-    }
+			AbilitySpecInputPressed(AbilitySpec);
+		}
+		else
+		{
+			AbilitiesToActivate.AddUnique(AbilitySpec.Handle);
+		}
+	});
 
 	//# 이번 프레임에 꾹 누르고 있는(Held) 어빌리티 처리
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
+	ForEachAbilitySpec(InputHeldSpecHandles, [&](FGameplayAbilitySpec& AbilitySpec)
 	{
-		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+		if (!AbilitySpec.IsActive())
 		{
-			if (AbilitySpec->Ability && !AbilitySpec->IsActive())
-			{
-				AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
-			}
+			AbilitiesToActivate.AddUnique(AbilitySpec.Handle);
 		}
-	}
+	});
 
 	//# 실제 능력 실행
 	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
@@ -89,25 +82,32 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
 		TryActivateAbility(AbilitySpecHandle);
 	}
 
-    //# 이번 프레임에 뗀(Released) 어빌리티 처리
-    for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
-    {
-        if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-        {
-            if (AbilitySpec->Ability)
-            {
-                AbilitySpec->InputPressed = false;
-
-                if (AbilitySpec->IsActive())
-                {
-                    //# 실행 중이면 "뗐다"는 이벤트 전달
-                    AbilitySpecInputReleased(*AbilitySpec);
-                }
-            }
-        }
-    }
+	//# 이번 프레임에 뗀(Released) 어빌리티 처리
+	ForEachAbilitySpec(InputReleasedSpecHandles, [&](FGameplayAbilitySpec& AbilitySpec)
+	{
+		AbilitySpec.InputPressed = false;
+		if (AbilitySpec.IsActive())
+		{
+			//# 실행 중이면 "뗐다"는 이벤트 전달
+			AbilitySpecInputReleased(AbilitySpec);
+		}
+	});
 
 	ClearAbilityInput();
+}
+
+void USpyAbilitySystemComponent::ForEachAbilitySpec(const TArray<FGameplayAbilitySpecHandle>& Handles, TFunctionRef<void(FGameplayAbilitySpec&)> Func)
+{
+	for (const FGameplayAbilitySpecHandle& SpecHandle : Handles)
+	{
+		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
+		{
+			if (AbilitySpec->Ability)
+			{
+				Func(*AbilitySpec);
+			}
+		}
+	}
 }
 
 void USpyAbilitySystemComponent::ClearAbilityInput()

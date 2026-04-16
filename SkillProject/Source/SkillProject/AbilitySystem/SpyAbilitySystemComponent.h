@@ -32,4 +32,7 @@ protected:
 	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
+
+private:
+	void ForEachAbilitySpec(const TArray<FGameplayAbilitySpecHandle>& Handles, TFunctionRef<void(FGameplayAbilitySpec&)> Func);
 };
