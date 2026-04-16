@@ -44,31 +44,24 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	bReplicates = true;
 
-	if (CharacterConfig)
-	{
-		GetCapsuleComponent()->InitCapsuleSize(CharacterConfig->CapsuleRadius, CharacterConfig->CapsuleHalfHeight);
-	}
-	else
-	{
-		GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-	}
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, CharacterConfig ? CharacterConfig->RotationRateYaw : 1080.f, 0.0f);
-	GetCharacterMovement()->JumpZVelocity = CharacterConfig ? CharacterConfig->JumpZVelocity : 700.f;
-	GetCharacterMovement()->AirControl = CharacterConfig ? CharacterConfig->AirControl : 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = CharacterConfig ? CharacterConfig->MaxWalkSpeed : 500.f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = CharacterConfig ? CharacterConfig->MinAnalogWalkSpeed : 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = CharacterConfig ? CharacterConfig->BrakingDecelerationWalking : 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = CharacterConfig ? CharacterConfig->BrakingDecelerationFalling : 1500.f;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1080.f, 0.0f);
+	GetCharacterMovement()->JumpZVelocity = 700.f;
+	GetCharacterMovement()->AirControl = 0.35f;
+	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 1500.f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = CharacterConfig ? CharacterConfig->CameraArmLength : 400.0f;
+	CameraBoom->TargetArmLength = 400.f;
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bDoCollisionTest = false;
 
@@ -78,7 +71,7 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 
 	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
 	HPBarComponent->SetupAttachment(GetMesh());
-	HPBarComponent->SetRelativeLocation(CharacterConfig ? CharacterConfig->HPBarOffset : FVector(0.f, 0.f, 200.f));
+	HPBarComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
 
 	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
 	SpyPawnExtensionComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
@@ -87,6 +80,29 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	SpyHealthComponent = CreateDefaultSubobject<USpyHealthComponent>(TEXT("HealthComponent"));
 	SpyHealthComponent->OnHealthChanged.AddDynamic(this, &ThisClass::OnHealthChanged);
 	SpyHealthComponent->OnDeath.AddDynamic(this, &ThisClass::OnDeath);
+}
+
+void ASpyCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	//# BP 기본값이 적용된 이후 시점이므로 CharacterConfig를 신뢰할 수 있음
+	if (CharacterConfig)
+	{
+		GetCapsuleComponent()->InitCapsuleSize(CharacterConfig->CapsuleRadius, CharacterConfig->CapsuleHalfHeight);
+
+		GetCharacterMovement()->RotationRate = FRotator(0.0f, CharacterConfig->RotationRateYaw, 0.0f);
+		GetCharacterMovement()->JumpZVelocity = CharacterConfig->JumpZVelocity;
+		GetCharacterMovement()->AirControl = CharacterConfig->AirControl;
+		GetCharacterMovement()->MaxWalkSpeed = CharacterConfig->MaxWalkSpeed;
+		GetCharacterMovement()->MinAnalogWalkSpeed = CharacterConfig->MinAnalogWalkSpeed;
+		GetCharacterMovement()->BrakingDecelerationWalking = CharacterConfig->BrakingDecelerationWalking;
+		GetCharacterMovement()->BrakingDecelerationFalling = CharacterConfig->BrakingDecelerationFalling;
+
+		CameraBoom->TargetArmLength = CharacterConfig->CameraArmLength;
+
+		HPBarComponent->SetRelativeLocation(CharacterConfig->HPBarOffset);
+	}
 }
 
 void ASpyCharacter::BeginPlay()
