@@ -31,23 +31,23 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	SetPerceptionComponent(*AIPerceptionComponent);
 
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = AIConfig ? AIConfig->SightRadius : 500.f;
-	SightConfig->LoseSightRadius = AIConfig ? AIConfig->LoseSightRadius : 700.f;
-	SightConfig->PeripheralVisionAngleDegrees = AIConfig ? AIConfig->PeripheralVisionAngleDegrees : 90.f;
-	SightConfig->SetMaxAge(AIConfig ? AIConfig->SightMaxAge : 5.f);
+	SightConfig->SightRadius = 500.f;
+	SightConfig->LoseSightRadius = 700.f;
+	SightConfig->PeripheralVisionAngleDegrees = 90.f;
+	SightConfig->SetMaxAge(5.f);
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
-	HearingConfig->HearingRange = AIConfig ? AIConfig->HearingRange : 200.f;
-	HearingConfig->SetMaxAge(AIConfig ? AIConfig->HearingMaxAge : 5.f);
+	HearingConfig->HearingRange = 200.f;
+	HearingConfig->SetMaxAge(5.f);
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
 
 	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
-	DamageConfig->SetMaxAge(AIConfig ? AIConfig->DamageMaxAge : 5.f);
+	DamageConfig->SetMaxAge(5.f);
 
 	AIPerceptionComponent->ConfigureSense(*SightConfig);
 	AIPerceptionComponent->ConfigureSense(*HearingConfig);
@@ -113,6 +113,28 @@ void ASpyAIController::OnRep_PlayerState()
 void ASpyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	//# OnPossess 시점엔 BP 기본값이 이미 적용되어 AIConfig를 신뢰할 수 있음
+	if (AIConfig && SightConfig && HearingConfig && DamageConfig)
+	{
+		SightConfig->SightRadius = AIConfig->SightRadius;
+		SightConfig->LoseSightRadius = AIConfig->LoseSightRadius;
+		SightConfig->PeripheralVisionAngleDegrees = AIConfig->PeripheralVisionAngleDegrees;
+		SightConfig->SetMaxAge(AIConfig->SightMaxAge);
+
+		HearingConfig->HearingRange = AIConfig->HearingRange;
+		HearingConfig->SetMaxAge(AIConfig->HearingMaxAge);
+
+		DamageConfig->SetMaxAge(AIConfig->DamageMaxAge);
+
+		if (AIPerceptionComponent)
+		{
+			AIPerceptionComponent->ConfigureSense(*SightConfig);
+			AIPerceptionComponent->ConfigureSense(*HearingConfig);
+			AIPerceptionComponent->ConfigureSense(*DamageConfig);
+			AIPerceptionComponent->RequestStimuliListenerUpdate();
+		}
+	}
 
 	if (BehaviorTreeAsset)
 	{
