@@ -73,4 +73,8 @@ protected:
 	TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
 
 	TSharedPtr<FComponentRequestHandle> ExtensionHandle;
+
+private:
+	//# CharacterAssetData 대기 중 재시도 타이머
+	FTimerHandle AssetDataRetryTimerHandle;
 };
