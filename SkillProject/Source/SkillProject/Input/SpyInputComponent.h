@@ -42,6 +42,7 @@ protected:
 	void Move(const FInputActionValue& InValue);
 	void MoveEnd(const FInputActionValue& InValue);
 	void Look(const FInputActionValue& InValue);
+	void CursorToggle(const FInputActionValue& InValue);
 
 protected:
 	virtual void OnRegister() override;

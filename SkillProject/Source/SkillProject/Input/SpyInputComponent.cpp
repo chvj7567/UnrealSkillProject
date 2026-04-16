@@ -102,6 +102,7 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Move, ETriggerEvent::Triggered, this, &ThisClass::Move);
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Move, ETriggerEvent::Completed, this, &ThisClass::MoveEnd);
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Look, ETriggerEvent::Triggered, this, &ThisClass::Look);
+					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_CursorToggle, ETriggerEvent::Started, this, &ThisClass::CursorToggle);
 				}
 			}
 		}
@@ -220,6 +221,14 @@ void USpyInputComponent::MoveEnd(const FInputActionValue& InValue)
 				SpyParkrourComponent->SetWallClimbInput(FVector2D::Zero());
 			}
 		}
+	}
+}
+
+void USpyInputComponent::CursorToggle(const FInputActionValue& InValue)
+{
+	if (ASpyPlayerController* SpyPC = GetController<ASpyPlayerController>())
+	{
+		SpyPC->ToggleCursorMode();
 	}
 }
 

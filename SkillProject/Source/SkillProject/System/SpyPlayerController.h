@@ -16,7 +16,7 @@ UCLASS()
 class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 	ASpyPlayerController();
 
@@ -33,7 +33,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
 
+	void ToggleCursorMode();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USpyTargetingManagerComponent> TargetingComp;
+
+	bool bCursorMode = false;
 };

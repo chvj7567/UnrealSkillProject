@@ -26,9 +26,31 @@ void ASpyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bShowMouseCursor = true;
+	bShowMouseCursor = false;
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
 
 	USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::MainHUD);
+}
+
+void ASpyPlayerController::ToggleCursorMode()
+{
+	bCursorMode = !bCursorMode;
+	bShowMouseCursor = bCursorMode;
+
+	if (bCursorMode)
+	{
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+		SetInputMode(InputMode);
+	}
+	else
+	{
+		FInputModeGameOnly InputMode;
+		SetInputMode(InputMode);
+	}
 }
 
 void ASpyPlayerController::OnPossess(APawn* InPawn)
