@@ -9,6 +9,28 @@
 
 class UCharacterMovementComponent;
 
+// ============================================================
+// FParkourWallBaseData ‚Äî Î≤Ω Í∞êÏßÄ Í≤∞Í≥º Íµ¨Ï°∞Ï≤¥Îì§Ïùò Í≥µÌÜµ Í∏∞Î∞ò
+// Distance / Height / Depth Ï∏°Ï†ïÍ∞íÏùÑ Í≥µÏú†Ìï©ÎãàÎã§.
+// FVaultWallData, FWallDataÍ∞Ä Ïù¥ Íµ¨Ï°∞Ï≤¥Î•º ÏÉÅÏÜçÌï©ÎãàÎã§.
+// ============================================================
+USTRUCT(BlueprintType)
+struct FParkourWallBaseData
+{
+	GENERATED_BODY()
+
+	float Distance = 0.f;
+	float Height   = 0.f;
+	float Depth    = 0.f;
+
+	void ClearBase()
+	{
+		Distance = 0.f;
+		Height   = 0.f;
+		Depth    = 0.f;
+	}
+};
+
 USTRUCT(BlueprintType)
 struct FVaultData {
 
@@ -60,7 +82,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FVaultWallData {
+struct FVaultWallData : public FParkourWallBaseData {
 
 	GENERATED_BODY()
 
@@ -68,32 +90,25 @@ public:
 	FVector FrontNormalVector;
 	FVector HandLocVector;
 	FVector LandLocVector;
-	float Distance;
-	float Height;
-	float Depth;
 
 	FVaultWallData()
 		: FrontNormalVector(FVector::ZeroVector)
 		, HandLocVector(FVector::ZeroVector)
 		, LandLocVector(FVector::ZeroVector)
-		, Distance(0.0f)
-		, Height(0.0f)
-		, Depth(0.0f)
 	{
 	}
 
-	void Clear() {
+	void Clear()
+	{
 		FrontNormalVector = FVector::ZeroVector;
-		HandLocVector = FVector::ZeroVector;
-		LandLocVector = FVector::ZeroVector;
-		Distance = 0.f;
-		Height = 0.f;
-		Depth = 0.f;
+		HandLocVector     = FVector::ZeroVector;
+		LandLocVector     = FVector::ZeroVector;
+		ClearBase();
 	}
 };
 
 USTRUCT(BlueprintType)
-struct FWallData {
+struct FWallData : public FParkourWallBaseData {
 
 	GENERATED_BODY()
 
@@ -101,27 +116,20 @@ public:
 	FVector NormalVector;
 	FVector HitVector;
 	FVector LandVector;
-	float Distance;
-	float Height;
-	float Depth;
 
 	FWallData()
 		: NormalVector(FVector::ZeroVector)
 		, HitVector(FVector::ZeroVector)
 		, LandVector(FVector::ZeroVector)
-		, Distance(0.0f)
-		, Height(0.0f)
-		, Depth(0.0f)
 	{
 	}
 
-	void Clear() {
+	void Clear()
+	{
 		NormalVector = FVector::ZeroVector;
-		HitVector = FVector::ZeroVector;
-		LandVector = FVector::ZeroVector;
-		Distance = 0.f;
-		Height = 0.f;
-		Depth = 0.f;
+		HitVector    = FVector::ZeroVector;
+		LandVector   = FVector::ZeroVector;
+		ClearBase();
 	}
 };
 
@@ -290,19 +298,19 @@ public:
 
 	void SetHangUpMotionWarpingData(const FVector& HitVector);
 
-public: //# ∞¯øÎ ªÁøÎ
+public: //# ÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩ
 	UPROPERTY(ReplicatedUsing = OnRep_FreeMoveMode)
 	bool bFreeMoveMode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FWallData WallData;
 
-public: //# µ®∏Æ∞‘¿Ã∆Æ
+public: //# ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ∆Æ
 	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
 	FSyncClilmbDataDelegate OnClimbData;
 	FSyncMotionWarpingDataDelegate OnHangUpMotionWarpingData;
 
-protected: //# ∫Æ ≥—±‚
+protected: //# ÔøΩÔøΩ ÔøΩ—±ÔøΩ
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVaultData VaultData;
 
@@ -311,7 +319,7 @@ protected: //# ∫Æ ≥—±‚
 	UPROPERTY(ReplicatedUsing = OnRep_VaultMotionWarpingData)
 	FMotionWarpingData VaultMotionWarpingData;
 
-protected: //# ∫Æ ≈∏±‚
+protected: //# ÔøΩÔøΩ ≈∏ÔøΩÔøΩ
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FClimbData ClimbData;
 
