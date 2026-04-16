@@ -8,7 +8,6 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Util/SpyGameplayTags.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
-#include "SKGameplayTags.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Data/SpyMovementConfig.h"
 

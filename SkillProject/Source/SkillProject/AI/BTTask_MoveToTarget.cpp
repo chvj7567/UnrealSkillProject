@@ -6,7 +6,6 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/PlayerState.h"
-#include "SKGameplayTags.h"
 #include "Util/SpyGameplayTags.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AITypes.h"

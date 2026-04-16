@@ -14,7 +14,6 @@
 #include "Character/SpyPawnExtensionComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Character/SpyHealthComponent.h"
-#include "SKGameplayTags.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "Data/SpyCharacterConfig.h"
 #include "Data/SpyCharacterAssetData.h"

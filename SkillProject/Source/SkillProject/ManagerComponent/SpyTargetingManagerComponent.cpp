@@ -11,7 +11,6 @@
 #include "GameplayTagContainer.h"
 #include "Util/SpyGameplayTags.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "SKGameplayTags.h"
 #include "Character/SpyHealthComponent.h"
 
 USpyTargetingManagerComponent::USpyTargetingManagerComponent()

@@ -5,7 +5,7 @@
 #include "Data/SpyAIConfig.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "SKGameplayTags.h"
+#include "Util/SpyGameplayTags.h"
 #include "SKAbilitySystemGlobals.h"
 #include "System/SpyPlayerState.h"
 #include "Perception/AIPerceptionComponent.h"
