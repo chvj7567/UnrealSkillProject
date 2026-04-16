@@ -29,8 +29,13 @@ public:
 	FORCEINLINE bool GetIsBindingInput() { return bIsBindingInput; }
 
 public:
-	void SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+	//# 기존 컨텍스트를 전부 제거하고 하나만 새로 등록 (완전 교체)
+	void ReplaceMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+
+	//# 기존 컨텍스트를 유지하면서 추가 등록 (스택 방식, Priority로 우선순위 결정)
 	void AddMappingContext(UInputMappingContext* InMappingContext, int32 Priority);
+
+	//# 지정한 컨텍스트만 제거 (나머지 컨텍스트는 유지)
 	void RemoveMappingContext(UInputMappingContext* InMappingContext);
 
 protected:

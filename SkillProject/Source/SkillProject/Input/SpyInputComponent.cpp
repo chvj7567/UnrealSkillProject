@@ -112,7 +112,7 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(const_cast<APlayerController*>(PC), NAME_ActorFeatureName);
 }
 
-void USpyInputComponent::SetMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
+void USpyInputComponent::ReplaceMappingContext(UInputMappingContext* InMappingContext, int32 Priority)
 {
 	const APawn* Pawn = GetPawn<APawn>();
 	if (Pawn == nullptr)
