@@ -28,7 +28,7 @@ bool ASKCueNotify_Actor::OnActive_Implementation(AActor* MyTarget, const FGamepl
 {
 	Super::OnActive_Implementation(MyTarget, Parameters);
 
-	//# ¼­¹ö´Â ¿¬Ãâ ½ºÅµ
+	//# ì„œë²„ëŠ” ì—°ì¶œ ìŠ¤í‚µ
 	if (GetNetMode() == NM_DedicatedServer)
 		return true;
 
@@ -67,7 +67,7 @@ bool ASKCueNotify_Actor::OnRemove_Implementation(AActor* MyTarget, const FGamepl
 	ParticleSystemComponent->DeactivateSystem();
 	ParticleSystemComponent->OnSystemFinished.RemoveDynamic(this, &ASKCueNotify_Actor::OnParticleSystemFinished);
 
-	//# È£ÃâÇØÁà¾ß Ç®¸µ Àç»ç¿ë Á¤»ó µ¿ÀÛ
+	//# í˜¸ì¶œí•´ì¤˜ì•¼ í’€ë§ ì¬ì‚¬ìš© ì •ìƒ ë™ì‘
 	K2_EndGameplayCue();
 
 	return Super::OnRemove_Implementation(MyTarget, Parameters);

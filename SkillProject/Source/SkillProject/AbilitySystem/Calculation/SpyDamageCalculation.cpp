@@ -34,7 +34,7 @@ float USpyDamageCalculation::CalculateBaseMagnitude_Implementation(const FGamepl
     if (Instigator == nullptr)
         return 0.f;
 
-    //# ÆÀ È®ÀÎ
+    //# íŒ€ í™•ì¸
     ASpyPlayerState* SourcePS = nullptr;
     if (ASpyPlayerState* PS = Cast<ASpyPlayerState>(Instigator)) {
         SourcePS = PS;
@@ -60,12 +60,12 @@ float USpyDamageCalculation::CalculateBaseMagnitude_Implementation(const FGamepl
 
     if (SourcePS && TargetPS)
     {
-        //# °°Àº ÆÀÀÌ¸é µ¥¹ÌÁö X
+        //# ê°™ì€ íŒ€ì´ë©´ ë°ë¯¸ì§€ X
         if (SourcePS->GetGenericTeamId() == TargetPS->GetGenericTeamId())
             return 0.f;
     }
 
-    //# AI ¿©ºÎ È®ÀÎ
+    //# AI ì—¬ë¶€ í™•ì¸
     bool bIsSourceAI = false;
     if (Cast<AAIController>(Instigator))
     {

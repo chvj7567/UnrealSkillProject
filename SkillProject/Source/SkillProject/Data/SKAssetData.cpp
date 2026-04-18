@@ -1,4 +1,4 @@
-﻿#include "Data/SKAssetData.h"
+#include "Data/SKAssetData.h"
 #include "Manager/SpyAssetManager.h"
 #include "UObject/ObjectSaveContext.h"
 

@@ -30,28 +30,28 @@ public:
     virtual void OnWaitGameplayEvent(FGameplayEventData Payload);
 
 public:
-    //# ´É·Â ¹ßµ¿ ½Ã È£Ãâ (Á¶°Ç Ã¼Å© X)
+    //# ëŠ¥ë ¥ ë°œë™ ì‹œ í˜¸ì¶œ (ì¡°ê±´ ì²´í¬ X)
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         const FGameplayEventData* TriggerEventData) override;
 
-    //# ´É·Â Ãë¼Ò ½Ã È£Ãâ
+    //# ëŠ¥ë ¥ ì·¨ì†Œ ì‹œ í˜¸ì¶œ
     virtual void CancelAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateCancelAbility) override;
 
-    //# ´É·Â ¹ßµ¿ ½Ã È£Ãâ (ÀÚ¿ø ¼Ò¸ğ)
+    //# ëŠ¥ë ¥ ë°œë™ ì‹œ í˜¸ì¶œ (ìì› ì†Œëª¨)
     virtual bool CommitAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
     
-    //# ´É·Â Á¾·á
+    //# ëŠ¥ë ¥ ì¢…ë£Œ
     virtual void EndAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
@@ -59,7 +59,7 @@ public:
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
 
-    //# ´É·Â ¹ßµ¿ Á¶°Ç È®ÀÎ
+    //# ëŠ¥ë ¥ ë°œë™ ì¡°ê±´ í™•ì¸
     virtual bool CanActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
@@ -67,25 +67,25 @@ public:
         const FGameplayTagContainer* TargetTags = nullptr,
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 
-    //# ´É·Â ºñ¿ë È®ÀÎ
+    //# ëŠ¥ë ¥ ë¹„ìš© í™•ì¸
     virtual bool CheckCost(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 
-    //# ´É·Â ºñ¿ë Àû¿ë
+    //# ëŠ¥ë ¥ ë¹„ìš© ì ìš©
     virtual void ApplyCost(
         const FGameplayAbilitySpecHandle Handle,
         const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo) const override;
 
-    //# ´É·Â Äğ´Ù¿î ÅÂ±×
+    //# ëŠ¥ë ¥ ì¿¨ë‹¤ìš´ íƒœê·¸
     virtual const FGameplayTagContainer* GetCooldownTags() const override;
 
-    //# ´É·Â ºÎ¿©
+    //# ëŠ¥ë ¥ ë¶€ì—¬
     virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
-    //# ´É·Â Á¦°Å
+    //# ëŠ¥ë ¥ ì œê±°
     virtual void OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
     virtual FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
