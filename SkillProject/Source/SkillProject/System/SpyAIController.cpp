@@ -195,12 +195,19 @@ void ASpyAIController::OnUnPossess()
 
 void ASpyAIController::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 {
-	TeamID = NewTeamID;
+	if (ASpyPlayerState* PS = GetPlayerState<ASpyPlayerState>())
+	{
+		PS->SetGenericTeamId(NewTeamID);
+	}
 }
 
 FGenericTeamId ASpyAIController::GetGenericTeamId() const
 {
-	return TeamID;
+	if (const ASpyPlayerState* PS = GetPlayerState<ASpyPlayerState>())
+	{
+		return PS->GetGenericTeamId();
+	}
+	return FGenericTeamId::NoTeam;
 }
 
 ETeamAttitude::Type ASpyAIController::GetTeamAttitudeTowards(const AActor& Other) const

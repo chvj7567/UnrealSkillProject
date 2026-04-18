@@ -73,9 +73,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
 
-	UPROPERTY(EditAnywhere)
-	FGenericTeamId TeamID;
-
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<USpyAIConfig> AIConfig;
 };
