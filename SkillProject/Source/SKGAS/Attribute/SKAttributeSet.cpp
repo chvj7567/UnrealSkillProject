@@ -37,7 +37,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 {
     Super::PostGameplayEffectExecute(Data);
 
-    //# Health°¡ º¯°æµÇ¾ú´ÂÁö È®ÀÎ
+    //# Healthï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     if (Data.EvaluatedData.Attribute == GetHealthAttribute())
     {
         FGameplayEffectContextHandle ContextHandle = Data.EffectSpec.GetContext();
@@ -62,13 +62,13 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                 );
             }
 
-            //# Å©¸®Æ¼ÄÃ ¿©ºÎ È®ÀÎ
+            //# Å©ï¿½ï¿½Æ¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
             if (CustomContext->IsCritical())
             {
                 //# TODO
             }
 
-            //# »ç¸Á È®ÀÎ
+            //# ï¿½ï¿½ï¿½ È®ï¿½ï¿½
             if (GetHealth() <= 0.0f)
             {
                 FGameplayEventData Payload;
@@ -82,7 +82,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
             }
             else
             {
-                //# ÇÇ°İ ¹æÇâ ÅÂ±×
+                //# ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Â±ï¿½
                 FGameplayTag HitTag = CustomContext->GetHitDirectionTag();
                 if (HitTag.IsValid())
                 {
@@ -94,6 +94,10 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                     Data.Target.HandleGameplayEvent(Payload.EventTag, &Payload);
                 }
             }
+
+            //# ì„œë²„ì—ì„œ OnHealthChanged ë¸Œë¡œë“œìºìŠ¤íŠ¸ (í´ë¼ì´ì–¸íŠ¸ëŠ” OnRep_Healthì—ì„œ ì²˜ë¦¬)
+            float NewHealth = GetHealth();
+            OnHealthChanged.Broadcast(InstigatorActor, EffectCauser, &Data.EffectSpec, DeltaValue, NewHealth - DeltaValue, NewHealth);
         }
     }
 }
