@@ -20,9 +20,14 @@ result = {{}}
 if asset is None:
     result = {{"error": "에셋을 찾을 수 없습니다: {asset_path}"}}
 else:
-    for prop in asset.get_class().iterate_properties():
+    result['class'] = asset.get_class().get_name()
+    result['path'] = asset.get_path_name()
+    for prop_name in dir(asset):
+        if prop_name.startswith('_'):
+            continue
         try:
-            result[prop.name] = str(asset.get_editor_property(prop.name))
+            val = asset.get_editor_property(prop_name)
+            result[prop_name] = str(val)
         except Exception:
             pass
 with open({result_file!r}, 'w', encoding='utf-8') as f:

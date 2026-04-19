@@ -54,7 +54,7 @@ class UnrealClient:
 
     def call_function(self, object_path: str, function_name: str, parameters: dict | None = None) -> dict:
         self._check_connection()
-        response = self._http.post(
+        response = self._http.put(
             f"{self.base_url}/remote/object/call",
             json={
                 "objectPath": object_path,
@@ -67,12 +67,12 @@ class UnrealClient:
 
     def execute_python(self, script: str) -> dict:
         self._check_connection()
-        response = self._http.post(
+        response = self._http.put(
             f"{self.base_url}/remote/object/call",
             json={
                 "objectPath": "/Script/PythonScriptPlugin.Default__PythonScriptLibrary",
                 "functionName": "ExecutePythonScript",
-                "parameters": {"pythonScript": script}
+                "parameters": {"PythonScript": script}
             }
         )
         response.raise_for_status()

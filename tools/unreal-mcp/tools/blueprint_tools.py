@@ -26,9 +26,11 @@ else:
     try:
         cdo = bp.generated_class().get_default_object()
         result = {{}}
-        for prop in cdo.get_class().iterate_properties():
+        for prop_name in dir(cdo):
+            if prop_name.startswith('_'):
+                continue
             try:
-                result[prop.name] = str(cdo.get_editor_property(prop.name))
+                result[prop_name] = str(cdo.get_editor_property(prop_name))
             except Exception:
                 pass
     except Exception as e:
