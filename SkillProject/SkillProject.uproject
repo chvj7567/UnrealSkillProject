@@ -43,6 +43,10 @@
 		{
 			"Name": "MotionWarping",
 			"Enabled": true
+		},
+		{
+			"Name": "RemoteControl",
+			"Enabled": true
 		}
 	]
 }
