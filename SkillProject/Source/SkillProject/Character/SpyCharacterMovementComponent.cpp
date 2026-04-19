@@ -96,14 +96,14 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
-	//# ë²½íƒ€ê¸° ìŠ¤í”¼ë“œ ì„¤ì •
+	//# º®Å¸±â ½ºÇÇµå ¼³Á¤
 	Velocity = GetWallClimbSpeed();
 
-	//# ë²½íƒ€ê¸° ì§„í–‰ ì¤‘ ìœ„ì¹˜ ê³„ì‚°
+	//# º®Å¸±â ÁøÇà Áß À§Ä¡ °è»ê
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	//# í•œ ë²ˆë§Œ í˜¸ì¶œí•˜ë„ë¡
+	//# ÇÑ ¹ø¸¸ È£ÃâÇÏµµ·Ï
 	if (CanHangUp() && bHangUp == false)
 	{
 		bHangUp = true;
@@ -221,13 +221,13 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	FVector WallPoint = ClimbWallData.HitVector;
 	FVector WallNormal = ClimbWallData.NormalVector.GetSafeNormal();
 
-	//# ë²½ í‰ë©´ê¹Œì§€ì˜ ê±°ë¦¬ ê³„ì‚°
+	//# º® Æò¸é±îÁöÀÇ °Å¸® °è»ê
 	float DistanceFromPlane = FVector::DotProduct(AnimBoneLocation - WallPoint, WallNormal);
 
-	//# ëª©í‘œ ì˜¤í”„ì…‹ (ë²½ ë²•ì„  ê¸°ì¤€ìœ¼ë¡œ ì´ë™)
+	//# ¸ñÇ¥ ¿ÀÇÁ¼Â (º® ¹ı¼± ±âÁØÀ¸·Î ÀÌµ¿)
 	FVector TargetWorldOffset = (-WallNormal * (DistanceFromPlane - Offset)) * IKWeight;
 
-	//# ì›”ë“œ -> ë©”ì‰¬ ê³µê°„ìœ¼ë¡œ ì¢Œí‘œ ë³€í™˜
+	//# ¿ùµå -> ¸Ş½¬ °ø°£À¸·Î ÁÂÇ¥ º¯È¯
 	FVector TargetMeshOffset = Mesh->GetComponentTransform().InverseTransformVectorNoScale(TargetWorldOffset);
 
 	CurrentOffsetVar = FMath::VInterpTo(CurrentOffsetVar, TargetMeshOffset, DeltaTime, InterpSpeed);
@@ -240,7 +240,7 @@ FVector USpyCharacterMovementComponent::GetWallClimbSpeed()
 	const FVector WallNormal = ClimbWallData.NormalVector;
 	const FVector UpVector = FVector::UpVector;
 
-	//# ì™¸ì ì„ í†µí•´ ë²½ì˜ ìœ„ìª½ ì˜¤ë¥¸ìª½ ë²¡í„° Get
+	//# ¿ÜÀûÀ» ÅëÇØ º®ÀÇ À§ÂÊ ¿À¸¥ÂÊ º¤ÅÍ Get
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 

@@ -29,40 +29,40 @@ void USKCueManager::OnCreated()
 
 bool USKCueManager::ShouldAsyncLoadRuntimeObjectLibraries() const
 {
-	//# í´ë¼ì´ì–¸íŠ¸ë§Œ ë¹„ë™ê¸° ë¡œë“œ ì‚¬ìš©(ì„œë²„ëŠ” ì‚¬ìš© X)
+	//# Å¬¶óÀÌ¾ğÆ®¸¸ ºñµ¿±â ·Îµå »ç¿ë(¼­¹ö´Â »ç¿ë X)
 	return IsRunningDedicatedServer() == false;
 }
 
 bool USKCueManager::ShouldSyncLoadMissingGameplayCues() const
 {
-	//# falseë¡œ ì§€ì •í•˜ì—¬ ë™ê¸° ë¡œë“œ ì‚¬ìš© ê±°ë¶€(Hitch ë°©ì§€)
+	//# false·Î ÁöÁ¤ÇÏ¿© µ¿±â ·Îµå »ç¿ë °ÅºÎ(Hitch ¹æÁö)
 	return false;
 }
 
 bool USKCueManager::ShouldAsyncLoadMissingGameplayCues() const
 {
-	//# í´ë¼ì´ì–¸íŠ¸ë§Œ ë¹„ë™ê¸° ë¡œë“œ ì‚¬ìš©(ì„œë²„ëŠ” ì‚¬ìš© X)
+	//# Å¬¶óÀÌ¾ğÆ®¸¸ ºñµ¿±â ·Îµå »ç¿ë(¼­¹ö´Â »ç¿ë X)
 	return IsRunningDedicatedServer() == false;
 }
 
 void USKCueManager::UpdateDelayLoadDelegateListeners()
 {
-	//# ê¸°ì¡´ ë“±ë¡ ì œê±° (ì¤‘ë³µ ë°©ì§€)
+	//# ±âÁ¸ µî·Ï Á¦°Å (Áßº¹ ¹æÁö)
 	UGameplayTagsManager::Get().OnGameplayTagLoadedDelegate.RemoveAll(this);
 	FCoreUObjectDelegates::GetPostGarbageCollect().RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
-	//# ì—ë””í„°ì—ì„œëŠ” ì´ëŸ° ë³µì¡í•œ ì§€ì—° ë¡œë”© ë¦¬ìŠ¤ë„ˆê°€ í•„ìš” ì—†ìŒ
+	//# ¿¡µğÅÍ¿¡¼­´Â ÀÌ·± º¹ÀâÇÑ Áö¿¬ ·Îµù ¸®½º³Ê°¡ ÇÊ¿ä ¾øÀ½
 //#if WITH_EDITOR
 //	if (GIsEditor)
 //		return;
 //#endif
 
-	//# ì„œë²„ë„ í•„ìš” ì—†ìŒ
+	//# ¼­¹öµµ ÇÊ¿ä ¾øÀ½
 	if (IsRunningDedicatedServer())
 		return;
 
-	//# í´ë¼ì´ì–¸íŠ¸ ì‹¤ì œ ê²Œì„ì—ì„œë§Œ ì°¸ì¡° ì‹œ ë¡œë”©ì„ ìœ„í•´ ë¸ë¦¬ê²Œì´íŠ¸ ì—°ê²°
+	//# Å¬¶óÀÌ¾ğÆ® ½ÇÁ¦ °ÔÀÓ¿¡¼­¸¸ ÂüÁ¶ ½Ã ·ÎµùÀ» À§ÇØ µ¨¸®°ÔÀÌÆ® ¿¬°á
 	UGameplayTagsManager::Get().OnGameplayTagLoadedDelegate.AddUObject(this, &ThisClass::OnGameplayTagLoaded);
 	FCoreUObjectDelegates::GetPostGarbageCollect().AddUObject(this, &ThisClass::HandlePostGarbageCollect);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::HandlePostLoadMap);
@@ -72,17 +72,17 @@ void USKCueManager::OnGameplayTagLoaded(const FGameplayTag& Tag)
 {
     FScopeLock ScopeLock(&LoadedGameplayTagsToProcessCS);
 
-    //# í˜„ì¬ íƒœê·¸ë¥¼ ë¡œë“œ ì¤‘ì¸ ì»¨í…ìŠ¤íŠ¸(ì—ì…‹) íŒŒì•…
+    //# ÇöÀç ÅÂ±×¸¦ ·Îµå ÁßÀÎ ÄÁÅØ½ºÆ®(¿¡¼Â) ÆÄ¾Ç
     FUObjectSerializeContext* LoadContext = FUObjectThreadContext::Get().GetSerializeContext();
     UObject* OwningObject = LoadContext ? LoadContext->SerializedObject : nullptr;
 
     bool bStartTask = LoadedGameplayTagsToProcess.Num() == 0;
     LoadedGameplayTagsToProcess.Emplace(Tag, OwningObject);
 
-    //# ì²« ë²ˆì§¸ íƒœê·¸ê°€ ë“¤ì–´ì™”ì„ ë•Œë§Œ ë©”ì¸ ìŠ¤ë ˆë“œ Task ìƒì„±
+    //# Ã¹ ¹øÂ° ÅÂ±×°¡ µé¾î¿ÔÀ» ¶§¸¸ ¸ŞÀÎ ½º·¹µå Task »ı¼º
     if (bStartTask)
     {
-        //# ë©”ì¸ ìŠ¤ë ˆë“œì—ì„œ ProcessLoadedTags í˜¸ì¶œ
+        //# ¸ŞÀÎ ½º·¹µå¿¡¼­ ProcessLoadedTags È£Ãâ
         AsyncTask(ENamedThreads::GameThread, [this]()
             {
                 if (GIsRunning)
@@ -102,7 +102,7 @@ void USKCueManager::OnGameplayTagLoaded(const FGameplayTag& Tag)
 
 void USKCueManager::HandlePostGarbageCollect()
 {
-	//# GC ì´í›„ íƒœê·¸ ë¡œë”© ì¬ì‹œì‘
+	//# GC ÀÌÈÄ ÅÂ±× ·Îµù Àç½ÃÀÛ
     if (bProcessLoadedTagsAfterGC)
     {
         ProcessLoadedTags();
@@ -113,7 +113,7 @@ void USKCueManager::HandlePostGarbageCollect()
 
 void USKCueManager::HandlePostLoadMap(UWorld* NewWorld)
 {
-    //# íë“¤ì„ ì—”ì§„ ê´€ë¦¬ ëª©ë¡ì—ì„œ ì œê±° ìš”ì²­
+    //# Å¥µéÀ» ¿£Áø °ü¸® ¸ñ·Ï¿¡¼­ Á¦°Å ¿äÃ»
     if (RuntimeGameplayCueObjectLibrary.CueSet)
     {
         for (UClass* CueClass : AlwaysLoadedCues)
@@ -127,20 +127,20 @@ void USKCueManager::HandlePostLoadMap(UWorld* NewWorld)
         }
     }
 
-    //# í”„ë¦¬ë¡œë“œëœ íë“¤ì€ ì •ë¦¬
+    //# ÇÁ¸®·ÎµåµÈ Å¥µéÀº Á¤¸®
     for (auto CueIt = PreloadedCues.CreateIterator(); CueIt; ++CueIt)
     {
         TSet<FObjectKey>& ReferencerSet = PreloadedCueReferencers.FindChecked(*CueIt);
         for (auto RefIt = ReferencerSet.CreateIterator(); RefIt; ++RefIt)
         {
-            //# ë§µì´ ë°”ë€Œë©´ì„œ ê°ì²´ê°€ íŒŒê´´ë˜ì—ˆë‹¤ë©´ ëª…ë‹¨ì—ì„œ ì œê±°
+            //# ¸ÊÀÌ ¹Ù²î¸é¼­ °´Ã¼°¡ ÆÄ±«µÇ¾ú´Ù¸é ¸í´Ü¿¡¼­ Á¦°Å
             if (RefIt->ResolveObjectPtr() == nullptr)
             {
                 RefIt.RemoveCurrent();
             }
         }
 
-        //# ì°¸ì¡°ìê°€ ì—†ë‹¤ë©´ ì œê±°
+        //# ÂüÁ¶ÀÚ°¡ ¾ø´Ù¸é Á¦°Å
         if (ReferencerSet.Num() == 0)
         {
             PreloadedCueReferencers.Remove(*CueIt);
@@ -155,7 +155,7 @@ void USKCueManager::ProcessLoadedTags()
     {
         FScopeLock ScopeLock(&LoadedGameplayTagsToProcessCS);
         
-        //# ë³µì‚¬ í›„ ë¹„ìš°ê¸°
+        //# º¹»ç ÈÄ ºñ¿ì±â
         TagsToProcess = MoveTemp(LoadedGameplayTagsToProcess);
     }
 
@@ -165,12 +165,12 @@ void USKCueManager::ProcessLoadedTags()
         {
             for (const FLoadedTag& TagData : TagsToProcess)
             {
-                // ì´ íƒœê·¸ê°€ ë§¤ë‹ˆì €ê°€ ê´€ë¦¬í•˜ëŠ” í ì„¸íŠ¸ì— í¬í•¨ë˜ì–´ ìˆëŠ”ì§€ í™•ì¸
+                // ÀÌ ÅÂ±×°¡ ¸Å´ÏÀú°¡ °ü¸®ÇÏ´Â Å¥ ¼¼Æ®¿¡ Æ÷ÇÔµÇ¾î ÀÖ´ÂÁö È®ÀÎ
                 if (RuntimeGameplayCueObjectLibrary.CueSet->GameplayCueDataMap.Contains(TagData.Tag))
                 {
                     if (TagData.OwningObject.IsValid())
                     {
-                        // í¬í•¨ë˜ì–´ ìˆë‹¤ë©´ ì‹¤ì œ ë¡œë”© í•¨ìˆ˜ í˜¸ì¶œ
+                        // Æ÷ÇÔµÇ¾î ÀÖ´Ù¸é ½ÇÁ¦ ·Îµù ÇÔ¼ö È£Ãâ
                         ProcessTagToPreload(TagData.Tag, TagData.OwningObject.Get());
                     }
                 }
@@ -181,34 +181,34 @@ void USKCueManager::ProcessLoadedTags()
 
 void USKCueManager::ProcessTagToPreload(const FGameplayTag& Tag, UObject* OwningObject)
 {
-    //# ì—ë””í„°ì—ì„œëŠ” í”„ë¦¬ë¡œë”©ì„ ìŠ¤í‚µí•¨
+    //# ¿¡µğÅÍ¿¡¼­´Â ÇÁ¸®·ÎµùÀ» ½ºÅµÇÔ
 //#if WITH_EDITOR
 //    if (GIsEditor)
 //        return;
 //#endif
 
-    //# ì„œë²„ëŠ” ë¡œë“œí•  í•„ìš” ì—†ìŒ
+    //# ¼­¹ö´Â ·ÎµåÇÒ ÇÊ¿ä ¾øÀ½
     if (IsRunningDedicatedServer())
         return;
 
     check(RuntimeGameplayCueObjectLibrary.CueSet);
 
-    //# ì¸ë±ìŠ¤ ë§µì—ì„œ íƒœê·¸ì— í•´ë‹¹í•˜ëŠ” ë°ì´í„° ìœ„ì¹˜(Index)ë¥¼ ì°¾ìŒ
+    //# ÀÎµ¦½º ¸Ê¿¡¼­ ÅÂ±×¿¡ ÇØ´çÇÏ´Â µ¥ÀÌÅÍ À§Ä¡(Index)¸¦ Ã£À½
     int32* DataIdx = RuntimeGameplayCueObjectLibrary.CueSet->GameplayCueDataMap.Find(Tag);
     if (DataIdx && RuntimeGameplayCueObjectLibrary.CueSet->GameplayCueData.IsValidIndex(*DataIdx))
     {
         const FGameplayCueNotifyData& CueData = RuntimeGameplayCueObjectLibrary.CueSet->GameplayCueData[*DataIdx];
 
-        //# ì´ë¯¸ ë©”ëª¨ë¦¬ì— ë¡œë“œë˜ì–´ ìˆëŠ”ì§€ ë¨¼ì € í™•ì¸
+        //# ÀÌ¹Ì ¸Ş¸ğ¸®¿¡ ·ÎµåµÇ¾î ÀÖ´ÂÁö ¸ÕÀú È®ÀÎ
         UClass* LoadedGameplayCueClass = FindObject<UClass>(nullptr, *CueData.GameplayCueNotifyObj.ToString());
         if (LoadedGameplayCueClass)
         {
-            //# ì´ë¯¸ ìˆë‹¤ë©´ ë“±ë¡ë§Œ í•˜ê³  ë
+            //# ÀÌ¹Ì ÀÖ´Ù¸é µî·Ï¸¸ ÇÏ°í ³¡
             RegisterPreloadedCue(LoadedGameplayCueClass, OwningObject);
         }
         else
         {
-            //# ì—†ë‹¤ë©´ ë¹„ë™ê¸° ë¡œë”© ì‹œì‘
+            //# ¾ø´Ù¸é ºñµ¿±â ·Îµù ½ÃÀÛ
             bool bAlwaysLoadedCue = (OwningObject == nullptr);
             TWeakObjectPtr<UObject> WeakOwner = OwningObject;
 
@@ -243,7 +243,7 @@ void USKCueManager::RegisterPreloadedCue(UClass* LoadedGameplayCueClass, UObject
 {
     check(LoadedGameplayCueClass);
 
-    //# ì£¼ì¸ì´ ì—†ì´ í˜¸ì¶œ ê°€ëŠ¥í•œ ìì£¼ ì“°ì´ëŠ” í
+    //# ÁÖÀÎÀÌ ¾øÀÌ È£Ãâ °¡´ÉÇÑ ÀÚÁÖ ¾²ÀÌ´Â Å¥
     const bool bAlwaysLoadedCue = (OwningObject == nullptr);
     if (bAlwaysLoadedCue)
     {
@@ -251,9 +251,9 @@ void USKCueManager::RegisterPreloadedCue(UClass* LoadedGameplayCueClass, UObject
         PreloadedCues.Remove(LoadedGameplayCueClass);
         PreloadedCueReferencers.Remove(LoadedGameplayCueClass);
     }
-    //# ìê¸° ì°¸ì¡° í™•ì¸
-    //# CDO ì°¸ì¡° í™•ì¸
-    //# ìì£¼ ì“°ì´ëŠ” í í™•ì¸
+    //# ÀÚ±â ÂüÁ¶ È®ÀÎ
+    //# CDO ÂüÁ¶ È®ÀÎ
+    //# ÀÚÁÖ ¾²ÀÌ´Â Å¥ È®ÀÎ
     else if ((OwningObject != LoadedGameplayCueClass) && (OwningObject != LoadedGameplayCueClass->GetDefaultObject()) &&
         AlwaysLoadedCues.Contains(LoadedGameplayCueClass) == false)
     {

@@ -21,13 +21,13 @@ FSKGameplayEffectContext* FSKGameplayEffectContext::ExtractEffectContext(struct 
 
 bool FSKGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 {
-	//# ë¶€ëª¨ í´ë˜ìŠ¤ ì§ë ¬í™”
+	//# ºÎ¸ğ Å¬·¡½º Á÷·ÄÈ­
 	bool bResult = Super::NetSerialize(Ar, Map, bOutSuccess);
 
-	//# GameplayTag ì§ë ¬í™”
+	//# GameplayTag Á÷·ÄÈ­
 	HitDirectionTag.NetSerialize(Ar, Map, bOutSuccess);
 
-	//# ì¼ë°˜ ë³€ìˆ˜ ì§ë ¬í™”
+	//# ÀÏ¹İ º¯¼ö Á÷·ÄÈ­
 	Ar << bIsCritical;
 
 	return bResult;

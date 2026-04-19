@@ -29,13 +29,13 @@ TArray<TSubclassOf<UActorComponent>> USpyCharacterAssetData::GetAllComponentClas
 {
 	TArray<TSubclassOf<UActorComponent>> ComponentClasses;
 
-	//# ê³µí†µ ìºë¦­í„° ì»´í¬ë„ŒíŠ¸
+	//# °øÅë Ä³¸¯ÅÍ ÄÄÆ÷³ÍÆ®
 	for (auto& ComponentClass : CharacterAssets.CommonComponentClasses)
 	{
 		ComponentClasses.Add(ComponentClass);
 	}
 
-	//# ì „ìš© ìºë¦­í„° ì»´í¬ë„ŒíŠ¸
+	//# Àü¿ë Ä³¸¯ÅÍ ÄÄÆ÷³ÍÆ®
 	for (auto& CharacterAsset : CharacterAssets.AssetEntries)
 	{
 		if (CharacterAsset.ClassType == InClassType)

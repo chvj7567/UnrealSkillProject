@@ -67,12 +67,12 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         FRotator Rot;
         if (Player->IsLocallyControlled())
         {
-            //# ë¡œì»¬ í”Œë ˆì´ì–´ -> ì»¨íŠ¸ë¡¤ëŸ¬ ê¸°ì¤€
+            //# ·ÎÄÃ ÇÃ·¹ÀÌ¾î -> ÄÁÆ®·Ñ·¯ ±âÁØ
             Rot = Player->GetControlRotation();
         }
         else
         {
-            //# ì„œë²„/ì›ê²© -> ìºë¦­í„° ê¸°ì¤€
+            //# ¼­¹ö/¿ø°Ý -> Ä³¸¯ÅÍ ±âÁØ
             Rot = Player->GetBaseAimRotation();
         }
 

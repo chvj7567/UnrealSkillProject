@@ -21,16 +21,16 @@ const FName ASpyPlayerState::NAME_AbilityReady("AbilitiesReady");
 ASpyPlayerState::ASpyPlayerState(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	//# ì—…ë°ì´íŠ¸ ì£¼ê¸°ë¥¼ ë¹ ë¥´ê²Œ ì„¤ì •
+	//# ¾÷µ¥ÀÌÆ® ÁÖ±â¸¦ ºü¸£°Ô ¼³Á¤
 	NetUpdateFrequency = 100.0f;
 
-	//# UActorComponent ë¥¼ ìƒì† ë°›ê¸°ì— ObjectInitializer ì‚¬ìš©(Actorê°€ í•„ìš”í•¨)
-	//# í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ ObjectInitializer.SetDefaultSubobjectClass<>ë¥¼ í†µí•´ íƒ€ì… êµì²´ ê°€ëŠ¥
+	//# UActorComponent ¸¦ »ó¼Ó ¹Ş±â¿¡ ObjectInitializer »ç¿ë(Actor°¡ ÇÊ¿äÇÔ)
+	//# ÇÏÀ§ Å¬·¡½º¿¡¼­ ObjectInitializer.SetDefaultSubobjectClass<>¸¦ ÅëÇØ Å¸ÀÔ ±³Ã¼ °¡´É
 	AbilitySystemComponent = ObjectInitializer.CreateDefaultSubobject<USpyAbilitySystemComponent>(this, TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
-	//# UObject ë¥¼ ìƒì† ë°›ê¸°ì— ObjectInitializer ë¯¸ì‚¬ìš©
+	//# UObject ¸¦ »ó¼Ó ¹Ş±â¿¡ ObjectInitializer ¹Ì»ç¿ë
 	CharacterAttributeSet = CreateDefaultSubobject<USpyCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
 }
 
@@ -41,7 +41,7 @@ UAbilitySystemComponent* ASpyPlayerState::GetAbilitySystemComponent() const
 
 void ASpyPlayerState::SetPlayerConnectionType(EPlayerConnectionType NewType)
 {
-	//# ìˆ˜ì • ë§ˆí¬ í‘œì‹œ
+	//# ¼öÁ¤ ¸¶Å© Ç¥½Ã
 	//MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PlayerConnectionType, this);
 	PlayerConnectionType = NewType;
 }
@@ -78,7 +78,7 @@ void ASpyPlayerState::Reset()
 
 void ASpyPlayerState::ClientInitialize(AController* C)
 {
-	//# í´ë¼ì´ì–¸íŠ¸ê°€ PSë¥¼ ì¸ì‹í–ˆì„ ë•Œ
+	//# Å¬¶óÀÌ¾ğÆ®°¡ PS¸¦ ÀÎ½ÄÇßÀ» ¶§
 	Super::ClientInitialize(C);
 
 	//# TODO
@@ -86,7 +86,7 @@ void ASpyPlayerState::ClientInitialize(AController* C)
 
 void ASpyPlayerState::CopyProperties(APlayerState* PlayerState)
 {
-	//# í”Œë ˆì´ì–´ ìƒíƒœê°€ ê°±ì‹ ë˜ê±°ë‚˜ ë§µ ì´ë™ ì‹œì— ì´ì „ ì •ë³´ ë‚¨ê²¨ë‘ëŠ” ìš©ë„
+	//# ÇÃ·¹ÀÌ¾î »óÅÂ°¡ °»½ÅµÇ°Å³ª ¸Ê ÀÌµ¿ ½Ã¿¡ ÀÌÀü Á¤º¸ ³²°ÜµÎ´Â ¿ëµµ
 	Super::CopyProperties(PlayerState);
 
 	//# TODO
@@ -96,7 +96,7 @@ void ASpyPlayerState::OnDeactivated()
 {
 	UE_LOG(LogTemp, Log, TEXT("# SpyPlayerState: OnDeactivated"));
 
-	//# ê²Œì„ì—ì„œ ë‚˜ê°€ê±°ë‚˜ ì—°ê²°ì´ ëŠê²¼ì„ ë•Œ
+	//# °ÔÀÓ¿¡¼­ ³ª°¡°Å³ª ¿¬°áÀÌ ²÷°åÀ» ¶§
 	bool bDestory = false;
 
 	switch (GetPlayerConnectionType())
@@ -116,7 +116,7 @@ void ASpyPlayerState::OnDeactivated()
 		break;
 	}
 
-	//# PSë¥¼ ë‚¨ê¸¸ì§€ ë°”ë¡œ íŒŒê´´í• ì§€ ê²°ì •
+	//# PS¸¦ ³²±æÁö ¹Ù·Î ÆÄ±«ÇÒÁö °áÁ¤
 	if (bDestory)
 	{
 		Super::OnDeactivated();
@@ -125,7 +125,7 @@ void ASpyPlayerState::OnDeactivated()
 
 void ASpyPlayerState::OnReactivated()
 {
-	//# ê²Œì„ì— ë“¤ì–´ì˜¤ê±°ë‚˜ ì—°ê²°ì´ ë˜ì—ˆì„ ë•Œ
+	//# °ÔÀÓ¿¡ µé¾î¿À°Å³ª ¿¬°áÀÌ µÇ¾úÀ» ¶§
 	Super::OnReactivated();
 
 	UE_LOG(LogTemp, Log, TEXT("# SpyPlayerState: OnReactivated"));
@@ -138,11 +138,11 @@ void ASpyPlayerState::OnReactivated()
 
 void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsPlayer)
 {
-	//# ì„œë²„ì—ì„œë§Œ ì„¸íŒ…
+	//# ¼­¹ö¿¡¼­¸¸ ¼¼ÆÃ
 	if (GetLocalRole() != ROLE_Authority)
 		return;
 
-	//# ì´ë¯¸ ì„¸íŒ…ë¨
+	//# ÀÌ¹Ì ¼¼ÆÃµÊ
 	if (CharacterAssetData)
 		return;
 

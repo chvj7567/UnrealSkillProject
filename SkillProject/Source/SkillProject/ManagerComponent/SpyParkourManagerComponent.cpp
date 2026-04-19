@@ -96,7 +96,7 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
 
     if (bHit)
     {
-        //# ì„œë²„ë§Œ ì‹¤í–‰
+        //# ¼­¹ö¸¸ ½ÇÇà
         if (OwnerCharacter->HasAuthority())
         {
             FClimbWallData newWallData = FClimbWallData();
@@ -125,10 +125,10 @@ bool USpyParkourManagerComponent::CanVaultAction()
     if (OwnerCharacter == nullptr)
         return false;
 
-    //# Vault ê°€ëŠ¥í•œ ë²½ ì •ë³´ ê°€ì ¸ì˜´
+    //# Vault °¡´ÉÇÑ º® Á¤º¸ °¡Á®¿È
     SetVaultWallData();
 
-    //# ë²½ ì •ë³´ê°€ ì„¸íŒ…ë˜ì§€ ì•Šì•˜ë‹¤ë©´ Vault ë¶ˆê°€ëŠ¥í•œ ë²½
+    //# º® Á¤º¸°¡ ¼¼ÆÃµÇÁö ¾Ê¾Ò´Ù¸é Vault ºÒ°¡´ÉÇÑ º®
     if (VaultWallData.FrontNormalVector == FVector::ZeroVector &&
         VaultWallData.HandLocVector == FVector::ZeroVector &&
         VaultWallData.LandLocVector == FVector::ZeroVector)
@@ -188,13 +188,13 @@ void USpyParkourManagerComponent::SetVaultMotionWarpingData()
     if (OwnerCharacter == nullptr)
         return;
 
-    //# ë²½ ë…¸ë§ ë²¡í„° ê¸°ì¤€ìœ¼ë¡œ ê³„ì‚°
+    //# º® ³ë¸» º¤ÅÍ ±âÁØÀ¸·Î °è»ê
     FRotator TargetRotator = VaultWallData.FrontNormalVector.GetSafeNormal2D().Rotation() - FRotator(0, 180.f, 0);
     FVector RightVector = FVector::CrossProduct(FVector::UpVector, -VaultWallData.FrontNormalVector);
     FVector ForwardVector = -VaultWallData.FrontNormalVector;
     FVector UpVector = FVector::UpVector;
 
-    //# ì• ë‹ˆë©”ì´ì…˜ì— ë”°ë¼ ì˜¤í”„ì…‹ ì ìš©
+    //# ¾Ö´Ï¸ŞÀÌ¼Ç¿¡ µû¶ó ¿ÀÇÁ¼Â Àû¿ë
     FVector FinalHandLoc = VaultWallData.HandLocVector +
         (RightVector * VaultData.VaultStartOffset.X) + //# X Offset
         (ForwardVector * VaultData.VaultStartOffset.Y) + //# Y Offset
@@ -205,7 +205,7 @@ void USpyParkourManagerComponent::SetVaultMotionWarpingData()
         (ForwardVector * VaultData.VaultEndOffset.Y) + //# Y Offset
         (UpVector * VaultData.VaultEndOffset.Z); //# Z Offset
 
-    //# ë””ë²„ê·¸ëŠ” Offset ì ìš© ì•ˆí•¨
+    //# µğ¹ö±×´Â Offset Àû¿ë ¾ÈÇÔ
     DrawDebugSphere(GetWorld(), VaultWallData.HandLocVector, 10.f, 12, FColor::Yellow, false, 1.f);
     DrawDebugSphere(GetWorld(), VaultWallData.LandLocVector, 10.f, 12, FColor::Green, false, 1.f);
 
@@ -229,13 +229,13 @@ void USpyParkourManagerComponent::SetHangUpMotionWarpingData(const FVector& HitV
     if (OwnerCharacter == nullptr)
         return;
 
-    //# ë²½ ë…¸ë§ ë²¡í„° ê¸°ì¤€ìœ¼ë¡œ ê³„ì‚°
+    //# º® ³ë¸» º¤ÅÍ ±âÁØÀ¸·Î °è»ê
     FRotator TargetRotator = OwnerCharacter->GetActorRotation();
     FVector RightVector = OwnerCharacter->GetActorRightVector();
     FVector ForwardVector = OwnerCharacter->GetActorForwardVector();
     FVector UpVector = FVector::UpVector;
 
-    //# ì• ë‹ˆë©”ì´ì…˜ì— ë”°ë¼ ì˜¤í”„ì…‹ ì ìš©
+    //# ¾Ö´Ï¸ŞÀÌ¼Ç¿¡ µû¶ó ¿ÀÇÁ¼Â Àû¿ë
     FVector FinalHandLoc = HitVector +
         (RightVector * HangUpData.HangUpStartOffset.X) + //# X Offset
         (ForwardVector * HangUpData.HangUpStartOffset.Y) + //# Y Offset
@@ -246,7 +246,7 @@ void USpyParkourManagerComponent::SetHangUpMotionWarpingData(const FVector& HitV
         (ForwardVector * HangUpData.HangUpEndOffset.Y) + //# Y Offset
         (UpVector * HangUpData.HangUpEndOffset.Z); //# Z Offset
 
-    //# ë””ë²„ê·¸ëŠ” Offset ì ìš© ì•ˆí•¨
+    //# µğ¹ö±×´Â Offset Àû¿ë ¾ÈÇÔ
     DrawDebugSphere(GetWorld(), HitVector, 10.f, 12, FColor::Blue, false, 1.f);
 
     if (OwnerCharacter->HasAuthority())
@@ -274,7 +274,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
     FVector OwnerLocation = OwnerCharacter->GetActorLocation();
     FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
 
-    //# ì¬ì‚¬ìš© ë³€ìˆ˜ë“¤
+    //# Àç»ç¿ë º¯¼öµé
     UWorld* World = GetWorld();
     FVector Start = OwnerLocation;
     FVector End = Start + (OwnerFowardVector * InValidDistance);
@@ -299,20 +299,20 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
         float HeightOffset = 1000.f;
 
         float MaxRayDistance = InValidDistance + InValidDepth;
-        //# VaildHeight ë§Œí¼ ì¶©ë¶„íˆ ë†’ì€ ìœ„ì¹˜ì—ì„œ RayInterval ê°„ê²©ìœ¼ë¡œ ë„ì›Œì„œ ë°˜ë³µ íŠ¸ë ˆì´ìŠ¤ ê²€ì‚¬
+        //# VaildHeight ¸¸Å­ ÃæºĞÈ÷ ³ôÀº À§Ä¡¿¡¼­ RayInterval °£°İÀ¸·Î ¶ç¿ö¼­ ¹İº¹ Æ®·¹ÀÌ½º °Ë»ç
         for (int i = 1; i <= InRayIntervalReapeatCount; ++i)
         {
-            //# ìµœëŒ€ ê±°ë¦¬ë¥¼ ë„˜ì—ˆìœ¼ë©´ ë‘ê»˜ ì´ˆê³¼ì´ë‹ˆ ë ˆì´ë¡œ í™•ì¸í•  í•„ìš”ê°€ ì—†ìŒ
+            //# ÃÖ´ë °Å¸®¸¦ ³Ñ¾úÀ¸¸é µÎ²² ÃÊ°úÀÌ´Ï ·¹ÀÌ·Î È®ÀÎÇÒ ÇÊ¿ä°¡ ¾øÀ½
             if (MaxRayDistance < InRayInterval * i)
             {
                 WallData.Clear();
                 return false;
             }
 
-            //# ìºë¦­í„° ê¸°ì¤€ì´ ì•„ë‹Œ ë²½ì˜ ë…¸ë§ ë²¡í„° ê¸°ì¤€ìœ¼ë¡œ í•¨
+            //# Ä³¸¯ÅÍ ±âÁØÀÌ ¾Æ´Ñ º®ÀÇ ³ë¸» º¤ÅÍ ±âÁØÀ¸·Î ÇÔ
             FVector Next = -WallNormalVector * InRayInterval * i;
             
-            //# ì¶©ë¶„íˆ ë†’ì€ ê³³ì—ì„œ ë ˆì´ ë°œì‚¬í•˜ì—¬ ë†’ì´ í™•ì¸
+            //# ÃæºĞÈ÷ ³ôÀº °÷¿¡¼­ ·¹ÀÌ ¹ß»çÇÏ¿© ³ôÀÌ È®ÀÎ
             Start = FlatLocation + (FVector::UpVector * (InValidHeight + HeightOffset)) + Next;
             End = Start + (FVector::DownVector * (InValidHeight + HeightOffset));
             HitResult.Reset();
@@ -320,7 +320,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
             bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
             DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
-            //# Hit ë˜ë©´ ë²½ì˜ ë†’ì´ ê²€ì‚¬
+            //# Hit µÇ¸é º®ÀÇ ³ôÀÌ °Ë»ç
             if (bHit)
             {
                 if (CheckHeight == false)
@@ -329,7 +329,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
                     WallData.HitVector = HitResult.Location;
                     WallData.Height = FVector::Distance(HitResult.Location, End);
 
-                    //# ë†’ì´ ìœ íš¨ì„± ê²€ì‚¬
+                    //# ³ôÀÌ À¯È¿¼º °Ë»ç
                     if (WallData.Height > InValidHeight)
                     {
                         WallData.Clear();
@@ -337,13 +337,13 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
                     }
                 }
             }
-            //# Hit ë˜ì§€ ì•Šì€ íŠ¸ë ˆì´ìŠ¤ì—ì„œ ìºë¦­í„° ë°©í–¥ìœ¼ë¡œ ì—­ íŠ¸ë ˆì´ìŠ¤ ê³„ì‚°í•˜ì—¬ ë²½ì˜ ë‘ê»˜ ê³„ì‚°
+            //# Hit µÇÁö ¾ÊÀº Æ®·¹ÀÌ½º¿¡¼­ Ä³¸¯ÅÍ ¹æÇâÀ¸·Î ¿ª Æ®·¹ÀÌ½º °è»êÇÏ¿© º®ÀÇ µÎ²² °è»ê
             else
             {
-                //# ë‹¤ìŒ ë°˜ë³µë¬¸ End ìœ„ì¹˜ê°€ ì°©ì§€ ì§€ì 
+                //# ´ÙÀ½ ¹İº¹¹® End À§Ä¡°¡ ÂøÁö ÁöÁ¡
                 WallData.LandVector = Start + -WallNormalVector * VaultData.RayInterval + (FVector::DownVector * (VaultData.VaildHeight + HeightOffset));
 
-                //# Zì¶• ë‹¤ì‹œ ìºë¦­í„° Zì¶•ìœ¼ë¡œ 
+                //# ZÃà ´Ù½Ã Ä³¸¯ÅÍ ZÃàÀ¸·Î 
                 End.Z = OwnerLocation.Z;
 
                 Start = End;
@@ -353,12 +353,12 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
                 bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
                 DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
-                //# Hit ë˜ë©´ ë²½ì˜ ë‘ê»˜ ê³„ì‚° í›„ ë°˜ë³µë¬¸ ì¢…ë£Œ
+                //# Hit µÇ¸é º®ÀÇ µÎ²² °è»ê ÈÄ ¹İº¹¹® Á¾·á
                 if (bHit)
                 {
                     WallData.Depth = FVector::Distance(WallStart, HitResult.Location);
 
-                    //# Vault ê°€ëŠ¥í•œ ë‘ê»˜ê°€ ì•„ë‹˜
+                    //# Vault °¡´ÉÇÑ µÎ²²°¡ ¾Æ´Ô
                     if (WallData.Depth > InValidDepth)
                     {
                         WallData.Clear();
@@ -372,7 +372,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
             }
         }
 
-        //# ë²½ì´ ì§€ì •í•œ ë ˆì´ ê°„ê²©ì˜ ë°˜ë³µ íšŸìˆ˜ë³´ë‹¤ ë” ë‘êº¼ì›€
+        //# º®ÀÌ ÁöÁ¤ÇÑ ·¹ÀÌ °£°İÀÇ ¹İº¹ È½¼öº¸´Ù ´õ µÎ²¨¿ò
         WallData.Clear();
         return false;
     }

@@ -50,7 +50,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 
 			if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
 			{
-				//# ì´ë¯¸ ì—´ë ¤ìˆëŠ” UI í™•ì¸
+				//# ÀÌ¹Ì ¿­·ÁÀÖ´Â UI È®ÀÎ
 				const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
 					[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
 					{
@@ -59,12 +59,12 @@ void USpyUIManager::OpenUI(FName InUIName)
 
 				if (FindOpenningUI)
 				{
-					//# ë™ì¼í•œ UIëŠ” ì¤‘ë³µí•´ì„œ ë„ìš°ì§€ ì•ŠìŒ
+					//# µ¿ÀÏÇÑ UI´Â Áßº¹ÇØ¼­ ¶ç¿ìÁö ¾ÊÀ½
 					UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *InUIName.ToString());
 					return;
 				}
 
-				//# ìºì‹± ì¤‘ì¸ UI í™•ì¸
+				//# Ä³½Ì ÁßÀÎ UI È®ÀÎ
 				const TObjectPtr<USpyUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
 					[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
 					{
@@ -73,7 +73,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 
 				if (FindCashingUI)
 				{
-					//# ìºì‹± ì¤‘ì¸ UIì´ë©´ Open
+					//# Ä³½Ì ÁßÀÎ UIÀÌ¸é Open
 					OpenUIList.Add(FindCashingUI->Get());
 					FindCashingUI->Get()->AddToViewport();
 
@@ -81,7 +81,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 					return;
 				}
 
-				//# UI ìƒì„±
+				//# UI »ı¼º
 				if (USpyUserWidget* UserWidget = CreateWidget<USpyUserWidget>(GetWorld(), UI))
 				{
 					UserWidget->SetUIName(InUIName);
@@ -104,7 +104,7 @@ void USpyUIManager::CloseUI(FName InUIName)
 	if (OpenUIList.IsEmpty())
 		return;
 
-	//# ì´ë¯¸ ì—´ë ¤ìˆëŠ” UI í™•ì¸
+	//# ÀÌ¹Ì ¿­·ÁÀÖ´Â UI È®ÀÎ
 	const TObjectPtr<USpyUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
 		[InUIName](TObjectPtr<USpyUserWidget>& UserWidget)
 		{
@@ -159,7 +159,7 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 
 void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)
 {
-	//# ìºì‹± ìˆ˜ê°€ Maxë¼ë©´ ì˜¤ë˜ëœ UI ì œê±° í›„ ì¶”ê°€
+	//# Ä³½Ì ¼ö°¡ Max¶ó¸é ¿À·¡µÈ UI Á¦°Å ÈÄ Ãß°¡
 	if (MaxCashingUICount > 0)
 	{
 		for (USKUserWidget* CashingUserWIdget : CashingUIList)

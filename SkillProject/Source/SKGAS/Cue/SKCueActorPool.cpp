@@ -21,8 +21,8 @@ AActor* FSKCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayT
 
     if (Entry.Available.Num() > 0)
     {
-        //# ì•½í•œ í¬ì¸í„°ì´ê¸°ì— ì™¸ë¶€ì—ì„œ íŒŒê´´ë  ê°€ëŠ¥ì„± ìˆìŒ
-        //# nullptrì´ë©´ RentCueActor ì¬í˜¸ì¶œ
+        //# ¾àÇÑ Æ÷ÀÎÅÍÀÌ±â¿¡ ¿ÜºÎ¿¡¼­ ÆÄ±«µÉ °¡´É¼º ÀÖÀ½
+        //# nullptrÀÌ¸é RentCueActor ÀçÈ£Ãâ
         TWeakObjectPtr<AActor> WeakA = Entry.Available.Pop();
         if (AActor* Actor = WeakA.Get())
         {
@@ -38,7 +38,7 @@ AActor* FSKCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayT
     {
         FActorSpawnParameters SpawnParams;
 
-        //# ìŠ¤í° ìœ„ì¹˜ì— ì¶©ëŒ ì—¬ë¶€ ìƒê´€ ì—†ì´ ìŠ¤í°í•˜ë„ë¡ ì„¤ì •
+        //# ½ºÆù À§Ä¡¿¡ Ãæµ¹ ¿©ºÎ »ó°ü ¾øÀÌ ½ºÆùÇÏµµ·Ï ¼³Á¤
         SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
         if (AActor* NewActor = World->SpawnActor<AActor>(ActorClass, TargetActor->GetActorTransform(), SpawnParams))
@@ -68,7 +68,7 @@ void FSKCueActorPool::ReturnCueActor(AActor* Actor)
     }
     else
     {
-        //# í’€ ëŒ€ìƒ ì•¡í„°ê°€ ì•„ë‹˜
+        //# Ç® ´ë»ó ¾×ÅÍ°¡ ¾Æ´Ô
         Actor->Destroy();
     }
 }
@@ -103,7 +103,7 @@ void FSKCueActorPool::DeactivateActorForPool(AActor* Actor)
     Actor->SetActorEnableCollision(false);
     Actor->SetActorTickEnabled(false);
 
-    //# ì‚¬ìš©ì ì´ˆê¸°í™”
+    //# »ç¿ëÀÚ ÃÊ±âÈ­
     // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
     // if (Poolable) Poolable->OnReturnedToPool();
 }
@@ -119,7 +119,7 @@ void FSKCueActorPool::ActivateActorFromPool(AActor* Actor, AActor* TargetActor)
     Actor->SetActorEnableCollision(true);
     Actor->SetActorTickEnabled(true);
 
-    //# ì‚¬ìš©ì ì´ˆê¸°í™”
+    //# »ç¿ëÀÚ ÃÊ±âÈ­
     // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
     // if (Poolable) Poolable->OnAcquiredFromPool();
 }

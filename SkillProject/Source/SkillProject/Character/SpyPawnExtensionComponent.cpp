@@ -26,7 +26,7 @@ void USpyPawnExtensionComponent::OnRegister()
 {
 	Super::OnRegister();
 
-	//# ìƒíƒœ ë¨¸ì‹  ë“±ë¡
+	//# »óÅÂ ¸Ó½Å µî·Ï
 	RegisterInitStateFeature();
 }
 
@@ -34,10 +34,10 @@ void USpyPawnExtensionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//# ìƒíƒœ ë³€í™” ì•Œë¦¼ ë“±ë¡
+	//# »óÅÂ º¯È­ ¾Ë¸² µî·Ï
 	BindOnActorInitStateChanged(NAME_None, FGameplayTag(), false);
 	
-	//# InitState_Spawned ìƒíƒœë¡œ ë³€í™˜ ì‹œë„
+	//# InitState_Spawned »óÅÂ·Î º¯È¯ ½Ãµµ
 	TryToChangeInitState(SpyGameplayTags::InitState_Spawned);
 
 	CheckDefaultInitialization();
@@ -53,7 +53,7 @@ void USpyPawnExtensionComponent::BeginPlay()
 
 void USpyPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//# ìƒíƒœ ë¨¸ì‹  í•´ì œ
+	//# »óÅÂ ¸Ó½Å ÇØÁ¦
 	UnregisterInitStateFeature();
 
 	ExtensionHandle.Reset();
@@ -74,40 +74,40 @@ bool USpyPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManag
 
 	APawn* Pawn = GetPawn<APawn>();
 
-	//# 1ë²ˆì§¸ ë‹¨ê³„
+	//# 1¹øÂ° ´Ü°è
 	if (CurrentState.IsValid() == false && DesiredState == SpyGameplayTags::InitState_Spawned)
 	{
-		//# í°ì´ ìŠ¤í°ë˜ì—ˆëŠ”ì§€ í™•ì¸
+		//# ÆùÀÌ ½ºÆùµÇ¾ú´ÂÁö È®ÀÎ
 		if (Pawn)
 			return true;
 	}
-	//# 2ë²ˆì§¸ ë‹¨ê³„
+	//# 2¹øÂ° ´Ü°è
 	else if (CurrentState == SpyGameplayTags::InitState_Spawned && DesiredState == SpyGameplayTags::InitState_DataAvailable)
 	{
-		//# ë°ì´í„°ê°€ ìœ íš¨í•œì§€ í™•ì¸
+		//# µ¥ÀÌÅÍ°¡ À¯È¿ÇÑÁö È®ÀÎ
 		if (CharacterAssetData == nullptr)
 			return false;
 
 		const bool bHasAuthority = Pawn->HasAuthority();
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 
-		//# ìê¸° ì»¨íŠ¸ë¡¤ëŸ¬ í˜¹ì€ ì„œë²„ì— ìˆëŠ” ì»¨íŠ¸ë¡¤ëŸ¬ë§Œ í™•ì¸
+		//# ÀÚ±â ÄÁÆ®·Ñ·¯ È¤Àº ¼­¹ö¿¡ ÀÖ´Â ÄÁÆ®·Ñ·¯¸¸ È®ÀÎ
 		if (bHasAuthority || bIsLocallyControlled)
 		{
-			//# ì»¨íŠ¸ë¡¤ëŸ¬ ë¹™ì˜ê°€ ë˜ì—ˆëŠ”ì§€ í™•ì¸
+			//# ÄÁÆ®·Ñ·¯ ºùÀÇ°¡ µÇ¾ú´ÂÁö È®ÀÎ
 			if (GetController<AController>() == nullptr)
 				return false;
 		}
 
 		return true;
 	}
-	//# 3ë²ˆì§¸ ë‹¨ê³„
+	//# 3¹øÂ° ´Ü°è
 	else if (CurrentState == SpyGameplayTags::InitState_DataAvailable && DesiredState == SpyGameplayTags::InitState_DataInitialized)
 	{
-		//# ë§¤ë‹ˆì €ì— ë“±ë¡ëœ ëª¨ë“  ë°ì´í„°ì˜ ì´ˆê¸°í™”ê°€ ì™„ë£Œë˜ì—ˆëŠ”ì§€ í™•ì¸
+		//# ¸Å´ÏÀú¿¡ µî·ÏµÈ ¸ğµç µ¥ÀÌÅÍÀÇ ÃÊ±âÈ­°¡ ¿Ï·áµÇ¾ú´ÂÁö È®ÀÎ
 		return Manager->HaveAllFeaturesReachedInitState(Pawn, SpyGameplayTags::InitState_DataAvailable);
 	}
-	//# ë§ˆì§€ë§‰ ë‹¨ê³„
+	//# ¸¶Áö¸· ´Ü°è
 	else if (CurrentState == SpyGameplayTags::InitState_DataInitialized && DesiredState == SpyGameplayTags::InitState_GameplayReady)
 	{
 		return true;
@@ -124,24 +124,24 @@ void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMa
 		if (Pawn == nullptr || CharacterAssetData == nullptr)
 			return;
 
-		//# ë¶€ì°©í•  ë°ì´í„° ëª©ë¡ë“¤ Get
+		//# ºÎÂøÇÒ µ¥ÀÌÅÍ ¸ñ·Ïµé Get
 		TArray<TSubclassOf<UActorComponent>> ComponentClasses = CharacterAssetData->GetAllComponentClasses(SpyGameplayTags::Character_Class_Normal);
 		for (const TSubclassOf<UActorComponent> ComponentClass : ComponentClasses)
 		{
 			if (ComponentClass == nullptr)
 				continue;
 
-			//# ì¤‘ë³µ ì»´í¬ë„ŒíŠ¸ ë°©ì§€
+			//# Áßº¹ ÄÄÆ÷³ÍÆ® ¹æÁö
 			if (Pawn->GetComponentByClass(ComponentClass) != nullptr)
 				continue;
 			
-			//# ì»´í¬ë„ŒíŠ¸ ë¶€ì°©
+			//# ÄÄÆ÷³ÍÆ® ºÎÂø
 			UActorComponent* NewComponent = NewObject<UActorComponent>(Pawn, ComponentClass);
 
-			//# ì—ë””í„° ë””í…Œì¼ ì°½ì— ì¶”ê°€
+			//# ¿¡µğÅÍ µğÅ×ÀÏ Ã¢¿¡ Ãß°¡
 			Pawn->AddInstanceComponent(NewComponent);
 
-			//# ëŸ°íƒ€ì„ ì»´í¬ë„ŒíŠ¸ ë“±ë¡
+			//# ·±Å¸ÀÓ ÄÄÆ÷³ÍÆ® µî·Ï
 			NewComponent->RegisterComponent();
 
 			if (NewComponent->HasBeenInitialized() == false)
@@ -156,7 +156,7 @@ void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMa
 
 void USpyPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
-	//# ë‹¤ë¥¸ í”¼ì³ë“¤ì˜ ìƒíƒœê°€ ë³€í–ˆì„ ë•Œ
+	//# ´Ù¸¥ ÇÇÃÄµéÀÇ »óÅÂ°¡ º¯ÇßÀ» ¶§
 	if (Params.FeatureName != NAME_ActorFeatureName)
 	{
 		CheckDefaultInitialization();
@@ -165,10 +165,10 @@ void USpyPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateCh
 
 void USpyPawnExtensionComponent::CheckDefaultInitialization()
 {
-	//# ë‹¤ë¥¸ í”¼ì³ë“¤ì˜ CheckDefaultInitialization ê°•ì œ ì‹¤í–‰
+	//# ´Ù¸¥ ÇÇÃÄµéÀÇ CheckDefaultInitialization °­Á¦ ½ÇÇà
 	CheckDefaultInitializationForImplementers();
 
-	//# ë‹¨ê³„ ìˆœì„œë„
+	//# ´Ü°è ¼ø¼­µµ
 	static const TArray<FGameplayTag> StateChain =
 	{
 		SpyGameplayTags::InitState_Spawned,
@@ -177,7 +177,7 @@ void USpyPawnExtensionComponent::CheckDefaultInitialization()
 		SpyGameplayTags::InitState_GameplayReady
 	};
 
-	//# ë‹¤ìŒ ë‹¨ê³„ ì§„í–‰
+	//# ´ÙÀ½ ´Ü°è ÁøÇà
 	ContinueInitStateChain(StateChain);
 }
 
@@ -187,17 +187,17 @@ void USpyPawnExtensionComponent::SetCharacterAssetData(const USpyCharacterAssetD
 
 	APawn* Pawn = GetPawnChecked<APawn>();
 
-	//# ì„œë²„ì—ì„œë§Œ ì„¸íŒ…
+	//# ¼­¹ö¿¡¼­¸¸ ¼¼ÆÃ
 	if (Pawn->GetLocalRole() != ROLE_Authority)
 		return;
 
-	//# ì´ë¯¸ ì„¸íŒ…ë¨
+	//# ÀÌ¹Ì ¼¼ÆÃµÊ
 	if (CharacterAssetData)
 		return;
 
 	CharacterAssetData = InCharacterAssetData;
 
-	//# ì„œë²„ì—ì„œ ë‹¤ë¥¸ í´ë¼ì´ì–¸íŠ¸ë“¤ì—ê²Œ ë°”ë€ ë°ì´í„° ê°±ì‹ í•˜ë„ë¡ ê°•ì œ ìš”ì²­
+	//# ¼­¹ö¿¡¼­ ´Ù¸¥ Å¬¶óÀÌ¾ğÆ®µé¿¡°Ô ¹Ù²ï µ¥ÀÌÅÍ °»½ÅÇÏµµ·Ï °­Á¦ ¿äÃ»
 	Pawn->ForceNetUpdate();
 
 	CheckDefaultInitialization();
@@ -208,11 +208,11 @@ void USpyPawnExtensionComponent::InitializeAbilitySystem(USpyAbilitySystemCompon
 	check(InASC);
 	check(InOwnerActor);
 
-	//# ASCê°€ ë°”ë€Œì§€ ì•ŠìŒ
+	//# ASC°¡ ¹Ù²îÁö ¾ÊÀ½
 	if (AbilitySystemComponent == InASC)
 		return;
 
-	//# ASCê°€ ë°”ë€Œì—ˆë‹¤ë©´ ê¸°ì¡´ ASC ì¢…ë£Œ
+	//# ASC°¡ ¹Ù²î¾ú´Ù¸é ±âÁ¸ ASC Á¾·á
 	if (AbilitySystemComponent)
 	{
 		UninitializeAbilitySystem();
@@ -221,7 +221,7 @@ void USpyPawnExtensionComponent::InitializeAbilitySystem(USpyAbilitySystemCompon
 	APawn* Pawn = GetPawnChecked<APawn>();
 	AActor* ExistingAvatar = InASC->GetAvatarActor();
 
-	//# ë‹¤ë¥¸ ì•„ë°”íƒ€ê°€ ASCë¥¼ ì°¨ì§€í•˜ê³  ìˆì„ë•Œ ê°•ì œ ì¢…ë£Œ ì‹œí‚´
+	//# ´Ù¸¥ ¾Æ¹ÙÅ¸°¡ ASC¸¦ Â÷ÁöÇÏ°í ÀÖÀ»¶§ °­Á¦ Á¾·á ½ÃÅ´
 	if ((ExistingAvatar != nullptr) && (ExistingAvatar != Pawn))
 	{
 		ensure(!ExistingAvatar->HasAuthority());
@@ -244,10 +244,10 @@ void USpyPawnExtensionComponent::UninitializeAbilitySystem()
 	if (AbilitySystemComponent == nullptr)
 		return;
 
-	//# ê¶Œí•œì´ ìˆëŠ” ê²½ìš°ë§Œ(ì•„ë°”íƒ€ê°€ ë‚˜ì¸ ê²½ìš°)
+	//# ±ÇÇÑÀÌ ÀÖ´Â °æ¿ì¸¸(¾Æ¹ÙÅ¸°¡ ³ªÀÎ °æ¿ì)
 	if (AbilitySystemComponent->GetAvatarActor() == GetOwner())
 	{
-		//# ëª¨ë“  ASC ê´€ë ¨ ì·¨ì†Œ
+		//# ¸ğµç ASC °ü·Ã Ãë¼Ò
 		AbilitySystemComponent->CancelAbilities();
 		AbilitySystemComponent->ClearAbilityInput();
 		AbilitySystemComponent->RemoveAllGameplayCues();
@@ -269,17 +269,17 @@ void USpyPawnExtensionComponent::UninitializeAbilitySystem()
 
 void USpyPawnExtensionComponent::HandleControllerChanged()
 {
-	//# ASC ì•„ë°”íƒ€ê°€ ë‚˜ì¸ì§€ í™•ì¸
+	//# ASC ¾Æ¹ÙÅ¸°¡ ³ªÀÎÁö È®ÀÎ
 	if (AbilitySystemComponent && (AbilitySystemComponent->GetAvatarActor() == GetPawnChecked<APawn>()))
 	{
 		if (AbilitySystemComponent->GetOwnerActor() == nullptr)
 		{
-			//# Ownerê°€ ì—†ë‹¤ë©´ ASC í•´ì œ
+			//# Owner°¡ ¾ø´Ù¸é ASC ÇØÁ¦
 			UninitializeAbilitySystem();
 		}
 		else
 		{
-			//# ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ë°”ë€Œì—ˆìœ¼ë‹ˆ ê°±ì‹ 
+			//# ÄÁÆ®·Ñ·¯°¡ ¹Ù²î¾úÀ¸´Ï °»½Å
 			AbilitySystemComponent->RefreshAbilityActorInfo();
 		}
 	}

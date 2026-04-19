@@ -50,7 +50,7 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
     TArray<FGameplayAbilitySpec*> ActiveAbilities;
     ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(TagContainer, ActiveAbilities);
 
-    //# GA ì‹¤í–‰ ì¤‘ì´ë©´ ì¤‘ë³µ ì‹¤í–‰í•˜ì§€ ì•Šê³  ì„±ê³µ ì²˜ë¦¬
+    //# GA ½ÇÇà ÁßÀÌ¸é Áßº¹ ½ÇÇàÇÏÁö ¾Ê°í ¼º°ø Ã³¸®
     for (const FGameplayAbilitySpec* Spec : ActiveAbilities)
     {
         if (Spec->IsActive())
@@ -59,7 +59,7 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
         }
     }
 
-    //# íƒœê·¸ë¥¼ í†µí•´ GA ì‹¤í–‰
+    //# ÅÂ±×¸¦ ÅëÇØ GA ½ÇÇà
     bool bActivated = ASC->TryActivateAbilitiesByTag(TagContainer);
 
     return bActivated ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;

@@ -51,7 +51,7 @@ protected:
 	FClimbWallData ClimbWallData;
 
 public:
-	//# ì´ì „ í”„ë ˆì„ì˜ IK ë„ë‹¬ ì§€ì ì„ ì €ì¥ (ë–¨ë¦¼ ë°©ì§€ìš© ë³´ê°„ íƒ€ê²Ÿ)
+	//# ÀÌÀü ÇÁ·¹ÀÓÀÇ IK µµ´Ş ÁöÁ¡À» ÀúÀå (¶³¸² ¹æÁö¿ë º¸°£ Å¸°Ù)
 	FVector CurrentOffsetHL;
 	FVector CurrentOffsetHR;
 	FVector CurrentOffsetFL;

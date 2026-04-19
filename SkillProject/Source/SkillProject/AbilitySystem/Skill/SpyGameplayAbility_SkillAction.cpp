@@ -52,7 +52,7 @@ void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHan
     if (OwnerPS == nullptr || OwnerASC == nullptr)
         return;
 
-    //# ì½¤ë³´ ê°€ëŠ¥ íƒœê·¸ ìžˆëŠ”ì§€ í™•ì¸
+    //# ÄÞº¸ °¡´É ÅÂ±× ÀÖ´ÂÁö È®ÀÎ
     if (OwnerASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Combo))
     {
         FGameplayTag MyTag = AbilityTags.GetByIndex(0);

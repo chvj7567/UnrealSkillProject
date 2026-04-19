@@ -30,21 +30,21 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
     Target = Cast<ACharacter>(BlackBoardComp->GetValueAsObject(Key));
 
-    //# ë‚´ê°€ ì›€ì§ì¼ ìˆ˜ ìžˆëŠ” ìƒíƒœì¸ì§€ í™•ì¸
+    //# ³»°¡ ¿òÁ÷ÀÏ ¼ö ÀÖ´Â »óÅÂÀÎÁö È®ÀÎ
     if (CanMove(AIController) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    //# íƒ€ê²Ÿì„ ê³µê²©í•  ìˆ˜ ìžˆëŠ”ì§€ í™•ì¸
+    //# Å¸°ÙÀ» °ø°ÝÇÒ ¼ö ÀÖ´ÂÁö È®ÀÎ
     if (CanTargetAttack(Target) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    //# íƒ€ê²Ÿì„ í–¥í•´ ë°”ë¼ë´„
+    //# Å¸°ÙÀ» ÇâÇØ ¹Ù¶óº½
     FVector Direction = Target->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
     Direction.Z = 0.f;
 
@@ -52,7 +52,7 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     AIController->SetControlRotation(TargetRot);
     AIController->GetPawn()->SetActorRotation(TargetRot);
 
-    //# íƒ€ê²Ÿê³¼ì˜ ê±°ë¦¬ í™•ì¸
+    //# Å¸°Ù°úÀÇ °Å¸® È®ÀÎ
     float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), Target->GetActorLocation());
     if (Distance <= StoppingDistance)
     {

@@ -42,7 +42,7 @@ void USKGameplayAbility_SkillAction::OnWaitGameplayEvent(FGameplayEventData Payl
     if (CustomContext == nullptr)
         return;
 
-    //# Contextì— ì •ë³´ ì¶”ê°€
+    //# Context¿¡ Á¤º¸ Ãß°¡
     CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
     CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
     CustomContext->AddActors({ TWeakObjectPtr<AActor>(TargetActor) });
@@ -80,7 +80,7 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
             WaitEffectSkillTask->ReadyForActivation();
         }
 
-        //# ì„œë²„ì—ì„œ Hit ê²€ì‚¬
+        //# ¼­¹ö¿¡¼­ Hit °Ë»ç
         ScheduleServerDetect();
     }
 
@@ -171,10 +171,10 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
         OutHits, CurrentStart, CurrentEnd,
         FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
 
-    //# ë””ë²„ê·¸ìš©
+    //# µğ¹ö±×¿ë
     bool bInvalidCharacter = false;
 
-    //# ì¤‘ë³µ ì•¡í„° ì²´í¬
+    //# Áßº¹ ¾×ÅÍ Ã¼Å©
     TArray<AActor*> CheckActors;
     for (const FHitResult& Overlap : OutHits)
     {
@@ -206,7 +206,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                    //# ëœë¤ ë°©í–¥ Hit íƒœê·¸
+                    //# ·£´ı ¹æÇâ Hit ÅÂ±×
                     int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
                     FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
                     Payload.TargetTags.AddTag(RandomHitTag);
@@ -256,10 +256,10 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
         QueryParams
     );
 
-    //# ë””ë²„ê·¸ìš©
+    //# µğ¹ö±×¿ë
     bool bInvalidCharacter = false;
 
-    //# ì¤‘ë³µ ì•¡í„° ì²´í¬
+    //# Áßº¹ ¾×ÅÍ Ã¼Å©
     TArray<AActor*> CheckActors;
     for (const FOverlapResult& Overlap : OutHits)
     {
@@ -298,7 +298,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                    //# ëœë¤ ë°©í–¥ Hit íƒœê·¸
+                    //# ·£´ı ¹æÇâ Hit ÅÂ±×
                     int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
                     FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
                     Payload.TargetTags.AddTag(RandomHitTag);

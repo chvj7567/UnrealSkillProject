@@ -290,19 +290,19 @@ public:
 
 	void SetHangUpMotionWarpingData(const FVector& HitVector);
 
-public: //# Í≥µÏö© ÏÇ¨Ïö©
+public: //# ∞¯øÎ ªÁøÎ
 	UPROPERTY(ReplicatedUsing = OnRep_FreeMoveMode)
 	bool bFreeMoveMode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FWallData WallData;
 
-public: //# Îç∏Î¶¨Í≤åÏù¥Ìä∏
+public: //# µ®∏Æ∞‘¿Ã∆Æ
 	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
 	FSyncClilmbDataDelegate OnClimbData;
 	FSyncMotionWarpingDataDelegate OnHangUpMotionWarpingData;
 
-protected: //# Î≤Ω ÎÑòÍ∏∞
+protected: //# ∫Æ ≥—±‚
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVaultData VaultData;
 
@@ -311,7 +311,7 @@ protected: //# Î≤Ω ÎÑòÍ∏∞
 	UPROPERTY(ReplicatedUsing = OnRep_VaultMotionWarpingData)
 	FMotionWarpingData VaultMotionWarpingData;
 
-protected: //# Î≤Ω ÌÉÄÍ∏∞
+protected: //# ∫Æ ≈∏±‚
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FClimbData ClimbData;
 

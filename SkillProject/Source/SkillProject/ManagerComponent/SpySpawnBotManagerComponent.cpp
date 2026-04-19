@@ -28,7 +28,7 @@ void USpySpawnBotManagerComponent::BeginPlay()
 
 void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRotator)
 {
-	//# ÏÑúÎ≤ÑÏóêÏÑúÎßå Ïã§Ìñâ
+	//# º≠πˆø°º≠∏∏ Ω««‡
 	if (GetOwnerRole() < ROLE_Authority)
 		return;
 
@@ -42,12 +42,12 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 	SpawnInfo.OverrideLevel = GetOwner()->GetLevel();
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
-	//# Ïª®Ìä∏Î°§Îü¨ Î®ºÏ†Ä ÏÉùÏÑ±
+	//# ƒ¡∆Æ∑—∑Ø ∏’¿˙ ª˝º∫
 	if (AAIController* NewController = World->SpawnActor<AAIController>(BotControllerClass, InLocation, InRotator, SpawnInfo))
 	{
 		if (ASpyGameMode* GameMode = Cast<ASpyGameMode>(World->GetAuthGameMode()))
 		{
-			//# PlayerState ÏÑ§Ï†ï
+			//# PlayerState º≥¡§
 			if (ASpyPlayerState* PS = NewController->GetPlayerState<ASpyPlayerState>())
 			{
 				PS->SetPlayerName(CreateBotName(PS->GetPlayerId()));
@@ -58,13 +58,13 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 				SpyAIController->SetBehaviorTree(BehaviorTreeAsset);
 			}
 
-			//# Î¥áÎèÑ Í∏∞Î≥∏Ï†ÅÏù∏ Ïª®Ìä∏Î°§Îü¨ Ï¥àÍ∏∞Ìôî ÌîÑÎ°úÏÑ∏Ïä§
+			//# ∫øµµ ±‚∫ª¿˚¿Œ ƒ¡∆Æ∑—∑Ø √ ±‚»≠ «¡∑ŒººΩ∫
 			GameMode->GenericPlayerInitialization(NewController);
 
-			//# Tranform ÏßÄÏ†ï
+			//# Tranform ¡ˆ¡§
 			FTransform SpawnTransform(InRotator, InLocation, FVector::OneVector);
 
-			//# Ìè∞ ÏÉùÏÑ± Î∞è ÎπôÏùò
+			//# ∆˘ ª˝º∫ π◊ ∫˘¿«
 			GameMode->RestartPlayerAtTransform(NewController, SpawnTransform);
 		}
 
@@ -82,13 +82,13 @@ void USpySpawnBotManagerComponent::RemoveOneBot()
 
 		if (BotToRemove)
 		{
-			//# Ï°∞Ï¢Ö Ï§ëÏù∏ Ìè∞ ÌååÍ¥¥
+			//# ¡∂¡æ ¡ﬂ¿Œ ∆˘ ∆ƒ±´
 			if (APawn* ControlledPawn = BotToRemove->GetPawn())
 			{
 				ControlledPawn->Destroy();
 			}
 
-			//# Ïª®Ìä∏Î°§Îü¨ ÌååÍ¥¥ (Ïù¥Îïå Î°úÍ∑∏ÏïÑÏõÉ Ï≤òÎ¶¨Îê®)
+			//# ƒ¡∆Æ∑—∑Ø ∆ƒ±´ (¿Ã∂ß ∑Œ±◊æ∆øÙ √≥∏Æµ )
 			BotToRemove->Destroy();
 		}
 

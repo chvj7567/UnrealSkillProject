@@ -46,7 +46,7 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
             SpyTarget->GetSpyHealthComponent()->OnDeath.RemoveDynamic(this, &ThisClass::OnTargetDeath);
         }
 
-        //# ì´ì „ íƒ€ê²Ÿ GE ì œê±°
+        //# ÀÌÀü Å¸°Ù GE Á¦°Å
         if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget.Get())->GetSpyAbilitySystemComponent())
         {
             FGameplayTagContainer TagContainer;
@@ -84,11 +84,11 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
     if (Owner == nullptr)
         return false;
 
-    //# ê°ì§€í•  ì˜¤ë¸Œì íŠ¸ íƒ€ì…ì„ Pawnìœ¼ë¡œ ì„¤ì •
+    //# °¨ÁöÇÒ ¿ÀºêÁ§Æ® Å¸ÀÔÀ» PawnÀ¸·Î ¼³Á¤
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
 
-    //# ìê¸° ìì‹  ì œì™¸
+    //# ÀÚ±â ÀÚ½Å Á¦¿Ü
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(Owner);
 
@@ -108,12 +108,12 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
         GetWorld(),
         Owner->GetActorLocation(),
         Radius,
-        24,                // ì„¸ê·¸ë¨¼íŠ¸ ìˆ˜ (êµ¬ì˜ ë””í…Œì¼)
-        FColor::Blue,       // ì„  ìƒ‰ìƒ
-        false,             // ì˜êµ¬ ì§€ì† ì—¬ë¶€
-        0.5f,              // ì§€ì† ì‹œê°„ (ì´ˆ)
+        24,                // ¼¼±×¸ÕÆ® ¼ö (±¸ÀÇ µğÅ×ÀÏ)
+        FColor::Blue,       // ¼± »ö»ó
+        false,             // ¿µ±¸ Áö¼Ó ¿©ºÎ
+        0.5f,              // Áö¼Ó ½Ã°£ (ÃÊ)
         0,                 // Depth Priority
-        1.0f               // ì„  ë‘ê»˜
+        1.0f               // ¼± µÎ²²
     );
 
     AActor* Target = nullptr;
@@ -125,7 +125,7 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
         {
             if (IsPotentialTargetValid(FoundActor))
             {
-                //# DistSquaredëŠ” ë£¨íŠ¸ ê³„ì‚°ì´ ì—†ì–´ ì¼ë°˜ Distë³´ë‹¤ ë¹ ë¦„
+                //# DistSquared´Â ·çÆ® °è»êÀÌ ¾ø¾î ÀÏ¹İ Distº¸´Ù ºü¸§
                 float DistSq = FVector::DistSquared(Owner->GetActorLocation(), FoundActor->GetActorLocation());
                 if (DistSq < ClosestDistanceSq)
                 {

@@ -36,13 +36,13 @@ protected:
 	void HandlePostLoadMap(UWorld* NewWorld);
 	void ProcessLoadedTags();
 
-	//# ì‹¤ì œ í”„ë¦¬ë¡œë”© í•µì‹¬ ë¡œì§
+	//# ½ÇÁ¦ ÇÁ¸®·Îµù ÇÙ½É ·ÎÁ÷
 	void ProcessTagToPreload(const FGameplayTag& Tag, UObject* OwningObject);
 
-	//# ë¡œë”© ì™„ë£Œ í›„ í˜¸ì¶œë  ì½œë°±
+	//# ·Îµù ¿Ï·á ÈÄ È£ÃâµÉ Äİ¹é
 	void OnPreloadCueComplete(FSoftObjectPath BundleAssetPath, TWeakObjectPtr<UObject> OwningObject, bool bAlwaysLoadedCue);
 
-	//# ë¡œë“œëœ íë¥¼ ê´€ë¦¬ ë¦¬ìŠ¤íŠ¸ì— ë“±ë¡ (ì¤‘ë³µ ë°©ì§€ ë° ì°¸ì¡° ìœ ì§€)
+	//# ·ÎµåµÈ Å¥¸¦ °ü¸® ¸®½ºÆ®¿¡ µî·Ï (Áßº¹ ¹æÁö ¹× ÂüÁ¶ À¯Áö)
 	void RegisterPreloadedCue(UClass* LoadedGameplayCueClass, UObject* OwningObject);
 
 private:
@@ -54,7 +54,7 @@ private:
 
 	FCriticalSection LoadedGameplayTagsToProcessCS;
 
-	//# ì‹¤ì œ ë¡œë“œëœ íƒœê·¸ ë°°ì—´
+	//# ½ÇÁ¦ ·ÎµåµÈ ÅÂ±× ¹è¿­
 	TArray<FLoadedTag> LoadedGameplayTagsToProcess;
 	bool bProcessLoadedTagsAfterGC = false;
 
@@ -62,7 +62,7 @@ private:
 	TSet<TObjectPtr<UClass>> PreloadedCues;
 	TMap<FObjectKey, TSet<FObjectKey>> PreloadedCueReferencers;
 
-	//# ìì£¼ ì“°ì´ëŠ” íë“¤ì€ GC ëŒ€ìƒì´ ë˜ì§€ ì•Šê²Œ ì°¸ì¡° ìœ ì§€
+	//# ÀÚÁÖ ¾²ÀÌ´Â Å¥µéÀº GC ´ë»óÀÌ µÇÁö ¾Ê°Ô ÂüÁ¶ À¯Áö
 	UPROPERTY(transient)
 	TSet<TObjectPtr<UClass>> AlwaysLoadedCues;
 };

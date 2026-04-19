@@ -20,10 +20,10 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//# ë´‡ì—ê²Œë„ PlayerStateë¥¼ ë¶€ì—¬í•˜ì—¬ í”Œë ˆì´ì–´ì™€ ë™ì¼í•œ ë°ì´í„° êµ¬ì¡°ë¥¼ ê°–ê²Œ í•¨
+	//# º¿¿¡°Ôµµ PlayerState¸¦ ºÎ¿©ÇÏ¿© ÇÃ·¹ÀÌ¾î¿Í µ¿ÀÏÇÑ µ¥ÀÌÅÍ ±¸Á¶¸¦ °®°Ô ÇÔ
 	bWantsPlayerState = true;
 
-	//# í°ì—ì„œ ë¶„ë¦¬ë˜ì–´ë„ ì¦‰ì‹œ AI ë¡œì§ì„ ì¤‘ë‹¨í•˜ì§€ ì•ŠìŒ
+	//# Æù¿¡¼­ ºĞ¸®µÇ¾îµµ Áï½Ã AI ·ÎÁ÷À» Áß´ÜÇÏÁö ¾ÊÀ½
 	bStopAILogicOnUnposses = false;
 
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
@@ -52,7 +52,7 @@ ASpyAIController::ASpyAIController(const FObjectInitializer& ObjectInitializer)
 	AIPerceptionComponent->ConfigureSense(*HearingConfig);
 	AIPerceptionComponent->ConfigureSense(*DamageConfig);
 
-	//# ì‹œì•¼ë¥¼ ìš°ì„  ìˆœìœ„ë¡œ ë‘ 
+	//# ½Ã¾ß¸¦ ¿ì¼± ¼øÀ§·Î µÒ
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
 
 	TeamID = FGenericTeamId(1);
@@ -71,13 +71,13 @@ void ASpyAIController::Tick(float DeltaSeconds)
 
 	if (SightConfig)
 	{
-		//# ì‹œê° ë²”ìœ„
+		//# ½Ã°¢ ¹üÀ§
 		//DrawDebugSphere(GetWorld(), Location, SightConfig->SightRadius, 32, FColor::Green, false, 0.f, 0, 1.5f);
 
-		//# ì‹œì•¼ì— íƒ€ê²Ÿì´ ë³´ì´ê³  ë‚˜ì„œ ì–´ê·¸ë¡œ ì—†ì–´ì§€ëŠ” ì‹œì•¼ ë²”ìœ„
+		//# ½Ã¾ß¿¡ Å¸°ÙÀÌ º¸ÀÌ°í ³ª¼­ ¾î±×·Î ¾ø¾îÁö´Â ½Ã¾ß ¹üÀ§
 		//DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
 
-		//# ì‹œì•¼ê°
+		//# ½Ã¾ß°¢
 		float HalfAngleRad = FMath::DegreesToRadians(SightConfig->PeripheralVisionAngleDegrees);
 
 		//DrawDebugCone(GetWorld(), Location, Forward, SightConfig->SightRadius, HalfAngleRad, HalfAngleRad, 32, FColor::Green, false, 0.f, 0, 1.2f);
@@ -85,28 +85,28 @@ void ASpyAIController::Tick(float DeltaSeconds)
 
 	if (HearingConfig)
 	{
-		//# ì²­ê° ë²”ìœ„
+		//# Ã»°¢ ¹üÀ§
 		//DrawDebugSphere(GetWorld(), Location, HearingConfig->HearingRange, 32, FColor::Blue, false, 0.f, 0, 1.5f );
 	}
 }
 
 void ASpyAIController::InitPlayerState()
 {
-	//# ì„œë²„ ì¸¡ ì´ˆê¸°í™”
+	//# ¼­¹ö Ãø ÃÊ±âÈ­
 	Super::InitPlayerState();
 	BroadcastOnPlayerStateChanged();
 }
 
 void ASpyAIController::CleanupPlayerState()
 {
-	//# í•´ì œ ì‹œ ì •ë¦¬
+	//# ÇØÁ¦ ½Ã Á¤¸®
 	BroadcastOnPlayerStateChanged();
 	Super::CleanupPlayerState();
 }
 
 void ASpyAIController::OnRep_PlayerState()
 {
-	//# í´ë¼ì´ì–¸íŠ¸ ì¸¡ ì´ˆê¸°í™”
+	//# Å¬¶óÀÌ¾ğÆ® Ãø ÃÊ±âÈ­
 	Super::OnRep_PlayerState();
 	BroadcastOnPlayerStateChanged();
 }
@@ -135,13 +135,13 @@ void ASpyAIController::BroadcastOnPlayerStateChanged()
 {
 	OnPlayerStateChanged();
 
-	//# ì´ì „ PlayerStateê°€ ìˆë‹¤ë©´ í•„ìš” ì‹œ ë¸ë¦¬ê²Œì´íŠ¸ í•´ì œ
+	//# ÀÌÀü PlayerState°¡ ÀÖ´Ù¸é ÇÊ¿ä ½Ã µ¨¸®°ÔÀÌÆ® ÇØÁ¦
 	if (LastSeenPlayerState != nullptr)
 	{
 		
 	}
 
-	//# ìƒˆ PlayerStateê°€ í• ë‹¹ë˜ì—ˆì„ ë•Œ ë¸ë¦¬ê²Œì´íŠ¸ ì„¤ì •
+	//# »õ PlayerState°¡ ÇÒ´çµÇ¾úÀ» ¶§ µ¨¸®°ÔÀÌÆ® ¼³Á¤
 	if (PlayerState != nullptr)
 	{
 		
@@ -157,7 +157,7 @@ void ASpyAIController::OnPlayerStateChanged()
 
 void ASpyAIController::OnUnPossess()
 {
-	//# ë¹™ì˜ í•´ì œ ì‹œ, ASCê°€ íŒŒê´´ë  í°ì„ ê³„ì† ì°¸ì¡°í•˜ì§€ ì•Šë„ë¡ ì•„ë°”íƒ€ë¥¼ ì •ë¦¬í•¨
+	//# ºùÀÇ ÇØÁ¦ ½Ã, ASC°¡ ÆÄ±«µÉ ÆùÀ» °è¼Ó ÂüÁ¶ÇÏÁö ¾Êµµ·Ï ¾Æ¹ÙÅ¸¸¦ Á¤¸®ÇÔ
 	if (APawn* PawnBeingUnpossessed = GetPawn())
 	{
 		if (UAbilitySystemComponent* ASC = GetSpyAbilitySystemComponent())
@@ -260,10 +260,10 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		//# ì‹œê° ê°ì§€
+		//# ½Ã°¢ °¨Áö
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
-			//# ì ì¼ ê²½ìš°ë§Œ íƒ€ê²ŸíŒ…
+			//# ÀûÀÏ °æ¿ì¸¸ Å¸°ÙÆÃ
 			if (Attitude == ETeamAttitude::Hostile)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Detected %s"), *TargetActor->GetName());
@@ -271,7 +271,7 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 				BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
 			}
 		}
-		//# ì²­ê° ê°ì§€
+		//# Ã»°¢ °¨Áö
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
 			/*if (Attitude == ETeamAttitude::Hostile)
@@ -280,7 +280,7 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 				BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
 			}*/
 		}
-		//# ë°ë¯¸ì§€ ê°ì§€
+		//# µ¥¹ÌÁö °¨Áö
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
 		{
 			if (Attitude == ETeamAttitude::Hostile)
@@ -292,7 +292,7 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 	}
 	else
 	{
-		//# ê°ì§€ë˜ì§€ ì•Šì•˜ì„ ë•Œ
+		//# °¨ÁöµÇÁö ¾Ê¾ÒÀ» ¶§
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Lost %s"), *TargetActor->GetName());

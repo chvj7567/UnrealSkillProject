@@ -8,13 +8,13 @@ class UAbilitySystemComponent;
 
 namespace SKGameplayTags
 {
-	//# ì ê¸ˆ ê´€ë ¨
+	//# Àá±İ °ü·Ã
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Lock_Input);
 
-	//# ìºë¦­í„° í´ë˜ìŠ¤
+	//# Ä³¸¯ÅÍ Å¬·¡½º
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_Class);
 
-	//# ìºë¦­í„° ìƒíƒœ
+	//# Ä³¸¯ÅÍ »óÅÂ
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Alive);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_DeathStart);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Death);
@@ -22,25 +22,25 @@ namespace SKGameplayTags
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_SuperArmor);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Combo);
 
-	//# ì•¡ì…˜ ìŠ¤í‚¬
+	//# ¾×¼Ç ½ºÅ³
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Action);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Effect_Skill_Action);
 
-	//# ì´ë™ ìŠ¤í‚¬
+	//# ÀÌµ¿ ½ºÅ³
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Move);
 
-	//# ë²„í”„ ìŠ¤í‚¬
+	//# ¹öÇÁ ½ºÅ³
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Buff);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Buff_Heal);
 
-	//# ë””ë²„í”„ ìŠ¤í‚¬
+	//# µğ¹öÇÁ ½ºÅ³
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Debuff);
 
-	//# Actor ì´í™íŠ¸
+	//# Actor ÀÌÆåÆ®
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor);
 
-	//# Static ì´í™íŠ¸
+	//# Static ÀÌÆåÆ®
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Static);
 
 	//# Hit
