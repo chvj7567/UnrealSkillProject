@@ -37,7 +37,13 @@
       "Bash(file --mime-encoding tools/unreal-mcp/server.py tools/unreal-mcp/unreal_client.py tools/unreal-mcp/tools/*.py tools/unreal-mcp/tests/*.py)",
       "Bash(powershell -Command \"Get-Item tools/unreal-mcp/server.py | Select-Object -ExpandProperty FullName\")",
       "Bash(powershell:*)",
-      "Bash(grep -n \"//.*[가-힣]\" SkillProject/Source/SkillProject/AbilitySystem/Calculation/SpyDamageCalculation.cpp)"
+      "Bash(grep -n \"//.*[가-힣]\" SkillProject/Source/SkillProject/AbilitySystem/Calculation/SpyDamageCalculation.cpp)",
+      "mcp__unreal-mcp__list_assets",
+      "Bash(curl:*)",
+      "Bash(xargs grep:*)",
+      "mcp__unreal-mcp__get_actors_in_level",
+      "mcp__unreal-mcp__get_actor_properties",
+      "mcp__unreal-mcp__execute_python"
     ]
   }
 }
