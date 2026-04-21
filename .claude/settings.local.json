@@ -5,7 +5,7 @@
       "Bash(ls *.md)",
       "Bash(xargs grep:*)",
       "Bash(dir tools\\\\unreal-mcp /b)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
       "Bash(pip show:*)",
       "Bash(python:*)",
       "Bash(python3 -m pip show httpx fastmcp pytest)",
@@ -48,7 +48,8 @@
       "Bash(xargs grep:*)",
       "mcp__unreal-mcp__get_actors_in_level",
       "mcp__unreal-mcp__get_actor_properties",
-      "mcp__unreal-mcp__execute_python"
+      "mcp__unreal-mcp__execute_python",
+      "Bash(git ls-tree *)"
     ]
   }
 }
