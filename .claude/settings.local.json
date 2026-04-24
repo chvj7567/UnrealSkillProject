@@ -49,7 +49,8 @@
       "mcp__unreal-mcp__get_actors_in_level",
       "mcp__unreal-mcp__get_actor_properties",
       "mcp__unreal-mcp__execute_python",
-      "Bash(git ls-tree *)"
+      "Bash(git ls-tree *)",
+      "Bash(grep -i \"\\\\.h$\")"
     ]
   }
 }
