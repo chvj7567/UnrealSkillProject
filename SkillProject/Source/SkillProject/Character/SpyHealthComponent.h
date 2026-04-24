@@ -13,6 +13,10 @@ class USpyCharacterAttributeSet;
 struct FGameplayEffectSpec;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyHealth_DeathEvent, AActor*, OwningActor, AActor*, CauserActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FSpyHealth_HitEvent,
+    float, Damage,
+    bool, bCritical,
+    AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyHealth_AttributeChanged, USpyHealthComponent*, HealthComponent, float, OldValue, float, NewValue, AActor*, Instigator);
 
 UCLASS()
@@ -45,6 +49,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FSpyHealth_DeathEvent OnDeath;
+
+	UPROPERTY(BlueprintAssignable)
+	FSpyHealth_HitEvent OnHit;
 
 protected:
 

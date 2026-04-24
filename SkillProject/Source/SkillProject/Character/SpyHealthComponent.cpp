@@ -6,6 +6,8 @@
 #include "Components/GameFrameworkComponentManager.h"
 #include "Character/SpyCharacterAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "SKGameplayEffectContext.h"
+#include "System/SpyPlayerController.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
 
@@ -78,6 +80,35 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 	}
 
 	OnHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+
+	// 실제 피해가 발생한 경우에만 (DamageMagnitude < 0 = 감소)
+	if (DamageMagnitude < 0.0f)
+	{
+		bool bCritical = false;
+		if (DamageEffectSpec)
+		{
+			FSKGameplayEffectContext* Ctx = FSKGameplayEffectContext::ExtractEffectContext(
+				DamageEffectSpec->GetContext());
+			if (Ctx)
+			{
+				bCritical = Ctx->IsCritical();
+			}
+		}
+
+		const float ActualDamage = FMath::Abs(DamageMagnitude);
+
+		// 피격자 쪽 이벤트
+		OnHit.Broadcast(ActualDamage, bCritical, DamageCauser);
+
+		// 공격자(DamageCauser)가 플레이어라면 해당 PC에도 알림
+		if (APawn* CauserPawn = Cast<APawn>(DamageCauser))
+		{
+			if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(CauserPawn->GetController()))
+			{
+				PC->HandleDealtHit(bCritical);
+			}
+		}
+	}
 }
 
 void USpyHealthComponent::HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
