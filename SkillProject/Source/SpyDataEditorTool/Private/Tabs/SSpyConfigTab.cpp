@@ -100,10 +100,10 @@ void SSpyConfigTab::Construct(const FArguments& InArgs)
 
     GEditor->GetTimerManager()->SetTimerForNextTick([this]()
     {
-        if (AIConfigView.IsValid())        AIConfigView->ForceRefreshDetails();
-        if (CharacterConfigView.IsValid()) CharacterConfigView->ForceRefreshDetails();
-        if (InputConfigView.IsValid())     InputConfigView->ForceRefreshDetails();
-        if (MovementConfigView.IsValid())  MovementConfigView->ForceRefreshDetails();
+        if (AIConfigView.IsValid())        AIConfigView->ForceRefresh();
+        if (CharacterConfigView.IsValid()) CharacterConfigView->ForceRefresh();
+        if (InputConfigView.IsValid())     InputConfigView->ForceRefresh();
+        if (MovementConfigView.IsValid())  MovementConfigView->ForceRefresh();
     });
 }
 

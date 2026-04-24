@@ -126,13 +126,13 @@ void FSpyDataEditorToolModule::RegisterMenus()
     FToolMenuSection& Section = Menu->FindOrAddSection("WindowLayout");
     Section.AddMenuEntry(
         "SpyDataEditorOpen",
+        LOCTEXT("MenuEntry", "Spy Data Editor"),
+        LOCTEXT("MenuEntryTooltip", "Spy Data 에셋 일괄 편집 도구 열기"),
+        FSlateIcon(),
         FUIAction(FExecuteAction::CreateLambda([]()
         {
             FGlobalTabmanager::Get()->TryInvokeTab(FSpyDataEditorToolModule::TabName);
-        })),
-        LOCTEXT("MenuEntry", "Spy Data Editor"),
-        LOCTEXT("MenuEntryTooltip", "Spy Data 에셋 일괄 편집 도구 열기"),
-        FSlateIcon()
+        }))
     );
 }
 

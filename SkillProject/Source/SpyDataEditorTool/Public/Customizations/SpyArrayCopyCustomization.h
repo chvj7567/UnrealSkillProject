@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "IDetailCustomization.h"
+#include "DetailCategoryBuilder.h"
+#include "IDetailChildrenBuilder.h"
+#include "PropertyHandle.h"
 
 class FSpyArrayCopyCustomization : public IDetailCustomization
 {

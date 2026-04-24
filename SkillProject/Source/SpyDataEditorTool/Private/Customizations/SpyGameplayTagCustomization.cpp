@@ -1,8 +1,8 @@
 #include "Customizations/SpyGameplayTagCustomization.h"
 #include "DetailWidgetRow.h"
-#include "IPropertyHandle.h"
+#include "PropertyHandle.h"
 #include "Widgets/Text/STextBlock.h"
-#include "Widgets/Layout/SVerticalBox.h"
+#include "Widgets/SBoxPanel.h"
 #include "Styling/CoreStyle.h"
 
 TSharedRef<IPropertyTypeCustomization> FSpyGameplayTagCustomization::MakeInstance()

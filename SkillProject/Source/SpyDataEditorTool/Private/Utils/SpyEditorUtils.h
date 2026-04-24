@@ -19,8 +19,7 @@ namespace SpyEditorUtils
         }
         FSavePackageArgs SaveArgs;
         SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
-        return UPackage::SavePackage(Package, Asset, *PackageFilename, SaveArgs)
-               == ESavePackageResult::Success;
+        return UPackage::SavePackage(Package, Asset, *PackageFilename, SaveArgs);
     }
 
     inline bool ConfirmApply(const TArray<FString>& AssetNames)

@@ -103,10 +103,10 @@ void SSpyAbilityTab::Construct(const FArguments& InArgs)
 
     GEditor->GetTimerManager()->SetTimerForNextTick([this]()
     {
-        if (CharacterAssetView.IsValid()) CharacterAssetView->ForceRefreshDetails();
-        if (CommonAbilityView.IsValid())  CommonAbilityView->ForceRefreshDetails();
-        if (NormalAbilityView.IsValid())  NormalAbilityView->ForceRefreshDetails();
-        if (ComboAssetView.IsValid())     ComboAssetView->ForceRefreshDetails();
+        if (CharacterAssetView.IsValid()) CharacterAssetView->ForceRefresh();
+        if (CommonAbilityView.IsValid())  CommonAbilityView->ForceRefresh();
+        if (NormalAbilityView.IsValid())  NormalAbilityView->ForceRefresh();
+        if (ComboAssetView.IsValid())     ComboAssetView->ForceRefresh();
     });
 }
 

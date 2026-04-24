@@ -84,8 +84,8 @@ void SSpyAssetsTab::Construct(const FArguments& InArgs)
 
     GEditor->GetTimerManager()->SetTimerForNextTick([this]()
     {
-        if (AssetDataView.IsValid())     AssetDataView->ForceRefreshDetails();
-        if (AnimAssetDataView.IsValid()) AnimAssetDataView->ForceRefreshDetails();
+        if (AssetDataView.IsValid())     AssetDataView->ForceRefresh();
+        if (AnimAssetDataView.IsValid()) AnimAssetDataView->ForceRefresh();
     });
 }
 
@@ -102,12 +102,12 @@ FReply SSpyAssetsTab::OnScanClicked()
         TSoftClassPtr<UAnimInstance> SoftClass(Pair.Value);
         AnimAssetData->AnimLayerMap.Add(Pair.Key, SoftClass);
     }
-    AnimAssetDataView->ForceRefreshDetails();
+    AnimAssetDataView->ForceRefresh();
 
     if (AssetData)
     {
         AssetData->Modify();
-        AssetDataView->ForceRefreshDetails();
+        AssetDataView->ForceRefresh();
     }
 
     return FReply::Handled();

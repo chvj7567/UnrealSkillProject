@@ -1,6 +1,6 @@
 #include "Customizations/SpyAssetPathCustomization.h"
 #include "DetailWidgetRow.h"
-#include "IPropertyHandle.h"
+#include "PropertyHandle.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
 #include "PropertyCustomizationHelpers.h"
