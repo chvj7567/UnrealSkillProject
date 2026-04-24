@@ -100,10 +100,10 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 		// 피격자 쪽 이벤트
 		OnHit.Broadcast(ActualDamage, bCritical, DamageCauser);
 
-		// 공격자(DamageCauser)가 플레이어라면 해당 PC에도 알림
-		if (APawn* CauserPawn = Cast<APawn>(DamageCauser))
+		// 공격자(DamageInstigator)가 플레이어라면 해당 PC에도 알림
+		if (APawn* InstigatorPawn = Cast<APawn>(DamageInstigator))
 		{
-			if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(CauserPawn->GetController()))
+			if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(InstigatorPawn->GetController()))
 			{
 				PC->HandleDealtHit(bCritical);
 			}
