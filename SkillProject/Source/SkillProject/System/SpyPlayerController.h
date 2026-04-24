@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Util/DefineEnum.h"
 #include "ModularPlayerController.h"
+#include "Camera/CameraShakeBase.h"
+#include "Character/SpyHealthComponent.h"
 
 #include "SpyPlayerController.generated.h"
 
@@ -21,6 +23,7 @@ public:
 	ASpyPlayerController();
 
 protected:
+	virtual void OnUnPossess() override;
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void AcknowledgePossession(APawn* InPawn) override;
@@ -35,9 +38,23 @@ public:
 
 	void ToggleCursorMode();
 
+	UFUNCTION()
+	void HandleReceivedHit(float Damage, bool bCritical, AActor* DamageCauser);
+	void HandleDealtHit(bool bCritical);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USpyTargetingManagerComponent> TargetingComp;
 
 	bool bCursorMode = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|Shake")
+	TSubclassOf<UCameraShakeBase> HitShakeLight;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|Shake")
+	TSubclassOf<UCameraShakeBase> HitShakeHeavy;
+
+	// OnUnPossess 시점에 GetPawn()은 이미 null이므로 별도 보관
+	UPROPERTY()
+	TWeakObjectPtr<USpyHealthComponent> BoundHealthComponent;
 };

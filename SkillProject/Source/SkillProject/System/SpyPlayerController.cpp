@@ -58,6 +58,23 @@ void ASpyPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
+
+	if (USpyHealthComponent* HC = USpyHealthComponent::FindHealthComponent(InPawn))
+	{
+		HC->OnHit.AddDynamic(this, &ASpyPlayerController::HandleReceivedHit);
+		BoundHealthComponent = HC;
+	}
+}
+
+void ASpyPlayerController::OnUnPossess()
+{
+	if (BoundHealthComponent.IsValid())
+	{
+		BoundHealthComponent->OnHit.RemoveDynamic(this, &ASpyPlayerController::HandleReceivedHit);
+		BoundHealthComponent = nullptr;
+	}
+
+	Super::OnUnPossess();
 }
 
 void ASpyPlayerController::AcknowledgePossession(APawn* InPawn)
@@ -116,4 +133,26 @@ USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent()
 {
 	const ASpyPlayerState* SpyPS = CastChecked<ASpyPlayerState>(PlayerState, ECastCheckedType::NullAllowed);
 	return (SpyPS ? SpyPS->GetSpyAbilitySystemComponent() : nullptr);
+}
+
+void ASpyPlayerController::HandleReceivedHit(float Damage, bool bCritical, AActor* DamageCauser)
+{
+	if (!PlayerCameraManager) return;
+
+	TSubclassOf<UCameraShakeBase> ShakeClass = bCritical ? HitShakeHeavy : HitShakeLight;
+	if (ShakeClass)
+	{
+		PlayerCameraManager->StartCameraShake(ShakeClass);
+	}
+}
+
+void ASpyPlayerController::HandleDealtHit(bool bCritical)
+{
+	if (!PlayerCameraManager) return;
+
+	TSubclassOf<UCameraShakeBase> ShakeClass = bCritical ? HitShakeHeavy : HitShakeLight;
+	if (ShakeClass)
+	{
+		PlayerCameraManager->StartCameraShake(ShakeClass);
+	}
 }
