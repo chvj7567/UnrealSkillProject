@@ -2,6 +2,8 @@
 
 
 #include "SpyPlayerController.h"
+#include "Camera/CameraShakeBase.h"
+#include "Character/SpyHealthComponent.h"
 #include "Character/SpyCharacter.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
@@ -55,6 +57,12 @@ void ASpyPlayerController::ToggleCursorMode()
 
 void ASpyPlayerController::OnPossess(APawn* InPawn)
 {
+	if (BoundHealthComponent.IsValid())
+	{
+		BoundHealthComponent->OnHit.RemoveDynamic(this, &ASpyPlayerController::HandleReceivedHit);
+		BoundHealthComponent = nullptr;
+	}
+
 	Super::OnPossess(InPawn);
 
 	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
@@ -139,6 +147,7 @@ void ASpyPlayerController::HandleReceivedHit(float Damage, bool bCritical, AActo
 {
 	if (!PlayerCameraManager) return;
 
+	// 피격·공격 모두 같은 에셋을 사용 — 에디터에서 강도를 달리 설정하려면 BP에서 교체
 	TSubclassOf<UCameraShakeBase> ShakeClass = bCritical ? HitShakeHeavy : HitShakeLight;
 	if (ShakeClass)
 	{

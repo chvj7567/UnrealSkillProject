@@ -6,13 +6,12 @@
 #include "GameFramework/PlayerController.h"
 #include "Util/DefineEnum.h"
 #include "ModularPlayerController.h"
-#include "Camera/CameraShakeBase.h"
-#include "Character/SpyHealthComponent.h"
-
 #include "SpyPlayerController.generated.h"
 
 class USpyAbilitySystemComponent;
 class USpyTargetingManagerComponent;
+class UCameraShakeBase;
+class USpyHealthComponent;
 
 UCLASS()
 class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController
