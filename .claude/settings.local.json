@@ -50,7 +50,12 @@
       "mcp__unreal-mcp__get_actor_properties",
       "mcp__unreal-mcp__execute_python",
       "Bash(git ls-tree *)",
-      "Bash(grep -i \"\\\\.h$\")"
+      "Bash(grep -i \"\\\\.h$\")",
+      "mcp__unreal-mcp__find_assets_by_class",
+      "mcp__unreal-mcp__set_blueprint_cdo_property",
+      "mcp__unreal-mcp__get_blueprint_cdo_properties",
+      "mcp__unreal-mcp__save_asset",
+      "Bash(git -C \"C:\\\\Users\\\\Tae\\\\Desktop\\\\MyProject\\\\SpyProject\\\\UnrealSkillProject\" diff --name-only HEAD -- \"SkillProject/Content/Spy/Blueprints/System/BP_SpyPlayerController.uasset\")"
     ]
   }
 }

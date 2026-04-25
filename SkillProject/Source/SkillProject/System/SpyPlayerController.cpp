@@ -145,23 +145,31 @@ USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent()
 
 void ASpyPlayerController::HandleReceivedHit(float Damage, bool bCritical, AActor* DamageCauser)
 {
-	if (!PlayerCameraManager) return;
-
-	// 피격·공격 모두 같은 에셋을 사용 — 에디터에서 강도를 달리 설정하려면 BP에서 교체
-	TSubclassOf<UCameraShakeBase> ShakeClass = bCritical ? HitShakeHeavy : HitShakeLight;
-	if (ShakeClass)
-	{
-		PlayerCameraManager->StartCameraShake(ShakeClass);
-	}
+	Client_TriggerShake(bCritical, true);
 }
 
 void ASpyPlayerController::HandleDealtHit(bool bCritical)
 {
+	Client_TriggerShake(bCritical, false);
+}
+
+void ASpyPlayerController::Client_TriggerShake_Implementation(bool bCritical, bool bFromReceivedHit)
+{
+	const TCHAR* Source = bFromReceivedHit ? TEXT("피격") : TEXT("공격");
+	const TCHAR* Intensity = bCritical ? TEXT("Heavy") : TEXT("Light");
+	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] %s — %s | CameraManager=%d ShakeLight=%d ShakeHeavy=%d"),
+		Source, Intensity, PlayerCameraManager != nullptr, HitShakeLight != nullptr, HitShakeHeavy != nullptr);
+
 	if (!PlayerCameraManager) return;
 
 	TSubclassOf<UCameraShakeBase> ShakeClass = bCritical ? HitShakeHeavy : HitShakeLight;
 	if (ShakeClass)
 	{
 		PlayerCameraManager->StartCameraShake(ShakeClass);
+		UE_LOG(LogTemp, Warning, TEXT("[CameraShake] StartCameraShake 완료 (%s %s)"), Source, Intensity);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[CameraShake] ShakeClass null (%s %s) — BP 에셋 할당 확인"), Source, Intensity);
 	}
 }

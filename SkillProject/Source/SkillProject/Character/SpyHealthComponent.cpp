@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 #include "SKGameplayEffectContext.h"
 #include "System/SpyPlayerController.h"
+#include "GameFramework/PlayerState.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
 
@@ -98,10 +99,21 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 		const float ActualDamage = FMath::Abs(DamageMagnitude);
 
 		// 피격자 쪽 이벤트
+		UE_LOG(LogTemp, Warning, TEXT("[CameraShake] OnHit.Broadcast — Damage=%.1f bCritical=%d Causer=%s"),
+			ActualDamage, bCritical, DamageCauser ? *DamageCauser->GetName() : TEXT("null"));
 		OnHit.Broadcast(ActualDamage, bCritical, DamageCauser);
 
-		// 공격자(DamageInstigator)가 플레이어라면 해당 PC에도 알림
-		if (APawn* InstigatorPawn = Cast<APawn>(DamageInstigator))
+		// 공격자가 플레이어라면 해당 PC에도 알림
+		// InstigatorActor는 PlayerState일 수 있으므로 Pawn 변환 실패 시 PlayerState 경로 시도
+		APawn* InstigatorPawn = Cast<APawn>(DamageInstigator);
+		if (!InstigatorPawn)
+		{
+			if (APlayerState* PS = Cast<APlayerState>(DamageInstigator))
+			{
+				InstigatorPawn = PS->GetPawn();
+			}
+		}
+		if (InstigatorPawn)
 		{
 			if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(InstigatorPawn->GetController()))
 			{

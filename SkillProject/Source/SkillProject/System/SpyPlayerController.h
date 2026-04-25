@@ -41,6 +41,9 @@ public:
 	void HandleReceivedHit(float Damage, bool bCritical, AActor* DamageCauser);
 	void HandleDealtHit(bool bCritical);
 
+	UFUNCTION(Client, Reliable)
+	void Client_TriggerShake(bool bCritical, bool bFromReceivedHit);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USpyTargetingManagerComponent> TargetingComp;
