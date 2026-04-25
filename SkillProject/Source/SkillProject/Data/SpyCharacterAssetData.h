@@ -19,7 +19,7 @@ struct FCharacterAssetEntry
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Meta = (Categories = "Character.Class"))
 	FGameplayTag ClassType;
 
 	UPROPERTY(EditDefaultsOnly)

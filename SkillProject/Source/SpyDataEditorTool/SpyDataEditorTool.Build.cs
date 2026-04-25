@@ -13,7 +13,7 @@ public class SpyDataEditorTool : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
-            "UnrealEd", "PropertyEditor", "AssetRegistry",
+            "UnrealEd", "PropertyEditor", "AssetRegistry", "GameplayTagsEditor",
             "Slate", "SlateCore", "InputCore",
             "ToolMenus", "EditorFramework", "EditorWidgets",
             "EditorSubsystem", "AssetTools"

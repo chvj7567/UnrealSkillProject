@@ -4,6 +4,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/SBoxPanel.h"
 #include "Styling/CoreStyle.h"
+#include "SGameplayTagCombo.h"
 
 TSharedRef<IPropertyTypeCustomization> FSpyGameplayTagCustomization::MakeInstance()
 {
@@ -38,6 +39,8 @@ void FSpyGameplayTagCustomization::CustomizeHeader(
     ]
     .ValueContent()
     [
-        PropertyHandle->CreatePropertyValueWidget()
+        SNew(SGameplayTagCombo)
+        .PropertyHandle(PropertyHandle)
+        .Filter(FilterCategory)
     ];
 }
