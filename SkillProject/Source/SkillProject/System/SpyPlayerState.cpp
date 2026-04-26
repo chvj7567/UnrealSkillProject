@@ -180,6 +180,10 @@ void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterA
 			}
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("# SpyPlayerState: SetCharacterAssetData - No matching AssetEntry found (bInIsPlayer=%d). TeamId not set, ClassSkills not granted."), bInIsPlayer);
+	}
 
 	UGameFrameworkComponentManager::SendGameFrameworkComponentExtensionEvent(this, NAME_AbilityReady);
 }
