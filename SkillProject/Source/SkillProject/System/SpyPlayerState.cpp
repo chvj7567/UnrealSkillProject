@@ -148,9 +148,6 @@ void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterA
 
 	CharacterAssetData = InCharacterAssetData;
 
-	//# Temp
-	SetGenericTeamId(bInIsPlayer ? 100 : 1);
-
 	for (const USpyAbilityData* AbilityData : CharacterAssetData->CharacterAssets.CommonSkills)
 	{
 		if (AbilityData)
@@ -171,11 +168,16 @@ void ASpyPlayerState::SetCharacterAssetData(USpyCharacterAssetData* InCharacterA
 			}
 		});
 
-	for (const USpyAbilityData* AbilityData : Entry->ClassSkills)
+	if (Entry)
 	{
-		if (AbilityData)
+		SetGenericTeamId(Entry->TeamId);
+
+		for (const USpyAbilityData* AbilityData : Entry->ClassSkills)
 		{
-			AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+			if (AbilityData)
+			{
+				AbilityData->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+			}
 		}
 	}
 
