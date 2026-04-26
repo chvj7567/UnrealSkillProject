@@ -44,7 +44,7 @@ public:
 	FName WeaponSocketName = TEXT("weapon_socket");
 
 	UPROPERTY(EditDefaultsOnly, Category = "Team")
-	uint8 TeamId = 0;
+	uint8 TeamId = 255;
 };
 
 USTRUCT()
