@@ -10,7 +10,7 @@ class USpyMovementConfig;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrappleTargetChanged, AActor*, NewTarget);
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SKILLPROJECT_API USpyGrappleTargetingComponent : public UActorComponent
 {
     GENERATED_BODY()
@@ -18,7 +18,6 @@ class SKILLPROJECT_API USpyGrappleTargetingComponent : public UActorComponent
 public:
     USpyGrappleTargetingComponent();
 
-    virtual void BeginPlay() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -29,7 +28,7 @@ public:
     FOnGrappleTargetChanged OnGrappleTargetChanged;
 
 protected:
-    UPROPERTY(Transient)
+    UPROPERTY(EditDefaultsOnly, Category = "Config")
     TObjectPtr<USpyMovementConfig> MovementConfig;
 
 private:
