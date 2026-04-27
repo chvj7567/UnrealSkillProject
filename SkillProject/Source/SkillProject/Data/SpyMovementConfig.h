@@ -66,4 +66,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
 	float GrappleFlightTime = 0.8f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrapplePromptRange = 1500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrappleTargetingScreenRadius = 150.f;
 };
