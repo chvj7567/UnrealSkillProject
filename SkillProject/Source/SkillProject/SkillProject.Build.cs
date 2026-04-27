@@ -33,6 +33,7 @@ public class SkillProject : ModuleRules
             "SKGAS",
             "AIModule",
             "NavigationSystem",
+            "CableComponent",
         });
     }
 }
