@@ -187,24 +187,22 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
 
             if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
             {
-                if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetCharacter))
-                {
-                    if (TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
-                        continue;
+                UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetCharacter);
+                if (TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+                    continue;
 
-                    if (!bIsHeal && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
+                if (!bIsHeal && TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
+                {
+                    FVector DefenderForward = TargetCharacter->GetActorForwardVector();
+                    FVector ToAttacker = (OwnerCharacter->GetActorLocation() - TargetCharacter->GetActorLocation()).GetSafeNormal();
+                    if (FVector::DotProduct(DefenderForward, ToAttacker) > 0.0f)
                     {
-                        FVector DefenderForward = TargetCharacter->GetActorForwardVector();
-                        FVector ToAttacker = (OwnerCharacter->GetActorLocation() - TargetCharacter->GetActorLocation()).GetSafeNormal();
-                        if (FVector::DotProduct(DefenderForward, ToAttacker) > 0.0f)
-                        {
-                            FGameplayEventData ParryPayload;
-                            ParryPayload.Instigator = OwnerCharacter;
-                            ParryPayload.Target = TargetCharacter;
-                            UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetCharacter, SKGameplayTags::Skill_Parry_Hit, ParryPayload);
-                            bInvalidCharacter = true;
-                            continue;
-                        }
+                        FGameplayEventData ParryPayload;
+                        ParryPayload.Instigator = OwnerCharacter;
+                        ParryPayload.Target = TargetCharacter;
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetCharacter, SKGameplayTags::Skill_Parry_Hit, ParryPayload);
+                        bInvalidCharacter = true;
+                        continue;
                     }
                 }
 
