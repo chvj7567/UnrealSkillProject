@@ -6,8 +6,8 @@
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Data/SpyMovementConfig.h"
 #include "Util/SpyGameplayTags.h"
+#include "ManagerComponent/SpyGrappleTargetingComponent.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/PlayerController.h"
 #include "AbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_GrappleHook)
@@ -41,20 +41,31 @@ void USpyGA_GrappleHook::ActivateAbility(
     if (!HasAuthority(&ActivationInfo))
         return;
 
-    FVector ImpactPoint;
-    if (!TryLineTrace(ImpactPoint))
+    AActor* AvatarActor = GetAvatarActorFromActorInfo();
+    USpyGrappleTargetingComponent* TargetComp =
+        AvatarActor ? AvatarActor->FindComponentByClass<USpyGrappleTargetingComponent>() : nullptr;
+
+    if (!TargetComp)
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
         return;
     }
 
-    ACharacter* Char = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+    AActor* Target = TargetComp->GetCurrentGrappleTarget();
+    if (!Target)
+    {
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        return;
+    }
+
+    ACharacter* Char = Cast<ACharacter>(AvatarActor);
     if (!Char)
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
         return;
     }
 
+    const FVector ImpactPoint = Target->GetActorLocation();
     LaunchToTarget(Char, ImpactPoint);
 
     FActorSpawnParameters SpawnParams;
@@ -105,40 +116,17 @@ void USpyGA_GrappleHook::OnGrappleArrived()
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-bool USpyGA_GrappleHook::TryLineTrace(FVector& OutImpactPoint) const
-{
-    APawn* OwnerPawn = Cast<APawn>(GetAvatarActorFromActorInfo());
-    APlayerController* PC = OwnerPawn ? Cast<APlayerController>(OwnerPawn->GetController()) : nullptr;
-    if (!PC || !MovementConfig) return false;
-
-    FVector  CamLoc;
-    FRotator CamRot;
-    PC->GetPlayerViewPoint(CamLoc, CamRot);
-
-    const FVector TraceEnd = CamLoc + CamRot.Vector() * MovementConfig->GrappleMaxRange;
-
-    FHitResult HitResult;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(GetAvatarActorFromActorInfo());
-
-    if (!GetWorld()->LineTraceSingleByChannel(HitResult, CamLoc, TraceEnd, ECC_WorldStatic, Params))
-        return false;
-
-    OutImpactPoint = HitResult.ImpactPoint;
-    return true;
-}
-
 void USpyGA_GrappleHook::LaunchToTarget(ACharacter* Character, const FVector& TargetLocation) const
 {
     if (!MovementConfig) return;
 
-    const FVector CharLoc   = Character->GetActorLocation();
-    const FVector Direction  = (TargetLocation - CharLoc).GetSafeNormal();
-    const float   HorzDist   = FVector::Dist2D(CharLoc, TargetLocation);
-    const float   Speed      = HorzDist / FMath::Max(MovementConfig->GrappleFlightTime, KINDA_SMALL_NUMBER);
+    const FVector CharLoc  = Character->GetActorLocation();
+    const FVector Direction = (TargetLocation - CharLoc).GetSafeNormal();
+    const float   HorzDist  = FVector::Dist2D(CharLoc, TargetLocation);
+    const float   Speed     = HorzDist / FMath::Max(MovementConfig->GrappleFlightTime, KINDA_SMALL_NUMBER);
 
-    FVector LaunchVelocity   = Direction * Speed;
-    LaunchVelocity.Z        += HorzDist * MovementConfig->GrappleLaunchArcZScale;
+    FVector LaunchVelocity  = Direction * Speed;
+    LaunchVelocity.Z       += HorzDist * MovementConfig->GrappleLaunchArcZScale;
 
     Character->LaunchCharacter(LaunchVelocity, true, true);
 }

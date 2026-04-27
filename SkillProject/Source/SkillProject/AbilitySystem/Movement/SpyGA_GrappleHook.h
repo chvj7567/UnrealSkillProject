@@ -8,6 +8,7 @@
 
 class AGrappleCableActor;
 class USpyMovementConfig;
+class USpyGrappleTargetingComponent;
 
 UCLASS()
 class SKILLPROJECT_API USpyGA_GrappleHook : public USKGameplayAbility
@@ -35,7 +36,6 @@ private:
     UFUNCTION()
     void OnGrappleArrived();
 
-    bool TryLineTrace(FVector& OutImpactPoint) const;
     void LaunchToTarget(ACharacter* Character, const FVector& TargetLocation) const;
 
 protected:
