@@ -38,8 +38,13 @@ void USpyGA_GrappleHook::ActivateAbility(
         ASC->AddLooseGameplayTag(SpyGameplayTags::Character_State_Grapple);
     }
 
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan, TEXT("[GrappleGA] ActivateAbility called"));
+
     if (!HasAuthority(&ActivationInfo))
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[GrappleGA] No authority — client only"));
         return;
+    }
 
     AActor* AvatarActor = GetAvatarActorFromActorInfo();
     USpyGrappleTargetingComponent* TargetComp =
@@ -47,6 +52,7 @@ void USpyGA_GrappleHook::ActivateAbility(
 
     if (!TargetComp)
     {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleGA] TargetComp NOT FOUND"));
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
         return;
     }
@@ -54,9 +60,12 @@ void USpyGA_GrappleHook::ActivateAbility(
     AActor* Target = TargetComp->GetCurrentGrappleTarget();
     if (!Target)
     {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleGA] CurrentGrappleTarget is NULL"));
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
         return;
     }
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+        FString::Printf(TEXT("[GrappleGA] Target=%s"), *Target->GetName()));
 
     ACharacter* Char = Cast<ACharacter>(AvatarActor);
     if (!Char)
