@@ -191,6 +191,20 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                 {
                     if (TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
                         continue;
+
+                    if (!bIsHeal && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
+                    {
+                        FVector DefenderForward = TargetCharacter->GetActorForwardVector();
+                        FVector ToAttacker = (OwnerCharacter->GetActorLocation() - TargetCharacter->GetActorLocation()).GetSafeNormal();
+                        if (FVector::DotProduct(DefenderForward, ToAttacker) > 0.0f)
+                        {
+                            FGameplayEventData ParryPayload;
+                            ParryPayload.Instigator = OwnerCharacter;
+                            ParryPayload.Target = TargetCharacter;
+                            UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetCharacter, SKGameplayTags::Skill_Parry_Hit, ParryPayload);
+                            continue;
+                        }
+                    }
                 }
 
                 bInvalidCharacter = true;
@@ -278,11 +292,9 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
 
             if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
             {
-                if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetCharacter))
-                {
-                    if (TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
-                        continue;
-                }
+                UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetCharacter);
+                if (TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+                    continue;
 
                 FVector TargetVector = TargetCharacter->GetActorLocation() - OwnerCharacter->GetActorLocation();
                 float TargetDegree = FMath::RadiansToDegrees(FMath::Acos(OwnerCharacter->GetActorForwardVector().CosineAngle2D(TargetVector)));
@@ -290,6 +302,20 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                 UE_LOG(LogTemp, Log, TEXT("# [GA_SkillAction] TargetDegree %f"), TargetDegree);
                 if (Degree < TargetDegree)
                     continue;
+
+                if (!bIsHeal && TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
+                {
+                    FVector DefenderForward = TargetCharacter->GetActorForwardVector();
+                    FVector ToAttacker = (OwnerCharacter->GetActorLocation() - TargetCharacter->GetActorLocation()).GetSafeNormal();
+                    if (FVector::DotProduct(DefenderForward, ToAttacker) > 0.0f)
+                    {
+                        FGameplayEventData ParryPayload;
+                        ParryPayload.Instigator = OwnerCharacter;
+                        ParryPayload.Target = TargetCharacter;
+                        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetCharacter, SKGameplayTags::Skill_Parry_Hit, ParryPayload);
+                        continue;
+                    }
+                }
 
                 bInvalidCharacter = true;
 
