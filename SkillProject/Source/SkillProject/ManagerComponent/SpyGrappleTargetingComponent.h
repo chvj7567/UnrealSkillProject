@@ -18,6 +18,7 @@ class SKILLPROJECT_API USpyGrappleTargetingComponent : public UActorComponent
 public:
     USpyGrappleTargetingComponent();
 
+    virtual void BeginPlay() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -28,7 +29,7 @@ public:
     FOnGrappleTargetChanged OnGrappleTargetChanged;
 
 protected:
-    UPROPERTY(EditDefaultsOnly, Category = "Config")
+    UPROPERTY(Transient)
     TObjectPtr<USpyMovementConfig> MovementConfig;
 
 private:

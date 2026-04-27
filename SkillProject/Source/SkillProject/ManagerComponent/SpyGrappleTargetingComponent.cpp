@@ -2,6 +2,8 @@
 
 #include "SpyGrappleTargetingComponent.h"
 #include "Data/SpyMovementConfig.h"
+#include "Data/SpyAssetNames.h"
+#include "Manager/SpyAssetManager.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
@@ -13,6 +15,13 @@ USpyGrappleTargetingComponent::USpyGrappleTargetingComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
     SetIsReplicatedByDefault(true);
+}
+
+void USpyGrappleTargetingComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    MovementConfig = USpyAssetManager::GetAssetByName<USpyMovementConfig>(
+        SpyAssetNames::MovementConfig);
 }
 
 void USpyGrappleTargetingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

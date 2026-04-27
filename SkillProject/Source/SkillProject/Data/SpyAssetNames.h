@@ -7,6 +7,7 @@ namespace SpyAssetNames
 	// DataAsset 등록명
 	inline const FName CharacterAssetData = TEXT("SpyCharacterAssetData");
 	inline const FName AnimAssetData      = TEXT("SpyAnimAssetData");
+	inline const FName MovementConfig     = TEXT("SpyMovementConfig");
 
 	// 클래스 등록명 (GameMode 초기화용)
 	inline const FName DefaultCharacter        = TEXT("SpyCharacter");
