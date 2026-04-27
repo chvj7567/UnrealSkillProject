@@ -3,6 +3,7 @@
 #include "SpyGrappleTargetingComponent.h"
 #include "Data/SpyMovementConfig.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "DrawDebugHelpers.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
@@ -46,7 +47,11 @@ void USpyGrappleTargetingComponent::TickComponent(
 
 AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 {
-    if (!MovementConfig) return nullptr;
+    if (!MovementConfig)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("[GrappleTgt] MovementConfig is NULL"));
+        return nullptr;
+    }
 
     APawn* OwnerPawn = Cast<APawn>(GetOwner());
     APlayerController* PC = OwnerPawn ? Cast<APlayerController>(OwnerPawn->GetController()) : nullptr;
@@ -55,6 +60,10 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
     FVector2D ViewportSize;
     GEngine->GameViewport->GetViewportSize(ViewportSize);
     const FVector2D ViewportCenter = ViewportSize * 0.5f;
+
+    // 탐색 반경 구체
+    DrawDebugSphere(GetWorld(), OwnerPawn->GetActorLocation(),
+        MovementConfig->GrapplePromptRange, 16, FColor::Cyan, false, 0.f, 0, 1.f);
 
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
@@ -74,22 +83,47 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         OutActors
     );
 
+    GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White,
+        FString::Printf(TEXT("[GrappleTgt] Overlap=%d  Center=%s  Radius=%.0f"),
+            OutActors.Num(), *ViewportCenter.ToString(), MovementConfig->GrappleTargetingScreenRadius));
+
     AActor* BestTarget = nullptr;
     float BestDistToCenter = MovementConfig->GrappleTargetingScreenRadius;
 
     for (AActor* Actor : OutActors)
     {
-        if (!Actor || !Actor->Tags.Contains(FName("GrappleAnchor"))) continue;
+        if (!Actor) continue;
+
+        const bool bHasTag = Actor->Tags.Contains(FName("GrappleAnchor"));
 
         FVector2D ScreenPos;
-        if (!PC->ProjectWorldLocationToScreen(Actor->GetActorLocation(), ScreenPos, true)) continue;
+        const bool bOnScreen = PC->ProjectWorldLocationToScreen(Actor->GetActorLocation(), ScreenPos, true);
+        const float DistToCenter = bOnScreen ? FVector2D::Distance(ScreenPos, ViewportCenter) : -1.f;
 
-        const float DistToCenter = FVector2D::Distance(ScreenPos, ViewportCenter);
+        // 월드 디버그 텍스트
+        DrawDebugString(GetWorld(), Actor->GetActorLocation() + FVector(0,0,50),
+            FString::Printf(TEXT("%s\nTag:%d Screen:%d Dist:%.0f"),
+                *Actor->GetName(), bHasTag, bOnScreen, DistToCenter),
+            nullptr, bHasTag ? FColor::Yellow : FColor::Silver, 0.f);
+
+        if (!bHasTag || !bOnScreen) continue;
+
         if (DistToCenter < BestDistToCenter)
         {
             BestDistToCenter = DistToCenter;
             BestTarget = Actor;
         }
+    }
+
+    if (BestTarget)
+    {
+        DrawDebugSphere(GetWorld(), BestTarget->GetActorLocation(), 60.f, 8, FColor::Green, false, 0.f, 0, 3.f);
+        GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
+            FString::Printf(TEXT("[GrappleTgt] BEST=%s (%.0fpx)"), *BestTarget->GetName(), BestDistToCenter));
+    }
+    else
+    {
+        GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Orange, TEXT("[GrappleTgt] No target"));
     }
 
     return BestTarget;
