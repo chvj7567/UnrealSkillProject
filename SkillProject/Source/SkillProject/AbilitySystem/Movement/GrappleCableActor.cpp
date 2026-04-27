@@ -21,6 +21,9 @@ AGrappleCableActor::AGrappleCableActor()
     CableComponent->NumSegments  = 8;
     CableComponent->CableLength  = 0.f;
     CableComponent->CableWidth   = 2.f;
+    CableComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    SetReplicatingMovement(false);
 }
 
 void AGrappleCableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

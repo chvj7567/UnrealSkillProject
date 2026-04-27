@@ -3,6 +3,7 @@
 #include "SpyGA_GrappleHook.h"
 #include "GrappleCableActor.h"
 #include "SpyAbilityTask_GrappleTick.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Data/SpyMovementConfig.h"
 #include "Util/SpyGameplayTags.h"
 #include "GameFramework/Character.h"
@@ -59,15 +60,22 @@ void USpyGA_GrappleHook::ActivateAbility(
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = Char;
     CableActor = GetWorld()->SpawnActor<AGrappleCableActor>(SpawnParams);
-    if (CableActor)
+    if (!CableActor)
     {
-        CableActor->InitCable(Char, ImpactPoint, HandBoneName);
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        return;
     }
+    CableActor->InitCable(Char, ImpactPoint, HandBoneName);
 
     const float Threshold = MovementConfig ? MovementConfig->GrappleArrivalThreshold : 150.f;
     USpyAbilityTask_GrappleTick* Task = USpyAbilityTask_GrappleTick::GrappleTick(this, CableActor, Threshold);
     Task->OnArrived.AddDynamic(this, &USpyGA_GrappleHook::OnGrappleArrived);
     Task->ReadyForActivation();
+
+    const float Timeout = MovementConfig ? MovementConfig->GrappleFlightTime * 2.f : 2.f;
+    UAbilityTask_WaitDelay* TimeoutTask = UAbilityTask_WaitDelay::WaitDelay(this, Timeout);
+    TimeoutTask->OnFinish.AddDynamic(this, &USpyGA_GrappleHook::OnGrappleArrived);
+    TimeoutTask->ReadyForActivation();
 }
 
 void USpyGA_GrappleHook::EndAbility(
