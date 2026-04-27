@@ -25,6 +25,7 @@ namespace SKGameplayTags
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Death);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Skill);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_SuperArmor);
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Parry);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Character_State_Combo);
 
 	//# 액션 스킬
@@ -50,6 +51,9 @@ namespace SKGameplayTags
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Hit_Right);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Hit_Front);
 	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Hit_Back);
+
+	//# 패링
+	SKGAS_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Parry_Hit);
 
 	SKGAS_API FGameplayTag GetSkillActionTag(const UAbilitySystemComponent* ASC);
 	SKGAS_API FGameplayTag GetEffectSkillActionTag(const UAbilitySystemComponent* ASC);

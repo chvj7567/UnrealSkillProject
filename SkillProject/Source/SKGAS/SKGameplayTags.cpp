@@ -15,6 +15,7 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Death, "Character.State.Death");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Skill, "Character.State.Skill");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_SuperArmor, "Character.State.SuperArmor");
+	UE_DEFINE_GAMEPLAY_TAG(Character_State_Parry, "Character.State.Parry");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Combo, "Character.State.Combo");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action, "Skill.Action");
@@ -35,6 +36,7 @@ namespace SKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit_Right, "Skill.Hit.Right");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit_Front, "Skill.Hit.Front");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit_Back, "Skill.Hit.Back");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Parry_Hit, "Skill.Parry.Hit");
 
 	FGameplayTag SKGameplayTags::GetSkillActionTag(const UAbilitySystemComponent* ASC)
 	{
