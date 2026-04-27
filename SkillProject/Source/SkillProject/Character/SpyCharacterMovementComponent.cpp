@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/SpyCharacterMovementComponent.h"
@@ -96,14 +96,14 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 	if (CharacterOwner == nullptr || UpdatedComponent == nullptr)
 		return;
 
-	//# ��Ÿ�� ���ǵ� ����
+	//# 벽타기 스피드 설정
 	Velocity = GetWallClimbSpeed();
 
-	//# ��Ÿ�� ���� �� ��ġ ���
+	//# 벽타기 진행 중 위치 계산
 	FHitResult Hit;
 	SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentRotation(), true, Hit);
 
-	//# �� ���� ȣ���ϵ���
+	//# 한 번만 호출하도록
 	if (CanHangUp() && bHangUp == false)
 	{
 		bHangUp = true;
@@ -234,13 +234,13 @@ FVector USpyCharacterMovementComponent::CalculateBoneVectorOffset(FName BoneName
 	FVector WallPoint = ClimbWallData.HitVector;
 	FVector WallNormal = ClimbWallData.NormalVector.GetSafeNormal();
 
-	//# �� �������� �Ÿ� ���
+	//# 벽 평면까지의 거리 계산
 	float DistanceFromPlane = FVector::DotProduct(AnimBoneLocation - WallPoint, WallNormal);
 
-	//# ��ǥ ������ (�� ���� �������� �̵�)
+	//# 목표 오프셋 (벽 법선 기준으로 이동)
 	FVector TargetWorldOffset = (-WallNormal * (DistanceFromPlane - Offset)) * IKWeight;
 
-	//# ���� -> �޽� �������� ��ǥ ��ȯ
+	//# 외적을 통해 벽의 위쪽 오른쪽 벡터 Get
 	FVector TargetMeshOffset = Mesh->GetComponentTransform().InverseTransformVectorNoScale(TargetWorldOffset);
 
 	CurrentOffsetVar = FMath::VInterpTo(CurrentOffsetVar, TargetMeshOffset, DeltaTime, InterpSpeed);
@@ -259,7 +259,7 @@ FVector USpyCharacterMovementComponent::GetWallClimbSpeed()
 	const FVector WallNormal = ClimbWallData.NormalVector;
 	const FVector UpVector = FVector::UpVector;
 
-	//# ������ ���� ���� ���� ������ ���� Get
+	//# 외적을 통해 벽의 위쪽 오른쪽 벡터 Get
 	FVector WallRight = FVector::CrossProduct(UpVector, WallNormal).GetSafeNormal();
 	FVector WallUp = FVector::CrossProduct(WallNormal, WallRight).GetSafeNormal();
 

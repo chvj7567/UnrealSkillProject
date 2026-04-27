@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "ManagerComponent/SpySpawnBotManagerComponent.h"
@@ -29,7 +29,7 @@ void USpySpawnBotManagerComponent::BeginPlay()
 
 void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRotator)
 {
-	//# ���������� ����
+	//# 서버에서만 실행
 	if (GetOwnerRole() < ROLE_Authority)
 		return;
 
@@ -43,12 +43,12 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 	SpawnInfo.OverrideLevel = GetOwner()->GetLevel();
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
-	//# ��Ʈ�ѷ� ���� ����
+	//# 컨트롤러 먼저 생성
 	if (AAIController* NewController = World->SpawnActor<AAIController>(BotControllerClass, InLocation, InRotator, SpawnInfo))
 	{
 		if (ASpyGameMode* GameMode = Cast<ASpyGameMode>(World->GetAuthGameMode()))
 		{
-			//# PlayerState ����
+			//# PlayerState 설정
 			if (ASpyPlayerState* PS = NewController->GetPlayerState<ASpyPlayerState>())
 			{
 				PS->SetPlayerName(CreateBotName(PS->GetPlayerId()));
@@ -59,13 +59,13 @@ void USpySpawnBotManagerComponent::SpawnOneBot(FVector InLocation, FRotator InRo
 				SpyAIController->SetBehaviorTree(BehaviorTreeAsset);
 			}
 
-			//# ���� �⺻���� ��Ʈ�ѷ� �ʱ�ȭ ���μ���
+			//# 폰 생성 및 빙의
 			GameMode->GenericPlayerInitialization(NewController);
 
-			//# Tranform ����
+			//# Tranform 지정
 			FTransform SpawnTransform(InRotator, InLocation, FVector::OneVector);
 
-			//# �� ���� �� ����
+			//# 폰 생성 및 빙의
 			GameMode->RestartPlayerAtTransform(NewController, SpawnTransform);
 		}
 
@@ -83,13 +83,13 @@ void USpySpawnBotManagerComponent::RemoveOneBot()
 
 		if (BotToRemove)
 		{
-			//# ���� ���� �� �ı�
+			//# 컨트롤러 파괴 (이때 로그아웃 처리됨)
 			if (APawn* ControlledPawn = BotToRemove->GetPawn())
 			{
 				ControlledPawn->Destroy();
 			}
 
-			//# ��Ʈ�ѷ� �ı� (�̶� �α׾ƿ� ó����)
+			//# 컨트롤러 파괴 (이때 로그아웃 처리됨)
 			BotToRemove->Destroy();
 		}
 

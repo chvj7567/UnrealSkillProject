@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Input/SpyInputComponent.h"
@@ -82,7 +82,7 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 
 				if (IMC)
 				{
-					//# IMC ���� �� ������ �ִٸ� �ش� Ű�� �״�� �ٲ� IMC �Է¿� ���
+					//# IMC 변경 시 눌려져 있다면 해당 키를 그대로 바뀐 IMC 입력에 사용
 					FModifyContextOptions Options = {};
 					Options.bIgnoreAllPressedKeysUntilRelease = false;
 
@@ -184,11 +184,11 @@ void USpyInputComponent::Move(const FInputActionValue& InValue)
 		{
 			if (ASpyPlayerState* SpyPlayerState = SpyCharacter->GetPlayerState<ASpyPlayerState>())
 			{
-				//# Death Ȯ��
+				//# Death 확인
 				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
 					return;
 
-				//# Move Lock Ȯ��
+				//# Move Lock 확인
 				if (SpyPlayerState->GetAbilitySystemComponent()->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Move))
 					return;
 
@@ -256,7 +256,7 @@ void USpyInputComponent::OnRegister()
 {
 	Super::OnRegister();
 
-	//# ���� �ӽ� ���
+	//# 상태 변화 알림 등록
 	RegisterInitStateFeature();
 }
 
@@ -264,10 +264,10 @@ void USpyInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//# ���� ��ȭ �˸� ���
+		//# 로컬 플레이어 혹은 서버인지 확인
 	BindOnActorInitStateChanged(USpyPawnExtensionComponent::NAME_ActorFeatureName, FGameplayTag(), false);
 
-	//# InitState_Spawned ���·� ��ȯ �õ�
+	//# 상태 머신 해제
 	TryToChangeInitState(SpyGameplayTags::InitState_Spawned);
 
 	CheckDefaultInitialization();
@@ -275,7 +275,7 @@ void USpyInputComponent::BeginPlay()
 
 void USpyInputComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//# ���� �ӽ� ����
+	//# 상태 머신 등록
 	UnregisterInitStateFeature();
 
 	Super::EndPlay(EndPlayReason);
@@ -297,7 +297,7 @@ bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 		if (GetPlayerState<ASpyPlayerState>() == nullptr)
 			return false;
 
-		//# ���� �÷��̾� Ȥ�� �������� Ȯ��
+		//# 로컬 플레이어 혹은 서버인지 확인
 		if (Pawn->GetLocalRole() != ROLE_SimulatedProxy)
 		{
 			AController* Controller = GetController<AController>();
@@ -313,7 +313,7 @@ bool USpyInputComponent::CanChangeInitState(UGameFrameworkComponentManager* Mana
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 		const bool bIsBot = Pawn->IsBotControlled();
 
-		//# ���� �ƴ� ���� �÷��̾����� Ȯ��
+		//# 로컬 플레이어 혹은 서버인지 확인
 		if (bIsLocallyControlled && bIsBot == false)
 		{
 			ASpyPlayerController* SpyPC = GetController<ASpyPlayerController>();

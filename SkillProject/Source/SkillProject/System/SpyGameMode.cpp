@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SpyGameMode.h"
 
@@ -19,22 +19,22 @@ ASpyGameMode::ASpyGameMode()
 
 void ASpyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
-	//# �� �ε��� ���� ���� ���� �ʱ�ȭ �ܰ�
+	//# Lyra처럼 한 프레임 대기하여 에셋 매니저와 시스템이 완전히 안착된 후 실행
 	Super::InitGame(MapName, Options, ErrorMessage);
 
-	//# Lyraó�� �� ������ ����Ͽ� ���� �Ŵ����� �ý����� ������ ������ �� ����
+	//# Lyra처럼 한 프레임 대기하여 에셋 매니저와 시스템이 완전히 안착된 후 실행
 	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::HandleGameStartInitialization);
 }
 
 void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 {
-	//# PlayerController �� PlayerState �ʱ�ȭ �� �ܰ�
+	//# PlayerController 및 PlayerState 초기화 후 단계
 	Super::GenericPlayerInitialization(NewPlayer);
 
 	USpyAssetManager& AssetManager = USpyAssetManager::Get();
 	if (USpyCharacterAssetData* CharacterAssetData = USpyAssetManager::GetAssetByName<USpyCharacterAssetData>(SpyAssetNames::CharacterAssetData))
 	{
-		//# PS�� ������ Set
+		//# PS에 데이터 Set
 		if (ASpyPlayerState* PS = NewPlayer->GetPlayerState<ASpyPlayerState>())
 		{
 			PS->SetCharacterAssetData(CharacterAssetData, NewPlayer->IsPlayerController());
@@ -48,24 +48,24 @@ APawn* ASpyGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* New
 	SpawnInfo.Instigator = GetInstigator();
 	SpawnInfo.ObjectFlags |= RF_Transient;
 
-	//# ������ ������ ������ ���� �ܰ�� ��� ����
+	//# 맵 로딩이 끝난 이후 게임 초기화 단계
 	SpawnInfo.bDeferConstruction = true;
 
 	if (UClass* PawnClass = GetDefaultPawnClassForController(NewPlayer))
 	{
-		//# ���� �� ���� �ܰ�, Lyra ������ Super ȣ������ �ʰ� ���� ����
+		//# 실제 폰 생성 단계, Lyra 식으로 Super 호출하지 않고 직접 생성
 		if (APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, SpawnTransform, SpawnInfo))
 		{
 			if (USpyPawnExtensionComponent* PawnExtensionComponent = USpyPawnExtensionComponent::FindPawnExtensionComponent(SpawnedPawn))
 			{
-				//# PawnExtensionComponent�� ������ Set
+				//# PawnExtensionComponent에 데이터 Set
 				if (const USpyCharacterAssetData* CharacterAssetData = GetCharacterDataForController(NewPlayer))
 				{
 					PawnExtensionComponent->SetCharacterAssetData(CharacterAssetData);
 				}
 			}
 
-			//# ������ ���� �ܰ� ����
+			//# 생성자 이후 단계 실행
 			SpawnedPawn->FinishSpawning(SpawnTransform);
 
 			return SpawnedPawn;

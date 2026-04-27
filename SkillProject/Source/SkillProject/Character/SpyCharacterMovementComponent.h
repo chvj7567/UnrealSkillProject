@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -54,7 +54,7 @@ protected:
 	FClimbWallData ClimbWallData;
 
 public:
-	//# ���� �������� IK ���� ������ ���� (���� ������ ���� Ÿ��)
+	//# 이전 프레임의 IK 도달 지점을 저장 (떨림 방지용 보간 타겟)
 	FVector CurrentOffsetHL;
 	FVector CurrentOffsetHR;
 	FVector CurrentOffsetFL;
