@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Attribute/SKAttributeSet.h"
@@ -37,7 +37,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 {
     Super::PostGameplayEffectExecute(Data);
 
-    //# Health�� ����Ǿ����� Ȯ��
+    //# Health가 변경되었는지 확인
     if (Data.EvaluatedData.Attribute == GetHealthAttribute())
     {
         FGameplayEffectContextHandle ContextHandle = Data.EffectSpec.GetContext();
@@ -62,13 +62,13 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                 );
             }
 
-            //# ũ��Ƽ�� ���� Ȯ��
+            //# 크리티컬 여부 확인
             if (CustomContext->IsCritical())
             {
                 //# TODO
             }
 
-            //# ��� Ȯ��
+            //# 사망 확인
             if (GetHealth() <= 0.0f)
             {
                 FGameplayEventData Payload;
@@ -82,7 +82,7 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
             }
             else
             {
-                //# �ǰ� ���� �±�
+                //# 피격 방향 태그
                 FGameplayTag HitTag = CustomContext->GetHitDirectionTag();
                 if (HitTag.IsValid())
                 {

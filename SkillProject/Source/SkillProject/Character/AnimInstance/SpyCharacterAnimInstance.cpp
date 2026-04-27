@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/AnimInstance/SpyCharacterAnimInstance.h"
@@ -67,12 +67,12 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
         FRotator Rot;
         if (Player->IsLocallyControlled())
         {
-            //# ���� �÷��̾� -> ��Ʈ�ѷ� ����
+            //# 로컬 플레이어 -> 컨트롤러 기준
             Rot = Player->GetControlRotation();
         }
         else
         {
-            //# ����/���� -> ĳ���� ����
+            //# 서버/원격 -> 캐릭터 기준
             Rot = Player->GetBaseAimRotation();
         }
 

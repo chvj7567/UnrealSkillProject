@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/SpyPawnExtensionComponent.h"
@@ -26,7 +26,7 @@ void USpyPawnExtensionComponent::OnRegister()
 {
 	Super::OnRegister();
 
-	//# ���� �ӽ� ���
+	//# 상태 머신 등록
 	RegisterInitStateFeature();
 }
 
@@ -34,10 +34,10 @@ void USpyPawnExtensionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//# ���� ��ȭ �˸� ���
+	//# 상태 변화 알림 등록
 	BindOnActorInitStateChanged(NAME_None, FGameplayTag(), false);
 	
-	//# InitState_Spawned ���·� ��ȯ �õ�
+	//# InitState_Spawned 상태로 변환 시도
 	TryToChangeInitState(SpyGameplayTags::InitState_Spawned);
 
 	CheckDefaultInitialization();
@@ -64,7 +64,7 @@ void USpyPawnExtensionComponent::BeginPlay()
 
 void USpyPawnExtensionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	//# ���� �ӽ� ����
+	//# 상태 머신 등록
 	UnregisterInitStateFeature();
 
 	ExtensionHandle.Reset();
@@ -85,40 +85,40 @@ bool USpyPawnExtensionComponent::CanChangeInitState(UGameFrameworkComponentManag
 
 	APawn* Pawn = GetPawn<APawn>();
 
-	//# 1��° �ܰ�
+	//# 1번째 단계
 	if (CurrentState.IsValid() == false && DesiredState == SpyGameplayTags::InitState_Spawned)
 	{
-		//# ���� �����Ǿ����� Ȯ��
+		//# 폰이 스폰되었는지 확인
 		if (Pawn)
 			return true;
 	}
-	//# 2��° �ܰ�
+		//# 매니저에 등록된 모든 데이터의 초기화가 완료되었는지 확인
 	else if (CurrentState == SpyGameplayTags::InitState_Spawned && DesiredState == SpyGameplayTags::InitState_DataAvailable)
 	{
-		//# �����Ͱ� ��ȿ���� Ȯ��
+	//# 마지막 단계
 		if (CharacterAssetData == nullptr)
 			return false;
 
 		const bool bHasAuthority = Pawn->HasAuthority();
 		const bool bIsLocallyControlled = Pawn->IsLocallyControlled();
 
-		//# �ڱ� ��Ʈ�ѷ� Ȥ�� ������ �ִ� ��Ʈ�ѷ��� Ȯ��
+		//# 자기 컨트롤러 혹은 서버에 있는 컨트롤러만 확인
 		if (bHasAuthority || bIsLocallyControlled)
 		{
-			//# ��Ʈ�ѷ� ���ǰ� �Ǿ����� Ȯ��
+			//# 컨트롤러 빙의가 되었는지 확인
 			if (GetController<AController>() == nullptr)
 				return false;
 		}
 
 		return true;
 	}
-	//# 3��° �ܰ�
+	//# 3번째 단계
 	else if (CurrentState == SpyGameplayTags::InitState_DataAvailable && DesiredState == SpyGameplayTags::InitState_DataInitialized)
 	{
-		//# �Ŵ����� ��ϵ� ��� �������� �ʱ�ȭ�� �Ϸ�Ǿ����� Ȯ��
+		//# 자기 컨트롤러 혹은 서버에 있는 컨트롤러만 확인
 		return Manager->HaveAllFeaturesReachedInitState(Pawn, SpyGameplayTags::InitState_DataAvailable);
 	}
-	//# ������ �ܰ�
+	//# 마지막 단계
 	else if (CurrentState == SpyGameplayTags::InitState_DataInitialized && DesiredState == SpyGameplayTags::InitState_GameplayReady)
 	{
 		return true;
@@ -138,24 +138,24 @@ void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMa
 		if (Pawn == nullptr || CharacterAssetData == nullptr)
 			return;
 
-		//# ������ ������ ��ϵ� Get
+			//# 에디터 디테일 창에 추가
 		TArray<TSubclassOf<UActorComponent>> ComponentClasses = CharacterAssetData->GetAllComponentClasses(SpyGameplayTags::Character_Class_Normal);
 		for (const TSubclassOf<UActorComponent> ComponentClass : ComponentClasses)
 		{
 			if (ComponentClass == nullptr)
 				continue;
 
-			//# �ߺ� ������Ʈ ����
+			////# 런타임 컴포넌트 등록
 			if (Pawn->GetComponentByClass(ComponentClass) != nullptr)
 				continue;
 			
-			//# ������Ʈ ����
+			//# 컴포넌트 부착
 			UActorComponent* NewComponent = NewObject<UActorComponent>(Pawn, ComponentClass);
 
-			//# ������ ������ â�� �߰�
+			//# 컨트롤러 빙의가 되었는지 확인
 			Pawn->AddInstanceComponent(NewComponent);
 
-			//# ��Ÿ�� ������Ʈ ���
+	//# 다른 피쳐들의 상태가 변했을 때
 			NewComponent->RegisterComponent();
 
 			if (NewComponent->HasBeenInitialized() == false)
@@ -170,7 +170,7 @@ void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMa
 
 void USpyPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateChangedParams& Params)
 {
-	//# �ٸ� ���ĵ��� ���°� ������ ��
+	//# 다른 피쳐들의 상태가 변했을 때
 	if (Params.FeatureName != NAME_ActorFeatureName)
 	{
 		CheckDefaultInitialization();
@@ -179,10 +179,10 @@ void USpyPawnExtensionComponent::OnActorInitStateChanged(const FActorInitStateCh
 
 void USpyPawnExtensionComponent::CheckDefaultInitialization()
 {
-	//# �ٸ� ���ĵ��� CheckDefaultInitialization ���� ����
+	//# 다른 피쳐들의 CheckDefaultInitialization 강제 실행
 	CheckDefaultInitializationForImplementers();
 
-	//# �ܰ� ������
+	//# 서버에서만 세팅
 	static const TArray<FGameplayTag> StateChain =
 	{
 		SpyGameplayTags::InitState_Spawned,
@@ -191,7 +191,7 @@ void USpyPawnExtensionComponent::CheckDefaultInitialization()
 		SpyGameplayTags::InitState_GameplayReady
 	};
 
-	//# ���� �ܰ� ����
+	//# 이미 세팅됨
 	ContinueInitStateChain(StateChain);
 }
 
@@ -201,11 +201,11 @@ void USpyPawnExtensionComponent::SetCharacterAssetData(const USpyCharacterAssetD
 
 	APawn* Pawn = GetPawnChecked<APawn>();
 
-	//# ���������� ����
+	//# 마지막 단계
 	if (Pawn->GetLocalRole() != ROLE_Authority)
 		return;
 
-	//# �̹� ���õ�
+	//# 마지막 단계
 	if (CharacterAssetData)
 		return;
 
@@ -225,11 +225,11 @@ void USpyPawnExtensionComponent::InitializeAbilitySystem(USpyAbilitySystemCompon
 	check(InASC);
 	check(InOwnerActor);
 
-	//# ASC�� �ٲ��� ����
+	//# ASC가 바뀌지 않음
 	if (AbilitySystemComponent == InASC)
 		return;
 
-	//# ASC�� �ٲ���ٸ� ���� ASC ����
+	//# ASC가 바뀌었다면 기존 ASC 종료
 	if (AbilitySystemComponent)
 	{
 		UninitializeAbilitySystem();
@@ -238,7 +238,7 @@ void USpyPawnExtensionComponent::InitializeAbilitySystem(USpyAbilitySystemCompon
 	APawn* Pawn = GetPawnChecked<APawn>();
 	AActor* ExistingAvatar = InASC->GetAvatarActor();
 
-	//# �ٸ� �ƹ�Ÿ�� ASC�� �����ϰ� ������ ���� ���� ��Ŵ
+	//# 권한이 있는 경우만(아바타가 나인 경우)
 	if ((ExistingAvatar != nullptr) && (ExistingAvatar != Pawn))
 	{
 		ensure(!ExistingAvatar->HasAuthority());
@@ -261,10 +261,10 @@ void USpyPawnExtensionComponent::UninitializeAbilitySystem()
 	if (AbilitySystemComponent == nullptr)
 		return;
 
-	//# ������ �ִ� ��츸(�ƹ�Ÿ�� ���� ���)
+	//# 권한이 있는 경우만(아바타가 나인 경우)
 	if (AbilitySystemComponent->GetAvatarActor() == GetOwner())
 	{
-		//# ��� ASC ���� ���
+		//# 모든 ASC 관련 취소
 		AbilitySystemComponent->CancelAbilities();
 		AbilitySystemComponent->ClearAbilityInput();
 		AbilitySystemComponent->RemoveAllGameplayCues();
@@ -286,17 +286,17 @@ void USpyPawnExtensionComponent::UninitializeAbilitySystem()
 
 void USpyPawnExtensionComponent::HandleControllerChanged()
 {
-	//# ASC �ƹ�Ÿ�� ������ Ȯ��
+	//# ASC 아바타가 나인지 확인
 	if (AbilitySystemComponent && (AbilitySystemComponent->GetAvatarActor() == GetPawnChecked<APawn>()))
 	{
 		if (AbilitySystemComponent->GetOwnerActor() == nullptr)
 		{
-			//# Owner�� ���ٸ� ASC ����
+			//# Owner가 없다면 ASC 해제
 			UninitializeAbilitySystem();
 		}
 		else
 		{
-			//# ��Ʈ�ѷ��� �ٲ������ ����
+			//# 중복 컴포넌트 방지
 			AbilitySystemComponent->RefreshAbilityActorInfo();
 		}
 	}

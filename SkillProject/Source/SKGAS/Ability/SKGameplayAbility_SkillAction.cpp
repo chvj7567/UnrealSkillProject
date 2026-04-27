@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SKGameplayAbility_SkillAction.h"
@@ -42,7 +42,7 @@ void USKGameplayAbility_SkillAction::OnWaitGameplayEvent(FGameplayEventData Payl
     if (CustomContext == nullptr)
         return;
 
-    //# Context�� ���� �߰�
+    //# Context에 정보 추가
     CustomContext->AddInstigator(CurrentActorInfo->OwnerActor.Get(), CurrentActorInfo->AvatarActor.Get());
     CustomContext->AddSourceObject(GetSourceObject(CurrentSpecHandle, CurrentActorInfo));
     CustomContext->AddActors({ TWeakObjectPtr<AActor>(TargetActor) });
@@ -80,7 +80,7 @@ void USKGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecH
             WaitEffectSkillTask->ReadyForActivation();
         }
 
-        //# �������� Hit �˻�
+        //# 서버에서 Hit 검사
         ScheduleServerDetect();
     }
 
@@ -171,10 +171,10 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
         OutHits, CurrentStart, CurrentEnd,
         FQuat::Identity, ECC_Pawn, SweepShape, QueryParams);
 
-    //# ����׿�
+    //# 디버그용
     bool bInvalidCharacter = false;
 
-    //# �ߺ� ���� üũ
+    //# 중복 액터 체크
     TArray<AActor*> CheckActors;
     for (const FHitResult& Overlap : OutHits)
     {
@@ -212,7 +212,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                    //# ���� ���� Hit �±�
+                    //# 랜덤 방향 Hit 태그
                     int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
                     FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
                     Payload.TargetTags.AddTag(RandomHitTag);
@@ -262,10 +262,10 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
         QueryParams
     );
 
-    //# ����׿�
+    //# 디버그용
     bool bInvalidCharacter = false;
 
-    //# �ߺ� ���� üũ
+    //# 중복 액터 체크
     TArray<AActor*> CheckActors;
     for (const FOverlapResult& Overlap : OutHits)
     {
@@ -310,7 +310,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
                     HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
 
-                    //# ���� ���� Hit �±�
+                    //# 랜덤 방향 Hit 태그
                     int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
                     FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
                     Payload.TargetTags.AddTag(RandomHitTag);

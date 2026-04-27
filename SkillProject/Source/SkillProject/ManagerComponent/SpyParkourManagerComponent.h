@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -298,19 +298,19 @@ public:
 
 	void SetHangUpMotionWarpingData(const FVector& HitVector);
 
-public: //# ���� ���
+public: //# 공용 사용
 	UPROPERTY(ReplicatedUsing = OnRep_FreeMoveMode)
 	bool bFreeMoveMode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FWallData WallData;
 
-public: //# ��������Ʈ
+public: //# 델리게이트
 	FSyncMotionWarpingDataDelegate OnVaultMotionWarpingData;
 	FSyncClilmbDataDelegate OnClimbData;
 	FSyncMotionWarpingDataDelegate OnHangUpMotionWarpingData;
 
-protected: //# �� �ѱ�
+protected: //# 벽 넘기
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVaultData VaultData;
 
@@ -319,7 +319,7 @@ protected: //# �� �ѱ�
 	UPROPERTY(ReplicatedUsing = OnRep_VaultMotionWarpingData)
 	FMotionWarpingData VaultMotionWarpingData;
 
-protected: //# �� Ÿ��
+protected: //# 벽 넘기
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FClimbData ClimbData;
 

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SpyGameplayAbility_SkillAction.h"
@@ -51,7 +51,7 @@ void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHan
     if (OwnerPS == nullptr || OwnerASC == nullptr)
         return;
 
-    //# �޺� ���� �±� �ִ��� Ȯ��
+    //# 콤보 가능 태그 있는지 확인
     if (OwnerASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Combo))
     {
         FGameplayTag MyTag = AbilityTags.GetByIndex(0);

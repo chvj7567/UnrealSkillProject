@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BTTask_MoveToTarget.h"
@@ -29,21 +29,21 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
     Target = Cast<ACharacter>(BlackBoardComp->GetValueAsObject(Key));
 
-    //# ���� ������ �� �ִ� �������� Ȯ��
+    //# 내가 움직일 수 있는 상태인지 확인
     if (CanMove(AIController) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    //# Ÿ���� ������ �� �ִ��� Ȯ��
+    //# 타겟을 공격할 수 있는지 확인
     if (CanTargetAttack(Target) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    //# Ÿ���� ���� �ٶ�
+    //# 타겟을 향해 바라봄
     FVector Direction = Target->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
     Direction.Z = 0.f;
 
@@ -51,7 +51,7 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     AIController->SetControlRotation(TargetRot);
     AIController->GetPawn()->SetActorRotation(TargetRot);
 
-    //# Ÿ�ٰ��� �Ÿ� Ȯ��
+    //# 타겟을 향해 바라봄
     float Distance = FVector::Dist(AIController->GetPawn()->GetActorLocation(), Target->GetActorLocation());
     if (Distance <= StoppingDistance)
     {
