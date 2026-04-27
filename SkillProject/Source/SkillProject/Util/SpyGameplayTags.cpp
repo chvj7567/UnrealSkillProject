@@ -37,6 +37,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_8, "Input.Ability.Skill.8");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_9, "Input.Ability.Skill.9");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_10, "Input.Ability.Skill.10");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_11, "Input.Ability.Skill.11");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Action_A, "Skill.Action.A");
 	UE_DEFINE_GAMEPLAY_TAG(Effect_Skill_Action_A, "Effect.Skill.Action.A");
