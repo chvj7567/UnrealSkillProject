@@ -21,6 +21,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Targeting, "Character.State.Targeting");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Normal, "Character.State.Movement.Normal");
 	UE_DEFINE_GAMEPLAY_TAG(Character_State_Movement_Climb, "Character.State.Movement.Climb");
+	UE_DEFINE_GAMEPLAY_TAG(Character_State_Grapple, "Character.State.Grapple");
 
 	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Move, "Input.Native.Move");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Look, "Input.Native.Look");
@@ -71,6 +72,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Climb, "Skill.Move.Climb");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_HangUp, "Skill.Move.HangUp");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_Jump, "Skill.Move.Jump");
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Move_GrappleHook, "Skill.Move.GrappleHook");
 
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Death, "Skill.Util.Death");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Util_Combo1, "Skill.Util.Combo1");
