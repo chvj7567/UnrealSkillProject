@@ -202,6 +202,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                             ParryPayload.Instigator = OwnerCharacter;
                             ParryPayload.Target = TargetCharacter;
                             UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetCharacter, SKGameplayTags::Skill_Parry_Hit, ParryPayload);
+                            bInvalidCharacter = true;
                             continue;
                         }
                     }
@@ -313,6 +314,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                         ParryPayload.Instigator = OwnerCharacter;
                         ParryPayload.Target = TargetCharacter;
                         UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetCharacter, SKGameplayTags::Skill_Parry_Hit, ParryPayload);
+                        bInvalidCharacter = true;
                         continue;
                     }
                 }
