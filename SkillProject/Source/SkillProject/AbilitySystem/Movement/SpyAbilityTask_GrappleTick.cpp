@@ -39,7 +39,7 @@ void USpyAbilityTask_GrappleTick::TickTask(float DeltaTime)
         return;
     }
 
-    const float Distance = FVector::Dist(Avatar->GetActorLocation(), CableActor->GetTargetLocation());
+    const float Distance = FVector::Dist(Avatar->GetActorLocation(), CableActor->GetGrappleTargetLocation());
     if (Distance <= ArrivalThreshold)
     {
         OnArrived.Broadcast();

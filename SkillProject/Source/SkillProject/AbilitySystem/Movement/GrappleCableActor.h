@@ -22,7 +22,7 @@ public:
 
     void InitCable(ACharacter* InOwnerCharacter, const FVector& InTargetLocation, const FName& InHandBoneName);
 
-    FORCEINLINE FVector GetTargetLocation() const { return TargetLocation; }
+    FORCEINLINE FVector GetGrappleTargetLocation() const { return TargetLocation; }
 
 private:
     void UpdateCableTransform();
