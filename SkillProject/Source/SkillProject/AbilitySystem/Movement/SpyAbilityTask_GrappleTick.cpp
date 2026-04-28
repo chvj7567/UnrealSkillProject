@@ -59,20 +59,19 @@ void USpyAbilityTask_GrappleTick::TickTask(float DeltaTime)
             EndTask();
             return;
         }
-
-        // 회전: 서버에서만, CMC 네트워크 스무딩 우회
-        const FVector HorizDir = FVector(ToTarget.X, ToTarget.Y, 0.f).GetSafeNormal();
-        if (!HorizDir.IsNearlyZero())
-        {
-            const FRotator Current    = Character->GetActorRotation();
-            const FRotator DesiredYaw = FRotator(Current.Pitch, HorizDir.Rotation().Yaw, Current.Roll);
-            Character->SetActorRotation(
-                FMath::RInterpTo(Current, DesiredYaw, DeltaTime, 15.f),
-                ETeleportType::TeleportPhysics);
-        }
     }
 
-    // 클라이언트·서버 모두: CMC LocalPredicted 이동 예측
+    // 클라이언트·서버 모두: CMC LocalPredicted 예측 이동 + 회전
+    const FVector HorizDir = FVector(ToTarget.X, ToTarget.Y, 0.f).GetSafeNormal();
+    if (!HorizDir.IsNearlyZero())
+    {
+        const FRotator Current    = Character->GetActorRotation();
+        const FRotator DesiredYaw = FRotator(Current.Pitch, HorizDir.Rotation().Yaw, Current.Roll);
+        Character->SetActorRotation(
+            FMath::RInterpTo(Current, DesiredYaw, DeltaTime, 15.f),
+            ETeleportType::TeleportPhysics);
+    }
+
     Character->LaunchCharacter(ToTarget * PullSpeed, true, true);
 }
 
