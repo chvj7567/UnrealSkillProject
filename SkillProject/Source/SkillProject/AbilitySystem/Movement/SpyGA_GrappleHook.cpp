@@ -12,6 +12,26 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_GrappleHook)
 
+bool USpyGA_GrappleHook::CanActivateAbility(
+    const FGameplayAbilitySpecHandle Handle,
+    const FGameplayAbilityActorInfo* ActorInfo,
+    const FGameplayTagContainer* SourceTags,
+    const FGameplayTagContainer* TargetTags,
+    FGameplayTagContainer* OptionalRelevantTags) const
+{
+    if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+        return false;
+
+    APawn* Pawn = Cast<APawn>(ActorInfo->AvatarActor.Get());
+    if (Pawn && Pawn->IsLocallyControlled())
+    {
+        USpyGrappleTargetingComponent* TargetComp =
+            Pawn->FindComponentByClass<USpyGrappleTargetingComponent>();
+        return TargetComp && TargetComp->GetLocalCachedTarget() != nullptr;
+    }
+    return true;
+}
+
 USpyGA_GrappleHook::USpyGA_GrappleHook()
 {
     InstancingPolicy   = EGameplayAbilityInstancingPolicy::InstancedPerActor;
@@ -38,64 +58,102 @@ void USpyGA_GrappleHook::ActivateAbility(
         ASC->AddLooseGameplayTag(SpyGameplayTags::Character_State_Grapple);
     }
 
-    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan, TEXT("[GrappleGA] ActivateAbility called"));
-
-    if (!HasAuthority(&ActivationInfo))
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[GrappleGA] No authority — client only"));
-        return;
-    }
-
     AActor* AvatarActor = GetAvatarActorFromActorInfo();
-    USpyGrappleTargetingComponent* TargetComp =
-        AvatarActor ? AvatarActor->FindComponentByClass<USpyGrappleTargetingComponent>() : nullptr;
-
-    if (!TargetComp)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleGA] TargetComp NOT FOUND"));
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-        return;
-    }
-
-    AActor* Target = TargetComp->GetCurrentGrappleTarget();
-    if (!Target)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleGA] CurrentGrappleTarget is NULL"));
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-        return;
-    }
-    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-        FString::Printf(TEXT("[GrappleGA] Target=%s"), *Target->GetName()));
-
-    ACharacter* Char = Cast<ACharacter>(AvatarActor);
+    ACharacter* Char    = Cast<ACharacter>(AvatarActor);
     if (!Char)
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
         return;
     }
 
-    const FVector ImpactPoint = Target->GetActorLocation();
-    LaunchToTarget(Char, ImpactPoint);
+    const bool bAuthority = HasAuthority(&ActivationInfo);
+    FVector TargetLocation = FVector::ZeroVector;
 
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = Char;
-    CableActor = GetWorld()->SpawnActor<AGrappleCableActor>(SpawnParams);
-    if (!CableActor)
+    UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][%s] ActivateAbility entry  NetMode=%d"),
+        bAuthority ? TEXT("SRV") : TEXT("CLI"), (int32)GetWorld()->GetNetMode());
+
+    if (bAuthority)
     {
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-        return;
+        USpyGrappleTargetingComponent* TargetComp =
+            AvatarActor->FindComponentByClass<USpyGrappleTargetingComponent>();
+
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] TargetComp class=%s"),
+            TargetComp ? *TargetComp->GetClass()->GetName() : TEXT("NULL"));
+
+        if (!TargetComp)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] TargetComp NOT FOUND → EndAbility"));
+            EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+            return;
+        }
+
+        AActor* Target = TargetComp->GetCurrentGrappleTarget();
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] CurrentGrappleTarget=%s"),
+            Target ? *Target->GetName() : TEXT("NULL"));
+
+        if (!Target)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] Target is NULL → EndAbility"));
+            EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+            return;
+        }
+
+        TargetLocation = Target->GetActorLocation();
+
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = Char;
+        CableActor = GetWorld()->SpawnActor<AGrappleCableActor>(SpawnParams);
+        if (!CableActor)
+        {
+            EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+            return;
+        }
+        CableActor->InitCable(Char, TargetLocation, HandBoneName);
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] CableActor spawned  TargetLoc=%s"), *TargetLocation.ToString());
     }
-    CableActor->InitCable(Char, ImpactPoint, HandBoneName);
+    else
+    {
+        APawn* Pawn = Cast<APawn>(AvatarActor);
+        USpyGrappleTargetingComponent* TargetComp =
+            Pawn ? Pawn->FindComponentByClass<USpyGrappleTargetingComponent>() : nullptr;
+
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] TargetComp class=%s"),
+            TargetComp ? *TargetComp->GetClass()->GetName() : TEXT("NULL"));
+
+        AActor* LocalTarget = TargetComp ? TargetComp->GetLocalCachedTarget() : nullptr;
+
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] LocalCachedTarget=%s"),
+            LocalTarget ? *LocalTarget->GetName() : TEXT("NULL"));
+
+        if (!LocalTarget)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[GrappleGA][CLI] LocalTarget NULL → early return (no task)"));
+            return;
+        }
+
+        TargetLocation = LocalTarget->GetActorLocation();
+    }
 
     const float Threshold = MovementConfig ? MovementConfig->GrappleArrivalThreshold : 150.f;
-    USpyAbilityTask_GrappleTick* Task = USpyAbilityTask_GrappleTick::GrappleTick(this, CableActor, Threshold);
+    const float PullSpeed = MovementConfig ? MovementConfig->GrapplePullSpeed        : 900.f;
+
+    UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][%s] Creating task  TargetLoc=%s  Speed=%.0f  Threshold=%.0f"),
+        bAuthority ? TEXT("SRV") : TEXT("CLI"), *TargetLocation.ToString(), PullSpeed, Threshold);
+
+    USpyAbilityTask_GrappleTick* Task = USpyAbilityTask_GrappleTick::GrappleTick(
+        this, CableActor, TargetLocation, PullSpeed, Threshold);
     Task->OnArrived.AddDynamic(this, &USpyGA_GrappleHook::OnGrappleArrived);
     Task->ReadyForActivation();
 
-    const float Timeout = MovementConfig ? MovementConfig->GrappleFlightTime * 2.f : 2.f;
-    UAbilityTask_WaitDelay* TimeoutTask = UAbilityTask_WaitDelay::WaitDelay(this, Timeout);
-    TimeoutTask->OnFinish.AddDynamic(this, &USpyGA_GrappleHook::OnGrappleArrived);
-    TimeoutTask->ReadyForActivation();
+    if (bAuthority)
+    {
+        const float Distance = FVector::Dist(Char->GetActorLocation(), TargetLocation);
+        const float Timeout  = (PullSpeed > 0.f ? Distance / PullSpeed : 1.f) * 2.f;
+        UAbilityTask_WaitDelay* TimeoutTask = UAbilityTask_WaitDelay::WaitDelay(this, Timeout);
+        TimeoutTask->OnFinish.AddDynamic(this, &USpyGA_GrappleHook::OnGrappleArrived);
+        TimeoutTask->ReadyForActivation();
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] Timeout=%.2fs"), Timeout);
+    }
 }
 
 void USpyGA_GrappleHook::EndAbility(
@@ -111,7 +169,8 @@ void USpyGA_GrappleHook::EndAbility(
         ASC->RemoveLooseGameplayTag(SpyGameplayTags::Character_State_Grapple);
     }
 
-    if (HasAuthority(&ActivationInfo) && CableActor)
+    AActor* AvatarActor = GetAvatarActorFromActorInfo();
+    if (AvatarActor && AvatarActor->HasAuthority() && CableActor)
     {
         CableActor->Destroy();
         CableActor = nullptr;
@@ -123,19 +182,4 @@ void USpyGA_GrappleHook::EndAbility(
 void USpyGA_GrappleHook::OnGrappleArrived()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-void USpyGA_GrappleHook::LaunchToTarget(ACharacter* Character, const FVector& TargetLocation) const
-{
-    if (!MovementConfig) return;
-
-    const FVector CharLoc  = Character->GetActorLocation();
-    const FVector Direction = (TargetLocation - CharLoc).GetSafeNormal();
-    const float   HorzDist  = FVector::Dist2D(CharLoc, TargetLocation);
-    const float   Speed     = HorzDist / FMath::Max(MovementConfig->GrappleFlightTime, KINDA_SMALL_NUMBER);
-
-    FVector LaunchVelocity  = Direction * Speed;
-    LaunchVelocity.Z       += HorzDist * MovementConfig->GrappleLaunchArcZScale;
-
-    Character->LaunchCharacter(LaunchVelocity, true, true);
 }

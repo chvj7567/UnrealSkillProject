@@ -37,11 +37,16 @@ void USpyGrappleTargetingComponent::TickComponent(
 
     AActor* NewTarget = FindBestTarget();
 
-    if (LocalCachedTarget != NewTarget)
+    if (NewTarget != LocalCachedTarget.Get())
     {
         LocalCachedTarget = NewTarget;
         OnGrappleTargetChanged.Broadcast(NewTarget);
-        Server_SetGrappleTarget(NewTarget);
+
+        // null은 서버에 보내지 않음 — 마지막 유효 타겟을 유지
+        if (NewTarget != nullptr)
+        {
+            Server_SetGrappleTarget(NewTarget);
+        }
     }
 }
 
@@ -131,5 +136,10 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 
 void USpyGrappleTargetingComponent::Server_SetGrappleTarget_Implementation(AActor* NewTarget)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[GrappleTgt][Server] Set=%s  NetMode=%d  Time=%.3f  Frame=%llu"),
+        NewTarget ? *NewTarget->GetName() : TEXT("NULL"),
+        (int32)GetWorld()->GetNetMode(),
+        GetWorld()->GetTimeSeconds(),
+        GFrameCounter);
     CurrentGrappleTarget = NewTarget;
 }

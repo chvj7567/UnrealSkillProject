@@ -23,15 +23,20 @@ public:
     static USpyAbilityTask_GrappleTick* GrappleTick(
         UGameplayAbility* OwningAbility,
         AGrappleCableActor* InCableActor,
+        FVector InTargetLocation,
+        float InPullSpeed,
         float InArrivalThreshold);
 
     virtual void Activate() override;
     virtual void TickTask(float DeltaTime) override;
+    virtual void OnDestroy(bool bInOwnerFinished) override;
 
     UPROPERTY(BlueprintAssignable)
     FGrappleArrivedDelegate OnArrived;
 
 private:
     TWeakObjectPtr<AGrappleCableActor> CableActor;
-    float ArrivalThreshold = 150.f;
+    FVector TargetLocation     = FVector::ZeroVector;
+    float   PullSpeed          = 900.f;
+    float   ArrivalThreshold   = 150.f;
 };

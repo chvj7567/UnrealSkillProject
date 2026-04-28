@@ -2,11 +2,11 @@
 
 #pragma once
 
+#include "AbilitySystemInterface.h"
+#include "Character/SpyCharacterMovementComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Character/SpyCharacterMovementComponent.h"
 #include "ModularCharacter.h"
-#include "AbilitySystemInterface.h"
 
 #include "SpyCharacter.generated.h"
 
@@ -22,45 +22,67 @@ class USpyAbilitySystemComponent;
 
 struct FOnAttributeChangeData;
 
-UCLASS(config=Game)
+UCLASS(config = Game)
 class ASpyCharacter : public AModularCharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
-	ASpyCharacter(const FObjectInitializer& ObjectInitializer);
+	ASpyCharacter(const FObjectInitializer &ObjectInitializer);
 
 protected:
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
-	virtual void PossessedBy(AController* NewController) override;
+	virtual void PossessedBy(AController *NewController) override;
 	virtual void UnPossessed() override;
 
 	virtual void OnRep_Controller() override;
 	virtual void OnRep_PlayerState() override;
 
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void
+	SetupPlayerInputComponent(UInputComponent *PlayerInputComponent) override;
 
-	//# IAbilitySystemInterface
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	//# ~IAbilitySystemInterface
+	// # IAbilitySystemInterface
+	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
+	// # ~IAbilitySystemInterface
 public:
-	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE UWidgetComponent* GetHPBarComponent() const { return HPBarComponent; }
-	FORCEINLINE USpyHealthComponent* GetSpyHealthComponent() const { return SpyHealthComponent; }
-	FORCEINLINE USpyCharacterMovementComponent* GetSpyCharacterMovementComponent() const { return GetCharacterMovement<USpyCharacterMovementComponent>(); }
-	FORCEINLINE ASpyWeapon* GetSpyWeapon() const { return SpyWeapon; }
+	FORCEINLINE USpringArmComponent *GetCameraBoom() const
+	{
+		return CameraBoom;
+	}
+	FORCEINLINE UCameraComponent *GetFollowCamera() const
+	{
+		return FollowCamera;
+	}
+	FORCEINLINE UWidgetComponent *GetHPBarComponent() const
+	{
+		return HPBarComponent;
+	}
+	FORCEINLINE USpyHealthComponent *GetSpyHealthComponent() const
+	{
+		return SpyHealthComponent;
+	}
+	FORCEINLINE USpyCharacterMovementComponent *
+	GetSpyCharacterMovementComponent() const
+	{
+		return GetCharacterMovement<USpyCharacterMovementComponent>();
+	}
+	FORCEINLINE ASpyWeapon *GetSpyWeapon() const
+	{
+		return SpyWeapon;
+	}
 
 public:
 	UFUNCTION(BlueprintCallable)
-	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
+	USpyAbilitySystemComponent *GetSpyAbilitySystemComponent() const;
 
 	UFUNCTION()
-	virtual void OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator);
+	virtual void OnHealthChanged(USpyHealthComponent *InHealthComponent,
+								 float InOldValue, float InNewValue,
+								 AActor *InInstigator);
 
 	UFUNCTION()
-	virtual void OnDeath(AActor* InOwningActor, AActor* InCauserActor);
+	virtual void OnDeath(AActor *InOwningActor, AActor *InCauserActor);
 
 protected:
 	virtual void OnAbilitySystemInitialized();
@@ -68,8 +90,10 @@ protected:
 
 	void InitializeGameplayTags();
 
-	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
-	void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode, bool bTagEnabled);
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode,
+									   uint8 PreviousCustomMode) override;
+	void SetMovementModeTag(EMovementMode MovementMode, uint8 CustomMovementMode,
+							bool bTagEnabled);
 
 	void SpawnAndAttachWeapon();
 
@@ -98,4 +122,3 @@ protected:
 private:
 	FTimerHandle WeaponSpawnTimerHandle;
 };
-

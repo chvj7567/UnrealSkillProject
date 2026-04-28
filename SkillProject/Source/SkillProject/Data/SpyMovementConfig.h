@@ -72,4 +72,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
 	float GrappleTargetingScreenRadius = 150.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrapplePullSpeed = 900.f;
 };

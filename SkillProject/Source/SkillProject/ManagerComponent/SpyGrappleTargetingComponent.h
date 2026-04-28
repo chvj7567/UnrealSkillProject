@@ -24,6 +24,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Grapple")
     AActor* GetCurrentGrappleTarget() const { return CurrentGrappleTarget; }
 
+    AActor* GetLocalCachedTarget() const { return LocalCachedTarget.Get(); }
+
+    void ClearGrappleTarget() { CurrentGrappleTarget = nullptr; }
+
     UPROPERTY(BlueprintAssignable, Category = "Grapple")
     FOnGrappleTargetChanged OnGrappleTargetChanged;
 
@@ -41,4 +45,5 @@ private:
     TObjectPtr<AActor> CurrentGrappleTarget;
 
     TWeakObjectPtr<AActor> LocalCachedTarget;
+
 };
