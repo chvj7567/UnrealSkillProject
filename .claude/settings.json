@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -File .claude/hooks/post-edit-clang-format.ps1",
+            "shell": "powershell",
+            "statusMessage": "clang-format 실행 중..."
+          }
+        ]
+      }
+    ]
+  }
+}
