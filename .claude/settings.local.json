@@ -24,7 +24,6 @@
       "Bash(python3 -m pytest tests/test_unreal_client.py -v)",
       "Bash(pip list:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)",
       "Bash(.venv/Scripts/python -m pytest tests/test_actor_tools.py -v)",
       "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt -q)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/test_spy_asset_tools.py -v)",
@@ -77,6 +76,9 @@
       "Bash(echo \"EXIT=$?\")",
       "mcp__unreal__add_asset_entry",
       "mcp__unreal__get_actors_in_level"
+    ],
+    "ask": [
+      "Bash(git commit*)"
     ],
     "deny": [
       "Bash(rm -rf *)"
