@@ -24,7 +24,6 @@
       "Bash(python3 -m pytest tests/test_unreal_client.py -v)",
       "Bash(pip list:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)",
       "Bash(.venv/Scripts/python -m pytest tests/test_actor_tools.py -v)",
       "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt -q)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/test_spy_asset_tools.py -v)",
@@ -55,7 +54,35 @@
       "mcp__unreal-mcp__set_blueprint_cdo_property",
       "mcp__unreal-mcp__get_blueprint_cdo_properties",
       "mcp__unreal-mcp__save_asset",
-      "Bash(git -C \"C:\\\\Users\\\\Tae\\\\Desktop\\\\MyProject\\\\SpyProject\\\\UnrealSkillProject\" diff --name-only HEAD -- \"SkillProject/Content/Spy/Blueprints/System/BP_SpyPlayerController.uasset\")"
-    ]
+      "Bash(git -C \"C:\\\\Users\\\\Tae\\\\Desktop\\\\MyProject\\\\SpyProject\\\\UnrealSkillProject\" diff --name-only HEAD -- \"SkillProject/Content/Spy/Blueprints/System/BP_SpyPlayerController.uasset\")",
+      "Bash(grep -rn \"//.*[^\\\\x00-\\\\x7F]\" SKGAS/Ability/SKGameplayAbility_SkillAction.cpp)",
+      "Bash(grep -n \"//#\")",
+      "Bash(grep -n \"//.*[^\\\\x00-\\\\x7F]\" SKGAS/Attribute/SKAttributeSet.cpp)",
+      "Bash(grep -i \"worktree\" .gitignore)",
+      "Bash(grep -i \"worktree.*director\" CLAUDE.md)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(/d/UnrealSkillProject/tools/unreal-mcp/.venv/Scripts/python.exe *)",
+      "Bash(xxd \"D:/UnrealSkillProject/SkillProject/Source/SkillProject/Character/SpyCharacterMovementComponent.cpp\")",
+      "Bash(xxd D:/UnrealSkillProject/__TRACKED_VAR__)",
+      "mcp__unreal__find_assets_by_class",
+      "mcp__unreal__execute_python",
+      "mcp__unreal__get_asset_properties",
+      "mcp__unreal__get_ability_data",
+      "mcp__unreal__get_character_asset_data",
+      "Bash(git -C \"D:/UnrealSkillProject\" log --oneline --all -- \"SkillProject/Content/Spy/Input/Mapping/IMC_Default.uasset\")",
+      "Bash(git *)",
+      "PowerShell(Get-ChildItem \"D:\\\\UnrealSkillProject\\\\SkillProject\\\\Source\\\\SkillProject\\\\ManagerComponent\\\\\" | Select-Object Name | ForEach-Object { $_.Name })",
+      "Bash(echo \"EXIT=$?\")",
+      "mcp__unreal__add_asset_entry",
+      "mcp__unreal__get_actors_in_level"
+    ],
+    "ask": [
+      "Bash(git commit*)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)"
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }

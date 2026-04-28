@@ -1,0 +1,25 @@
+---
+# Unreal Engine 5 C++ style
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForContinuationAndIndentation
+ColumnLimit: 0
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+PointerAlignment: Right
+AlignTrailingComments: true
+SpaceBeforeParens: ControlStatements
+AccessModifierOffset: -4
+IndentCaseLabels: false
