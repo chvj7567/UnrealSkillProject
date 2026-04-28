@@ -53,4 +53,26 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|IK")
 	FName IKCurveFootRight = TEXT("Foot_R_IK_Weight");
+
+	// Grapple Hook
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrappleMaxRange = 3000.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrappleArrivalThreshold = 150.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrappleLaunchArcZScale = 0.4f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrappleFlightTime = 0.8f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrapplePromptRange = 1500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrappleTargetingScreenRadius = 150.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
+	float GrapplePullSpeed = 900.f;
 };

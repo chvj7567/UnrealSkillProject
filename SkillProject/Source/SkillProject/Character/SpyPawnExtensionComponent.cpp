@@ -1,4 +1,4 @@
-﻿﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/SpyPawnExtensionComponent.h"
@@ -37,7 +37,7 @@ void USpyPawnExtensionComponent::BeginPlay()
 	//# 상태 변화 알림 등록
 	BindOnActorInitStateChanged(NAME_None, FGameplayTag(), false);
 	
-	//# InitState_Spawned 상태로 변환 시도
+	//# InitState_Spawned 상태로 변환 시도 
 	TryToChangeInitState(SpyGameplayTags::InitState_Spawned);
 
 	CheckDefaultInitialization();
