@@ -75,13 +75,16 @@
       "PowerShell(Get-ChildItem \"D:\\\\UnrealSkillProject\\\\SkillProject\\\\Source\\\\SkillProject\\\\ManagerComponent\\\\\" | Select-Object Name | ForEach-Object { $_.Name })",
       "Bash(echo \"EXIT=$?\")",
       "mcp__unreal__add_asset_entry",
-      "mcp__unreal__get_actors_in_level"
-    ],
-    "ask": [
-      "Bash(git commit*)"
+      "mcp__unreal__get_actors_in_level",
+      "mcp__unreal-mcp__get_character_asset_data",
+      "mcp__unreal-mcp__get_ability_data",
+      "mcp__unreal-mcp__get_asset_properties"
     ],
     "deny": [
       "Bash(rm -rf *)"
+    ],
+    "ask": [
+      "Bash(git commit*)"
     ],
     "defaultMode": "bypassPermissions"
   }
