@@ -29,3 +29,11 @@ void USpyAnimManagerComponent::Initialize(USpyCharacterAnimInstance* InAnimInsta
 	AnimInstance = InAnimInstance;
 }
 
+float USpyAnimManagerComponent::CalcDirectionFromVelocity(
+	const FVector& WorldVelocity, const FRotator& ActorRotation)
+{
+	if (WorldVelocity.IsNearlyZero()) return 0.f;
+	FVector LocalVel = ActorRotation.UnrotateVector(WorldVelocity);
+	return FMath::RadiansToDegrees(FMath::Atan2(LocalVel.Y, LocalVel.X));
+}
+

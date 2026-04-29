@@ -23,10 +23,6 @@ protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:
-	bool CanMove(AAIController* InAIController);
-	bool CanTargetAttack(ACharacter* InTarget);
-
-protected:
 	UPROPERTY(EditAnywhere, Category = "Config")
 	float StoppingDistance = 200.f;
 

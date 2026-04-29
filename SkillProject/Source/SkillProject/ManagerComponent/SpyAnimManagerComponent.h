@@ -25,6 +25,7 @@ public:
 
 public:
 	void Initialize(USpyCharacterAnimInstance* InAnimInstance);
+	static float CalcDirectionFromVelocity(const FVector& WorldVelocity, const FRotator& ActorRotation);
 	
 private:
 	UPROPERTY()

@@ -2,11 +2,9 @@
 
 
 #include "BTTask_MoveToTarget.h"
+#include "SpyAIUtils.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "AbilitySystemComponent.h"
-#include "GameFramework/PlayerState.h"
-#include "Util/SpyGameplayTags.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AITypes.h"
 #include "GameFramework/Character.h"
@@ -30,14 +28,14 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     Target = Cast<ACharacter>(BlackBoardComp->GetValueAsObject(Key));
 
     //# 내가 움직일 수 있는 상태인지 확인
-    if (CanMove(AIController) == false)
+    if (SpyAIUtils::CanMove(AIController) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
     //# 타겟을 공격할 수 있는지 확인
-    if (CanTargetAttack(Target) == false)
+    if (SpyAIUtils::CanTargetAttack(Target, BlackBoardComp, Key) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
@@ -78,47 +76,3 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     return EBTNodeResult::Failed;
 }
 
-bool UBTTask_MoveToTarget::CanMove(AAIController* InAIController)
-{
-    APawn* Pawn = InAIController->GetPawn();
-    if (Pawn == nullptr)
-        return false;
-
-    APlayerState* PS = Pawn->GetPlayerState();
-    if (PS == nullptr)
-        return false;
-
-    UAbilitySystemComponent* ASC = PS->FindComponentByClass<UAbilitySystemComponent>();
-    if (ASC == nullptr)
-        return false;
-
-    if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
-        return false;
-
-    if (ASC->HasMatchingGameplayTag(SpyGameplayTags::Lock_Input_Move))
-        return false;
-
-    return true;
-}
-
-bool UBTTask_MoveToTarget::CanTargetAttack(ACharacter* InTarget)
-{
-    if (InTarget == nullptr)
-        return false;
-
-    APlayerState* PS = InTarget->GetPlayerState();
-    if (PS == nullptr)
-        return false;
-
-    UAbilitySystemComponent* ASC = PS->FindComponentByClass<UAbilitySystemComponent>();
-    if (ASC == nullptr)
-        return false;
-
-    if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
-    {
-        BlackBoardComp->ClearValue(Key);
-        return false;
-    }
-
-    return true;
-}
