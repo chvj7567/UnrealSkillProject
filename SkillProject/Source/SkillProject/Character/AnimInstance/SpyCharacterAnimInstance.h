@@ -65,6 +65,9 @@ protected:
 	float InputAngle;
 
 	UPROPERTY(BlueprintReadOnly)
+	float DirectionAngle;
+
+	UPROPERTY(BlueprintReadOnly)
 	FVector CurrentOffsetHL;
 
 	UPROPERTY(BlueprintReadOnly)
