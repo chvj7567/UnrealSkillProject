@@ -41,19 +41,34 @@ TSharedRef<SDockTab> FSpyGACreatorToolModule::OnSpawnTab(const FSpawnTabArgs& Sp
 void FSpyGACreatorToolModule::RegisterMenus()
 {
     FToolMenuOwnerScoped OwnerScoped(this);
-    UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Window");
-    if (!Menu) return;
-    FToolMenuSection& Section = Menu->FindOrAddSection("WindowLayout");
-    Section.AddMenuEntry(
-        "SpyGACreatorOpen",
-        LOCTEXT("MenuEntry", "Spy GA Creator"),
-        LOCTEXT("MenuEntryTooltip", "Gameplay Ability Blueprint 생성 도구 열기"),
-        FSlateIcon(),
-        FUIAction(FExecuteAction::CreateLambda([]()
-        {
-            FGlobalTabmanager::Get()->TryInvokeTab(FSpyGACreatorToolModule::TabName);
-        }))
-    );
+
+    UToolMenu* MainMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu");
+    if (MainMenu)
+    {
+        FToolMenuSection& Section = MainMenu->FindOrAddSection("SpyTools");
+        Section.AddSubMenu(
+            "SpyTools",
+            LOCTEXT("SpyToolsMenu", "Spy Tools"),
+            LOCTEXT("SpyToolsMenuTooltip", "Spy 개발 도구 모음"),
+            FNewToolMenuDelegate::CreateLambda([](UToolMenu*) {})
+        );
+    }
+
+    UToolMenu* SpyMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.SpyTools");
+    if (SpyMenu)
+    {
+        FToolMenuSection& Section = SpyMenu->FindOrAddSection("SpyToolsSection");
+        Section.AddMenuEntry(
+            "SpyGACreatorOpen",
+            LOCTEXT("MenuEntry", "Spy GA Creator"),
+            LOCTEXT("MenuEntryTooltip", "Gameplay Ability Blueprint 생성 도구 열기"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([]()
+            {
+                FGlobalTabmanager::Get()->TryInvokeTab(FSpyGACreatorToolModule::TabName);
+            }))
+        );
+    }
 }
 
 #undef LOCTEXT_NAMESPACE
