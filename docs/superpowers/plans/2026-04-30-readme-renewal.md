@@ -1,3 +1,45 @@
+# README 리뉴얼 Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 기존 UE 5.4 기준의 `README.md`를 UE 5.7 + 신규 시스템(그래플링·패링·AI/EQS·전투 인터랙션·에디터 툴체인) 반영한 포트폴리오 쇼케이스 형태로 전면 교체한다.
+
+**Architecture:** 단일 파일(`README.md`) 전면 교체. 상단 = 한 줄 카피 + 배지 + 인트로 + Showcase + 셀링포인트. 본문 = 6개 카테고리 각각 1문단 요약 + `<details>` 토글로 상세 펼침. 부록 = 빌드 / 모듈 그래프 / 폴더 트리. Mermaid 다이어그램·C++ 스니펫·GIF 플레이스홀더 적극 활용.
+
+**Tech Stack:** Markdown(GitHub Flavored), Mermaid(GitHub 네이티브), shields.io 배지, HTML `<details>` 토글.
+
+**Spec:** `docs/superpowers/specs/2026-04-30-readme-renewal-design.md`
+
+**Commit policy:** 본 plan의 각 Task 끝에 Commit step이 있더라도, **사용자가 명시적으로 커밋을 요청한 경우에만 실행**한다. 그 전까지는 작업 결과만 디스크에 보존하고 commit은 보류한다.
+
+---
+
+## File Structure
+
+| 파일 | 작업 | 설명 |
+|---|---|---|
+| `README.md` | **전면 교체** | 한 파일에 모든 결과 작성. 작업은 Task별로 Edit 누적 또는 1회 Write + 부분 Edit. |
+| 새 파일 | 없음 | 별도 영문판/스크린샷 등 비목표 (spec § 1.3) |
+
+**작성 전략:** Task 1에서 `Write`로 헤더만 들어간 빈 골격 파일을 생성하고, Task 2~9에서 `Edit`로 새 섹션을 끝에 append. 마지막 Task 10에서 검증.
+
+---
+
+## Task 1: 헤더 (제목 + 카피 + 배지 + 인트로)
+
+**Files:**
+- Create: `README.md` (기존 파일 백업 후 새로 작성)
+
+- [ ] **Step 1: 기존 README 백업 확인 (git이 이미 추적 중이므로 별도 파일 백업 불필요)**
+
+Run: `git -C D:/UnrealSkillProject status README.md`
+Expected: README.md가 추적 중인 파일로 표시됨. (수정 시 git diff로 비교 가능)
+
+- [ ] **Step 2: README.md 새로 작성 — 헤더 섹션만**
+
+`Write`로 README.md 전체 덮어쓰기. 첫 작성이므로 이 시점엔 헤더만 넣고 나머지는 후속 Task에서 append.
+
+```markdown
 # UnrealSkillProject : Spy Project
 
 *UE 5.7 · Dedicated Server · 커스텀 GAS · 모듈형 아키텍처 — 확장 가능한 멀티플레이어 액션 프레임워크.*
@@ -18,7 +60,44 @@ Lyra 스타일의 모듈형 아키텍처, 자체 래핑한 SKGAS 프레임워크
 Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) 위에서 동기화됩니다.
 
 ---
+```
 
+- [ ] **Step 3: 헤더 구조 검증**
+
+Run: `head -20 D:/UnrealSkillProject/README.md`
+Expected:
+- 첫 줄에 `# UnrealSkillProject : Spy Project`
+- 두 번째 단락에 한 줄 카피 (D안)
+- 5개 shields.io 배지가 한 블록에 모여 있음
+- 2 문단 인트로 (인트로 1: 5줄, 인트로 2: 2줄)
+
+- [ ] **Step 4: 백틱·괄호 병기·UE 버전 표기 검증**
+
+Run: `grep -n "5.4" D:/UnrealSkillProject/README.md`
+Expected: 결과 없음 (UE 5.4 잔재 0).
+
+Run: `grep -n "5.7" D:/UnrealSkillProject/README.md`
+Expected: 최소 2회 (한 줄 카피 + 인트로 단락).
+
+- [ ] **Step 5: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — 전면 리뉴얼: 헤더(타이틀/카피/배지/인트로) 작성"
+```
+
+---
+
+## Task 2: 🎬 Showcase + ✨ 핵심 셀링포인트
+
+**Files:**
+- Modify: `README.md` (Task 1 끝에 append)
+
+- [ ] **Step 1: Showcase 섹션 작성**
+
+`README.md` 끝에 Edit로 다음 블록을 append:
+
+```markdown
 ## 🎬 Showcase
 
 > 시스템별 데모 영상은 추후 추가 예정입니다.
@@ -39,7 +118,13 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 **🤖 AI 전투** — Behavior Tree + EQS 기반 회피·전략 위치 선정
 
 ---
+```
 
+- [ ] **Step 2: 핵심 셀링포인트 섹션 작성 (5개 bullet — 1·3·4·7·8)**
+
+`README.md` 끝에 Edit로 다음 블록을 append:
+
+```markdown
 ## ✨ 핵심 셀링포인트
 
 - **모든 캐릭터 액션이 GA** — 점프 · 파쿠르 · 콤보 · 그래플링 · 패링 · 죽음까지 전부 Gameplay Ability로 캡슐화. 하드코딩 0, 서버 동기화 자동.
@@ -52,6 +137,35 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 
 # 🛠️ 시스템 아키텍처
 
+```
+
+- [ ] **Step 3: GIF 플레이스홀더 개수·셀링포인트 위치 검증**
+
+Run: `grep -c "TODO: GIF" D:/UnrealSkillProject/README.md`
+Expected: `5` (Showcase 5개)
+
+Run: `grep -n "핵심 셀링포인트" D:/UnrealSkillProject/README.md`
+Expected: 단일 라인. 라인 번호가 README 상단 60줄 안에 위치 (spec § 7 검수 항목).
+
+- [ ] **Step 4: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — Showcase + 핵심 셀링포인트 섹션 추가"
+```
+
+---
+
+## Task 3: § 1 코어 프레임워크 (3 하위)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: § 1 헤더 + 1-1 데디케이티드 서버 멀티플레이어 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## 1. 🌐 코어 프레임워크
 
 ### 1-1. 데디케이티드 서버 멀티플레이어
@@ -81,6 +195,14 @@ void USpyGA_Example::ActivateAbility(...)
 ```
 
 </details>
+
+```
+
+- [ ] **Step 2: 1-2 모듈형 아키텍처 + InitState 동기화 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 
 ### 1-2. 모듈형 아키텍처 + InitState 동기화
 
@@ -114,6 +236,14 @@ sequenceDiagram
 
 </details>
 
+```
+
+- [ ] **Step 3: 1-3 Enhanced Input × Gameplay Tag 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 1-3. Enhanced Input × Gameplay Tag
 
 > 언리얼 최신 입력 체계(Enhanced Input)와 Gameplay Tag 시스템을 융합해, 입력-스킬 바인딩을 데이터(`SpyInputConfig`)로 완전히 분리했습니다. 폰의 입력 바인딩 코드는 한 줄도 하드코딩하지 않고 `SpyEnhancedInputComponent`가 태그 기반으로 ASC에 직접 전달합니다.
@@ -128,7 +258,35 @@ sequenceDiagram
 </details>
 
 ---
+```
 
+- [ ] **Step 4: § 1 검증**
+
+Run: `grep -n "^### 1-" D:/UnrealSkillProject/README.md`
+Expected: 3개 라인 (1-1 / 1-2 / 1-3)
+
+Run: `grep -n "<details>" D:/UnrealSkillProject/README.md`
+Expected: 3개 (각 하위 항목별 하나)
+
+- [ ] **Step 5: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — § 1 코어 프레임워크 (데디서버/InitState/Enhanced Input)"
+```
+
+---
+
+## Task 4: § 2 GAS & 데이터 파이프라인 (4 하위)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: § 2 헤더 + 2-1 SKGAS 모듈 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## 2. ⚡ GAS & 데이터 파이프라인
 
 ### 2-1. SKGAS 모듈 (커스텀 GAS 래퍼)
@@ -143,6 +301,14 @@ sequenceDiagram
 - **입력 버퍼링 + 태그 매핑**: `SKAbilitySystemComponent`에서 입력을 단순 enum이 아닌 캐싱된 핸들 배열 + Gameplay Tag로 처리. 태그 기반 매칭이라 어빌리티 부여/회수 시 자동 정합.
 
 </details>
+
+```
+
+- [ ] **Step 2: 2-2 Data-Driven GiveAbility 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 
 ### 2-2. Data-Driven GiveAbility (USpyAbilityData)
 
@@ -176,6 +342,14 @@ flowchart LR
 
 </details>
 
+```
+
+- [ ] **Step 3: 2-3 DataAsset 계층 + SpyAssetManager 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 2-3. DataAsset 계층 + SpyAssetManager
 
 > 모든 기획 요소(어빌리티 / 캐릭터 컴포넌트 / 콤보 / 애니메이션 레이어)를 `PrimaryDataAsset` 계층으로 분리하고, `SpyAssetManager`를 진실의 원천(Single Source of Truth)으로 두었습니다. 글로벌 코어 데이터만 시작 시 동기 로드하고 나머지는 시점에 따라 sync/async 메커니즘으로 제어합니다.
@@ -196,6 +370,14 @@ flowchart LR
 
 </details>
 
+```
+
+- [ ] **Step 4: 2-4 SKCueManager 비동기 프리로딩 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 2-4. SKCueManager 비동기 프리로딩
 
 > 런타임 빈발하는 이펙트·사운드용 큐(Cue) 액터의 첫 발동 히치(hitch)를 방지하기 위해, `SKCueManager`가 게임 시작 직후 사용 후보 큐들을 백그라운드로 프리로드하고, 풀(`SKCueActorPool`)에서 즉시 꺼내 재생하도록 설계했습니다.
@@ -209,7 +391,35 @@ flowchart LR
 </details>
 
 ---
+```
 
+- [ ] **Step 5: § 2 검증**
+
+Run: `grep -n "^### 2-" D:/UnrealSkillProject/README.md`
+Expected: 4개 라인 (2-1 / 2-2 / 2-3 / 2-4)
+
+Run: `grep -c "mermaid" D:/UnrealSkillProject/README.md`
+Expected: 최소 2 (§ 1-2 InitState + § 2-2 GiveAbility 파이프라인)
+
+- [ ] **Step 6: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — § 2 GAS & 데이터 파이프라인 (4 하위)"
+```
+
+---
+
+## Task 5: § 3 캐릭터 액션 (4 하위 — 신규 2개 포함)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: § 3 헤더 + 3-1 파쿠르 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## 3. 🏃 캐릭터 액션
 
 ### 3-1. 파쿠르 (Vault / WallClimb / HangUp)
@@ -241,6 +451,14 @@ flowchart LR
 
 </details>
 
+```
+
+- [ ] **Step 2: 3-2 데이터 지향 콤보 시스템 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 3-2. 데이터 지향 콤보 시스템
 
 > 애니메이션 노티파이로 콤보 윈도우를 열고, `SpyComboAssetData` 딕셔너리에서 다음 GA를 색인해 즉시 발동합니다. "A 스킬 → B 스킬" 연계 공식이 코드가 아닌 데이터 에셋에 정의됩니다.
@@ -259,6 +477,14 @@ flowchart LR
 <!-- TODO: GIF — 콤보 (3타 이상 사이클) -->
 
 </details>
+
+```
+
+- [ ] **Step 3: 3-3 그래플링 훅 (신규) 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 
 ### 3-3. 🆕 그래플링 훅 (타겟팅 + 케이블 + UI 프롬프트)
 
@@ -291,6 +517,14 @@ if (!Target.IsZero())
 
 </details>
 
+```
+
+- [ ] **Step 4: 3-4 패링 (신규) 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 3-4. 🆕 홀드형 패링 시스템
 
 > 패링 입력을 누르고 있는 동안 `Character_State_Parry` 태그가 유지되며, 이 윈도우 동안 들어온 정면 공격을 `SkillAction` 단계에서 차단하고 공격자에게 `Skill_Parry_Hit` 이벤트를 역송합니다.
@@ -308,7 +542,38 @@ if (!Target.IsZero())
 </details>
 
 ---
+```
 
+- [ ] **Step 5: § 3 검증**
+
+Run: `grep -n "^### 3-" D:/UnrealSkillProject/README.md`
+Expected: 4개 라인 (3-1 / 3-2 / 3-3 / 3-4)
+
+Run: `grep -c "🆕" D:/UnrealSkillProject/README.md`
+Expected: 최소 2 (3-3 / 3-4 — § 4·5·6 진행 시 추가됨)
+
+Run: `grep -n "Skill.Parry.Hit\|Character.State.Parry\|Character.State.Grapple\|Skill.Move.GrappleHook" D:/UnrealSkillProject/README.md`
+Expected: 4개 태그 모두 등장.
+
+- [ ] **Step 6: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — § 3 캐릭터 액션 (파쿠르/콤보/그래플링/패링)"
+```
+
+---
+
+## Task 6: § 4 전투 / 인터랙션 (4 하위 — 전체 신규)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: § 4 헤더 + 4-1 타겟팅 매니저 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## 4. ⚔️ 전투 / 인터랙션  🆕
 
 ### 4-1. 타겟팅 매니저
@@ -322,6 +587,14 @@ if (!Target.IsZero())
 - **GA 통합**: `SKGameplayAbility_SkillAction` 등 공격성 GA가 발동 시 매니저에게 베스트 타겟을 질의. 타겟 부재 시에도 어빌리티 활성은 유지(미스/공중 공격 허용).
 
 </details>
+
+```
+
+- [ ] **Step 2: 4-2 무기 AnimTrail 이펙트 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 
 ### 4-2. 무기 AnimTrail 이펙트
 
@@ -337,6 +610,14 @@ if (!Target.IsZero())
 
 </details>
 
+```
+
+- [ ] **Step 3: 4-3 히트 카메라 셰이크 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 4-3. 히트 카메라 셰이크
 
 > 데미지 적중 시 공격자/피격자에게 강도가 다른 카메라 셰이크를 적용해 타격감을 강화합니다. 클라이언트 연출이므로 GA의 권한 블록 밖에서 처리됩니다.
@@ -348,6 +629,14 @@ if (!Target.IsZero())
 - **클라이언트 연출 패턴**: 셰이크는 클라 전용이므로 GA `HasAuthority` 분기 밖에서 `PlayerController->ClientStartCameraShake()` 호출.
 
 </details>
+
+```
+
+- [ ] **Step 4: 4-4 팀 시스템 (TeamId) 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 
 ### 4-4. 팀 시스템 (TeamId)
 
@@ -364,7 +653,35 @@ if (!Target.IsZero())
 </details>
 
 ---
+```
 
+- [ ] **Step 5: § 4 검증**
+
+Run: `grep -n "^### 4-" D:/UnrealSkillProject/README.md`
+Expected: 4개 라인 (4-1 / 4-2 / 4-3 / 4-4)
+
+Run: `grep -n "🆕" D:/UnrealSkillProject/README.md`
+Expected: § 3-3, 3-4, § 4 헤더 (이후 § 5, § 6 추가 예정)
+
+- [ ] **Step 6: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — § 4 전투/인터랙션 (타겟팅/트레일/카메라/팀)"
+```
+
+---
+
+## Task 7: § 5 AI 시스템 (3 하위 — 전체 신규)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: § 5 헤더 + 5-1 Behavior Tree Tasks 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## 5. 🤖 AI 시스템  🆕
 
 ### 5-1. Behavior Tree Tasks
@@ -395,6 +712,14 @@ flowchart TD
 
 </details>
 
+```
+
+- [ ] **Step 2: 5-2 EQS + StrafeDirection Context 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 5-2. EQS + StrafeDirection Context
 
 > 회피 방향 결정에 EQS(Environment Query System)를 도입해, 좌/우 후보 위치를 환경(장애물·벽·낭떠러지 기준)에서 평가한 뒤 가장 유리한 쪽을 선택하도록 했습니다. 결과는 BB 변수로 기록되어 `BTTask_CircleStrafe`가 즉시 사용합니다.
@@ -410,6 +735,14 @@ flowchart TD
 
 </details>
 
+```
+
+- [ ] **Step 3: 5-3 SpawnBot 매니저 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 5-3. SpawnBot 매니저
 
 > `SpySpawnBotManagerComponent`가 레벨 내 봇 스폰 위치/타이밍/카운트를 중앙에서 관리합니다. 게임 모드와 분리된 컴포넌트로 두어, 다른 게임플레이 모드에서도 재사용 가능합니다.
@@ -423,7 +756,35 @@ flowchart TD
 </details>
 
 ---
+```
 
+- [ ] **Step 4: § 5 검증**
+
+Run: `grep -n "^### 5-" D:/UnrealSkillProject/README.md`
+Expected: 3개 라인 (5-1 / 5-2 / 5-3)
+
+Run: `grep -c "BTTask_" D:/UnrealSkillProject/README.md`
+Expected: 최소 4 (`ActivateAbility` / `MoveToTarget` / `CircleStrafe` / `FindRandomPos`)
+
+- [ ] **Step 5: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — § 5 AI 시스템 (BT Tasks/EQS/SpawnBot)"
+```
+
+---
+
+## Task 8: § 6 에디터 툴체인 & 워크플로우 (3 하위 — 전체 신규)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: § 6 헤더 + 6-1 SpyDataEditorTool 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## 6. 🧰 에디터 툴체인 & 워크플로우  🆕
 
 ### 6-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
@@ -443,6 +804,14 @@ flowchart TD
 
 </details>
 
+```
+
+- [ ] **Step 2: 6-2 SpyGACreatorTool 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
+
 ### 6-2. SpyGACreatorTool — GA Blueprint 원클릭 생성
 
 > Window 메뉴에 추가된 "Spy GA Creator" 탭에서 부모 클래스/이름/GAS 기본 설정을 입력하고 버튼 한 번이면 `/Game/Spy/Blueprints/GameplayAbilities/GA_<Name>.uasset` Blueprint가 생성되고 에디터가 자동으로 열립니다.
@@ -459,6 +828,14 @@ flowchart TD
   4. `AssetEditorSubsystem::OpenEditorForAsset` 호출로 새 BP 자동 오픈.
 
 </details>
+
+```
+
+- [ ] **Step 3: 6-3 Unreal MCP 서버 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 
 ### 6-3. Unreal MCP 서버 — Python 원격 제어
 
@@ -483,7 +860,35 @@ flowchart TD
 </details>
 
 ---
+```
 
+- [ ] **Step 4: § 6 검증**
+
+Run: `grep -n "^### 6-" D:/UnrealSkillProject/README.md`
+Expected: 3개 라인 (6-1 / 6-2 / 6-3)
+
+Run: `grep -n "SpyGACreatorTool\|SpyDataEditorTool\|tools/unreal-mcp" D:/UnrealSkillProject/README.md`
+Expected: 모두 등장.
+
+- [ ] **Step 5: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — § 6 에디터 툴체인 (DataEditor/GACreator/MCP)"
+```
+
+---
+
+## Task 9: 부록 A (빌드) + B (의존 그래프) + C (폴더 트리)
+
+**Files:**
+- Modify: `README.md` (append)
+
+- [ ] **Step 1: 부록 헤더 + A 빌드 방법 작성**
+
+`README.md` 끝에 Edit로 append. **`Launch.bat`은 커스텀 파일이므로 노출하지 않고 일반 generate 방식만 안내** (spec § 5-1):
+
+```markdown
 # 📎 부록
 
 ## A. 빌드 방법
@@ -493,6 +898,13 @@ flowchart TD
 3. 솔루션 빌드 후 Unreal Editor 실행.
 4. 새 C++ 클래스 추가 후에는 Editor의 **Tools > Refresh Visual Studio Project** 실행 또는 1번 단계 재수행.
 
+```
+
+- [ ] **Step 2: B 모듈 의존 그래프 작성**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## B. 모듈 의존 그래프
 
 ```mermaid
@@ -511,6 +923,13 @@ graph LR
 - `SpyDataEditorTool` (Editor) — `SkillProject` + 에디터 전용 모듈에 의존.
 - `SpyGACreatorTool` (Editor) — `SpyDataEditorTool`과 코드/의존 분리된 별도 에디터 모듈.
 
+```
+
+- [ ] **Step 3: C 폴더 구조 작성 (자세히)**
+
+`README.md` 끝에 Edit로 append:
+
+```markdown
 ## C. 폴더 구조
 
 ```
@@ -561,3 +980,139 @@ docs/
     ├── plans/                         # superpowers writing-plans 산출물
     └── specs/                         # superpowers brainstorming 산출물 (디자인 스펙)
 ```
+```
+
+- [ ] **Step 4: 부록 검증**
+
+Run: `grep -n "^## A\\.\|^## B\\.\|^## C\\." D:/UnrealSkillProject/README.md`
+Expected: 3개 라인.
+
+Run: `grep -n "Launch.bat" D:/UnrealSkillProject/README.md`
+Expected: 결과 없음 (spec § 7 검수 항목 — 빌드 부록에 노출 금지).
+
+- [ ] **Step 5: Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — 부록 (빌드/모듈 그래프/폴더 트리)"
+```
+
+---
+
+## Task 10: 최종 검토 (검수 체크리스트 자동화)
+
+**Files:**
+- Read-only: `README.md`
+
+**목적:** spec § 7 성공 기준 8개 + 클래스명 실재성 검증.
+
+- [ ] **Step 1: § 2 표 신규 시스템이 README에 모두 등장하는지 확인**
+
+각 키워드별로 grep:
+
+```bash
+grep -n "5\.7" D:/UnrealSkillProject/README.md         # 엔진
+grep -n "SpyGA_GrappleHook\|GrappleCableActor" D:/UnrealSkillProject/README.md  # 그래플링
+grep -n "SpyGameplayAbility_Parry\|Skill\.Parry\.Hit" D:/UnrealSkillProject/README.md  # 패링
+grep -n "SpyTargetingManagerComponent" D:/UnrealSkillProject/README.md  # 타겟팅
+grep -n "AnimTrail\|SpyWeapon" D:/UnrealSkillProject/README.md  # 무기 트레일
+grep -n "카메라 셰이크\|CameraShake" D:/UnrealSkillProject/README.md  # 카메라 셰이크
+grep -n "TeamId\|NoTeam" D:/UnrealSkillProject/README.md  # 팀 시스템
+grep -n "BTTask_ActivateAbility\|BTTask_CircleStrafe" D:/UnrealSkillProject/README.md  # BT
+grep -n "EnvQueryContext_StrafeDirection" D:/UnrealSkillProject/README.md  # EQS
+grep -n "SpySpawnBotManagerComponent" D:/UnrealSkillProject/README.md  # SpawnBot
+grep -n "SpyDataEditorTool" D:/UnrealSkillProject/README.md  # 데이터 에디터
+grep -n "SpyGACreatorTool" D:/UnrealSkillProject/README.md  # GA Creator
+grep -n "tools/unreal-mcp" D:/UnrealSkillProject/README.md  # MCP
+grep -n "CableComponent\|RemoteControl" D:/UnrealSkillProject/README.md  # 새 플러그인
+```
+
+Expected: 모든 `grep`이 최소 1개 이상의 라인 매칭.
+
+- [ ] **Step 2: 핵심 셀링포인트가 상단에 위치하는지 확인**
+
+Run: `grep -n "## ✨ 핵심 셀링포인트" D:/UnrealSkillProject/README.md`
+Expected: 라인 번호 ≤ 60 (spec § 7 — 상단 30줄 안에 위치 항목, 인트로/배지/Showcase 분량을 감안해 60줄까지 허용).
+
+- [ ] **Step 3: `<details>` 토글 일관성 확인**
+
+Run: `grep -c "<details>" D:/UnrealSkillProject/README.md`
+Expected: 17 (§1: 3 + §2: 4 + §3: 4 + §4: 4 + §5: 3 + §6: 3 — 합계 21? 다시 카운트: 3+4+4+4+3+3 = 21)
+
+수정: Expected는 정확히 **21**.
+
+Run: `grep -c "</details>" D:/UnrealSkillProject/README.md`
+Expected: 21 (열린 토글 수와 일치).
+
+- [ ] **Step 4: Mermaid 다이어그램 ≥ 3개 확인 (spec § 7)**
+
+Run: `grep -c '```mermaid' D:/UnrealSkillProject/README.md`
+Expected: 최소 5 (§ 1-2 InitState + § 2-2 GiveAbility + § 3-1 파쿠르 + § 5-1 BT + 부록 B 의존 그래프)
+
+- [ ] **Step 5: GIF 플레이스홀더 ≥ 5개 확인 (spec § 7)**
+
+Run: `grep -c "TODO: GIF" D:/UnrealSkillProject/README.md`
+Expected: 최소 9 (Showcase 5 + § 3-1 파쿠르 + § 3-2 콤보 + § 3-3 그래플링 + § 3-4 패링 + § 4-2 트레일 + § 5-2 EQS — 합계 11; 최소 5 충족)
+
+- [ ] **Step 6: 빌드 부록에 `Launch.bat` 미노출 확인 (spec § 7)**
+
+Run: `grep -n "Launch.bat" D:/UnrealSkillProject/README.md`
+Expected: 결과 없음.
+
+- [ ] **Step 7: UE 5.4 잔재 0 확인 (spec § 7)**
+
+Run: `grep -n "5\.4" D:/UnrealSkillProject/README.md`
+Expected: 결과 없음.
+
+- [ ] **Step 8: 라이선스/크레딧/참고/이력 부록 부재 확인 (spec § 7)**
+
+Run: `grep -in "license\|라이선스\|크레딧\|credits\|references\|참고자료\|changelog\|변경.이력" D:/UnrealSkillProject/README.md`
+Expected: 결과 없음 (또는 본문 내 우연한 매칭만 있고 ## 헤더로 등장하지 않음).
+
+- [ ] **Step 9: 클래스명·경로 실재성 검증 (spec § 8 리스크 완화)**
+
+README에 등장한 핵심 식별자가 실제 소스에 존재하는지 spot check:
+
+```bash
+grep -rn "SpyGA_GrappleHook" D:/UnrealSkillProject/SkillProject/Source/ | head -3
+grep -rn "SpyGameplayAbility_Parry" D:/UnrealSkillProject/SkillProject/Source/ | head -3
+grep -rn "EnvQueryContext_StrafeDirection" D:/UnrealSkillProject/SkillProject/Source/ | head -3
+grep -rn "SpyTargetingManagerComponent" D:/UnrealSkillProject/SkillProject/Source/ | head -3
+grep -rn "SSpyCreateGADialog" D:/UnrealSkillProject/SkillProject/Source/ | head -3
+```
+
+Expected: 각 grep이 최소 1개 라인 (헤더 또는 cpp) 매칭.
+
+- [ ] **Step 10: GitHub 렌더링 시각 확인 (수동)**
+
+Run: VS Code에서 `README.md`를 마크다운 미리보기로 열거나 GitHub에 push 후 web에서 확인.
+체크 항목:
+1. 배지 5개가 한 줄에 렌더링.
+2. `<details>` 토글이 모두 접힌 상태로 표시.
+3. Mermaid 다이어그램 5개가 모두 그래픽으로 렌더링.
+4. 6개 카테고리 + 부록 3개가 ToC 없이도 명확히 구분됨.
+
+수동 확인 항목이므로, 자동 검증 없음. 미리보기 결과를 사용자에게 보고하고 OK 받으면 종료.
+
+- [ ] **Step 11: 최종 Commit (사용자 명시 요청 시에만)**
+
+```bash
+git -C D:/UnrealSkillProject add README.md
+git -C D:/UnrealSkillProject commit -m "[Docs] README — 전면 리뉴얼 완료 (UE 5.7 + 신규 시스템 6종 반영)"
+```
+
+---
+
+## Self-Review Notes
+
+작성 후 자체 검토 항목:
+
+1. **Spec coverage**:
+   - § 2 표의 14개 신규 시스템 → Task 1(엔진 5.7) / Task 5(그래플링·패링) / Task 6(타겟팅·트레일·셰이크·팀) / Task 7(BT·EQS·SpawnBot) / Task 8(DataEditor·GACreator·MCP) / Task 9(CableComponent·RemoteControl 플러그인은 부록 B 의존 그래프에서 간접 등장 — 본문에 명시적으로 다루지 않으나 § 3-3 그래플링에서 `CableComponent` 언급) ✓
+   - § 3 결정사항 13개 → 모두 Task의 Step에 매핑 ✓
+   - § 4 6개 카테고리 + 부록 3개 → Task 3~9 ✓
+   - § 5 본문 작성 규칙 → Task 3~8의 각 Step 코드 블록에 패턴 반영 ✓
+   - § 7 검수 체크리스트 8항 → Task 10의 Step 1~8에 1:1 매핑 ✓
+2. **Placeholder scan**: 본문 텍스트는 모두 풀텍스트 작성. `<!-- TODO: GIF -->`는 spec § 7에서 명시한 의도된 플레이스홀더이므로 제외.
+3. **Type consistency**: 클래스명/태그명/모듈명 표기가 Task들 간에 일관됨 (예: `SpyGA_GrappleHook`, `Character.State.Grapple`).
+4. **Commit policy**: 모든 Commit step에 "사용자 명시 요청 시에만" 명시. memory의 "명시적 요청 없이 커밋 금지" 규칙 준수.
