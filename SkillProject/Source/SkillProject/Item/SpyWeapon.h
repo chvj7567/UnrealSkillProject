@@ -1,22 +1,20 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "NativeGameplayTags.h"
 
 #include "SpyWeapon.generated.h"
 
-class UBoxComponent;
 class USkeletalMeshComponent;
+class UParticleSystemComponent;
+class UParticleSystem;
 
 UCLASS()
 class SKILLPROJECT_API ASpyWeapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	ASpyWeapon();
 
 protected:
@@ -29,7 +27,26 @@ public:
 	UFUNCTION()
 	void UnEquipWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	void ActivateTrail();
+
+	UFUNCTION(BlueprintCallable)
+	void DeactivateTrail();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ActivateTrail();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_DeactivateTrail();
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USkeletalMeshComponent> WeaponSkeletalMeshComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	TObjectPtr<UParticleSystem> TrailEffect;
+
+private:
+	UPROPERTY(Transient)
+	TObjectPtr<UParticleSystemComponent> ActiveTrailComponent;
 };

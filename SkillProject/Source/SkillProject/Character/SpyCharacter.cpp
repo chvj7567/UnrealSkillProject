@@ -18,7 +18,15 @@
 #include "Data/SpyCharacterConfig.h"
 #include "Data/SpyCharacterAssetData.h"
 
+#include "Net/UnrealNetwork.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacter)
+
+void ASpyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ASpyCharacter, SpyWeapon);
+}
 
 ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer.SetDefaultSubobjectClass<USpyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))

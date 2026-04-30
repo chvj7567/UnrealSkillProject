@@ -1,6 +1,3 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "SpyGameplayAbility_SkillAction.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Util/SpyGameplayTags.h"
@@ -9,55 +6,70 @@
 #include "Data/SpyCharacterAssetData.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Character/SpyCharacter.h"
+#include "Item/SpyWeapon.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGameplayAbility_SkillAction)
 
 void USpyGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-    do
-    {
-        /*ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-        if (OwnerCharacter == nullptr)
-            break;
-
-        USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
-        if (TargetingComp == nullptr)
-            break;
-
-        if (TargetingComp->GetTarget().IsValid())
-        {
-            FVector LookDir = TargetingComp->GetTarget()->GetActorLocation() - OwnerCharacter->GetActorLocation();
-            LookDir.Z = 0.f;
-            FRotator TargetRot = LookDir.Rotation();
-
-            OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
-            OwnerCharacter->SetActorRotation(TargetRot);
-            OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
-        }*/
-
-    } while (false);
-
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+    ASpyCharacter* SpyChar = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo());
+    if (IsValid(SpyChar) && IsValid(SpyChar->GetSpyWeapon()))
+    {
+        if (HasAuthority(&ActivationInfo))
+        {
+            SpyChar->GetSpyWeapon()->Multicast_ActivateTrail();
+        }
+        else
+        {
+            SpyChar->GetSpyWeapon()->ActivateTrail();
+        }
+    }
+}
+
+void USpyGameplayAbility_SkillAction::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+    ASpyCharacter* SpyChar = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo());
+    if (IsValid(SpyChar) && IsValid(SpyChar->GetSpyWeapon()))
+    {
+        if (HasAuthority(&ActivationInfo))
+        {
+            SpyChar->GetSpyWeapon()->Multicast_DeactivateTrail();
+        }
+        else
+        {
+            SpyChar->GetSpyWeapon()->DeactivateTrail();
+        }
+    }
+
+    Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-    if (OwnerCharacter == nullptr)
+    if (!IsValid(OwnerCharacter))
         return;
 
     ASpyPlayerState* OwnerPS = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
-    USpyAbilitySystemComponent* OwnerASC = Cast<USpyAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent.Get());
-    if (OwnerPS == nullptr || OwnerASC == nullptr)
+    if (!IsValid(OwnerPS))
         return;
 
-    //# 콤보 가능 태그 있는지 확인
+    if (CurrentActorInfo == nullptr)
+        return;
+
+    USpyAbilitySystemComponent* OwnerASC = Cast<USpyAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent.Get());
+    if (!IsValid(OwnerASC))
+        return;
+
     if (OwnerASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Combo))
     {
         FGameplayTag MyTag = AbilityTags.GetByIndex(0);
         if (MyTag.IsValid() == false)
             return;
-        
+
         if (USpyCharacterAssetData* CharacterAssetData = OwnerPS->GetCharacterAssetData())
         {
             FGameplayTag Tag = CharacterAssetData->GetComboTag(SpyGameplayTags::Character_Class_Normal, MyTag);
@@ -66,7 +78,6 @@ void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHan
                 FGameplayEventData Payload;
                 Payload.EventTag = Tag;
 
-                UE_LOG(LogTemp, Warning, TEXT("# Combo %s"), *Tag.ToString());
                 OwnerASC->HandleGameplayEvent(Payload.EventTag, &Payload);
                 return;
             }

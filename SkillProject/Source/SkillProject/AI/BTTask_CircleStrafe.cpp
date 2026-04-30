@@ -102,7 +102,7 @@ void UBTTask_CircleStrafe::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* N
 				{
 					RunEQS(*RetryOwner.Get());
 				}
-			}), 0.3f, false);
+ 			}), 0.3f, false);
 	}
 	else
 	{

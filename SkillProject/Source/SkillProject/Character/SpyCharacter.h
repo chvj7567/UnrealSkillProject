@@ -31,6 +31,7 @@ public:
 	ASpyCharacter(const FObjectInitializer &ObjectInitializer);
 
 protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController *NewController) override;
@@ -113,7 +114,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	TObjectPtr<USpyHealthComponent> SpyHealthComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", Replicated)
 	TObjectPtr<ASpyWeapon> SpyWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
