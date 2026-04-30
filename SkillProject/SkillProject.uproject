@@ -23,6 +23,11 @@
 			"Name": "SpyDataEditorTool",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "SpyGACreatorTool",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [
