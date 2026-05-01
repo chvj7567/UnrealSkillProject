@@ -32,6 +32,13 @@ void SSpyTagManagerDialog::RebuildData()
     RootNodes = BuildTreeNodes(ParsedGroups);
 }
 
+static void PropagateGroupComment(TSharedPtr<FTagTreeNode> Node, const FString& Comment)
+{
+    Node->GroupComment = Comment;
+    for (auto& Child : Node->Children)
+        PropagateGroupComment(Child, Comment);
+}
+
 TArray<TSharedPtr<FTagTreeNode>> SSpyTagManagerDialog::BuildTreeNodes(
     const TArray<FSpyTagGroup>& Groups)
 {
@@ -45,6 +52,8 @@ TArray<TSharedPtr<FTagTreeNode>> SSpyTagManagerDialog::BuildTreeNodes(
         for (const FSpyTagEntry& Entry : Group.Tags)
             if (!Entry.TagString.IsEmpty())
                 InsertTagIntoTree(Header, Entry.TagString);
+        for (auto& Child : Header->Children)
+            PropagateGroupComment(Child, Group.Comment);
         Result.Add(Header);
     }
     return Result;
@@ -149,10 +158,33 @@ void SSpyTagManagerDialog::OnGetChildren(
 void SSpyTagManagerDialog::OnTreeSelectionChanged(
     TSharedPtr<FTagTreeNode> Node, ESelectInfo::Type)
 {
-    if (!Node || Node->bIsGroupHeader) return;
-    ParentPath = Node->FullPath;
-    if (ParentPathBox.IsValid())
-        ParentPathBox->SetText(FText::FromString(ParentPath));
+    if (!Node) return;
+
+    // 그룹 콤보박스 & 주석 동기화
+    const FString& GroupComment = Node->GroupComment;
+    TSharedPtr<FSpyTagGroup>* Found = GroupOptions.FindByPredicate(
+        [&GroupComment](const TSharedPtr<FSpyTagGroup>& G)
+        { return G.IsValid() && G->Comment == GroupComment; });
+
+    if (Found)
+    {
+        SelectedGroupOption = *Found;
+        if (GroupComboBox.IsValid())
+            GroupComboBox->SetSelectedItem(SelectedGroupOption);
+        if (GroupCommentBox.IsValid())
+        {
+            GroupCommentBox->SetEnabled(false);
+            GroupCommentBox->SetText(FText::FromString(GroupComment));
+        }
+    }
+
+    // 태그 노드일 때만 부모 경로 갱신
+    if (!Node->bIsGroupHeader)
+    {
+        ParentPath = Node->FullPath;
+        if (ParentPathBox.IsValid())
+            ParentPathBox->SetText(FText::FromString(ParentPath));
+    }
 }
 
 FReply SSpyTagManagerDialog::OnRefreshClicked()
