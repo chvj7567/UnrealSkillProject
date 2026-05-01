@@ -121,19 +121,34 @@ TSharedRef<SDockTab> FSpyDataEditorToolModule::OnSpawnTab(const FSpawnTabArgs& S
 void FSpyDataEditorToolModule::RegisterMenus()
 {
     FToolMenuOwnerScoped OwnerScoped(this);
-    UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Window");
-    if (!Menu) return;
-    FToolMenuSection& Section = Menu->FindOrAddSection("WindowLayout");
-    Section.AddMenuEntry(
-        "SpyDataEditorOpen",
-        LOCTEXT("MenuEntry", "Spy Data Editor"),
-        LOCTEXT("MenuEntryTooltip", "Spy Data 에셋 일괄 편집 도구 열기"),
-        FSlateIcon(),
-        FUIAction(FExecuteAction::CreateLambda([]()
-        {
-            FGlobalTabmanager::Get()->TryInvokeTab(FSpyDataEditorToolModule::TabName);
-        }))
-    );
+
+    UToolMenu* MainMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu");
+    if (MainMenu)
+    {
+        FToolMenuSection& Section = MainMenu->FindOrAddSection("SpyTools");
+        Section.AddSubMenu(
+            "SpyTools",
+            LOCTEXT("SpyToolsMenu", "Spy Tools"),
+            LOCTEXT("SpyToolsMenuTooltip", "Spy 개발 도구 모음"),
+            FNewToolMenuDelegate::CreateLambda([](UToolMenu*) {})
+        );
+    }
+
+    UToolMenu* SpyMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.SpyTools");
+    if (SpyMenu)
+    {
+        FToolMenuSection& Section = SpyMenu->FindOrAddSection("SpyToolsSection");
+        Section.AddMenuEntry(
+            "SpyDataEditorOpen",
+            LOCTEXT("MenuEntry", "Spy Data Editor"),
+            LOCTEXT("MenuEntryTooltip", "Spy Data 에셋 일괄 편집 도구 열기"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([]()
+            {
+                FGlobalTabmanager::Get()->TryInvokeTab(FSpyDataEditorToolModule::TabName);
+            }))
+        );
+    }
 }
 
 #undef LOCTEXT_NAMESPACE

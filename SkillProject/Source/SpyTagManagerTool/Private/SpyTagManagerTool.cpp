@@ -1,44 +1,44 @@
-#include "SpyGACreatorTool.h"
-#include "SSpyCreateGADialog.h"
+#include "SpyTagManagerTool.h"
 #include "Framework/Docking/TabManager.h"
 #include "ToolMenus.h"
 #include "Widgets/Docking/SDockTab.h"
+#include "SSpyTagManagerDialog.h"
 
-#define LOCTEXT_NAMESPACE "FSpyGACreatorToolModule"
+#define LOCTEXT_NAMESPACE "FSpyTagManagerToolModule"
 
-const FName FSpyGACreatorToolModule::TabName = TEXT("SpyGACreatorTool");
+const FName FSpyTagManagerToolModule::TabName = TEXT("SpyTagManagerTool");
 
-void FSpyGACreatorToolModule::StartupModule()
+void FSpyTagManagerToolModule::StartupModule()
 {
     FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
         TabName,
-        FOnSpawnTab::CreateRaw(this, &FSpyGACreatorToolModule::OnSpawnTab))
-        .SetDisplayName(LOCTEXT("TabTitle", "Spy GA Creator"))
-        .SetTooltipText(LOCTEXT("TabTooltip", "Gameplay Ability Blueprint 생성 도구"))
+        FOnSpawnTab::CreateRaw(this, &FSpyTagManagerToolModule::OnSpawnTab))
+        .SetDisplayName(LOCTEXT("TabTitle", "Spy Tag Manager"))
+        .SetTooltipText(LOCTEXT("TabTooltip", "SpyGameplayTags 태그 관리 도구"))
         .SetMenuType(ETabSpawnerMenuType::Hidden);
 
     UToolMenus::RegisterStartupCallback(
         FSimpleMulticastDelegate::FDelegate::CreateRaw(
-            this, &FSpyGACreatorToolModule::RegisterMenus));
+            this, &FSpyTagManagerToolModule::RegisterMenus));
 }
 
-void FSpyGACreatorToolModule::ShutdownModule()
+void FSpyTagManagerToolModule::ShutdownModule()
 {
     UToolMenus::UnRegisterStartupCallback(this);
     UToolMenus::UnregisterOwner(this);
     FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(TabName);
 }
 
-TSharedRef<SDockTab> FSpyGACreatorToolModule::OnSpawnTab(const FSpawnTabArgs& SpawnTabArgs)
+TSharedRef<SDockTab> FSpyTagManagerToolModule::OnSpawnTab(const FSpawnTabArgs& SpawnTabArgs)
 {
     return SNew(SDockTab)
         .TabRole(ETabRole::NomadTab)
         [
-            SNew(SSpyCreateGADialog)
+            SNew(SSpyTagManagerDialog)
         ];
 }
 
-void FSpyGACreatorToolModule::RegisterMenus()
+void FSpyTagManagerToolModule::RegisterMenus()
 {
     FToolMenuOwnerScoped OwnerScoped(this);
 
@@ -59,13 +59,13 @@ void FSpyGACreatorToolModule::RegisterMenus()
     {
         FToolMenuSection& Section = SpyMenu->FindOrAddSection("SpyToolsSection");
         Section.AddMenuEntry(
-            "SpyGACreatorOpen",
-            LOCTEXT("MenuEntry", "Spy GA Creator"),
-            LOCTEXT("MenuEntryTooltip", "Gameplay Ability Blueprint 생성 도구 열기"),
+            "SpyTagManagerOpen",
+            LOCTEXT("MenuEntry", "Spy Tag Manager"),
+            LOCTEXT("MenuEntryTooltip", "SpyGameplayTags 태그 관리 도구 열기"),
             FSlateIcon(),
             FUIAction(FExecuteAction::CreateLambda([]()
             {
-                FGlobalTabmanager::Get()->TryInvokeTab(FSpyGACreatorToolModule::TabName);
+                FGlobalTabmanager::Get()->TryInvokeTab(FSpyTagManagerToolModule::TabName);
             }))
         );
     }
@@ -73,4 +73,4 @@ void FSpyGACreatorToolModule::RegisterMenus()
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_MODULE(FSpyGACreatorToolModule, SpyGACreatorTool)
+IMPLEMENT_MODULE(FSpyTagManagerToolModule, SpyTagManagerTool)
