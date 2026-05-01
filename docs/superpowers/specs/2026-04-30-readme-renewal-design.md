@@ -37,6 +37,7 @@ Author: chvj7567 + Claude
 | AI | **SpawnBot 매니저** | `SpySpawnBotManagerComponent` |
 | 툴 | **SpyDataEditorTool** | Assets / Ability / Config 3탭 일괄 편집기 (Editor 모듈) |
 | 툴 | **SpyGACreatorTool** | Window 메뉴 → GA Blueprint 원클릭 생성 (Editor 모듈) |
+| 툴 | **SpyTagManagerTool** | Spy Tools 메뉴 → `SpyGameplayTags.h`/`.cpp` 파싱·편집, 트리 뷰 + 다중 태그 추가 (Editor 모듈) |
 | 툴 | **Unreal MCP 서버** | `tools/unreal-mcp/` Python MCP |
 | 플러그인 | CableComponent, RemoteControl 추가 | uproject `Plugins` |
 
@@ -112,9 +113,10 @@ Author: chvj7567 + Claude
    5-3. SpawnBot 매니저
 
 6. 🧰 에디터 툴체인 & 워크플로우  🆕
-   6-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
-   6-2. SpyGACreatorTool  — GA Blueprint 원클릭 생성
+   6-1. SpyDataEditorTool  — 3탭 데이터 일괄 편집기
+   6-2. SpyGACreatorTool   — GA Blueprint 원클릭 생성
    6-3. Unreal MCP 서버    — Python 원격 제어
+   6-4. SpyTagManagerTool  — Gameplay Tag 직접 편집기  🆕
 
 ────────────────────────────────────────────
 📎 부록
@@ -195,7 +197,7 @@ writing-plans 단계에서 다음 단위로 작업을 쪼갠다.
 | 5 | § 3 캐릭터 액션 (4 하위 — 신규 2개 포함) |
 | 6 | § 4 전투/인터랙션 (4 하위 — 전체 신규) |
 | 7 | § 5 AI 시스템 (3 하위 — 전체 신규) |
-| 8 | § 6 에디터 툴체인 (3 하위 — 전체 신규) |
+| 8 | § 6 에디터 툴체인 (4 하위 — 전체 신규, SpyTagManagerTool 포함) |
 | 9 | 부록 A (빌드) + B (의존 그래프) + C (폴더 트리) |
 | 10 | 최종 검토 — 톤 일관성 / Mermaid 렌더 검증 / 링크 깨짐 검증 |
 

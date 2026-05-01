@@ -46,7 +46,7 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 - **Data-Driven 파이프라인** — `USpyAbilityData` 하나로 AttributeSet 동적 생성 + 초기 GE 적용 + GA 부여 일괄 처리, 핸들 트래킹으로 메모리 누수 차단.
 - **InitState 기반 안전한 초기화** — GameFeature 의존 없이 `IGameFrameworkInitStateInterface`로 서버-클라 초기화 동기화, 컴포넌트 런타임 동적 주입.
 - **AI + EQS 전투** — Behavior Tree Tasks(`BTTask_ActivateAbility` / `BTTask_CircleStrafe`) + EQS `EnvQueryContext_StrafeDirection`으로 회피·전략적 위치 선정.
-- **자체 에디터 툴체인** — `SpyDataEditorTool` 3탭 데이터 편집기 + `SpyGACreatorTool` 원클릭 GA 생성 + Python MCP 서버로 에디터 원격 제어.
+- **자체 에디터 툴체인** — `SpyDataEditorTool` 3탭 데이터 편집기 + `SpyGACreatorTool` 원클릭 GA 생성 + `SpyTagManagerTool` 태그 파일 직접 편집 + Python MCP 서버로 에디터 원격 제어.
 
 ---
 
@@ -482,6 +482,21 @@ flowchart TD
 
 </details>
 
+### 6-4. 🆕 SpyTagManagerTool — Gameplay Tag 직접 편집기
+
+> `SpyGameplayTags.h` / `.cpp` 파일을 직접 파싱·편집하는 에디터 탭입니다. 트리 뷰로 전체 태그 계층을 시각화하고, 그룹 선택 + 부모 경로 + 복수 리프 입력으로 여러 태그를 한 번에 추가할 수 있습니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **`SpyTagManagerTool` (Editor 모듈)**: Level Editor 상단 메뉴 `Spy Tools → Spy Tag Manager`에서 NomadTab으로 열림.
+- **`SSpyTagManagerDialog` (Slate)**: 좌측 트리 뷰(그룹 계층 시각화) + 우측 추가 패널(그룹 콤보박스 / 부모 경로 / 그룹 주석 / 리프 입력 행 다중 추가)로 구성.
+- **`FSpyTagFileEditor`**: `SpyGameplayTags.h`와 `.cpp`를 직접 파싱해 그룹 + `VarName` + `TagString`을 추출. 중복 체크 후 `AppendTags`로 파일에 직접 기록.
+- **그룹 주석 인라인 편집**: 트리에서 그룹 헤더 클릭 시 우측 패널의 콤보박스·주석 텍스트가 자동 동기화. 수정 후 저장 버튼 한 번으로 h/cpp 파일 내 `//#` 주석 줄을 교체(`FSpyTagFileEditor::RenameGroup`).
+- **플로우**: Refresh(파일 파싱) → 트리 검토 → 그룹·리프 입력 → 추가(중복 체크) → h/cpp 파일 직접 갱신.
+
+</details>
+
 ---
 
 # 📎 부록
@@ -504,12 +519,15 @@ graph LR
     SpyDataEditorTool --> UnrealEd
     SpyGACreatorTool --> UnrealEd
     SpyGACreatorTool --> AssetTools
+    SpyTagManagerTool --> UnrealEd
+    SpyTagManagerTool --> ToolMenus
 ```
 
 - `SkillProject` (Runtime) — 게임 로직 메인 모듈, `SKGAS`와 `ModularGameplayActors` 플러그인에 의존.
 - `SKGAS` (Runtime) — 프로젝트 비의존 GAS 래퍼 모듈.
 - `SpyDataEditorTool` (Editor) — `SkillProject` + 에디터 전용 모듈에 의존.
 - `SpyGACreatorTool` (Editor) — `SpyDataEditorTool`과 코드/의존 분리된 별도 에디터 모듈.
+- `SpyTagManagerTool` (Editor) — `SkillProject`에 비의존. `UnrealEd` / `ToolMenus`만 참조해 태그 파일을 직접 파싱·편집.
 
 ## C. 폴더 구조
 
@@ -545,6 +563,12 @@ SkillProject/
     │   └── Utils/                     # SpyDataScanner / SpyEditorUtils
     ├── SpyGACreatorTool/              # GA Blueprint 원클릭 생성 (Editor)
     │   ├── Public/ (SpyGACreatorTool.h / SSpyCreateGADialog.h)
+    │   └── Private/
+    ├── SpyTagManagerTool/             # Gameplay Tag 직접 편집기 (Editor)
+    │   ├── Public/
+    │   │   ├── SpyTagManagerTool.h    # 모듈 / Spy Tools 메뉴 등록
+    │   │   ├── SSpyTagManagerDialog.h # Slate 트리 뷰 + 추가 패널
+    │   │   └── SpyTagFileEditor.h     # h/cpp 파일 파서 + AppendTags / RenameGroup
     │   └── Private/
     └── Plugins/
         └── ModularGameplayActors/     # 에픽 ModularGameplay 통합 플러그인
