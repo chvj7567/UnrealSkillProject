@@ -55,6 +55,7 @@ private:
     FReply OnRefreshClicked();
     FReply OnAddTagsClicked();
     FReply OnAddLeafRowClicked();
+    FReply OnSaveGroupCommentClicked();
     TSharedRef<SWidget> OnGenerateGroupWidget(TSharedPtr<FSpyTagGroup> Item);
     FText GetGroupComboText() const;
 

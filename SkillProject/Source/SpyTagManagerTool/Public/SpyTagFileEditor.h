@@ -35,6 +35,9 @@ public:
 		const TArray<FSpyTagEntry>& NewEntries,
 		bool bIsNewGroup);
 
+	// h/cpp 파일에서 그룹 주석 줄(//#)을 OldComment → NewComment로 교체
+	static bool RenameGroup(const FString& OldComment, const FString& NewComment);
+
 private:
 	static TArray<FSpyTagGroup> ParseHeaderGroups();
 	static TMap<FString, FString> ParseCppTagMap();

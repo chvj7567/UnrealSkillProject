@@ -172,10 +172,7 @@ void SSpyTagManagerDialog::OnTreeSelectionChanged(
         if (GroupComboBox.IsValid())
             GroupComboBox->SetSelectedItem(SelectedGroupOption);
         if (GroupCommentBox.IsValid())
-        {
-            GroupCommentBox->SetEnabled(false);
             GroupCommentBox->SetText(FText::FromString(GroupComment));
-        }
     }
 
     // 태그 노드일 때만 부모 경로 갱신
@@ -233,7 +230,6 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
                 bool bNew = Item.IsValid() && Item->Comment == NewGroupSentinel;
                 if (GroupCommentBox.IsValid())
                 {
-                    GroupCommentBox->SetEnabled(bNew);
                     GroupCommentBox->SetText(FText::FromString(
                         bNew ? TEXT("") : (Item.IsValid() ? Item->Comment : TEXT(""))));
                 }
@@ -246,13 +242,24 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
     // 그룹 주석
     Panel->AddSlot().AutoHeight().Padding(4.f, 2.f)
     [
-        MakeRow(LOCTEXT("Comment", "그룹 주석"),
+        SNew(SHorizontalBox)
+        + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+        [
+            SNew(SBox).WidthOverride(130.f)[ SNew(STextBlock).Text(LOCTEXT("Comment", "그룹 주석")) ]
+        ]
+        + SHorizontalBox::Slot().FillWidth(1.f).Padding(4.f, 0.f)
+        [
             SAssignNew(GroupCommentBox, SEditableTextBox)
-            .IsReadOnly(true)
             .Text(FText::FromString(
                 SelectedGroupOption.IsValid() ? SelectedGroupOption->Comment : TEXT("")))
             .OnTextChanged_Lambda([this](const FText& T){ NewGroupComment = T.ToString(); })
-        )
+        ]
+        + SHorizontalBox::Slot().AutoWidth().Padding(4.f, 0.f)
+        [
+            SNew(SButton)
+            .Text(LOCTEXT("SaveComment", "저장"))
+            .OnClicked(this, &SSpyTagManagerDialog::OnSaveGroupCommentClicked)
+        ]
     ];
 
     // 부모 경로
@@ -363,6 +370,58 @@ FText SSpyTagManagerDialog::GetGroupComboText() const
     return FText::FromString(
         SelectedGroupOption->Comment == NewGroupSentinel
         ? TEXT("새 그룹 추가...") : SelectedGroupOption->Comment);
+}
+
+FReply SSpyTagManagerDialog::OnSaveGroupCommentClicked()
+{
+    if (!SelectedGroupOption.IsValid() || SelectedGroupOption->Comment == NewGroupSentinel)
+    {
+        FMessageDialog::Open(EAppMsgType::Ok,
+            LOCTEXT("ErrNoGroupForRename", "수정할 기존 그룹을 선택하세요."));
+        return FReply::Handled();
+    }
+
+    FString NewComment = GroupCommentBox.IsValid()
+        ? GroupCommentBox->GetText().ToString().TrimStartAndEnd() : TEXT("");
+
+    if (NewComment.IsEmpty())
+    {
+        FMessageDialog::Open(EAppMsgType::Ok,
+            LOCTEXT("ErrEmptyComment", "그룹 주석을 입력하세요."));
+        return FReply::Handled();
+    }
+
+    FString OldComment = SelectedGroupOption->Comment;
+    if (OldComment == NewComment)
+        return FReply::Handled();
+
+    if (!FSpyTagFileEditor::RenameGroup(OldComment, NewComment))
+    {
+        FMessageDialog::Open(EAppMsgType::Ok,
+            LOCTEXT("ErrRename", "그룹 주석 수정에 실패했습니다."));
+        return FReply::Handled();
+    }
+
+    RebuildData();
+    if (TagTreeView.IsValid())
+    {
+        TagTreeView->RequestTreeRefresh();
+        for (const TSharedPtr<FTagTreeNode>& Node : RootNodes)
+            TagTreeView->SetItemExpansion(Node, true);
+    }
+
+    // 변경된 이름으로 선택 복원
+    TSharedPtr<FSpyTagGroup>* Found = GroupOptions.FindByPredicate(
+        [&NewComment](const TSharedPtr<FSpyTagGroup>& G)
+        { return G.IsValid() && G->Comment == NewComment; });
+    if (Found)
+    {
+        SelectedGroupOption = *Found;
+        if (GroupComboBox.IsValid())
+            GroupComboBox->SetSelectedItem(SelectedGroupOption);
+    }
+
+    return FReply::Handled();
 }
 
 FReply SSpyTagManagerDialog::OnAddTagsClicked()

@@ -100,6 +100,35 @@ bool FSpyTagFileEditor::DoesVarNameExist(const TArray<FSpyTagGroup>& Groups, con
 	return false;
 }
 
+bool FSpyTagFileEditor::RenameGroup(const FString& OldComment, const FString& NewComment)
+{
+    auto ReplaceInFile = [&](const FString& Path) -> bool
+    {
+        TArray<FString> Lines;
+        if (!FFileHelper::LoadFileToStringArray(Lines, *Path)) return false;
+
+        for (FString& Line : Lines)
+        {
+            FString T = Line.TrimStartAndEnd();
+            if (T.StartsWith(TEXT("//#")) && T.RightChop(3).TrimStartAndEnd() == OldComment)
+            {
+                FString Leading;
+                for (TCHAR C : Line)
+                {
+                    if (C == TEXT('\t') || C == TEXT(' ')) Leading += C;
+                    else break;
+                }
+                Line = Leading + TEXT("//# ") + NewComment;
+            }
+        }
+
+        FString Content = FString::Join(Lines, TEXT("\n")) + TEXT("\n");
+        return FFileHelper::SaveStringToFile(Content, *Path);
+    };
+
+    return ReplaceInFile(GetHeaderPath()) && ReplaceInFile(GetCppPath());
+}
+
 bool FSpyTagFileEditor::AppendTags(
     const TArray<FSpyTagGroup>& ParsedGroups,
     const FSpyTagGroup& TargetGroup,
