@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SpyCharacter.h"
+#include "AIController.h"
+#include "BrainComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -207,6 +209,17 @@ void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 	if (USpyTargetingManagerComponent* TargetingComp = FindComponentByClass<USpyTargetingManagerComponent>())
 	{
 		TargetingComp->SetCurrentTarget(nullptr);
+	}
+
+	//# AI 사망 시 BT 정지 + focus 해제 — 사후 회전 방지
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		if (UBrainComponent* BrainComp = AIController->GetBrainComponent())
+		{
+			BrainComp->StopLogic(SKGameplayTags::Character_State_Death.GetTag().ToString());
+		}
+		AIController->StopMovement();
+		AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnDeath: %s"), *GetName());
