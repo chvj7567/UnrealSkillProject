@@ -12,7 +12,11 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Damage.h"
+#include "Perception/AISense_Sight.h"
+#include "Perception/AISense_Hearing.h"
+#include "Perception/AISense_Damage.h"
 #include "Attribute/SKAttributeSet.h"
+#include "GameFramework/PlayerState.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAIController)
 
@@ -64,6 +68,14 @@ void ASpyAIController::Tick(float DeltaSeconds)
 	APawn* ControlledPawn = GetPawn();
 	if (ControlledPawn == nullptr)
 		return;
+
+	//# Perception은 현재 타겟이 죽어도 새 이벤트를 안 쏘므로 Tick에서 주기적으로 재검증
+	TargetRefreshAccumulator += DeltaSeconds;
+	if (TargetRefreshAccumulator >= TargetRefreshInterval)
+	{
+		TargetRefreshAccumulator = 0.f;
+		RefreshBlackboardTarget();
+	}
 
 	FVector Location = ControlledPawn->GetActorLocation();
 	FVector Forward = ControlledPawn->GetActorForwardVector();
@@ -249,86 +261,128 @@ void ASpyAIController::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 	if (MyPawn == nullptr)
 		return;
 
+	//# 내가 죽었으면 타겟 갱신 중단
 	if (APlayerState* MyPS = Cast<APlayerState>(MyPawn->GetPlayerState()))
 	{
 		if (UAbilitySystemComponent* MyASC = MyPS->FindComponentByClass<UAbilitySystemComponent>())
 		{
 			if (MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] MyActor is Die"));
 				return;
-			}
 		}
 	}
 
-	AActor* TargetActor = nullptr;
-	if (APlayerState* TargetPS = Cast<APlayerState>(Actor))
+	//# 데미지는 즉시 그 가해자를 타겟으로 (등 뒤 피격 대응)
+	if (Stimulus.WasSuccessfullySensed() && Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
 	{
-		TargetActor = TargetPS->GetPawn();
-
-		if (UAbilitySystemComponent* MyASC = TargetPS->FindComponentByClass<UAbilitySystemComponent>())
+		if (APawn* DamagerPawn = ResolvePawnFromActor(Actor))
 		{
-			bool bIsDead = MyASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.0f;
-			if (bIsDead || MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+			if (IsHostileAndAlive(DamagerPawn))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] TargetActor is Die"));
+				BlackboardComp->SetValueAsObject("TargetActor", DamagerPawn);
+				BlackboardComp->SetValueAsVector("TargetLocation", DamagerPawn->GetActorLocation());
 				return;
 			}
 		}
 	}
-	else
+
+	//# 그 외 시각/청각 감지는 통합 재평가 (현재 타겟이 살아있으면 유지, 죽었으면 가장 가까운 살아있는 적으로 교체)
+	RefreshBlackboardTarget();
+}
+
+void ASpyAIController::RefreshBlackboardTarget()
+{
+	UBlackboardComponent* BB = GetBlackboardComponent();
+	APawn* MyPawn = GetPawn();
+	if (BB == nullptr || MyPawn == nullptr || AIPerceptionComponent == nullptr)
+		return;
+
+	//# 내가 죽었으면 갱신하지 않음
+	if (APlayerState* MyPS = Cast<APlayerState>(MyPawn->GetPlayerState()))
 	{
-		TargetActor = Actor;
+		if (UAbilitySystemComponent* MyASC = MyPS->FindComponentByClass<UAbilitySystemComponent>())
+		{
+			if (MyASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+				return;
+		}
 	}
 
-	if (TargetActor == nullptr)
+	//# 현재 타겟이 살아있는 적이면 유지 (전투 중 임의 타겟 스왑 방지)
+	AActor* CurrentTarget = Cast<AActor>(BB->GetValueAsObject("TargetActor"));
+	if (CurrentTarget && IsHostileAndAlive(CurrentTarget))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] TargetActor is Null"));
+		BB->SetValueAsVector("TargetLocation", CurrentTarget->GetActorLocation());
 		return;
 	}
 
-	ETeamAttitude::Type Attitude = GetTeamAttitudeTowards(*Actor);
-	const FName SenseName = Stimulus.Type.Name;
+	//# 시야에 들어온 살아있는 적 중 가장 가까운 적으로 교체
+	TArray<AActor*> PerceivedActors;
+	AIPerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActors);
 
-	if (Stimulus.WasSuccessfullySensed())
+	APawn* BestPawn = nullptr;
+	float BestDistSq = TNumericLimits<float>::Max();
+	const FVector MyLoc = MyPawn->GetActorLocation();
+
+	for (AActor* Perceived : PerceivedActors)
 	{
-		//# 시각 감지
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+		APawn* CandidatePawn = ResolvePawnFromActor(Perceived);
+		if (!IsValid(CandidatePawn))
+			continue;
+		if (!IsHostileAndAlive(CandidatePawn))
+			continue;
+
+		const float DistSq = FVector::DistSquared(MyLoc, CandidatePawn->GetActorLocation());
+		if (DistSq < BestDistSq)
 		{
-			//# 적일 경우만 타겟팅
-			if (Attitude == ETeamAttitude::Hostile)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Detected %s"), *TargetActor->GetName());
-				BlackboardComp->SetValueAsObject("TargetActor", TargetActor);
-				BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
-			}
+			BestDistSq = DistSq;
+			BestPawn = CandidatePawn;
 		}
-		//# 청각 감지
-		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
-		{
-			/*if (Attitude == ETeamAttitude::Hostile)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Hearing: Detected %s"), *Stimulus.StimulusLocation.ToString());
-				BlackboardComp->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
-			}*/
-		}
-		//# 데미지 감지
-		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
-		{
-			if (Attitude == ETeamAttitude::Hostile)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Damage: Detected %s"), *TargetActor->GetName());
-				BlackboardComp->SetValueAsObject("TargetActor", TargetActor);
-			}
-		}
+	}
+
+	if (BestPawn)
+	{
+		BB->SetValueAsObject("TargetActor", BestPawn);
+		BB->SetValueAsVector("TargetLocation", BestPawn->GetActorLocation());
 	}
 	else
 	{
-		//# 감지되지 않았을 때
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+		BB->ClearValue("TargetActor");
+	}
+}
+
+bool ASpyAIController::IsHostileAndAlive(AActor* InActor) const
+{
+	if (!IsValid(InActor))
+		return false;
+
+	if (GetTeamAttitudeTowards(*InActor) != ETeamAttitude::Hostile)
+		return false;
+
+	APlayerState* PS = nullptr;
+	if (APawn* OtherPawn = Cast<APawn>(InActor))
+		PS = OtherPawn->GetPlayerState();
+	else
+		PS = Cast<APlayerState>(InActor);
+
+	if (PS)
+	{
+		if (UAbilitySystemComponent* ASC = PS->FindComponentByClass<UAbilitySystemComponent>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyAIController] Sight: Lost %s"), *TargetActor->GetName());
-			//BlackboardComp->ClearValue("TargetActor");
+			if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
+				return false;
+			if (ASC->GetNumericAttribute(USKAttributeSet::GetHealthAttribute()) <= 0.f)
+				return false;
 		}
 	}
+	return true;
+}
+
+APawn* ASpyAIController::ResolvePawnFromActor(AActor* InActor) const
+{
+	if (InActor == nullptr)
+		return nullptr;
+	if (APawn* P = Cast<APawn>(InActor))
+		return P;
+	if (APlayerState* PS = Cast<APlayerState>(InActor))
+		return PS->GetPawn();
+	return nullptr;
 }

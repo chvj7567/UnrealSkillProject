@@ -66,7 +66,16 @@ protected:
 	UFUNCTION()
 	void OnTargetDetected(AActor* Actor, FAIStimulus Stimulus);
 
+	//# 현재 BB.TargetActor가 죽었거나 비었을 때 가장 가까운 살아있는 적으로 교체
+	void RefreshBlackboardTarget();
+
+	bool IsHostileAndAlive(AActor* InActor) const;
+	APawn* ResolvePawnFromActor(AActor* InActor) const;
+
 private:
+	float TargetRefreshAccumulator = 0.f;
+	static constexpr float TargetRefreshInterval = 0.3f;
+
 	UPROPERTY()
 	TObjectPtr<APlayerState> LastSeenPlayerState;
 
