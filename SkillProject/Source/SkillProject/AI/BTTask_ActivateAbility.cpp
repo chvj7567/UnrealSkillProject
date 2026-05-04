@@ -3,6 +3,7 @@
 
 #include "BTTask_ActivateAbility.h"
 #include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemComponent.h"
@@ -12,6 +13,8 @@
 UBTTask_ActivateAbility::UBTTask_ActivateAbility()
 {
     NodeName = "Activate Ability";
+
+    TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_ActivateAbility, TargetKey), AActor::StaticClass());
 }
 
 EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -39,7 +42,25 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
     if (AbilityTags.Num() <= 0)
         return EBTNodeResult::Failed;
 
+    UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] ActivateAbility: 진입"), *Pawn->GetName());
+
     AIController->StopMovement();
+
+    //# 어빌리티 발동 직전에 타겟 방향으로 즉시 회전
+    if (TargetKey.SelectedKeyName != NAME_None)
+    {
+        if (AActor* TargetActor = Cast<AActor>(BlackBoardComp->GetValueAsObject(TargetKey.SelectedKeyName)))
+        {
+            FVector ToTarget = TargetActor->GetActorLocation() - Pawn->GetActorLocation();
+            ToTarget.Z = 0.f;
+            if (!ToTarget.IsNearlyZero())
+            {
+                const FRotator NewRot = ToTarget.Rotation();
+                AIController->SetControlRotation(NewRot);
+                Pawn->SetActorRotation(NewRot);
+            }
+        }
+    }
 
     int32 RandomIndex = FMath::RandRange(0, AbilityTags.Num() - 1);
     FGameplayTag RandomTag = AbilityTags[RandomIndex];
@@ -59,8 +80,12 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
         }
     }
 
-    //# 태그를 통해 GA 실행
-    bool bActivated = ASC->TryActivateAbilitiesByTag(TagContainer);
+    //# 태그를 통해 GA 실행 시도 — 쿨타임 등으로 실패해도 다음 단계(CircleStrafe)로 넘어가도록 항상 Succeeded
+    const bool bActivated = ASC->TryActivateAbilitiesByTag(TagContainer);
+    if (!bActivated)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] ActivateAbility: TryActivate 실패 (쿨타임 등) — Succeeded로 진행"), *Pawn->GetName());
+    }
 
-    return bActivated ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
+    return EBTNodeResult::Succeeded;
 }

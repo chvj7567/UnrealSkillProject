@@ -66,6 +66,9 @@ protected:
 	UFUNCTION()
 	void OnTargetDetected(AActor* Actor, FAIStimulus Stimulus);
 
+	UFUNCTION()
+	void OnTrackedTargetDestroyed(AActor* DestroyedActor);
+
 	//# 현재 BB.TargetActor가 죽었거나 비었을 때 가장 가까운 살아있는 적으로 교체
 	void RefreshBlackboardTarget();
 
@@ -75,6 +78,14 @@ protected:
 private:
 	float TargetRefreshAccumulator = 0.f;
 	static constexpr float TargetRefreshInterval = 0.3f;
+
+	//# 마지막으로 로그를 남긴 BB.TargetActor 값. 상태 변화 시에만 로그를 찍기 위함.
+	UPROPERTY(Transient)
+	TWeakObjectPtr<AActor> LastLoggedTarget;
+
+	//# 폰 라이프사이클 추적 — destroy 감지용
+	UPROPERTY(Transient)
+	TWeakObjectPtr<AActor> TrackedTargetForDestroyDetection;
 
 	UPROPERTY()
 	TObjectPtr<APlayerState> LastSeenPlayerState;

@@ -20,7 +20,7 @@ public:
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	virtual void OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess) override;
+	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 	// 스트레이프 지속 시간 (초)
 	UPROPERTY(EditAnywhere, Category = "Config")
@@ -55,5 +55,7 @@ private:
 	float StartTime = 0.f;
 	float OriginalMaxWalkSpeed = 0.f;
 	bool bTaskActive = false;
-	FTimerHandle RetryTimerHandle;
+	bool bEQSPending = false;            //# 동시에 여러 쿼리가 날아가지 않도록
+	float EQSAccumulator = 0.f;          //# 다음 RunEQS까지의 누적 시간
+	FTimerHandle DurationTimerHandle;
 };

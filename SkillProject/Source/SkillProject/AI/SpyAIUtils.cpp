@@ -37,10 +37,9 @@ bool SpyAIUtils::CanTargetAttack(ACharacter* InTarget, UBlackboardComponent* InB
     UAbilitySystemComponent* ASC = PS->FindComponentByClass<UAbilitySystemComponent>();
     if (!ASC) return false;
 
+    //# Death 시에도 BB는 직접 건드리지 않음 — RefreshBlackboardTarget이 단일 진입점
     if (ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
     {
-        if (InBlackboard)
-            InBlackboard->ClearValue(TargetKeyName);
         return false;
     }
 

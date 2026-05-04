@@ -11,6 +11,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "NavigationSystem.h"
 #include "SpyAIUtils.h"
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BTTask_CircleStrafe)
 
@@ -18,6 +19,7 @@ UBTTask_CircleStrafe::UBTTask_CircleStrafe()
 {
 	NodeName = TEXT("Circle Strafe");
 	bCreateNodeInstance = true;
+	bNotifyTick = true;
 
 	TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_CircleStrafe, TargetKey), AActor::StaticClass());
 	StrafeLeftKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_CircleStrafe, StrafeLeftKey));
@@ -45,15 +47,32 @@ EBTNodeResult::Type UBTTask_CircleStrafe::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
-	if (OriginalMaxWalkSpeed > 0.f)
-	{
-		SetStrafeSpeed(AIController, OriginalMaxWalkSpeed);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("[CircleStrafe] START — Duration=%.1f"), StrafeDuration);
+	const FString StrafeBotName = AIController->GetPawn() ? AIController->GetPawn()->GetName() : AIController->GetName();
+	UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe: 진입 Duration=%.1f"), *StrafeBotName, StrafeDuration);
 
 	bTaskActive = true;
+	bEQSPending = false;
+	EQSAccumulator = 0.f;
 	StartTime = GetWorld()->GetTimeSeconds();
+
+	//# 추격 시 본체가 타겟을 보도록 focus 지정
+	AIController->SetFocus(Target);
+
+	//# 스트레이프 속도로 변경
+	SetStrafeSpeed(AIController, StrafeWalkSpeed);
+
+	//# StrafeDuration 후 강제 종료 — EQS retry나 MoveTo 미완료로 인한 InProgress 무한대기 방지
+	TWeakObjectPtr<UBehaviorTreeComponent> WeakOwnerForTimeout(&OwnerComp);
+	GetWorld()->GetTimerManager().SetTimer(DurationTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this, WeakOwnerForTimeout]()
+		{
+			if (bTaskActive && WeakOwnerForTimeout.IsValid())
+			{
+				FinishStrafe(*WeakOwnerForTimeout.Get(), EBTNodeResult::Succeeded);
+			}
+		}), StrafeDuration, false);
+
+	//# 첫 EQS 즉시 발사
 	RunEQS(OwnerComp);
 
 	return EBTNodeResult::InProgress;
@@ -62,7 +81,7 @@ EBTNodeResult::Type UBTTask_CircleStrafe::ExecuteTask(UBehaviorTreeComponent& Ow
 EBTNodeResult::Type UBTTask_CircleStrafe::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	bTaskActive = false;
-	GetWorld()->GetTimerManager().ClearTimer(RetryTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 
 	if (ActiveQueryId != INDEX_NONE)
 	{
@@ -85,28 +104,42 @@ EBTNodeResult::Type UBTTask_CircleStrafe::AbortTask(UBehaviorTreeComponent& Owne
 	return Super::AbortTask(OwnerComp, NodeMemory);
 }
 
-void UBTTask_CircleStrafe::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory,
-                                     FName Message, int32 RequestID, bool bSuccess)
+void UBTTask_CircleStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	// Super 호출 금지 — Super는 FinishLatentTask를 호출해 태스크를 종료시킴
-	SetStrafeSpeed(OwnerComp.GetAIOwner(), OriginalMaxWalkSpeed);
+	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
 
-	const float Elapsed = GetWorld()->GetTimeSeconds() - StartTime;
-	if (Elapsed < StrafeDuration)
+	if (!bTaskActive)
+		return;
+
+	AAIController* AIC = OwnerComp.GetAIOwner();
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	if (!IsValid(AIC) || !IsValid(BB))
+		return;
+
+	APawn* MyPawn = AIC->GetPawn();
+	ACharacter* CurTarget = Cast<ACharacter>(BB->GetValueAsObject(TargetKey.SelectedKeyName));
+	if (!IsValid(MyPawn) || !IsValid(CurTarget))
 	{
-		TWeakObjectPtr<UBehaviorTreeComponent> RetryOwner(&OwnerComp);
-		GetWorld()->GetTimerManager().SetTimer(RetryTimerHandle,
-			FTimerDelegate::CreateWeakLambda(this, [this, RetryOwner]()
-			{
-				if (bTaskActive && RetryOwner.IsValid())
-				{
-					RunEQS(*RetryOwner.Get());
-				}
- 			}), 0.3f, false);
+		FinishStrafe(OwnerComp, EBTNodeResult::Failed);
+		return;
 	}
-	else
+
+	//# 매 프레임 타겟 방향으로 본체 회전 — 후퇴/측면이동 중에도 정면이 타겟을 보게
+	FVector ToTarget = CurTarget->GetActorLocation() - MyPawn->GetActorLocation();
+	ToTarget.Z = 0.f;
+	if (!ToTarget.IsNearlyZero())
 	{
-		FinishStrafe(OwnerComp, EBTNodeResult::Succeeded);
+		const FRotator NewRot = ToTarget.Rotation();
+		AIC->SetControlRotation(NewRot);
+		MyPawn->SetActorRotation(NewRot);
+	}
+
+	//# 0.3초마다 새로운 EQS 위치로 재요청 — bEQSPending stuck 방지를 위해 강제 발사
+	EQSAccumulator += DeltaSeconds;
+	if (EQSAccumulator >= 0.3f)
+	{
+		EQSAccumulator = 0.f;
+		RunEQS(OwnerComp);
 	}
 }
 
@@ -116,20 +149,15 @@ void UBTTask_CircleStrafe::RunEQS(UBehaviorTreeComponent& OwnerComp)
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
 	if (!IsValid(AIController) || !IsValid(BB))
-	{
-		FinishStrafe(OwnerComp, EBTNodeResult::Failed);
 		return;
-	}
 
 	APawn* Pawn = AIController->GetPawn();
 	if (!IsValid(Pawn))
-	{
-		FinishStrafe(OwnerComp, EBTNodeResult::Failed);
 		return;
-	}
 
 	BB->SetValueAsBool(StrafeLeftKey.SelectedKeyName, FMath::RandBool());
 
+	bEQSPending = true;
 	TWeakObjectPtr<UBehaviorTreeComponent> WeakOwner(&OwnerComp);
 	FEnvQueryRequest QueryRequest(EQSQuery, Pawn);
 	FQueryFinishedSignature FinishedDelegate = FQueryFinishedSignature::CreateLambda(
@@ -145,100 +173,80 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
                                            TWeakObjectPtr<UBehaviorTreeComponent> WeakOwner)
 {
 	ActiveQueryId = INDEX_NONE;
+	bEQSPending = false;
 
 	if (!WeakOwner.IsValid() || !bTaskActive)
-	{
 		return;
-	}
 
 	UBehaviorTreeComponent* OwnerComp = WeakOwner.Get();
+	AAIController* AIController = OwnerComp->GetAIOwner();
+	const FString DiagBotName = (IsValid(AIController) && AIController->GetPawn()) ? AIController->GetPawn()->GetName() : TEXT("?");
 
 	DrawDebugEQSResults(GetWorld(), Result);
 
+	const int32 NumItems = (Result.IsValid() && Result->IsSuccessful()) ? Result->Items.Num() : 0;
+
+	//# 빈 결과 — C++ 자체 계산으로 fallback
 	if (!Result.IsValid() || !Result->IsSuccessful() || Result->Items.IsEmpty())
 	{
-		TWeakObjectPtr<UBehaviorTreeComponent> RetryOwner(OwnerComp);
-		GetWorld()->GetTimerManager().SetTimer(RetryTimerHandle,
-			FTimerDelegate::CreateWeakLambda(this, [this, RetryOwner]()
-			{
-				if (bTaskActive && RetryOwner.IsValid())
-				{
-					RunEQS(*RetryOwner.Get());
-				}
-			}), 0.5f, false);
+		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe EQS: 빈 결과 → C++ fallback"), *DiagBotName);
+
+		if (!IsValid(AIController))
+			return;
+		if (!SpyAIUtils::CanMove(AIController))
+			return;
+
+		APawn* MyPawn = AIController->GetPawn();
+		UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
+		ACharacter* CurTarget = (IsValid(BB) && IsValid(MyPawn))
+			? Cast<ACharacter>(BB->GetValueAsObject(TargetKey.SelectedKeyName))
+			: nullptr;
+		if (!IsValid(CurTarget) || !IsValid(MyPawn))
+			return;
+
+		//# 타겟 반대 방향 + ±30° 랜덤 각도, 100~200 유닛 거리
+		FVector AwayDir = MyPawn->GetActorLocation() - CurTarget->GetActorLocation();
+		AwayDir.Z = 0.f;
+		if (!AwayDir.Normalize())
+			return;
+
+		const float RandomAngle = FMath::RandRange(-30.f, 30.f);
+		const FVector StrafeDir = FRotator(0.f, RandomAngle, 0.f).RotateVector(AwayDir);
+		const float Radius = FMath::RandRange(100.f, 200.f);
+		const FVector RawLoc = MyPawn->GetActorLocation() + StrafeDir * Radius;
+
+		//# NavMesh로 투영
+		UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+		FNavLocation ProjectedLoc;
+		if (IsValid(NavSys) && NavSys->ProjectPointToNavigation(RawLoc, ProjectedLoc, FVector(100.f, 100.f, 200.f)))
+		{
+			FAIMoveRequest MoveReq(ProjectedLoc.Location);
+			MoveReq.SetAcceptanceRadius(StrafeAcceptanceRadius);
+			MoveReq.SetUsePathfinding(true);
+			AIController->MoveTo(MoveReq);
+		}
 		return;
 	}
 
-	FVector StrafeLocation = Result->GetItemAsLocation(0);
-
-	AAIController* AIController = OwnerComp->GetAIOwner();
-	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
-
-	if (!IsValid(AIController) || !IsValid(BB))
-	{
-		FinishStrafe(*OwnerComp, EBTNodeResult::Failed);
+	if (!IsValid(AIController))
 		return;
-	}
 
-	// 스킬 시전 중(Lock_Input_Move)이면 이동 보류
+	//# 스킬 시전 중(Lock_Input_Move)이면 이번 프레임 이동 보류 — TickTask가 다시 시도
 	if (!SpyAIUtils::CanMove(AIController))
 	{
-		TWeakObjectPtr<UBehaviorTreeComponent> RetryOwner(OwnerComp);
-		GetWorld()->GetTimerManager().SetTimer(RetryTimerHandle,
-			FTimerDelegate::CreateWeakLambda(this, [this, RetryOwner]()
-			{
-				if (bTaskActive && RetryOwner.IsValid())
-				{
-					RunEQS(*RetryOwner.Get());
-				}
-			}), 0.2f, false);
+		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe EQS: CanMove=false → 이동 보류"), *DiagBotName);
 		return;
 	}
 
-	ACharacter* Target = Cast<ACharacter>(BB->GetValueAsObject(TargetKey.SelectedKeyName));
-	if (IsValid(Target))
-	{
-		AIController->SetFocus(Target);
-	}
-
-	SetStrafeSpeed(AIController, StrafeWalkSpeed);
+	const FVector StrafeLocation = Result->GetItemAsLocation(0);
 
 	FAIMoveRequest MoveReq(StrafeLocation);
 	MoveReq.SetAcceptanceRadius(StrafeAcceptanceRadius);
 	MoveReq.SetUsePathfinding(true);
 
-	FPathFollowingRequestResult MoveResult = AIController->MoveTo(MoveReq);
-
-	if (MoveResult.Code == EPathFollowingRequestResult::RequestSuccessful)
-	{
-		WaitForMessage(*OwnerComp, UBrainComponent::AIMessage_MoveFinished);
-	}
-	else if (MoveResult.Code == EPathFollowingRequestResult::AlreadyAtGoal)
-	{
-		SetStrafeSpeed(AIController, OriginalMaxWalkSpeed);
-		const float Elapsed = GetWorld()->GetTimeSeconds() - StartTime;
-		if (Elapsed < StrafeDuration)
-		{
-			TWeakObjectPtr<UBehaviorTreeComponent> RetryOwner(OwnerComp);
-			GetWorld()->GetTimerManager().SetTimer(RetryTimerHandle,
-				FTimerDelegate::CreateWeakLambda(this, [this, RetryOwner]()
-				{
-					if (bTaskActive && RetryOwner.IsValid())
-					{
-						RunEQS(*RetryOwner.Get());
-					}
-				}), 0.3f, false);
-		}
-		else
-		{
-			FinishStrafe(*OwnerComp, EBTNodeResult::Succeeded);
-		}
-	}
-	else
-	{
-		SetStrafeSpeed(AIController, OriginalMaxWalkSpeed);
-		FinishStrafe(*OwnerComp, EBTNodeResult::Failed);
-	}
+	const FPathFollowingRequestResult MoveResult = AIController->MoveTo(MoveReq);
+	UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe EQS: Items=%d MoveTo Code=%d"),
+		*DiagBotName, NumItems, (int32)MoveResult.Code);
 }
 
 void UBTTask_CircleStrafe::SetStrafeSpeed(AAIController* InController, float Speed)
@@ -272,10 +280,12 @@ void UBTTask_CircleStrafe::SetStrafeSpeed(AAIController* InController, float Spe
 void UBTTask_CircleStrafe::FinishStrafe(UBehaviorTreeComponent& OwnerComp, EBTNodeResult::Type Result)
 {
 	bTaskActive = false;
-	GetWorld()->GetTimerManager().ClearTimer(RetryTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	if (IsValid(AIController))
 	{
+		const FString FinishBotName = AIController->GetPawn() ? AIController->GetPawn()->GetName() : AIController->GetName();
+		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe: 종료 Result=%d"), *FinishBotName, (int32)Result);
 		SetStrafeSpeed(AIController, OriginalMaxWalkSpeed);
 		AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	}
