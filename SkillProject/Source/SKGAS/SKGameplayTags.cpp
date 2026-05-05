@@ -32,6 +32,7 @@ namespace SKGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Static, "GameplayCue.Static");
 
+	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit, "Skill.Hit");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit_Left, "Skill.Hit.Left");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit_Right, "Skill.Hit.Right");
 	UE_DEFINE_GAMEPLAY_TAG(Skill_Hit_Front, "Skill.Hit.Front");

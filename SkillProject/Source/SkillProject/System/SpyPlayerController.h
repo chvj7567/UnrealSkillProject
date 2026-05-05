@@ -11,7 +11,6 @@
 class USpyAbilitySystemComponent;
 class USpyTargetingManagerComponent;
 class UCameraShakeBase;
-class USpyHealthComponent;
 
 UCLASS()
 class SKILLPROJECT_API ASpyPlayerController : public AModularPlayerController
@@ -22,7 +21,6 @@ public:
 	ASpyPlayerController();
 
 protected:
-	virtual void OnUnPossess() override;
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void AcknowledgePossession(APawn* InPawn) override;
@@ -36,10 +34,6 @@ public:
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
 
 	void ToggleCursorMode();
-
-	UFUNCTION()
-	void HandleReceivedHit(float Damage, bool bCritical, AActor* DamageCauser);
-	void HandleDealtHit(bool bCritical);
 
 	UFUNCTION(Client, Reliable)
 	void Client_TriggerShake(bool bCritical, bool bFromReceivedHit);
@@ -55,8 +49,4 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera|Shake")
 	TSubclassOf<UCameraShakeBase> HitShakeHeavy;
-
-	// OnUnPossess 시점에 GetPawn()은 이미 null이므로 별도 보관
-	UPROPERTY()
-	TWeakObjectPtr<USpyHealthComponent> BoundHealthComponent;
 };

@@ -3,7 +3,6 @@
 
 #include "SpyPlayerController.h"
 #include "Camera/CameraShakeBase.h"
-#include "Character/SpyHealthComponent.h"
 #include "Character/SpyCharacter.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
@@ -57,32 +56,9 @@ void ASpyPlayerController::ToggleCursorMode()
 
 void ASpyPlayerController::OnPossess(APawn* InPawn)
 {
-	if (BoundHealthComponent.IsValid())
-	{
-		BoundHealthComponent->OnHit.RemoveDynamic(this, &ASpyPlayerController::HandleReceivedHit);
-		BoundHealthComponent = nullptr;
-	}
-
 	Super::OnPossess(InPawn);
 
 	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
-
-	if (USpyHealthComponent* HC = USpyHealthComponent::FindHealthComponent(InPawn))
-	{
-		HC->OnHit.AddDynamic(this, &ASpyPlayerController::HandleReceivedHit);
-		BoundHealthComponent = HC;
-	}
-}
-
-void ASpyPlayerController::OnUnPossess()
-{
-	if (BoundHealthComponent.IsValid())
-	{
-		BoundHealthComponent->OnHit.RemoveDynamic(this, &ASpyPlayerController::HandleReceivedHit);
-		BoundHealthComponent = nullptr;
-	}
-
-	Super::OnUnPossess();
 }
 
 void ASpyPlayerController::AcknowledgePossession(APawn* InPawn)
@@ -141,16 +117,6 @@ USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent()
 {
 	const ASpyPlayerState* SpyPS = CastChecked<ASpyPlayerState>(PlayerState, ECastCheckedType::NullAllowed);
 	return (SpyPS ? SpyPS->GetSpyAbilitySystemComponent() : nullptr);
-}
-
-void ASpyPlayerController::HandleReceivedHit(float Damage, bool bCritical, AActor* DamageCauser)
-{
-	Client_TriggerShake(bCritical, true);
-}
-
-void ASpyPlayerController::HandleDealtHit(bool bCritical)
-{
-	Client_TriggerShake(bCritical, false);
 }
 
 void ASpyPlayerController::Client_TriggerShake_Implementation(bool bCritical, bool bFromReceivedHit)

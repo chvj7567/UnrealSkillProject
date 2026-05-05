@@ -7,8 +7,10 @@
 #include "Character/SpyCharacterAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "SKGameplayEffectContext.h"
-#include "System/SpyPlayerController.h"
+#include "SKGameplayTags.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
+#include "System/SpyPlayerController.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyHealthComponent)
 
@@ -82,45 +84,65 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 
 	OnHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
 
-	// 실제 피해가 발생한 경우에만 (DamageMagnitude < 0 = 감소)
+	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] HealthComp Enter — Mag=%.2f Spec=%d Owner=%s Instigator=%s"),
+		DamageMagnitude, DamageEffectSpec != nullptr,
+		*GetNameSafe(GetOwner()), *GetNameSafe(DamageInstigator));
+
+	// 컨텍스트에서 피격/크리티컬 정보 추출 — GA 차단과 무관하게 발화하기 위해 GA가 아닌 이 경로에서 처리
+	if (DamageEffectSpec == nullptr)
+		return;
+
+	FSKGameplayEffectContext* Ctx = FSKGameplayEffectContext::ExtractEffectContext(DamageEffectSpec->GetContext());
+	if (Ctx == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[CameraShake] HealthComp — Ctx null"));
+		return;
+	}
+
+	const FGameplayTag HitDirTag = Ctx->GetHitDirectionTag();
+	const bool bIsHit = HitDirTag.IsValid() && HitDirTag.MatchesTag(SKGameplayTags::Skill_Hit);
+	const bool bCritical = Ctx->IsCritical();
+
+	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] HealthComp Ctx — HitDir=%s bIsHit=%d bCritical=%d"),
+		*HitDirTag.ToString(), bIsHit, bCritical);
+
+	// BP 호환 OnHit (실제 피해가 발생한 경우만)
 	if (DamageMagnitude < 0.0f)
 	{
-		bool bCritical = false;
-		if (DamageEffectSpec)
-		{
-			FSKGameplayEffectContext* Ctx = FSKGameplayEffectContext::ExtractEffectContext(
-				DamageEffectSpec->GetContext());
-			if (Ctx)
-			{
-				bCritical = Ctx->IsCritical();
-			}
-		}
+		OnHit.Broadcast(FMath::Abs(DamageMagnitude), bCritical, DamageCauser);
+	}
 
-		const float ActualDamage = FMath::Abs(DamageMagnitude);
+	if (!bIsHit)
+		return;
 
-		// 피격자 쪽 이벤트
-		UE_LOG(LogTemp, Warning, TEXT("[CameraShake] OnHit.Broadcast — Damage=%.1f bCritical=%d Causer=%s"),
-			ActualDamage, bCritical, DamageCauser ? *DamageCauser->GetName() : TEXT("null"));
-		OnHit.Broadcast(ActualDamage, bCritical, DamageCauser);
-
-		// 공격자가 플레이어라면 해당 PC에도 알림
-		// InstigatorActor는 PlayerState일 수 있으므로 Pawn 변환 실패 시 PlayerState 경로 시도
-		APawn* InstigatorPawn = Cast<APawn>(DamageInstigator);
-		if (!InstigatorPawn)
+	// 피격자 카메라 쉐이크
+	ASpyPlayerController* DefenderPC = nullptr;
+	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+	{
+		DefenderPC = Cast<ASpyPlayerController>(OwnerPawn->GetController());
+		if (DefenderPC)
 		{
-			if (APlayerState* PS = Cast<APlayerState>(DamageInstigator))
-			{
-				InstigatorPawn = PS->GetPawn();
-			}
-		}
-		if (InstigatorPawn)
-		{
-			if (ASpyPlayerController* PC = Cast<ASpyPlayerController>(InstigatorPawn->GetController()))
-			{
-				PC->HandleDealtHit(bCritical);
-			}
+			DefenderPC->Client_TriggerShake(bCritical, true);
 		}
 	}
+
+	// 공격자 카메라 쉐이크 — DamageInstigator는 PlayerState일 수 있어 Pawn 변환 폴백
+	APawn* InstigatorPawn = Cast<APawn>(DamageInstigator);
+	if (!InstigatorPawn)
+	{
+		if (APlayerState* PS = Cast<APlayerState>(DamageInstigator))
+		{
+			InstigatorPawn = PS->GetPawn();
+		}
+	}
+	ASpyPlayerController* AttackerPC = InstigatorPawn ? Cast<ASpyPlayerController>(InstigatorPawn->GetController()) : nullptr;
+	if (AttackerPC)
+	{
+		AttackerPC->Client_TriggerShake(bCritical, false);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] HealthComp RPC — DefenderPC=%d AttackerPC=%d"),
+		DefenderPC != nullptr, AttackerPC != nullptr);
 }
 
 void USpyHealthComponent::HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
