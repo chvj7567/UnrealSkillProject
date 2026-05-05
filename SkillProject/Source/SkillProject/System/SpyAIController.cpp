@@ -168,11 +168,6 @@ void ASpyAIController::OnPossess(APawn* InPawn)
 				FOnBlackboardChangeNotification::CreateWeakLambda(this,
 					[this](const UBlackboardComponent& InBB, FBlackboard::FKey InKey) -> EBlackboardNotificationResult
 					{
-						UObject* NewVal = InBB.GetValueAsObject(InBB.GetKeyName(InKey));
-						const FString BotName = GetPawn() ? GetPawn()->GetName() : GetName();
-						UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] BB.TargetActor 변경됨: %s"),
-							*BotName,
-							NewVal ? *NewVal->GetName() : TEXT("NULL"));
 						return EBlackboardNotificationResult::ContinueObserving;
 					}));
 		}
@@ -364,12 +359,6 @@ void ASpyAIController::RefreshBlackboardTarget()
 		return;
 	}
 
-	const FString BotName = MyPawn->GetName();
-	UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] Refresh: bCurrentGone=true (Target=%s, IsValid=%d) — 새 타겟 검색"),
-		*BotName,
-		CurrentTarget ? *CurrentTarget->GetName() : TEXT("NULL"),
-		CurrentTarget ? IsValid(CurrentTarget) : 0);
-
 	//# 현재 타겟이 사라짐 → 시야 내 살아있는 적 중 가장 가까운 적으로 교체
 	TArray<AActor*> PerceivedActors;
 	AIPerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActors);
@@ -399,13 +388,6 @@ void ASpyAIController::RefreshBlackboardTarget()
 		BB->SetValueAsObject("TargetActor", BestPawn);
 		BB->SetValueAsVector("TargetLocation", BestPawn->GetActorLocation());
 
-		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] Refresh SET: %s (LastLogged=%s)"),
-			*BotName,
-			*BestPawn->GetName(),
-			LastLoggedTarget.IsValid() ? *LastLoggedTarget.Get()->GetName() : TEXT("NULL"));
-
-		LastLoggedTarget = BestPawn;
-
 		//# 새 타겟의 OnDestroyed 델리게이트 바인딩 — destroy 시점 직접 잡음
 		if (AActor* PrevTracked = TrackedTargetForDestroyDetection.Get())
 		{
@@ -424,16 +406,12 @@ void ASpyAIController::RefreshBlackboardTarget()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] Refresh CLEAR: bCurrentGone=true, 시야 내 적 없음 — BB 클리어"), *BotName);
 		BB->ClearValue("TargetActor");
-		LastLoggedTarget = nullptr;
 	}
 }
 
 void ASpyAIController::OnTrackedTargetDestroyed(AActor* DestroyedActor)
 {
-	UE_LOG(LogTemp, Error, TEXT("[SpyAI] !!! 타겟 폰 OnDestroyed 발화: %s !!!"),
-		DestroyedActor ? *DestroyedActor->GetName() : TEXT("NULL"));
 }
 
 bool ASpyAIController::IsHostileAndAlive(AActor* InActor) const

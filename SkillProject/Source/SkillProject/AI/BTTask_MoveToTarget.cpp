@@ -34,8 +34,6 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 
     if (RawTarget == nullptr)
     {
-        const FString BotName = AIController->GetPawn() ? AIController->GetPawn()->GetName() : AIController->GetName();
-        UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] MoveToTarget ExecuteTask: BB.%s = NULL"), *BotName, *Key.ToString());
         return EBTNodeResult::Failed;
     }
 
@@ -77,16 +75,6 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     MoveReq.SetUsePathfinding(true);
 
     const FPathFollowingRequestResult Result = AIController->MoveTo(MoveReq);
-
-    //# 진단: MoveTo 직후 PFC가 Moving 상태로 진입했는지
-    EPathFollowingStatus::Type PostStatus = EPathFollowingStatus::Idle;
-    if (UPathFollowingComponent* PFC = AIController->GetPathFollowingComponent())
-    {
-        PostStatus = PFC->GetStatus();
-    }
-    const FString BotName = AIController->GetPawn() ? AIController->GetPawn()->GetName() : AIController->GetName();
-    UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] MoveTo: Code=%d Dist=%.0f StopDist=%.0f PostStatus=%d"),
-        *BotName, (int32)Result.Code, Distance, StoppingDistance, (int32)PostStatus);
 
     if (Result.Code == EPathFollowingRequestResult::RequestSuccessful)
     {
@@ -139,8 +127,6 @@ void UBTTask_MoveToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
     const float CurDist = FVector::Dist(MyPawn->GetActorLocation(), CurTarget->GetActorLocation());
     if (CurDist <= StoppingDistance)
     {
-        const FString TickBotName = MyPawn ? MyPawn->GetName() : AIC->GetName();
-        UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] MoveToTarget: Succeeded (Dist=%.0f ≤ %.0f) → ActivateAbility로"), *TickBotName, CurDist, StoppingDistance);
         AIC->StopMovement();
         FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
         return;

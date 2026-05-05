@@ -47,9 +47,6 @@ EBTNodeResult::Type UBTTask_CircleStrafe::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
-	const FString StrafeBotName = AIController->GetPawn() ? AIController->GetPawn()->GetName() : AIController->GetName();
-	UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe: 진입 Duration=%.1f"), *StrafeBotName, StrafeDuration);
-
 	bTaskActive = true;
 	bEQSPending = false;
 	EQSAccumulator = 0.f;
@@ -180,17 +177,12 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 
 	UBehaviorTreeComponent* OwnerComp = WeakOwner.Get();
 	AAIController* AIController = OwnerComp->GetAIOwner();
-	const FString DiagBotName = (IsValid(AIController) && AIController->GetPawn()) ? AIController->GetPawn()->GetName() : TEXT("?");
 
 	DrawDebugEQSResults(GetWorld(), Result);
-
-	const int32 NumItems = (Result.IsValid() && Result->IsSuccessful()) ? Result->Items.Num() : 0;
 
 	//# 빈 결과 — C++ 자체 계산으로 fallback
 	if (!Result.IsValid() || !Result->IsSuccessful() || Result->Items.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe EQS: 빈 결과 → C++ fallback"), *DiagBotName);
-
 		if (!IsValid(AIController))
 			return;
 		if (!SpyAIUtils::CanMove(AIController))
@@ -234,7 +226,6 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 	//# 스킬 시전 중(Lock_Input_Move)이면 이번 프레임 이동 보류 — TickTask가 다시 시도
 	if (!SpyAIUtils::CanMove(AIController))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe EQS: CanMove=false → 이동 보류"), *DiagBotName);
 		return;
 	}
 
@@ -244,9 +235,7 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 	MoveReq.SetAcceptanceRadius(StrafeAcceptanceRadius);
 	MoveReq.SetUsePathfinding(true);
 
-	const FPathFollowingRequestResult MoveResult = AIController->MoveTo(MoveReq);
-	UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe EQS: Items=%d MoveTo Code=%d"),
-		*DiagBotName, NumItems, (int32)MoveResult.Code);
+	AIController->MoveTo(MoveReq);
 }
 
 void UBTTask_CircleStrafe::SetStrafeSpeed(AAIController* InController, float Speed)
@@ -284,8 +273,6 @@ void UBTTask_CircleStrafe::FinishStrafe(UBehaviorTreeComponent& OwnerComp, EBTNo
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	if (IsValid(AIController))
 	{
-		const FString FinishBotName = AIController->GetPawn() ? AIController->GetPawn()->GetName() : AIController->GetName();
-		UE_LOG(LogTemp, Warning, TEXT("[SpyAI %s] CircleStrafe: 종료 Result=%d"), *FinishBotName, (int32)Result);
 		SetStrafeSpeed(AIController, OriginalMaxWalkSpeed);
 		AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	}

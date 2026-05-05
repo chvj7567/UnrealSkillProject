@@ -105,12 +105,6 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         const bool bOnScreen = PC->ProjectWorldLocationToScreen(Actor->GetActorLocation(), ScreenPos, true);
         const float DistToCenter = bOnScreen ? FVector2D::Distance(ScreenPos, ViewportCenter) : -1.f;
 
-        // 월드 디버그 텍스트
-        DrawDebugString(GetWorld(), Actor->GetActorLocation() + FVector(0,0,50),
-            FString::Printf(TEXT("%s\nTag:%d Screen:%d Dist:%.0f"),
-                *Actor->GetName(), bHasTag, bOnScreen, DistToCenter),
-            nullptr, bHasTag ? FColor::Yellow : FColor::Silver, 0.f);
-
         if (!bHasTag || !bOnScreen) continue;
 
         if (DistToCenter < BestDistToCenter)
