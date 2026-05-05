@@ -45,7 +45,7 @@ void USpyGA_SkillMove_HangUp::EndAbility(const FGameplayAbilitySpecHandle Handle
 		{
 			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 			{
-				ParkourComponent->bFreeMoveMode = false;
+				ParkourComponent->SetFreeMoveMode(false);
 			}
 		}
 	}
@@ -62,7 +62,7 @@ void USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData(FMotionWarpingData InHangU
 
 			if (HasAuthority(&CurrentActivationInfo))
 			{
-				ParkourComponent->bFreeMoveMode = true;
+				ParkourComponent->SetFreeMoveMode(true);
 			}
 		}
 

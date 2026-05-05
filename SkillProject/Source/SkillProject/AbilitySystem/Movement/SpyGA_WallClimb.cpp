@@ -43,7 +43,7 @@ void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const
         {
             if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
             {
-                ParkourComponent->bFreeMoveMode = false;
+                ParkourComponent->SetFreeMoveMode(false);
             }
         }
     }

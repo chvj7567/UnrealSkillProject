@@ -57,7 +57,7 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 		{
 			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 			{
-				ParkourComponent->bFreeMoveMode = false;
+				ParkourComponent->SetFreeMoveMode(false);
 			}
 		}
 	}
@@ -75,7 +75,7 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultD
 
 			if (HasAuthority(&CurrentActivationInfo))
 			{
-				ParkourComponent->bFreeMoveMode = true;
+				ParkourComponent->SetFreeMoveMode(true);
 			}
 		}
 

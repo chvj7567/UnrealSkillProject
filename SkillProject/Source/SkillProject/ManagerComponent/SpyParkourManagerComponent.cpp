@@ -63,6 +63,13 @@ void USpyParkourManagerComponent::OnRep_FreeMoveMode()
     }
 }
 
+void USpyParkourManagerComponent::SetFreeMoveMode(bool bInFreeMoveMode)
+{
+    bFreeMoveMode = bInFreeMoveMode;
+    //# REPNOTIFY는 클라이언트에서만 호출되므로, 서버 자신도 즉시 동일 로직을 실행한다.
+    OnRep_FreeMoveMode();
+}
+
 bool USpyParkourManagerComponent::TryToggleClimbAction()
 {
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
@@ -86,6 +93,11 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
     FVector OwnerLocation = OwnerCharacter->GetActorLocation();
     FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
 
+    //# Climb 검출 forward trace는 머리보다 약간 위에서 시작
+    const float CapsuleHalfHeight = OwnerCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    const float ClimbRayHeightAboveHead = 30.f;
+    OwnerLocation.Z += CapsuleHalfHeight + ClimbRayHeightAboveHead;
+
     FVector Start = OwnerLocation;
     FVector End = Start + (OwnerFowardVector * ClimbData.DistanceOffset);
 
@@ -104,6 +116,9 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
         {
             FClimbWallData newWallData = FClimbWallData();
             newWallData.HitVector = Hit.ImpactPoint;
+            //# trace는 머리 위에서 쐈지만, climb 시작 위치는 캐릭터 capsule center 높이를 유지
+            //# (그렇지 않으면 StartWallClimb의 SetWorldLocationAndRotation이 위로 점프시킴)
+            newWallData.HitVector.Z = OwnerCharacter->GetActorLocation().Z;
             newWallData.NormalVector = Hit.ImpactNormal;
 
             ClimbWallData = newWallData;
@@ -280,6 +295,11 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
 
     FVector OwnerLocation = OwnerCharacter->GetActorLocation();
     FVector OwnerFowardVector = OwnerCharacter->GetActorForwardVector();
+
+    //# Vault 검출 forward trace는 발 위치보다 약간 위에서 시작 (낮은 장애물 감지용)
+    const float CapsuleHalfHeight = OwnerCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    const float VaultRayHeightAboveFoot = 30.f;
+    OwnerLocation.Z -= (CapsuleHalfHeight - VaultRayHeightAboveFoot);
 
     //# 재사용 변수들
     UWorld* World = GetWorld();

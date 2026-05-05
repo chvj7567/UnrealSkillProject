@@ -275,6 +275,10 @@ public:
 	UFUNCTION()
 	void OnRep_FreeMoveMode();
 
+	//# 서버에서 호출 시 OnRep_FreeMoveMode를 직접 한 번 더 실행하여
+	//# 서버 자신의 movement mode와 capsule collision도 즉시 반영한다.
+	void SetFreeMoveMode(bool bInFreeMoveMode);
+
 	UFUNCTION(BlueprintCallable)
 	bool TryToggleClimbAction();
 
