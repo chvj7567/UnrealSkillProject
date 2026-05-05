@@ -10,6 +10,8 @@
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Data/SpyMovementConfig.h"
+#include "DrawDebugHelpers.h"
+#include "SKDebug.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyCharacterMovementComponent)
 
@@ -125,8 +127,8 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 		Params.AddIgnoredActor(GetOwner());
 
 		bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-		DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, 
-false, 1.f, 0, -1.f);
+		if (SpyDebugDrawEnabled())
+			DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
 		FGameplayAbilityTargetData_LocationInfo* LocData = new FGameplayAbilityTargetData_LocationInfo();
 		LocData->TargetLocation.LiteralTransform = FTransform(HitResult.Location);
@@ -203,7 +205,8 @@ bool USpyCharacterMovementComponent::CanHangUp()
 	Params.AddIgnoredActor(OwnerCharacter);
 
 	bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-	DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
+	if (SpyDebugDrawEnabled())
+		DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
 	return bHit == false;
 }

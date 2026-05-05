@@ -14,6 +14,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/OverlapResult.h"
 #include "DrawDebugHelpers.h"
+#include "SKDebug.h"
 #include "SKGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility_SkillAction)
@@ -42,14 +43,17 @@ FGameplayTag CalcHitDirectionTag(const FVector& AttackerLocation, const ACharact
     else
         ResultTag = SKGameplayTags::Skill_Hit_Left;
 
-    UE_LOG(LogTemp, Warning, TEXT("[HitDir] Target=%s Angle=%.1f° → %s"),
-        *TargetCharacter->GetName(), AngleDeg, *ResultTag.ToString());
-
-    if (UWorld* World = TargetCharacter->GetWorld())
+    if (SpyDebugDrawEnabled())
     {
-        const FVector LineBase = TargetLocation + FVector(0, 0, 90.0f);
-        DrawDebugLine(World, LineBase, LineBase + TargetForward * 200.0f, FColor::Blue, false, 2.0f, 0, 3.0f);
-        DrawDebugLine(World, LineBase, LineBase + ToAttacker * 200.0f, FColor::Red, false, 2.0f, 0, 3.0f);
+        UE_LOG(LogTemp, Warning, TEXT("[HitDir] Target=%s Angle=%.1f° → %s"),
+            *TargetCharacter->GetName(), AngleDeg, *ResultTag.ToString());
+
+        if (UWorld* World = TargetCharacter->GetWorld())
+        {
+            const FVector LineBase = TargetLocation + FVector(0, 0, 90.0f);
+            DrawDebugLine(World, LineBase, LineBase + TargetForward * 200.0f, FColor::Blue, false, 2.0f, 0, 3.0f);
+            DrawDebugLine(World, LineBase, LineBase + ToAttacker * 200.0f, FColor::Red, false, 2.0f, 0, 3.0f);
+        }
     }
 
     return ResultTag;
@@ -265,17 +269,12 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
         }
     }
 
-    if (bInvalidCharacter)
+    if (SpyDebugDrawEnabled())
     {
+        const FColor Color = bInvalidCharacter ? FColor::Red : FColor::Green;
         DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
             FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
-            FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Red, false, 1.0f);
-    }
-    else
-    {
-        DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
-            FVector::Dist(CurrentStart, CurrentEnd) * 0.5f + Radius, Radius,
-            FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), FColor::Green, false, 1.0f);
+            FRotationMatrix::MakeFromZ(CurrentStart - CurrentEnd).ToQuat(), Color, false, 1.0f);
     }
 }
 
@@ -367,12 +366,9 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
         }
     }
 
-    if (bInvalidCharacter)
+    if (SpyDebugDrawEnabled())
     {
-        DrawDebugSphere(OwnerCharacter->GetWorld(), TargetLoc, Radius, 12, FColor::Red, false, 1.0f);
-    }
-    else
-    {
-        DrawDebugSphere(OwnerCharacter->GetWorld(), TargetLoc, Radius, 12, FColor::Green, false, 1.0f);
+        const FColor Color = bInvalidCharacter ? FColor::Red : FColor::Green;
+        DrawDebugSphere(OwnerCharacter->GetWorld(), TargetLoc, Radius, 12, Color, false, 1.0f);
     }
 }

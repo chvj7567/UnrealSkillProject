@@ -6,6 +6,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "DrawDebugHelpers.h"
+#include "SKDebug.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
 #include "GameFramework/Character.h"
@@ -178,7 +179,8 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 	UBehaviorTreeComponent* OwnerComp = WeakOwner.Get();
 	AAIController* AIController = OwnerComp->GetAIOwner();
 
-	DrawDebugEQSResults(GetWorld(), Result);
+	if (SpyDebugDrawEnabled())
+		DrawDebugEQSResults(GetWorld(), Result);
 
 	//# 빈 결과 — C++ 자체 계산으로 fallback
 	if (!Result.IsValid() || !Result->IsSuccessful() || Result->Items.IsEmpty())

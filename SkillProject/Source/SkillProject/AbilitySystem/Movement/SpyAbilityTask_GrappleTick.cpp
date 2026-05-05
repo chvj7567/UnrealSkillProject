@@ -3,6 +3,7 @@
 #include "SpyAbilityTask_GrappleTick.h"
 #include "GrappleCableActor.h"
 #include "GameFramework/Character.h"
+#include "SKDebug.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyAbilityTask_GrappleTick)
 
@@ -44,14 +45,18 @@ void USpyAbilityTask_GrappleTick::TickTask(float DeltaTime)
     {
         if (!CableActor.IsValid())
         {
-            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleTick] CableActor invalid — EndTask"));
+            if (SpyDebugDrawEnabled())
+                GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleTick] CableActor invalid — EndTask"));
             EndTask();
             return;
         }
 
         const float Distance = FVector::Dist(CharLoc, TargetLocation);
-        GEngine->AddOnScreenDebugMessage(10, 0.f, FColor::Cyan,
-            FString::Printf(TEXT("[GrappleTick] Dist=%.0f  Speed=%.0f"), Distance, PullSpeed));
+        if (SpyDebugDrawEnabled())
+        {
+            GEngine->AddOnScreenDebugMessage(10, 0.f, FColor::Cyan,
+                FString::Printf(TEXT("[GrappleTick] Dist=%.0f  Speed=%.0f"), Distance, PullSpeed));
+        }
 
         if (Distance <= ArrivalThreshold)
         {

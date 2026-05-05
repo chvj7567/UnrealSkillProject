@@ -4,6 +4,7 @@
 #include "Data/SpyMovementConfig.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "SKDebug.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
@@ -54,7 +55,8 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 {
     if (!MovementConfig)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("[GrappleTgt] MovementConfig is NULL"));
+        if (SpyDebugDrawEnabled())
+            GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("[GrappleTgt] MovementConfig is NULL"));
         return nullptr;
     }
 
@@ -67,8 +69,11 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
     const FVector2D ViewportCenter = ViewportSize * 0.5f;
 
     // 탐색 반경 구체
-    DrawDebugSphere(GetWorld(), OwnerPawn->GetActorLocation(),
-        MovementConfig->GrapplePromptRange, 16, FColor::Cyan, false, 0.f, 0, 1.f);
+    if (SpyDebugDrawEnabled())
+    {
+        DrawDebugSphere(GetWorld(), OwnerPawn->GetActorLocation(),
+            MovementConfig->GrapplePromptRange, 16, FColor::Cyan, false, 0.f, 0, 1.f);
+    }
 
     TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
@@ -88,9 +93,12 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         OutActors
     );
 
-    GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White,
-        FString::Printf(TEXT("[GrappleTgt] Overlap=%d  Center=%s  Radius=%.0f"),
-            OutActors.Num(), *ViewportCenter.ToString(), MovementConfig->GrappleTargetingScreenRadius));
+    if (SpyDebugDrawEnabled())
+    {
+        GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White,
+            FString::Printf(TEXT("[GrappleTgt] Overlap=%d  Center=%s  Radius=%.0f"),
+                OutActors.Num(), *ViewportCenter.ToString(), MovementConfig->GrappleTargetingScreenRadius));
+    }
 
     AActor* BestTarget = nullptr;
     float BestDistToCenter = MovementConfig->GrappleTargetingScreenRadius;
@@ -114,15 +122,18 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         }
     }
 
-    if (BestTarget)
+    if (SpyDebugDrawEnabled())
     {
-        DrawDebugSphere(GetWorld(), BestTarget->GetActorLocation(), 60.f, 8, FColor::Green, false, 0.f, 0, 3.f);
-        GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
-            FString::Printf(TEXT("[GrappleTgt] BEST=%s (%.0fpx)"), *BestTarget->GetName(), BestDistToCenter));
-    }
-    else
-    {
-        GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Orange, TEXT("[GrappleTgt] No target"));
+        if (BestTarget)
+        {
+            DrawDebugSphere(GetWorld(), BestTarget->GetActorLocation(), 60.f, 8, FColor::Green, false, 0.f, 0, 3.f);
+            GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
+                FString::Printf(TEXT("[GrappleTgt] BEST=%s (%.0fpx)"), *BestTarget->GetName(), BestDistToCenter));
+        }
+        else
+        {
+            GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Orange, TEXT("[GrappleTgt] No target"));
+        }
     }
 
     return BestTarget;
