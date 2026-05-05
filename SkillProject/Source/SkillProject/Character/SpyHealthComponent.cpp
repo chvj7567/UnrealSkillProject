@@ -115,14 +115,17 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 	if (!bIsHit)
 		return;
 
-	// 피격자 카메라 쉐이크
+	// 피격자 카메라 쉐이크 — 로컬 컨트롤러는 RPC 우회 (ProcessEvent 경로 BP 이슈 회피)
 	ASpyPlayerController* DefenderPC = nullptr;
 	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
 	{
 		DefenderPC = Cast<ASpyPlayerController>(OwnerPawn->GetController());
 		if (DefenderPC)
 		{
-			DefenderPC->Client_TriggerShake(bCritical, true);
+			if (DefenderPC->IsLocalController())
+				DefenderPC->TriggerShakeLocal(bCritical, true);
+			else
+				DefenderPC->Client_TriggerShake(bCritical, true);
 		}
 	}
 
@@ -138,7 +141,10 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 	ASpyPlayerController* AttackerPC = InstigatorPawn ? Cast<ASpyPlayerController>(InstigatorPawn->GetController()) : nullptr;
 	if (AttackerPC)
 	{
-		AttackerPC->Client_TriggerShake(bCritical, false);
+		if (AttackerPC->IsLocalController())
+			AttackerPC->TriggerShakeLocal(bCritical, false);
+		else
+			AttackerPC->Client_TriggerShake(bCritical, false);
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] HealthComp RPC — DefenderPC=%d AttackerPC=%d"),

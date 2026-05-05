@@ -94,10 +94,13 @@ void USpyGameplayAbility_Parry::OnWaitGameplayEvent(FGameplayEventData Payload)
 	FVector KnockbackDir = -OwnerCharacter->GetActorForwardVector();
 	OwnerCharacter->LaunchCharacter(KnockbackDir * KnockbackForce, true, false);
 
-	// 패링 성공 시 방어자/공격자 양쪽 카메라 쉐이크
+	// 패링 성공 시 방어자/공격자 양쪽 카메라 쉐이크 — 로컬 컨트롤러는 RPC 우회
 	if (ASpyPlayerController* DefenderPC = Cast<ASpyPlayerController>(OwnerCharacter->GetController()))
 	{
-		DefenderPC->Client_TriggerShake(false, true);
+		if (DefenderPC->IsLocalController())
+			DefenderPC->TriggerShakeLocal(false, true);
+		else
+			DefenderPC->Client_TriggerShake(false, true);
 	}
 
 	AActor* InstigatorActor = const_cast<AActor*>(Payload.Instigator.Get());
@@ -105,7 +108,10 @@ void USpyGameplayAbility_Parry::OnWaitGameplayEvent(FGameplayEventData Payload)
 	{
 		if (ASpyPlayerController* AttackerPC = Cast<ASpyPlayerController>(InstigatorPawn->GetController()))
 		{
-			AttackerPC->Client_TriggerShake(false, false);
+			if (AttackerPC->IsLocalController())
+				AttackerPC->TriggerShakeLocal(false, false);
+			else
+				AttackerPC->Client_TriggerShake(false, false);
 		}
 	}
 }

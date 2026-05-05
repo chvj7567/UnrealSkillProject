@@ -38,6 +38,9 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_TriggerShake(bool bCritical, bool bFromReceivedHit);
 
+	//# RPC 우회용 — 로컬 컨트롤러는 ProcessEvent 거치지 않고 직접 호출
+	void TriggerShakeLocal(bool bCritical, bool bFromReceivedHit);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USpyTargetingManagerComponent> TargetingComp;

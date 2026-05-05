@@ -13,9 +13,47 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
 #include "Engine/OverlapResult.h"
+#include "DrawDebugHelpers.h"
 #include "SKGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKGameplayAbility_SkillAction)
+
+//# 타겟의 정면 기준으로 공격자가 어느 방향에 있는지 4분할
+FGameplayTag CalcHitDirectionTag(const FVector& AttackerLocation, const ACharacter* TargetCharacter)
+{
+    if (TargetCharacter == nullptr)
+        return SKGameplayTags::Skill_Hit_Front;
+
+    const FVector TargetLocation = TargetCharacter->GetActorLocation();
+    const FVector ToAttacker = (AttackerLocation - TargetLocation).GetSafeNormal2D();
+    const FVector TargetForward = TargetCharacter->GetActorForwardVector().GetSafeNormal2D();
+
+    const float Dot = FVector::DotProduct(TargetForward, ToAttacker);
+    const float CrossZ = FVector::CrossProduct(TargetForward, ToAttacker).Z;
+    const float AngleDeg = FMath::RadiansToDegrees(FMath::Atan2(CrossZ, Dot));
+
+    FGameplayTag ResultTag = SKGameplayTags::Skill_Hit_Front;
+    if (FMath::Abs(AngleDeg) <= 45.0f)
+        ResultTag = SKGameplayTags::Skill_Hit_Front;
+    else if (FMath::Abs(AngleDeg) >= 135.0f)
+        ResultTag = SKGameplayTags::Skill_Hit_Back;
+    else if (AngleDeg > 0.0f)
+        ResultTag = SKGameplayTags::Skill_Hit_Right;
+    else
+        ResultTag = SKGameplayTags::Skill_Hit_Left;
+
+    UE_LOG(LogTemp, Warning, TEXT("[HitDir] Target=%s Angle=%.1f° → %s"),
+        *TargetCharacter->GetName(), AngleDeg, *ResultTag.ToString());
+
+    if (UWorld* World = TargetCharacter->GetWorld())
+    {
+        const FVector LineBase = TargetLocation + FVector(0, 0, 90.0f);
+        DrawDebugLine(World, LineBase, LineBase + TargetForward * 200.0f, FColor::Blue, false, 2.0f, 0, 3.0f);
+        DrawDebugLine(World, LineBase, LineBase + ToAttacker * 200.0f, FColor::Red, false, 2.0f, 0, 3.0f);
+    }
+
+    return ResultTag;
+}
 
 USKGameplayAbility_SkillAction::USKGameplayAbility_SkillAction()
 {
@@ -212,23 +250,14 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                 Payload.Instigator = OwnerCharacter;
                 Payload.Target = TargetCharacter;
 
-                TArray<FGameplayTag> HitDirectionTags;
-
                 if (bIsHeal)
                 {
                     Payload.TargetTags.AddTag(SKGameplayTags::Skill_Buff_Heal);
                 }
                 else
                 {
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
-
-                    //# 랜덤 방향 Hit 태그
-                    int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
-                    FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
-                    Payload.TargetTags.AddTag(RandomHitTag);
+                    //# 타겟 정면 기준 공격자 위치로 4방향 Hit 태그 결정
+                    Payload.TargetTags.AddTag(CalcHitDirectionTag(OwnerCharacter->GetActorLocation(), TargetCharacter));
                 }
 
                 UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);
@@ -323,23 +352,14 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                 Payload.Instigator = OwnerCharacter;
                 Payload.Target = TargetCharacter;
 
-                TArray<FGameplayTag> HitDirectionTags;
-
                 if (bIsHeal)
                 {
                     Payload.TargetTags.AddTag(SKGameplayTags::Skill_Buff_Heal);
                 }
                 else
                 {
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Front);
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Back);
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Left);
-                    HitDirectionTags.Add(SKGameplayTags::Skill_Hit_Right);
-
-                    //# 랜덤 방향 Hit 태그
-                    int32 RandomIndex = FMath::RandRange(0, HitDirectionTags.Num() - 1);
-                    FGameplayTag RandomHitTag = HitDirectionTags[RandomIndex];
-                    Payload.TargetTags.AddTag(RandomHitTag);
+                    //# 타겟 정면 기준 공격자 위치로 4방향 Hit 태그 결정
+                    Payload.TargetTags.AddTag(CalcHitDirectionTag(OwnerCharacter->GetActorLocation(), TargetCharacter));
                 }
 
                 UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerCharacter, EffectSkillActionTag, Payload);

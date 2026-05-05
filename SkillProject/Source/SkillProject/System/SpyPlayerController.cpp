@@ -121,6 +121,11 @@ USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent()
 
 void ASpyPlayerController::Client_TriggerShake_Implementation(bool bCritical, bool bFromReceivedHit)
 {
+	TriggerShakeLocal(bCritical, bFromReceivedHit);
+}
+
+void ASpyPlayerController::TriggerShakeLocal(bool bCritical, bool bFromReceivedHit)
+{
 	const TCHAR* Source = bFromReceivedHit ? TEXT("피격") : TEXT("공격");
 	const TCHAR* Intensity = bCritical ? TEXT("Heavy") : TEXT("Light");
 	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] %s — %s | CameraManager=%d ShakeLight=%d ShakeHeavy=%d"),
