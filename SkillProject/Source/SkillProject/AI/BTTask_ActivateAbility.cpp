@@ -3,8 +3,6 @@
 
 #include "BTTask_ActivateAbility.h"
 #include "AIController.h"
-#include "BehaviorTree/BlackboardComponent.h"
-#include "GameFramework/Character.h"
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemComponent.h"
 
@@ -13,18 +11,12 @@
 UBTTask_ActivateAbility::UBTTask_ActivateAbility()
 {
     NodeName = "Activate Ability";
-
-    TargetKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_ActivateAbility, TargetKey), AActor::StaticClass());
 }
 
 EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     AAIController* AIController = OwnerComp.GetAIOwner();
     if (AIController == nullptr)
-        return EBTNodeResult::Failed;
-
-    UBlackboardComponent* BlackBoardComp = OwnerComp.GetBlackboardComponent();
-    if (BlackBoardComp == nullptr)
         return EBTNodeResult::Failed;
 
     APawn* Pawn = AIController->GetPawn();
@@ -43,22 +35,6 @@ EBTNodeResult::Type UBTTask_ActivateAbility::ExecuteTask(UBehaviorTreeComponent&
         return EBTNodeResult::Failed;
 
     AIController->StopMovement();
-
-    //# 어빌리티 발동 직전에 타겟 방향으로 즉시 회전
-    if (TargetKey.SelectedKeyName != NAME_None)
-    {
-        if (AActor* TargetActor = Cast<AActor>(BlackBoardComp->GetValueAsObject(TargetKey.SelectedKeyName)))
-        {
-            FVector ToTarget = TargetActor->GetActorLocation() - Pawn->GetActorLocation();
-            ToTarget.Z = 0.f;
-            if (!ToTarget.IsNearlyZero())
-            {
-                const FRotator NewRot = ToTarget.Rotation();
-                AIController->SetControlRotation(NewRot);
-                Pawn->SetActorRotation(NewRot);
-            }
-        }
-    }
 
     int32 RandomIndex = FMath::RandRange(0, AbilityTags.Num() - 1);
     FGameplayTag RandomTag = AbilityTags[RandomIndex];

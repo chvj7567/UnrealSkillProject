@@ -21,8 +21,4 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Ability")
     TArray<FGameplayTag> AbilityTags;
-
-    //# Blackboard에서 타겟을 읽을 키 — 어빌리티 발동 전 타겟 방향으로 회전
-    UPROPERTY(EditAnywhere, Category = "Ability")
-    FBlackboardKeySelector TargetKey;
 };

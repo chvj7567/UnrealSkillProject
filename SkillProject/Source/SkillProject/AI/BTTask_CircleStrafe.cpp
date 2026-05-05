@@ -122,14 +122,27 @@ void UBTTask_CircleStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 		return;
 	}
 
-	//# 매 프레임 타겟 방향으로 본체 회전 — 후퇴/측면이동 중에도 정면이 타겟을 보게
-	FVector ToTarget = CurTarget->GetActorLocation() - MyPawn->GetActorLocation();
-	ToTarget.Z = 0.f;
-	if (!ToTarget.IsNearlyZero())
+	//# 스킬 시전(Lock_Input_Move) / 죽음 중에는 타겟 회전·시선 락 모두 해제
+	if (!SpyAIUtils::CanMove(AIC))
 	{
-		const FRotator NewRot = ToTarget.Rotation();
-		AIC->SetControlRotation(NewRot);
-		MyPawn->SetActorRotation(NewRot);
+		AIC->ClearFocus(EAIFocusPriority::Gameplay);
+	}
+	else
+	{
+		//# 행동 가능 상태면 시선 락 복구 후 매 프레임 타겟 방향으로 본체 회전
+		if (AIC->GetFocusActor() != CurTarget)
+		{
+			AIC->SetFocus(CurTarget);
+		}
+
+		FVector ToTarget = CurTarget->GetActorLocation() - MyPawn->GetActorLocation();
+		ToTarget.Z = 0.f;
+		if (!ToTarget.IsNearlyZero())
+		{
+			const FRotator NewRot = ToTarget.Rotation();
+			AIC->SetControlRotation(NewRot);
+			MyPawn->SetActorRotation(NewRot);
+		}
 	}
 
 	//# 0.3초마다 새로운 EQS 위치로 재요청 — bEQSPending stuck 방지를 위해 강제 발사
