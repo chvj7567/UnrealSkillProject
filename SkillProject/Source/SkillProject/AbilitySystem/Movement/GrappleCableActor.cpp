@@ -18,10 +18,9 @@ AGrappleCableActor::AGrappleCableActor()
 
     CableComponent->bAttachStart = true;
     CableComponent->bAttachEnd   = false;
-    CableComponent->NumSegments  = 8;
     CableComponent->CableLength  = 0.f;
-    CableComponent->CableWidth   = 2.f;
     CableComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    CableComponent->SetAbsolute(false, true, false);
 
     SetReplicatingMovement(false);
 }
@@ -37,6 +36,17 @@ void AGrappleCableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 void AGrappleCableActor::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (CableComponent)
+    {
+        CableComponent->CableWidth  = CableWidth;
+        CableComponent->NumSegments = NumSegments;
+        if (CableMaterial)
+        {
+            CableComponent->SetMaterial(0, CableMaterial);
+        }
+    }
+
     UpdateCableTransform();
 }
 

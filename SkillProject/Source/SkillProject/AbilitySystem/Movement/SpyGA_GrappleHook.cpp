@@ -39,6 +39,8 @@ USpyGA_GrappleHook::USpyGA_GrappleHook()
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 
     ActivationBlockedTags.AddTag(SpyGameplayTags::Character_State_Grapple);
+
+    CableActorClass = AGrappleCableActor::StaticClass();
 }
 
 void USpyGA_GrappleHook::ActivateAbility(
@@ -103,7 +105,12 @@ void USpyGA_GrappleHook::ActivateAbility(
 
         FActorSpawnParameters SpawnParams;
         SpawnParams.Owner = Char;
-        CableActor = GetWorld()->SpawnActor<AGrappleCableActor>(SpawnParams);
+        TSubclassOf<AGrappleCableActor> SpawnClass = CableActorClass;
+        if (!SpawnClass)
+        {
+            SpawnClass = AGrappleCableActor::StaticClass();
+        }
+        CableActor = GetWorld()->SpawnActor<AGrappleCableActor>(SpawnClass, SpawnParams);
         if (!CableActor)
         {
             EndAbility(Handle, ActorInfo, ActivationInfo, true, true);

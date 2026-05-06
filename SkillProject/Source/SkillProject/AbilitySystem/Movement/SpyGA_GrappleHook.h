@@ -54,6 +54,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     TObjectPtr<UAnimMontage> AirLoopMontage;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Cable")
+    TSubclassOf<AGrappleCableActor> CableActorClass;
+
 private:
     UPROPERTY()
     TObjectPtr<AGrappleCableActor> CableActor;

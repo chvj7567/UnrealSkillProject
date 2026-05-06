@@ -7,6 +7,7 @@
 #include "GrappleCableActor.generated.h"
 
 class UCableComponent;
+class UMaterialInterface;
 
 UCLASS()
 class SKILLPROJECT_API AGrappleCableActor : public AActor
@@ -30,6 +31,15 @@ private:
 private:
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UCableComponent> CableComponent;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable")
+    TObjectPtr<UMaterialInterface> CableMaterial;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable", meta = (ClampMin = "0.1"))
+    float CableWidth = 5.f;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable", meta = (ClampMin = "1"))
+    int32 NumSegments = 10;
 
     UPROPERTY(Replicated)
     FVector TargetLocation = FVector::ZeroVector;
