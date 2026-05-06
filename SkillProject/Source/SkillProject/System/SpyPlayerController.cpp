@@ -3,7 +3,9 @@
 
 #include "SpyPlayerController.h"
 #include "Camera/CameraShakeBase.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Character/SpyCharacter.h"
+#include "Data/SpyCharacterConfig.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -66,6 +68,18 @@ void ASpyPlayerController::AcknowledgePossession(APawn* InPawn)
 	Super::AcknowledgePossession(InPawn);
 
 	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
+
+	if (PlayerCameraManager)
+	{
+		if (ASpyCharacter* SpyChar = Cast<ASpyCharacter>(InPawn))
+		{
+			if (USpyCharacterConfig* Config = SpyChar->GetCharacterConfig())
+			{
+				PlayerCameraManager->ViewPitchMin = Config->ViewPitchMin;
+				PlayerCameraManager->ViewPitchMax = Config->ViewPitchMax;
+			}
+		}
+	}
 }
 
 void ASpyPlayerController::OnRep_PlayerState()

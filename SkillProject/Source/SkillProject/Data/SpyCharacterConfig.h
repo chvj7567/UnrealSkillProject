@@ -44,6 +44,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	float CameraArmLength = 400.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (ClampMin = "-89.9", ClampMax = "0.0"))
+	float ViewPitchMin = -60.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (ClampMin = "0.0", ClampMax = "89.9"))
+	float ViewPitchMax = 60.f;
+
 	// UI
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	FVector HPBarOffset = FVector(0.f, 0.f, 200.f);

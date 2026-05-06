@@ -72,6 +72,10 @@ public:
 	{
 		return SpyWeapon;
 	}
+	FORCEINLINE USpyCharacterConfig *GetCharacterConfig() const
+	{
+		return CharacterConfig;
+	}
 
 public:
 	UFUNCTION(BlueprintCallable)
