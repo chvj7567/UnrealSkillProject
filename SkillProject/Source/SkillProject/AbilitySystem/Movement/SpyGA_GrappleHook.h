@@ -9,6 +9,7 @@
 class AGrappleCableActor;
 class USpyMovementConfig;
 class USpyGrappleTargetingComponent;
+class UAnimMontage;
 
 UCLASS()
 class SKILLPROJECT_API USpyGA_GrappleHook : public USKGameplayAbility
@@ -49,6 +50,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Config")
     FName HandBoneName = FName("hand_r");
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    TObjectPtr<UAnimMontage> AirLoopMontage;
 
 private:
     UPROPERTY()

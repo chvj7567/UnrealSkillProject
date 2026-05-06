@@ -4,6 +4,7 @@
 #include "GrappleCableActor.h"
 #include "SpyAbilityTask_GrappleTick.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Data/SpyMovementConfig.h"
 #include "Util/SpyGameplayTags.h"
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"
@@ -153,6 +154,23 @@ void USpyGA_GrappleHook::ActivateAbility(
         TimeoutTask->OnFinish.AddDynamic(this, &USpyGA_GrappleHook::OnGrappleArrived);
         TimeoutTask->ReadyForActivation();
         UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] Timeout=%.2fs"), Timeout);
+    }
+
+    if (AirLoopMontage)
+    {
+        if (UAbilityTask_PlayMontageAndWait* MontageTask =
+            UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+                this, NAME_None, AirLoopMontage))
+        {
+            MontageTask->ReadyForActivation();
+            UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][%s] AirLoopMontage Task started"),
+                bAuthority ? TEXT("SRV") : TEXT("CLI"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][%s] AirLoopMontage is null — skipping Montage Task"),
+            bAuthority ? TEXT("SRV") : TEXT("CLI"));
     }
 }
 
