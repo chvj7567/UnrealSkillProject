@@ -45,8 +45,9 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 - **모든 캐릭터 액션이 GA** — 점프 · 파쿠르 · 콤보 · 그래플링 · 패링 · 죽음까지 전부 Gameplay Ability로 캡슐화. 하드코딩 0, 서버 동기화 자동.
 - **Data-Driven 파이프라인** — `USpyAbilityData` 하나로 AttributeSet 동적 생성 + 초기 GE 적용 + GA 부여 일괄 처리, 핸들 트래킹으로 메모리 누수 차단.
 - **InitState 기반 안전한 초기화** — GameFeature 의존 없이 `IGameFrameworkInitStateInterface`로 서버-클라 초기화 동기화, 컴포넌트 런타임 동적 주입.
-- **AI + EQS 전투** — Behavior Tree Tasks(`BTTask_ActivateAbility` / `BTTask_CircleStrafe`) + EQS `EnvQueryContext_StrafeDirection`으로 회피·전략적 위치 선정.
+- **AI Kiting 사이클** — Behavior Tree Tasks + EQS `StrafeDirection` / `ArcAwayFromTarget` 커스텀 Generator로 추격 → 사거리 진입 → 어빌리티 → 후퇴로 이어지는 거리 유지형 전투 AI.
 - **자체 에디터 툴체인** — `SpyDataEditorTool` 3탭 데이터 편집기 + `SpyGACreatorTool` 원클릭 GA 생성 + `SpyTagManagerTool` 태그 파일 직접 편집 + Python MCP 서버로 에디터 원격 제어.
+- **검증/시연 인프라** — `spy.DebugDraw` CVar 한 줄로 파쿠르·타겟팅·CircleStrafe 등 모든 디버그 시각화 일괄 토글.
 
 ---
 
@@ -260,19 +261,20 @@ flowchart LR
 
 </details>
 
-### 3-3. 🆕 그래플링 훅 (타겟팅 + 케이블 + UI 프롬프트)
+### 3-3. 🆕 그래플링 훅 (타겟팅 + 케이블 + 공중 루프 + UI 프롬프트)
 
-> 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 케이블 액터를 펼치며 `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행합니다. 도착하면 캐릭터 상태를 `Character_State_Grapple`로 전환하고 즉시 풀어줍니다.
+> 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 빨간 케이블 액터가 손 본에서 타겟 위치로 펼쳐지며 캐릭터는 공중 자세 루핑 Montage로 매달린 채 끌려갑니다. `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행하고 도착 시 GA를 종료해 자연 블렌드로 풀어줍니다.
 
 <details>
 <summary>자세히 보기</summary>
 
 - **`USpyGrappleTargetingComponent`**: `GrapplePromptRange` / `GrappleTargetingScreenRadius` (`SpyMovementConfig`)로 카메라 viewport 내 베스트 타겟 스캔. Delegate로 `OnTargetChanged` 통지.
-- **`USpyGrappleUIComponent`**: 타겟 변경 시 `WBP_GrapplePrompt` 위젯 토글 + 타겟 액터 Highlight.
-- **`USpyGA_GrappleHook` (LocalPredicted)**: 입력 → 타겟 조회(`GetGrappleTargetLocation`) → 케이블 액터 스폰 → `SpyAbilityTask_GrappleTick` 시작.
-- **`USpyAbilityTask_GrappleTick`**: 서버에서 캐릭터-타겟 거리 체크. 임계값 도달 시 GA 종료 + 상태 태그 정리.
-- **`AGrappleCableActor` (Replicated)**: `CableComponent` 플러그인 활용한 시각화 액터. 시작 위치(캐릭터 손) → 끝 위치(타겟)로 케이블을 스트레치.
-- **태그**: `Skill.Move.GrappleHook` / `Character.State.Grapple` / `Input.Ability.Skill.11`.
+- **`USpyGrappleUIComponent`**: 타겟 변경 시 `WBP_GrapplePrompt` 위젯 토글 + 타겟 액터 Highlight (스캔 중인 앵커가 한눈에 보임).
+- **`USpyGA_GrappleHook` (LocalPredicted)**: 입력 → 타겟 조회(`GetGrappleTargetLocation`) → 서버에서 케이블 액터 스폰 → `SpyAbilityTask_GrappleTick` + `UAbilityTask_PlayMontageAndWait(AirLoopMontage)` 동시 시작. 양쪽(서버·로컬 클라)에서 Montage 재생, 시뮬 클라는 GAS 표준 Montage Replication으로 동기화.
+- **`USpyAbilityTask_GrappleTick`**: 서버에서 캐릭터-타겟 거리 체크. 임계값 도달 시 GA 종료 + 상태 태그 정리 + Montage 자동 Stop(Task OnDestroy).
+- **`AGrappleCableActor` (Replicated)**: `CableComponent` 플러그인 기반 시각화 액터. 손 본(`HandBoneName`) → 타겟 위치(`TargetLocation`)로 매 프레임 트랜스폼 갱신, 빨간 머티리얼 + `NumSegments` / `CableWidth`로 굵기 조절.
+- **재누름 취소**: 그래플링 도중 다시 입력하면 GA가 즉시 종료되어 케이블·Montage·태그가 한 번에 정리됨.
+- **태그**: `Skill.Move.GrappleHook` / `Character.State.Grapple` / `Lock.Input.Move` / `Input.Ability.Skill.11`.
 - **방향 전환 지원**: 그래플링 도중 캐릭터가 타겟 방향으로 자연스럽게 회전.
 
 ```cpp
@@ -300,6 +302,7 @@ if (!Target.IsZero())
 
 - **`USpyGameplayAbility_Parry` (홀드형 GA)**: 입력 Pressed에서 ActivateAbility, Released에서 EndAbility. 활성 동안 ASC에 `Character_State_Parry` 태그 유지.
 - **`SKGameplayAbility_SkillAction` 통합**: 공격자가 데미지를 가하기 직전에 타겟 ASC가 `Character_State_Parry` 태그를 보유 중이고 정면 각도(dot product) 안에 들어왔는지 검사 → 충족 시 데미지 무효화 + 공격자에게 `Skill_Parry_Hit` 게임플레이 이벤트 전송 + `bInvalidCharacter` 플래그 설정.
+- **양쪽 카메라 쉐이크**: 패링 성공 시 패링한 측과 공격자 측 모두에게 카메라 쉐이크가 트리거되어 타이밍 성공 임팩트가 양쪽에 전달.
 - **태그**: `Character.State.Parry` / `Skill.Parry.Hit` / `Input.Ability.Parry`.
 - **null 안전성**: `SendTagToTargetByWeapon`은 `BySphere` 헬퍼와 동일한 null 처리 패턴을 따름 (TargetASC null 시 조용히 스킵).
 
@@ -346,6 +349,8 @@ if (!Target.IsZero())
 
 - **공격자/피격자 분리**: 공격자에게는 가벼운 임팩트 셰이크, 피격자에게는 강한 셰이크 + 시간 보정.
 - **클라이언트 연출 패턴**: 셰이크는 클라 전용이므로 GA `HasAuthority` 분기 밖에서 `PlayerController->ClientStartCameraShake()` 호출.
+- **로컬 컨트롤러 RPC 우회**: 서버 호스트 자신이 피격자인 경우 Client RPC 경로 대신 로컬 직접 호출로 전환해, 호스트 화면에서 셰이크가 누락되던 케이스 해결.
+- **GA 차단 무관 트리거**: 카메라 쉐이크 트리거를 `SpyHealthComponent`의 데미지 수신 경로로 옮겨, 패링·무적 등으로 GA가 차단되어도 피격 연출이 정상 발동.
 
 </details>
 
@@ -367,46 +372,54 @@ if (!Target.IsZero())
 
 ## 5. 🤖 AI 시스템  🆕
 
-### 5-1. Behavior Tree Tasks
+### 5-1. Behavior Tree Tasks + Kiting 사이클
 
-> 모든 AI 행동을 GA로 통일한 프로젝트 철학에 맞춰, BT의 끝단 Task가 직접 로직을 작성하지 않고 `BTTask_ActivateAbility`로 GA를 발화시키는 구조를 채택했습니다. 쿨다운·이동·전략적 위치 선정도 모두 별도 Task로 분리했습니다.
+> 모든 AI 행동을 GA로 통일한 프로젝트 철학에 맞춰, BT의 끝단 Task가 직접 로직을 작성하지 않고 `BTTask_ActivateAbility`로 GA를 발화시키는 구조를 채택했습니다. 추격 → 사거리 진입 → 어빌리티 발동 → EQS 후퇴로 이어지는 **Kiting 사이클**로 단순 돌격 AI에서 벗어나 거리 유지형 액션 AI를 구현했습니다.
 
 <details>
 <summary>자세히 보기</summary>
 
 - **`BTTask_ActivateAbility`**: BB의 어빌리티 태그를 입력 받아 ASC `TryActivateAbilitiesByTag` 호출. AI 행동 = GA 호출이 1:1로 매핑.
-- **`BTTask_MoveToTarget`**: BB의 타겟 액터를 향한 이동. AIController 표준 `MoveTo`보다 거리/타임아웃 처리가 정교.
+- **`BTTask_MoveToTarget`**: BB의 타겟 액터를 향한 이동. AIController 표준 `MoveTo`를 직접 사용하지 않고 거리·재경로 산출·타임아웃 처리를 자체 관리해 추격 정확도와 안정성을 강화.
 - **`BTTask_CircleStrafe`**: 타겟 주위로 좌/우 회피 이동. EQS 컨텍스트(§ 5-2)에서 결정된 방향을 따라 회전 반경을 유지하며 측면 이동.
 - **`BTTask_FindRandomPos`**: 정찰용 랜덤 위치 결정.
 - **`BTService_CheckCooldown`**: 어빌리티 쿨다운을 BB 변수로 동기화. BT가 사용 가능 어빌리티만 선택하도록 필터.
+- **`SpyAIController` 안정화**:
+  - 타겟 사망 시 살아있는 적으로 자동 전환 — 사망한 타겟에 묶여 멈추는 현상 방지.
+  - 자신이 사망한 후에도 회전이 지속되던 문제 수정 — 사망 후에는 컨트롤 회전을 강제 해제.
+  - `Lock.Input.Move` 태그(스킬 시전 락) 보유 중에는 타겟 회전을 차단해 시전 직전의 스냅 회전을 방지.
 
 ```mermaid
 flowchart TD
     Root[BehaviorTree Root] --> Sel{Selector}
     Sel --> Combat[Combat Sequence]
     Sel --> Patrol[Patrol Sequence]
-    Combat --> Move[BTTask_MoveToTarget]
-    Move --> CD[BTService_CheckCooldown]
-    CD --> Strafe[BTTask_CircleStrafe]
-    Strafe --> Skill[BTTask_ActivateAbility]
+    Combat --> Chase[BTTask_MoveToTarget — 추격]
+    Chase --> CD[BTService_CheckCooldown]
+    CD --> Skill[BTTask_ActivateAbility — 사거리 진입 시 발동]
+    Skill --> Retreat[EQS ArcAwayFromTarget → BTTask_MoveToTarget — 후퇴]
+    Retreat --> Strafe[BTTask_CircleStrafe — 측면 유지]
+    Strafe --> Chase
     Patrol --> Find[BTTask_FindRandomPos]
     Find --> MoveR[MoveTo]
 ```
 
 </details>
 
-### 5-2. EQS + StrafeDirection Context
+### 5-2. EQS + StrafeDirection / ArcAwayFromTarget
 
-> 회피 방향 결정에 EQS(Environment Query System)를 도입해, 좌/우 후보 위치를 환경(장애물·벽·낭떠러지 기준)에서 평가한 뒤 가장 유리한 쪽을 선택하도록 했습니다. 결과는 BB 변수로 기록되어 `BTTask_CircleStrafe`가 즉시 사용합니다.
+> 회피 방향과 후퇴 위치 결정에 EQS(Environment Query System)를 도입했습니다. 좌/우 회피는 `StrafeDirection` 컨텍스트로, 어빌리티 사용 후 후퇴는 자체 작성한 `EnvQueryGenerator_ArcAwayFromTarget`으로 타겟 반대 방향 호(arc) 위 지점을 평가해 가장 유리한 쪽을 선택합니다.
 
 <details>
 <summary>자세히 보기</summary>
 
 - **`EnvQueryContext_StrafeDirection`**: AI에게 좌/우 회피 후보 지점을 생성/평가하기 위한 컨텍스트. 캐릭터-타겟 벡터 기준 좌/우 지점을 BB 변수로 노출.
-- **EQS 관련 BB 변수 추가**: `StrafeTargetLocation`, `StrafeDirection` 등 EQS 결과 저장용.
-- **AI 행동 결과**: 단순한 정면 돌격이 아닌, 사이드 스텝하면서 거리 유지 + 어빌리티 발동의 전형적인 액션 게임 AI 패턴 구현.
+- **`EnvQueryContext_TargetActor`**: BB의 `TargetActor`를 EQS 컨텍스트로 노출해 타겟 좌표·방향을 모든 EQS 쿼리에서 참조 가능.
+- **`EnvQueryGenerator_ArcAwayFromTarget` (커스텀 Generator)**: Querier 위치를 중심으로 타겟의 반대 방향을 향한 호(`ArcAngleDegrees`) 위에 점(`NumPoints`)을 균등 생성, NavMesh로 투영. `Radius`는 후퇴 거리(기본 150cm)이며 짧은 사이드 스텝/백 스텝 회피용.
+- **EQS 관련 BB 변수**: `StrafeTargetLocation`, `StrafeDirection`, `RetreatLocation` 등 EQS 결과 저장용.
+- **AI 행동 결과**: 단순한 정면 돌격이 아닌, 사이드 스텝하면서 거리 유지 + 어빌리티 발동 + 후퇴로 이어지는 전형적인 액션 게임 AI 패턴 구현.
 
-<!-- TODO: GIF — AI CircleStrafe + Ability 콤보 -->
+<!-- TODO: GIF — AI CircleStrafe + Ability + Retreat Kiting 사이클 -->
 
 </details>
 
@@ -494,6 +507,19 @@ flowchart TD
 - **`FSpyTagFileEditor`**: `SpyGameplayTags.h`와 `.cpp`를 직접 파싱해 그룹 + `VarName` + `TagString`을 추출. 중복 체크 후 `AppendTags`로 파일에 직접 기록.
 - **그룹 주석 인라인 편집**: 트리에서 그룹 헤더 클릭 시 우측 패널의 콤보박스·주석 텍스트가 자동 동기화. 수정 후 저장 버튼 한 번으로 h/cpp 파일 내 `//#` 주석 줄을 교체(`FSpyTagFileEditor::RenameGroup`).
 - **플로우**: Refresh(파일 파싱) → 트리 검토 → 그룹·리프 입력 → 추가(중복 체크) → h/cpp 파일 직접 갱신.
+
+</details>
+
+### 6-5. 🆕 SKDebug — `spy.DebugDraw` 일괄 토글 CVar
+
+> 파쿠르·타겟팅·CircleStrafe·SkillAction 등 곳곳에 흩어진 `DrawDebug*` / 진단 `UE_LOG` / `AddOnScreenDebugMessage`를 단일 콘솔 변수로 일괄 켜고 끕니다. 시연 시에는 끄고, 디버깅 시에는 한 줄로 켤 수 있습니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **`SKGAS_API bool SpyDebugDrawEnabled()`**: 모든 시각 디버그 코드가 이 함수를 분기 조건으로 사용. CVar `spy.DebugDraw 1 / 0`로 토글.
+- **적용 지점**: `SKGameplayAbility_SkillAction`, `SpyAbilityTask_GrappleTick`, `SpyCharacterMovementComponent`, `SpyGrappleTargetingComponent`, `SpyParkourManagerComponent`, `SpyTargetingManagerComponent`, `BTTask_CircleStrafe`.
+- **이전 상황**: 디버그 시각화가 항상 켜져 있어 패키징 빌드/시연 영상에 불필요한 라인이 노출되거나, 끄려면 각 파일을 일일이 주석 처리해야 했음. CVar 도입 후 `~ spy.DebugDraw 0` 한 줄로 정리.
 
 </details>
 
