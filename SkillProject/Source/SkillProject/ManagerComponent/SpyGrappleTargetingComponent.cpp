@@ -5,6 +5,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "SKDebug.h"
+#include "Components/MeshComponent.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
@@ -40,7 +41,13 @@ void USpyGrappleTargetingComponent::TickComponent(
 
     if (NewTarget != LocalCachedTarget.Get())
     {
+        ClearHighlight();
         LocalCachedTarget = NewTarget;
+        if (NewTarget)
+        {
+            ApplyHighlight(NewTarget);
+        }
+
         OnGrappleTargetChanged.Broadcast(NewTarget);
 
         // null은 서버에 보내지 않음 — 마지막 유효 타겟을 유지
@@ -49,6 +56,49 @@ void USpyGrappleTargetingComponent::TickComponent(
             Server_SetGrappleTarget(NewTarget);
         }
     }
+}
+
+void USpyGrappleTargetingComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    ClearHighlight();
+    Super::EndPlay(EndPlayReason);
+}
+
+void USpyGrappleTargetingComponent::ApplyHighlight(AActor* Actor)
+{
+    if (!Actor || !TargetHighlightMaterial) return;
+
+    TArray<UMeshComponent*> Meshes;
+    Actor->GetComponents<UMeshComponent>(Meshes);
+    for (UMeshComponent* Mesh : Meshes)
+    {
+        if (Mesh)
+        {
+            Mesh->SetOverlayMaterial(TargetHighlightMaterial);
+        }
+    }
+    HighlightedActor = Actor;
+}
+
+void USpyGrappleTargetingComponent::ClearHighlight()
+{
+    AActor* Actor = HighlightedActor.Get();
+    if (!Actor)
+    {
+        HighlightedActor = nullptr;
+        return;
+    }
+
+    TArray<UMeshComponent*> Meshes;
+    Actor->GetComponents<UMeshComponent>(Meshes);
+    for (UMeshComponent* Mesh : Meshes)
+    {
+        if (Mesh)
+        {
+            Mesh->SetOverlayMaterial(nullptr);
+        }
+    }
+    HighlightedActor = nullptr;
 }
 
 AActor* USpyGrappleTargetingComponent::FindBestTarget() const
@@ -126,7 +176,6 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
     {
         if (BestTarget)
         {
-            DrawDebugSphere(GetWorld(), BestTarget->GetActorLocation(), 60.f, 8, FColor::Green, false, 0.f, 0, 3.f);
             GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
                 FString::Printf(TEXT("[GrappleTgt] BEST=%s (%.0fpx)"), *BestTarget->GetName(), BestDistToCenter));
         }

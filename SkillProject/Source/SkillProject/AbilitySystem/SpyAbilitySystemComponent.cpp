@@ -117,6 +117,12 @@ void USpyAbilitySystemComponent::ClearAbilityInput()
 	InputHeldSpecHandles.Reset();
 }
 
+void USpyAbilitySystemComponent::ConsumeInputForHandle(const FGameplayAbilitySpecHandle& Handle)
+{
+	InputPressedSpecHandles.Remove(Handle);
+	InputHeldSpecHandles.Remove(Handle);
+}
+
 bool USpyAbilitySystemComponent::HasAbilityByTag(const FGameplayTag& AbilityTag) const
 {
 	//# 모든 태그 중에서 현재 태그를 가지고 있는지 확인

@@ -23,6 +23,7 @@ public:
 
 	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
 	void ClearAbilityInput();
+	void ConsumeInputForHandle(const FGameplayAbilitySpecHandle& Handle);
 
 public:
 	bool HasAbilityByTag(const FGameplayTag& AbilityTag) const;

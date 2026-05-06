@@ -10,6 +10,7 @@
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_GrappleHook)
 
@@ -207,4 +208,21 @@ void USpyGA_GrappleHook::EndAbility(
 void USpyGA_GrappleHook::OnGrappleArrived()
 {
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void USpyGA_GrappleHook::InputPressed(
+    const FGameplayAbilitySpecHandle Handle,
+    const FGameplayAbilityActorInfo* ActorInfo,
+    const FGameplayAbilityActivationInfo ActivationInfo)
+{
+    Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+
+    UE_LOG(LogTemp, Warning, TEXT("[GrappleGA] InputPressed during active → cancel grapple"));
+
+    if (USpyAbilitySystemComponent* SpyASC = Cast<USpyAbilitySystemComponent>(ActorInfo ? ActorInfo->AbilitySystemComponent.Get() : nullptr))
+    {
+        SpyASC->ConsumeInputForHandle(Handle);
+    }
+
+    CancelAbility(Handle, ActorInfo, ActivationInfo, true);
 }

@@ -7,6 +7,7 @@
 #include "SpyGrappleTargetingComponent.generated.h"
 
 class USpyMovementConfig;
+class UMaterialInterface;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrappleTargetChanged, AActor*, NewTarget);
 
@@ -19,6 +20,7 @@ public:
     USpyGrappleTargetingComponent();
 
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     UFUNCTION(BlueprintCallable, Category = "Grapple")
@@ -35,15 +37,22 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Config")
     TObjectPtr<USpyMovementConfig> MovementConfig;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Highlight")
+    TObjectPtr<UMaterialInterface> TargetHighlightMaterial;
+
 private:
     UFUNCTION(Server, Reliable)
     void Server_SetGrappleTarget(AActor* NewTarget);
 
     AActor* FindBestTarget() const;
 
+    void ApplyHighlight(AActor* Actor);
+    void ClearHighlight();
+
     UPROPERTY(Replicated)
     TObjectPtr<AActor> CurrentGrappleTarget;
 
     TWeakObjectPtr<AActor> LocalCachedTarget;
+    TWeakObjectPtr<AActor> HighlightedActor;
 
 };
