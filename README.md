@@ -232,18 +232,18 @@ flowchart LR
   1. **전방 검출 (Forward Raycast)**: 캐릭터 전방 LineTrace로 벽 법선과 거리 추출.
   2. **높이/상단 표면 검출 (Top-Down Iteration)**: 벽 법선을 역산해 `RayInterval`마다 위→아래 LineTrace로 정확한 높이(`Height`)와 손 짚을 위치(`HitVector`) 산출.
   3. **깊이 식별 + 착지점 (Depth Check)**: 상단 LineTrace가 벽을 벗어난 시점을 감지해 역방향 LineTrace로 두께(`Depth`) 산출, 최종 착지점(`LandVector`) 도출.
-- **GA 발동 흐름**: Vault/Wall Climb는 입력 키셋 + 지형 조건 충족 시 `TryActivateAbility`. Hang Up은 별도 키 없이 Wall Climb GA가 벽 상단 엣지를 감지했을 때 자동 시전.
+- **GA 발동 흐름**: Vault와 Wall Climb는 **각자 별개 InputAction**으로 발동한다. 입력 시 `SpyParkourManagerComponent`의 `CanVaultAction()` / `TryToggleClimbAction()`이 자체 LineTrace로 지형 조건을 체크하고, 통과해야 `TryActivateAbility`. Hang Up만 별도 키 없이 — WallClimb 활성 중 `SpyCharacterMovementComponent::PhysCustom_WallClimb`가 `CanHangUp()` 충족 시 `Skill.Move.HangUp` GameplayEvent를 송신해 자동 시전.
 - **Motion Warping 동기화**: 서버 계산 결과를 `OnRep_VaultMotionWarpingData` 등으로 클라에 푸시, 애니메이션 워핑 앵커가 도착 위치와 정합.
 
 ```mermaid
 flowchart LR
-    Input[입력] --> Fwd[Forward LineTrace]
-    Fwd -->|법선·거리| Top[Top-Down Iteration]
-    Top -->|Height·HitVector| Depth[Depth Check]
-    Depth -->|LandVector| Decide{조건 분기}
-    Decide -->|얕음| Vault[GA_Vault]
-    Decide -->|높음| Climb[GA_WallClimb]
-    Climb -->|상단 엣지 감지| Hang[GA_HangUp 자동]
+    VInput[Vault 입력] --> VCan[CanVaultAction · 자체 LineTrace]
+    VCan -->|조건 충족| Vault[GA_Vault]
+    CInput[Climb 입력] --> CCan[TryToggleClimbAction · 자체 LineTrace]
+    CCan -->|조건 충족| Climb[GA_WallClimb]
+    Climb --> Phys[PhysCustom_WallClimb tick]
+    Phys -->|CanHangUp 충족| Event[Skill.Move.HangUp Event]
+    Event --> Hang[GA_HangUp 자동]
 ```
 
 </details>
