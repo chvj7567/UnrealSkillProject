@@ -217,6 +217,14 @@ flowchart LR
 
 > 단순한 충돌 판정이 아닌 다중 LineTrace로 장애물의 형태(법선·높이·두께·착지점)를 정밀하게 분석한 뒤, 결과를 `FMotionWarpingData`로 변환해 클라에 리플리케이트합니다. 모든 파쿠르 액션은 `GA_Vault` / `GA_WallClimb` / `GA_HangUp` GA로 캡슐화되어 있습니다.
 
+**Vault**
+
+![Parkour — Vault](docs/gifs/Parkour_Vault.gif)
+
+**Wall Climb → Hang Up**
+
+![Parkour — Wall Climb / Hang Up](docs/gifs/Parkour_Climb.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -237,14 +245,6 @@ flowchart LR
     Decide -->|높음| Climb[GA_WallClimb]
     Climb -->|상단 엣지 감지| Hang[GA_HangUp 자동]
 ```
-
-**Vault**
-
-![Parkour — Vault](docs/gifs/Parkour_Vault.gif)
-
-**Wall Climb → Hang Up**
-
-![Parkour — Wall Climb / Hang Up](docs/gifs/Parkour_Climb.gif)
 
 </details>
 
@@ -271,6 +271,8 @@ flowchart LR
 
 > 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 빨간 케이블 액터가 손 본에서 타겟 위치로 펼쳐지며 캐릭터는 공중 자세 루핑 Montage로 매달린 채 끌려갑니다. `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행하고 도착 시 GA를 종료해 자연 블렌드로 풀어줍니다.
 
+![Grappling Hook — 타겟 스캔 → 케이블 → 도착](docs/gifs/Grappling.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -294,8 +296,6 @@ if (!Target.IsZero())
     Task->ReadyForActivation();
 }
 ```
-
-![Grappling Hook — 타겟 스캔 → 케이블 → 도착](docs/gifs/Grappling.gif)
 
 </details>
 
@@ -477,6 +477,8 @@ flowchart TD
 
 > `Content/Spy/Data/`의 모든 DataAsset을 한 곳에서 일괄 편집하기 위한 별도 에디터 모듈. Assets / Ability / Config 3탭으로 책임을 분리했고, **Scan → 검토/편집 → Apply** 흐름을 따릅니다.
 
+![SpyDataEditorTool — 3탭 데이터 편집기](docs/images/Tool_DataEditor.png)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -488,13 +490,13 @@ flowchart TD
 - **`SpyDataScanner` 자동 스캔**: 새 에셋 타입 추가 시 스캐너에 등록만 하면 탭 자동 갱신.
 - **`IDetailCustomization` / `IPropertyTypeCustomization`**: 일부 복잡한 구조체에 커스텀 디테일 패널 적용.
 
-![SpyDataEditorTool — 3탭 데이터 편집기](docs/images/Tool_DataEditor.png)
-
 </details>
 
 ### 6-2. SpyGACreatorTool — GA Blueprint 원클릭 생성
 
 > Window 메뉴에 추가된 "Spy GA Creator" 탭에서 부모 클래스/이름/GAS 기본 설정을 입력하고 버튼 한 번이면 `/Game/Spy/Blueprints/GameplayAbilities/GA_<Name>.uasset` Blueprint가 생성되고 에디터가 자동으로 열립니다.
+
+![SpyGACreatorTool — GA Blueprint 생성 다이얼로그](docs/images/Tool_GACreator.png)
 
 <details>
 <summary>자세히 보기</summary>
@@ -506,8 +508,6 @@ flowchart TD
   2. `KismetCompilerUtilities::CreateBlueprint`로 GA Blueprint 생성.
   3. CDO에 GAS 기본 설정 주입.
   4. `AssetEditorSubsystem::OpenEditorForAsset` 호출로 새 BP 자동 오픈.
-
-![SpyGACreatorTool — GA Blueprint 생성 다이얼로그](docs/images/Tool_GACreator.png)
 
 </details>
 
@@ -537,6 +537,8 @@ flowchart TD
 
 > `SpyGameplayTags.h` / `.cpp` 파일을 직접 파싱·편집하는 에디터 탭입니다. 트리 뷰로 전체 태그 계층을 시각화하고, 그룹 선택 + 부모 경로 + 복수 리프 입력으로 여러 태그를 한 번에 추가할 수 있습니다.
 
+![SpyTagManagerTool — 트리 + 추가 패널](docs/images/Tool_TagManager.png)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -545,8 +547,6 @@ flowchart TD
 - **`FSpyTagFileEditor`**: `SpyGameplayTags.h`와 `.cpp`를 직접 파싱해 그룹 + `VarName` + `TagString`을 추출. 중복 체크 후 `AppendTags`로 파일에 직접 기록.
 - **그룹 주석 인라인 편집**: 트리에서 그룹 헤더 클릭 시 우측 패널의 콤보박스·주석 텍스트가 자동 동기화. 수정 후 저장 버튼 한 번으로 h/cpp 파일 내 `//#` 주석 줄을 교체(`FSpyTagFileEditor::RenameGroup`).
 - **플로우**: Refresh(파일 파싱) → 트리 검토 → 그룹·리프 입력 → 추가(중복 체크) → h/cpp 파일 직접 갱신.
-
-![SpyTagManagerTool — 트리 + 추가 패널](docs/images/Tool_TagManager.png)
 
 </details>
 
