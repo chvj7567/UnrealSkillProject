@@ -4,6 +4,7 @@
 #include "SpyGA_WallClimb.h"
 #include "GameFramework/Character.h"
 #include "Util/DefineEnum.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "System/SpyPlayerController.h"
@@ -53,9 +54,14 @@ void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const
 
 void USpyGA_WallClimb::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-    //# 토글 기능
+    //# 토글 기능 — 같은 프레임의 Held 루프가 재활성화 시키지 못하도록 입력을 먼저 소비한다.
     if (IsActive() == false)
         return;
+
+    if (USpyAbilitySystemComponent* SpyASC = Cast<USpyAbilitySystemComponent>(ActorInfo ? ActorInfo->AbilitySystemComponent.Get() : nullptr))
+    {
+        SpyASC->ConsumeInputForHandle(Handle);
+    }
 
     EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
