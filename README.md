@@ -27,10 +27,10 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 - [**⚔️ 데이터 지향 콤보**](#3-2-데이터-지향-콤보-시스템) — `SpyComboAssetData` 딕셔너리 기반 GA 체인
 - [**🪝 그래플링 훅**](#3-3--그래플링-훅-타겟팅--케이블--공중-루프--ui-프롬프트) — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
 - [**🛡️ 홀드형 패링**](#3-4--홀드형-패링-시스템) — 홀드형 GA + Loose Tag 윈도우 + `Skill_Parry_Hit` 역송
-- [**🎥 카메라 제어**](#3-5--카메라-제어-벽-가림-회피--피치-제한) — SpringArm 충돌 회피 + Config 기반 피치 클램프
 - [**🎯 타겟팅 매니저**](#4-1-타겟팅-매니저) — 시야/거리 기반 베스트 타겟 추적
 - [**💢 무기 AnimTrail**](#4-2-무기-animtrail-이펙트) — 데이터 지향 검격 잔상
 - [**💥 히트 카메라 셰이크**](#4-3-히트-카메라-셰이크) — 공격자/피격자 차등 셰이크 + 로컬 RPC 우회
+- [**🥊 방향별 Hit 리액션**](#4-4--방향별-hit-리액션-애니메이션) — Front/Back/Left/Right 4분할 + Context 운반 + 4종 몽타주 분기
 - [**🤖 AI Behavior Tree**](#5-1-behavior-tree-tasks--kiting-사이클) — BTTask = GA 1:1 매핑 + Kiting 사이클
 - [**🧭 AI EQS**](#5-2-eqs--strafedirection--arcawayfromtarget) — StrafeDirection + ArcAwayFromTarget 평가
 
@@ -315,36 +315,6 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 3-5. 🆕 카메라 제어 (벽 가림 회피 + 피치 제한)
-
-> 3인칭 카메라가 벽에 가려 캐릭터가 보이지 않거나, 시점이 비현실적으로 위/아래로 꺾이는 문제를 Config 기반으로 해결했습니다. SpringArm 충돌 테스트와 View Pitch 클램프를 `SpyCharacterConfig`로 노출해 데이터 수정만으로 캐릭터별 카메라 거동을 조정할 수 있습니다.
-
-![Camera Control — 벽 가림 회피 + 피치 제한](docs/gifs/Camera_Control.gif)
-
-<details>
-<summary>자세히 보기</summary>
-
-- **SpringArm 자동 단축**: `CameraBoom->bDoCollisionTest = true`로 변경. 카메라와 캐릭터 사이에 벽이 들어오면 SpringArm이 자동으로 줄어들어 캐릭터가 가려지지 않음.
-- **View Pitch 클램프 (Config 기반)**: `USpyCharacterConfig`에 `ViewPitchMin`(기본 -60°) / `ViewPitchMax`(기본 +60°) 필드 추가. `ClampMin/Max` 메타로 ±89.9° 안전 범위 강제.
-- **Possession 시점 적용**: `ASpyPlayerController::AcknowledgePossession`에서 `SpyCharacter->GetCharacterConfig()`를 조회해 `PlayerCameraManager->ViewPitchMin/Max`에 주입. 캐릭터마다 다른 시점 제한을 데이터로 관리.
-
-```cpp
-//# SpyPlayerController::AcknowledgePossession 발췌
-if (PlayerCameraManager)
-{
-    if (ASpyCharacter* SpyChar = Cast<ASpyCharacter>(InPawn))
-    {
-        if (USpyCharacterConfig* Config = SpyChar->GetCharacterConfig())
-        {
-            PlayerCameraManager->ViewPitchMin = Config->ViewPitchMin;
-            PlayerCameraManager->ViewPitchMax = Config->ViewPitchMax;
-        }
-    }
-}
-```
-
-</details>
-
 ---
 
 ## 4. ⚔️ 전투 / 인터랙션  🆕
@@ -393,7 +363,25 @@ if (PlayerCameraManager)
 
 </details>
 
-### 4-4. 팀 시스템 (TeamId)
+### 4-4. 🆕 방향별 Hit 리액션 애니메이션
+
+> 피격 시 공격자가 타겟의 어느 방향에 있는지를 4분할(Front · Back · Left · Right)로 분류해, 같은 데미지라도 방향에 맞는 별개의 리액션 몽타주가 재생됩니다. 정면 피격 한 장으로 끝나지 않고 측·후방 공격이 시각적으로 구분되어 전투 가독성을 높입니다.
+
+![Hit Direction — Front/Back/Left/Right 4분할 리액션](docs/gifs/Hit_Direction.gif)
+
+<details>
+<summary>자세히 보기</summary>
+
+- **`CalcHitDirectionTag` (`SKGameplayAbility_SkillAction.cpp:23`)**: 데미지 적용 시점에 공격자 위치와 타겟의 forward 벡터 사이 각도를 `Atan2(Cross.Z, Dot)`로 부호 있는 각도로 환산해 4분할 — `±45°` 이내 → `Skill.Hit.Front`, `|135°| 이상` → `Skill.Hit.Back`, 그 외 양수/음수에 따라 `Skill.Hit.Right` / `Skill.Hit.Left`.
+- **`FSKGameplayEffectContext::HitDirectionTag` 운반**: 계산된 방향 태그를 데미지 GE의 커스텀 컨텍스트에 담아 함께 송신. 타겟 측은 GE 적용과 동시에 컨텍스트에서 태그를 추출해 어떤 방향 리액션을 쓸지 결정.
+- **`USpyGA_SkillHit` 4종 몽타주 분기**: 타겟 ASC가 받은 `Skill.Hit.*` 이벤트의 태그를 매칭해 `HitFront/Back/Left/RightAbilityMontage` 중 하나를 `PlayMontageAndWait`. 몽타주 슬롯은 데이터 지향이라 캐릭터마다 다른 리액션 세트 가능.
+- **`SpyHealthComponent` 부가 분기**: GA가 패링·무적 등으로 차단되어도 카메라 셰이크 같은 부가 연출은 발화해야 하므로, HealthComponent도 컨텍스트에서 `HitDirTag`를 추출해 별도 경로로 활용(§ 4-3 히트 카메라 셰이크와 같은 패턴).
+- **태그**: `Skill.Hit.Front` / `Skill.Hit.Back` / `Skill.Hit.Left` / `Skill.Hit.Right` (`SKGameplayTags.cpp:36~39`에 등록).
+- **디버그 시각화**: `spy.DebugDraw 1`일 때 타겟 forward(파란선)와 공격자 방향(빨간선) + 분류 결과 로그를 그려 분할 정확도를 즉시 검증 가능.
+
+</details>
+
+### 4-5. 팀 시스템 (TeamId)
 
 > `FCharacterAssetEntry`에 `TeamId` 필드를 도입해 캐릭터 클래스 단위로 팀 번호를 관리합니다. 기본값 `NoTeam(255)`로, 데이터 미설정 시 의도치 않은 아군 판정이 발생하지 않도록 설계했습니다.
 
@@ -423,7 +411,7 @@ if (PlayerCameraManager)
 <summary>자세히 보기</summary>
 
 - **`AIPerceptionComponent` + 3센스 (Sight / Hearing / Damage)**: BT가 소비할 `TargetActor` / `TargetLocation` 블랙보드 값을 채우는 upstream 레이어. `SpyAIController` 생성자에서 세 센스를 모두 구성하고 시각을 Dominant Sense로 지정.
-  - **Sight**: SightRadius 500 / LoseSightRadius 700 / FOV 90°, MaxAge 5s, Affiliation으로 Enemy·Neutral·Friendly 모두 감지(§ 4-4 `TeamId`와 결합).
+  - **Sight**: SightRadius 500 / LoseSightRadius 700 / FOV 90°, MaxAge 5s, Affiliation으로 Enemy·Neutral·Friendly 모두 감지(§ 4-5 `TeamId`와 결합).
   - **Hearing**: HearingRange 200, MaxAge 5s.
   - **Damage**: 등 뒤·시야 밖 피격에도 반응하기 위해 도입. `OnTargetPerceptionUpdated`에서 Damage 자극은 별도 분기로 즉시 가해자를 `TargetActor`로 설정(시야 재탐색 단계 우회).
   - **`RefreshBlackboardTarget()` 통합 재평가**: 시각/청각 자극은 현재 타겟의 생존 여부를 우선 검사 — 살아있으면 시야를 잃어도 BB 유지(추격 지속), 사망/파괴 확인 시에만 `GetCurrentlyPerceivedActors(Sight)`로 가장 가까운 살아있는 적으로 교체.

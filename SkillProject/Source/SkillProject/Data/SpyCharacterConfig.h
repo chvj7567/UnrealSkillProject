@@ -42,7 +42,7 @@ public:
 
 	//# Camera
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
-	float CameraArmLength = 400.f;
+	float CameraArmLength = 600.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (ClampMin = "-89.9", ClampMax = "0.0"))
 	float ViewPitchMin = -60.f;
