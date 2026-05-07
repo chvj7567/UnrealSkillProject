@@ -238,7 +238,13 @@ flowchart LR
     Climb -->|상단 엣지 감지| Hang[GA_HangUp 자동]
 ```
 
-<!-- TODO: GIF — 파쿠르 (Vault → WallClimb → HangUp) 시연 -->
+**Vault**
+
+![Parkour — Vault](docs/gifs/Parkour_Vault.gif)
+
+**Wall Climb → Hang Up**
+
+![Parkour — Wall Climb / Hang Up](docs/gifs/Parkour_Climb.gif)
 
 </details>
 
@@ -289,7 +295,7 @@ if (!Target.IsZero())
 }
 ```
 
-<!-- TODO: GIF — 그래플링 훅 (타겟 스캔 + 발사 + 도착) -->
+![Grappling Hook — 타겟 스캔 → 케이블 → 도착](docs/gifs/Grappling.gif)
 
 </details>
 
@@ -482,6 +488,8 @@ flowchart TD
 - **`SpyDataScanner` 자동 스캔**: 새 에셋 타입 추가 시 스캐너에 등록만 하면 탭 자동 갱신.
 - **`IDetailCustomization` / `IPropertyTypeCustomization`**: 일부 복잡한 구조체에 커스텀 디테일 패널 적용.
 
+![SpyDataEditorTool — 3탭 데이터 편집기](docs/images/Tool_DataEditor.png)
+
 </details>
 
 ### 6-2. SpyGACreatorTool — GA Blueprint 원클릭 생성
@@ -498,6 +506,8 @@ flowchart TD
   2. `KismetCompilerUtilities::CreateBlueprint`로 GA Blueprint 생성.
   3. CDO에 GAS 기본 설정 주입.
   4. `AssetEditorSubsystem::OpenEditorForAsset` 호출로 새 BP 자동 오픈.
+
+![SpyGACreatorTool — GA Blueprint 생성 다이얼로그](docs/images/Tool_GACreator.png)
 
 </details>
 
@@ -535,6 +545,8 @@ flowchart TD
 - **`FSpyTagFileEditor`**: `SpyGameplayTags.h`와 `.cpp`를 직접 파싱해 그룹 + `VarName` + `TagString`을 추출. 중복 체크 후 `AppendTags`로 파일에 직접 기록.
 - **그룹 주석 인라인 편집**: 트리에서 그룹 헤더 클릭 시 우측 패널의 콤보박스·주석 텍스트가 자동 동기화. 수정 후 저장 버튼 한 번으로 h/cpp 파일 내 `//#` 주석 줄을 교체(`FSpyTagFileEditor::RenameGroup`).
 - **플로우**: Refresh(파일 파싱) → 트리 검토 → 그룹·리프 입력 → 추가(중복 체크) → h/cpp 파일 직접 갱신.
+
+![SpyTagManagerTool — 트리 + 추가 패널](docs/images/Tool_TagManager.png)
 
 </details>
 
@@ -635,6 +647,8 @@ tools/
 
 docs/
 ├── hardcoded-values.md                # Config DataAsset 이전 대상 매직 넘버/문자열 정리
+├── gifs/                              # README용 동영상 GIF (파쿠르·콤보·그래플링·패링·트레일·AI Kiting)
+├── images/                            # README용 정지 스크린샷 (에디터 툴 화면 등)
 └── superpowers/
     ├── plans/                         # superpowers writing-plans 산출물
     └── specs/                         # superpowers brainstorming 산출물 (디자인 스펙)
