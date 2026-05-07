@@ -310,6 +310,34 @@ if (!Target.IsZero())
 
 </details>
 
+### 3-5. 🆕 카메라 제어 (벽 가림 회피 + 피치 제한)
+
+> 3인칭 카메라가 벽에 가려 캐릭터가 보이지 않거나, 시점이 비현실적으로 위/아래로 꺾이는 문제를 Config 기반으로 해결했습니다. SpringArm 충돌 테스트와 View Pitch 클램프를 `SpyCharacterConfig`로 노출해 데이터 수정만으로 캐릭터별 카메라 거동을 조정할 수 있습니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **SpringArm 자동 단축**: `CameraBoom->bDoCollisionTest = true`로 변경. 카메라와 캐릭터 사이에 벽이 들어오면 SpringArm이 자동으로 줄어들어 캐릭터가 가려지지 않음.
+- **View Pitch 클램프 (Config 기반)**: `USpyCharacterConfig`에 `ViewPitchMin`(기본 -60°) / `ViewPitchMax`(기본 +60°) 필드 추가. `ClampMin/Max` 메타로 ±89.9° 안전 범위 강제.
+- **Possession 시점 적용**: `ASpyPlayerController::AcknowledgePossession`에서 `SpyCharacter->GetCharacterConfig()`를 조회해 `PlayerCameraManager->ViewPitchMin/Max`에 주입. 캐릭터마다 다른 시점 제한을 데이터로 관리.
+
+```cpp
+// SpyPlayerController::AcknowledgePossession 발췌
+if (PlayerCameraManager)
+{
+    if (ASpyCharacter* SpyChar = Cast<ASpyCharacter>(InPawn))
+    {
+        if (USpyCharacterConfig* Config = SpyChar->GetCharacterConfig())
+        {
+            PlayerCameraManager->ViewPitchMin = Config->ViewPitchMin;
+            PlayerCameraManager->ViewPitchMax = Config->ViewPitchMax;
+        }
+    }
+}
+```
+
+</details>
+
 ---
 
 ## 4. ⚔️ 전투 / 인터랙션  🆕
