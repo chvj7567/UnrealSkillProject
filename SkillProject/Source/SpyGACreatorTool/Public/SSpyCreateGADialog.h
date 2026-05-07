@@ -22,14 +22,14 @@ private:
     static TSharedRef<SWidget> MakeSectionHeader(const FText& Label);
     static TSharedRef<SWidget> MakeLabeledRow(const FText& Label, TSharedRef<SWidget> Content);
 
-    // 클래스 목록
+    //# 클래스 목록
     TArray<UClass*> ClassList;
     UClass* SelectedClass = nullptr;
 
-    // 이름
+    //# 이름
     FString GAName;
 
-    // Tags
+    //# Tags
     FGameplayTagContainer AbilityTagsContainer;
     FGameplayTagContainer ActivationOwnedTagsContainer;
     FGameplayTagContainer ActivationRequiredTagsContainer;
@@ -37,7 +37,7 @@ private:
     FGameplayTagContainer CancelAbilitiesWithTagContainer;
     FGameplayTagContainer BlockAbilitiesWithTagContainer;
 
-    // Policies
+    //# Policies
     TArray<TSharedPtr<FString>> NetExecOptions;
     TArray<TSharedPtr<FString>> InstancingOptions;
     TArray<TSharedPtr<FString>> NetSecOptions;
@@ -45,10 +45,10 @@ private:
     TSharedPtr<FString> SelectedInstancingPolicy;
     TSharedPtr<FString> SelectedNetSecPolicy;
 
-    // GE Classes (SClassPropertyEntryBox returns const UClass*)
+    //# GE Classes (SClassPropertyEntryBox returns const UClass*)
     UClass* CostGEClass     = nullptr;
     UClass* CooldownGEClass = nullptr;
 
-    // 경로 실시간 표시
+    //# 경로 실시간 표시
     TSharedPtr<STextBlock> OutputPathText;
 };

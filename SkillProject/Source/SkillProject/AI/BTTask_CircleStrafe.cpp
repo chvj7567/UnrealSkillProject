@@ -31,19 +31,19 @@ EBTNodeResult::Type UBTTask_CircleStrafe::ExecuteTask(UBehaviorTreeComponent& Ow
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
-	if (!IsValid(AIController) || !IsValid(BB))
+	if (IsValid(AIController) == false || IsValid(BB) == false)
 	{
 		return EBTNodeResult::Failed;
 	}
 
-	if (!IsValid(EQSQuery))
+	if (IsValid(EQSQuery) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[CircleStrafe] ExecuteTask FAIL: EQSQuery is NULL"));
 		return EBTNodeResult::Failed;
 	}
 
 	ACharacter* Target = Cast<ACharacter>(BB->GetValueAsObject(TargetKey.SelectedKeyName));
-	if (!IsValid(Target))
+	if (IsValid(Target) == false)
 	{
 		return EBTNodeResult::Failed;
 	}
@@ -106,24 +106,24 @@ void UBTTask_CircleStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
 
-	if (!bTaskActive)
+	if (bTaskActive == false)
 		return;
 
 	AAIController* AIC = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	if (!IsValid(AIC) || !IsValid(BB))
+	if (IsValid(AIC) == false || IsValid(BB) == false)
 		return;
 
 	APawn* MyPawn = AIC->GetPawn();
 	ACharacter* CurTarget = Cast<ACharacter>(BB->GetValueAsObject(TargetKey.SelectedKeyName));
-	if (!IsValid(MyPawn) || !IsValid(CurTarget))
+	if (IsValid(MyPawn) == false || IsValid(CurTarget) == false)
 	{
 		FinishStrafe(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
 
 	//# 스킬 시전(Lock_Input_Move) / 죽음 중에는 타겟 회전·시선 락 모두 해제
-	if (!SpyAIUtils::CanMove(AIC))
+	if (SpyAIUtils::CanMove(AIC) == false)
 	{
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 	}
@@ -137,7 +137,7 @@ void UBTTask_CircleStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
 		FVector ToTarget = CurTarget->GetActorLocation() - MyPawn->GetActorLocation();
 		ToTarget.Z = 0.f;
-		if (!ToTarget.IsNearlyZero())
+		if (ToTarget.IsNearlyZero() == false)
 		{
 			const FRotator NewRot = ToTarget.Rotation();
 			AIC->SetControlRotation(NewRot);
@@ -159,11 +159,11 @@ void UBTTask_CircleStrafe::RunEQS(UBehaviorTreeComponent& OwnerComp)
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
-	if (!IsValid(AIController) || !IsValid(BB))
+	if (IsValid(AIController) == false || IsValid(BB) == false)
 		return;
 
 	APawn* Pawn = AIController->GetPawn();
-	if (!IsValid(Pawn))
+	if (IsValid(Pawn) == false)
 		return;
 
 	BB->SetValueAsBool(StrafeLeftKey.SelectedKeyName, FMath::RandBool());
@@ -186,7 +186,7 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 	ActiveQueryId = INDEX_NONE;
 	bEQSPending = false;
 
-	if (!WeakOwner.IsValid() || !bTaskActive)
+	if (WeakOwner.IsValid() == false || bTaskActive == false)
 		return;
 
 	UBehaviorTreeComponent* OwnerComp = WeakOwner.Get();
@@ -196,11 +196,11 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 		DrawDebugEQSResults(GetWorld(), Result);
 
 	//# 빈 결과 — C++ 자체 계산으로 fallback
-	if (!Result.IsValid() || !Result->IsSuccessful() || Result->Items.IsEmpty())
+	if (Result.IsValid() == false || Result->IsSuccessful() == false || Result->Items.IsEmpty())
 	{
-		if (!IsValid(AIController))
+		if (IsValid(AIController) == false)
 			return;
-		if (!SpyAIUtils::CanMove(AIController))
+		if (SpyAIUtils::CanMove(AIController) == false)
 			return;
 
 		APawn* MyPawn = AIController->GetPawn();
@@ -208,13 +208,13 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 		ACharacter* CurTarget = (IsValid(BB) && IsValid(MyPawn))
 			? Cast<ACharacter>(BB->GetValueAsObject(TargetKey.SelectedKeyName))
 			: nullptr;
-		if (!IsValid(CurTarget) || !IsValid(MyPawn))
+		if (IsValid(CurTarget) == false || IsValid(MyPawn) == false)
 			return;
 
 		//# 타겟 반대 방향 + ±30° 랜덤 각도, 100~200 유닛 거리
 		FVector AwayDir = MyPawn->GetActorLocation() - CurTarget->GetActorLocation();
 		AwayDir.Z = 0.f;
-		if (!AwayDir.Normalize())
+		if (AwayDir.Normalize() == false)
 			return;
 
 		const float RandomAngle = FMath::RandRange(-30.f, 30.f);
@@ -235,11 +235,11 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 		return;
 	}
 
-	if (!IsValid(AIController))
+	if (IsValid(AIController) == false)
 		return;
 
 	//# 스킬 시전 중(Lock_Input_Move)이면 이번 프레임 이동 보류 — TickTask가 다시 시도
-	if (!SpyAIUtils::CanMove(AIController))
+	if (SpyAIUtils::CanMove(AIController) == false)
 	{
 		return;
 	}
@@ -255,13 +255,13 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 
 void UBTTask_CircleStrafe::SetStrafeSpeed(AAIController* InController, float Speed)
 {
-	if (!IsValid(InController)) return;
+	if (IsValid(InController) == false) return;
 
 	ACharacter* Char = Cast<ACharacter>(InController->GetPawn());
-	if (!IsValid(Char)) return;
+	if (IsValid(Char) == false) return;
 
 	UCharacterMovementComponent* CMC = Char->GetCharacterMovement();
-	if (!IsValid(CMC)) return;
+	if (IsValid(CMC) == false) return;
 
 	if (Speed == StrafeWalkSpeed)
 	{
@@ -298,7 +298,7 @@ void UBTTask_CircleStrafe::DrawDebugEQSResults(UWorld* World,
                                                const TSharedPtr<FEnvQueryResult>& Result) const
 {
 #if ENABLE_DRAW_DEBUG
-	if (!World || !Result.IsValid())
+	if (World == nullptr || Result.IsValid() == false)
 	{
 		return;
 	}

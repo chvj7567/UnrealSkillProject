@@ -43,9 +43,9 @@ protected:
 	virtual void
 	SetupPlayerInputComponent(UInputComponent *PlayerInputComponent) override;
 
-	// # IAbilitySystemInterface
+	//# # IAbilitySystemInterface
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
-	// # ~IAbilitySystemInterface
+	//# # ~IAbilitySystemInterface
 public:
 	FORCEINLINE USpringArmComponent *GetCameraBoom() const
 	{

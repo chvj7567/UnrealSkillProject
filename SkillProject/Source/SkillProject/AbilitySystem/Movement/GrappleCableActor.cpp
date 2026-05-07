@@ -66,10 +66,10 @@ void AGrappleCableActor::InitCable(ACharacter* InOwnerCharacter, const FVector& 
 
 void AGrappleCableActor::UpdateCableTransform()
 {
-    if (!OwnerCharacter || !CableComponent) return;
+    if (OwnerCharacter == nullptr || CableComponent == nullptr) return;
 
     USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
-    if (!Mesh) return;
+    if (Mesh == nullptr) return;
 
     FVector HandBoneWorld        = Mesh->GetBoneLocation(HandBoneName);
     SetActorLocation(HandBoneWorld);

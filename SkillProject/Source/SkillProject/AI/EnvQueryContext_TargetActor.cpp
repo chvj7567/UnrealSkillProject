@@ -11,25 +11,25 @@ void UEnvQueryContext_TargetActor::ProvideContext(FEnvQueryInstance& QueryInstan
                                                   FEnvQueryContextData& ContextData) const
 {
 	APawn* QuerierPawn = Cast<APawn>(QueryInstance.Owner.Get());
-	if (!IsValid(QuerierPawn))
+	if (IsValid(QuerierPawn) == false)
 	{
 		return;
 	}
 
 	AAIController* AIController = Cast<AAIController>(QuerierPawn->GetController());
-	if (!IsValid(AIController))
+	if (IsValid(AIController) == false)
 	{
 		return;
 	}
 
 	UBlackboardComponent* BB = AIController->GetBlackboardComponent();
-	if (!IsValid(BB))
+	if (IsValid(BB) == false)
 	{
 		return;
 	}
 
 	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(TargetKeyName));
-	if (!IsValid(TargetActor))
+	if (IsValid(TargetActor) == false)
 	{
 		return;
 	}

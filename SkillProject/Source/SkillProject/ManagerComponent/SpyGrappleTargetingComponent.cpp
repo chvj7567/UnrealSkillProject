@@ -32,10 +32,10 @@ void USpyGrappleTargetingComponent::TickComponent(
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     APawn* OwnerPawn = Cast<APawn>(GetOwner());
-    if (!OwnerPawn) return;
+    if (OwnerPawn == nullptr) return;
 
     APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
-    if (!PC || !PC->IsLocalController()) return;
+    if (PC == nullptr || PC->IsLocalController() == false) return;
 
     AActor* NewTarget = FindBestTarget();
 
@@ -50,7 +50,7 @@ void USpyGrappleTargetingComponent::TickComponent(
 
         OnGrappleTargetChanged.Broadcast(NewTarget);
 
-        // null은 서버에 보내지 않음 — 마지막 유효 타겟을 유지
+        //# null은 서버에 보내지 않음 — 마지막 유효 타겟을 유지
         if (NewTarget != nullptr)
         {
             Server_SetGrappleTarget(NewTarget);
@@ -66,7 +66,7 @@ void USpyGrappleTargetingComponent::EndPlay(const EEndPlayReason::Type EndPlayRe
 
 void USpyGrappleTargetingComponent::ApplyHighlight(AActor* Actor)
 {
-    if (!Actor || !TargetHighlightMaterial) return;
+    if (Actor == nullptr || TargetHighlightMaterial == nullptr) return;
 
     TArray<UMeshComponent*> Meshes;
     Actor->GetComponents<UMeshComponent>(Meshes);
@@ -83,7 +83,7 @@ void USpyGrappleTargetingComponent::ApplyHighlight(AActor* Actor)
 void USpyGrappleTargetingComponent::ClearHighlight()
 {
     AActor* Actor = HighlightedActor.Get();
-    if (!Actor)
+    if (Actor == nullptr)
     {
         HighlightedActor = nullptr;
         return;
@@ -103,7 +103,7 @@ void USpyGrappleTargetingComponent::ClearHighlight()
 
 AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 {
-    if (!MovementConfig)
+    if (MovementConfig == nullptr)
     {
         if (SpyDebugDrawEnabled())
             GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("[GrappleTgt] MovementConfig is NULL"));
@@ -112,13 +112,13 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 
     APawn* OwnerPawn = Cast<APawn>(GetOwner());
     APlayerController* PC = OwnerPawn ? Cast<APlayerController>(OwnerPawn->GetController()) : nullptr;
-    if (!PC) return nullptr;
+    if (PC == nullptr) return nullptr;
 
     FVector2D ViewportSize;
     GEngine->GameViewport->GetViewportSize(ViewportSize);
     const FVector2D ViewportCenter = ViewportSize * 0.5f;
 
-    // 탐색 반경 구체
+    //# 탐색 반경 구체
     if (SpyDebugDrawEnabled())
     {
         DrawDebugSphere(GetWorld(), OwnerPawn->GetActorLocation(),
@@ -155,7 +155,7 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 
     for (AActor* Actor : OutActors)
     {
-        if (!Actor) continue;
+        if (Actor == nullptr) continue;
 
         const bool bHasTag = Actor->Tags.Contains(FName("GrappleAnchor"));
 
@@ -163,7 +163,7 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         const bool bOnScreen = PC->ProjectWorldLocationToScreen(Actor->GetActorLocation(), ScreenPos, true);
         const float DistToCenter = bOnScreen ? FVector2D::Distance(ScreenPos, ViewportCenter) : -1.f;
 
-        if (!bHasTag || !bOnScreen) continue;
+        if (bHasTag == false || bOnScreen == false) continue;
 
         if (DistToCenter < BestDistToCenter)
         {

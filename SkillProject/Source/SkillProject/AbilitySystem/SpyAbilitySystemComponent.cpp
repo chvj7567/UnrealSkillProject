@@ -70,7 +70,7 @@ void USpyAbilitySystemComponent::ProcessAbilityInput(float DeltaTime, bool bGame
 	//# 이번 프레임에 꾹 누르고 있는(Held) 어빌리티 처리
 	ForEachAbilitySpec(InputHeldSpecHandles, [&](FGameplayAbilitySpec& AbilitySpec)
 	{
-		if (!AbilitySpec.IsActive())
+		if (AbilitySpec.IsActive() == false)
 		{
 			AbilitiesToActivate.AddUnique(AbilitySpec.Handle);
 		}

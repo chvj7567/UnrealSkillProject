@@ -22,7 +22,7 @@ protected:
 	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
-	// 스트레이프 지속 시간 (초)
+	//# 스트레이프 지속 시간 (초)
 	UPROPERTY(EditAnywhere, Category = "Config")
 	float StrafeDuration = 3.f;
 

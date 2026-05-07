@@ -26,7 +26,7 @@ void SSpyTagManagerDialog::RebuildData()
     Sentinel->Comment = NewGroupSentinel;
     GroupOptions.Add(Sentinel);
 
-    if (!GroupOptions.IsEmpty())
+    if (GroupOptions.IsEmpty() == false)
         SelectedGroupOption = GroupOptions[0];
 
     RootNodes = BuildTreeNodes(ParsedGroups);
@@ -50,7 +50,7 @@ TArray<TSharedPtr<FTagTreeNode>> SSpyTagManagerDialog::BuildTreeNodes(
         Header->GroupComment   = Group.Comment;
         Header->Segment        = Group.Comment;
         for (const FSpyTagEntry& Entry : Group.Tags)
-            if (!Entry.TagString.IsEmpty())
+            if (Entry.TagString.IsEmpty() == false)
                 InsertTagIntoTree(Header, Entry.TagString);
         for (auto& Child : Header->Children)
             PropagateGroupComment(Child, Group.Comment);
@@ -158,9 +158,9 @@ void SSpyTagManagerDialog::OnGetChildren(
 void SSpyTagManagerDialog::OnTreeSelectionChanged(
     TSharedPtr<FTagTreeNode> Node, ESelectInfo::Type)
 {
-    if (!Node) return;
+    if (Node == nullptr) return;
 
-    // 그룹 콤보박스 & 주석 동기화
+    //# 그룹 콤보박스 & 주석 동기화
     const FString& GroupComment = Node->GroupComment;
     TSharedPtr<FSpyTagGroup>* Found = GroupOptions.FindByPredicate(
         [&GroupComment](const TSharedPtr<FSpyTagGroup>& G)
@@ -175,8 +175,8 @@ void SSpyTagManagerDialog::OnTreeSelectionChanged(
             GroupCommentBox->SetText(FText::FromString(GroupComment));
     }
 
-    // 태그 노드일 때만 부모 경로 갱신
-    if (!Node->bIsGroupHeader)
+    //# 태그 노드일 때만 부모 경로 갱신
+    if (Node->bIsGroupHeader == false)
     {
         ParentPath = Node->FullPath;
         if (ParentPathBox.IsValid())
@@ -217,7 +217,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
             [ Content ];
     };
 
-    // 그룹 선택
+    //# 그룹 선택
     Panel->AddSlot().AutoHeight().Padding(4.f, 4.f)
     [
         MakeRow(LOCTEXT("Group", "그룹"),
@@ -239,7 +239,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
         )
     ];
 
-    // 그룹 주석
+    //# 그룹 주석
     Panel->AddSlot().AutoHeight().Padding(4.f, 2.f)
     [
         SNew(SHorizontalBox)
@@ -262,7 +262,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
         ]
     ];
 
-    // 부모 경로
+    //# 부모 경로
     Panel->AddSlot().AutoHeight().Padding(4.f, 2.f)
     [
         MakeRow(LOCTEXT("Parent", "부모 경로"),
@@ -272,7 +272,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
         )
     ];
 
-    // 리프 이름 헤더
+    //# 리프 이름 헤더
     Panel->AddSlot().AutoHeight().Padding(4.f, 10.f, 4.f, 2.f)
     [
         SNew(SHorizontalBox)
@@ -285,12 +285,12 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
         ]
     ];
 
-    // 리프 입력 박스
+    //# 리프 입력 박스
     Panel->AddSlot().AutoHeight().Padding(4.f, 0.f)
     [ SAssignNew(LeafInputBox, SVerticalBox) ];
     RebuildLeafInputs();
 
-    // 미리보기
+    //# 미리보기
     Panel->AddSlot().AutoHeight().Padding(4.f, 10.f, 4.f, 2.f)
     [ SNew(STextBlock).Text(LOCTEXT("Preview", "미리보기")) ];
 
@@ -307,7 +307,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
                 TArray<FString> Lines;
                 for (const TSharedPtr<FString>& Leaf : LeafInputs)
                 {
-                    if (Leaf.IsValid() && !Leaf->IsEmpty())
+                    if (Leaf.IsValid() && Leaf->IsEmpty() == false)
                     {
                         FString Tag = ParentPath.IsEmpty()
                             ? *Leaf : ParentPath + TEXT(".") + *Leaf;
@@ -322,7 +322,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
         ]
     ];
 
-    // Add Tags 버튼
+    //# Add Tags 버튼
     Panel->AddSlot().AutoHeight().Padding(4.f, 12.f)
     [
         SNew(SButton).HAlign(HAlign_Center)
@@ -335,7 +335,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::BuildAddPanel()
 
 void SSpyTagManagerDialog::RebuildLeafInputs()
 {
-    if (!LeafInputBox.IsValid()) return;
+    if (LeafInputBox.IsValid() == false) return;
     LeafInputBox->ClearChildren();
     for (const TSharedPtr<FString>& Input : LeafInputs)
     {
@@ -366,7 +366,7 @@ TSharedRef<SWidget> SSpyTagManagerDialog::OnGenerateGroupWidget(TSharedPtr<FSpyT
 
 FText SSpyTagManagerDialog::GetGroupComboText() const
 {
-    if (!SelectedGroupOption.IsValid()) return FText::GetEmpty();
+    if (SelectedGroupOption.IsValid() == false) return FText::GetEmpty();
     return FText::FromString(
         SelectedGroupOption->Comment == NewGroupSentinel
         ? TEXT("새 그룹 추가...") : SelectedGroupOption->Comment);
@@ -374,7 +374,7 @@ FText SSpyTagManagerDialog::GetGroupComboText() const
 
 FReply SSpyTagManagerDialog::OnSaveGroupCommentClicked()
 {
-    if (!SelectedGroupOption.IsValid() || SelectedGroupOption->Comment == NewGroupSentinel)
+    if (SelectedGroupOption.IsValid() == false || SelectedGroupOption->Comment == NewGroupSentinel)
     {
         FMessageDialog::Open(EAppMsgType::Ok,
             LOCTEXT("ErrNoGroupForRename", "수정할 기존 그룹을 선택하세요."));
@@ -395,7 +395,7 @@ FReply SSpyTagManagerDialog::OnSaveGroupCommentClicked()
     if (OldComment == NewComment)
         return FReply::Handled();
 
-    if (!FSpyTagFileEditor::RenameGroup(OldComment, NewComment))
+    if (FSpyTagFileEditor::RenameGroup(OldComment, NewComment) == false)
     {
         FMessageDialog::Open(EAppMsgType::Ok,
             LOCTEXT("ErrRename", "그룹 주석 수정에 실패했습니다."));
@@ -410,7 +410,7 @@ FReply SSpyTagManagerDialog::OnSaveGroupCommentClicked()
             TagTreeView->SetItemExpansion(Node, true);
     }
 
-    // 변경된 이름으로 선택 복원
+    //# 변경된 이름으로 선택 복원
     TSharedPtr<FSpyTagGroup>* Found = GroupOptions.FindByPredicate(
         [&NewComment](const TSharedPtr<FSpyTagGroup>& G)
         { return G.IsValid() && G->Comment == NewComment; });
@@ -432,7 +432,7 @@ FReply SSpyTagManagerDialog::OnAddTagsClicked()
         return FReply::Handled();
     }
 
-    bool bIsNew = !SelectedGroupOption.IsValid()
+    bool bIsNew = SelectedGroupOption.IsValid() == false
         || SelectedGroupOption->Comment == NewGroupSentinel;
 
     FSpyTagGroup TargetGroup;
@@ -454,7 +454,7 @@ FReply SSpyTagManagerDialog::OnAddTagsClicked()
     TArray<FSpyTagEntry> NewEntries;
     for (const TSharedPtr<FString>& Leaf : LeafInputs)
     {
-        if (!Leaf.IsValid() || Leaf->IsEmpty()) continue;
+        if (Leaf.IsValid() == false || Leaf->IsEmpty()) continue;
         FSpyTagEntry E;
         E.TagString = ParentPath + TEXT(".") + *Leaf;
         E.VarName   = FSpyTagFileEditor::TagStringToVarName(E.TagString);
@@ -479,14 +479,14 @@ FReply SSpyTagManagerDialog::OnAddTagsClicked()
         }
     }
 
-    if (!FSpyTagFileEditor::AppendTags(ParsedGroups, TargetGroup, NewEntries, bIsNew))
+    if (FSpyTagFileEditor::AppendTags(ParsedGroups, TargetGroup, NewEntries, bIsNew) == false)
     {
         FMessageDialog::Open(EAppMsgType::Ok,
             LOCTEXT("ErrWrite", "파일 쓰기에 실패했습니다."));
         return FReply::Handled();
     }
 
-    // 성공: 재파싱 + 트리 갱신 + 입력 초기화
+    //# 성공: 재파싱 + 트리 갱신 + 입력 초기화
     RebuildData();
     if (TagTreeView.IsValid())
     {

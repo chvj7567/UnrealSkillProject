@@ -104,8 +104,8 @@ void FSKCueActorPool::DeactivateActorForPool(AActor* Actor)
     Actor->SetActorTickEnabled(false);
 
     //# 사용자 초기화
-    // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
-    // if (Poolable) Poolable->OnReturnedToPool();
+    //# IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
+    //# if (Poolable) Poolable->OnReturnedToPool();
 }
 
 void FSKCueActorPool::ActivateActorFromPool(AActor* Actor, AActor* TargetActor)
@@ -114,14 +114,14 @@ void FSKCueActorPool::ActivateActorFromPool(AActor* Actor, AActor* TargetActor)
         return;
 
     Actor->AttachToComponent(TargetActor->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
-    //Actor->SetActorTransform(FTransform());
+    //#Actor->SetActorTransform(FTransform());
     Actor->SetActorHiddenInGame(false);
     Actor->SetActorEnableCollision(true);
     Actor->SetActorTickEnabled(true);
 
     //# 사용자 초기화
-    // IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
-    // if (Poolable) Poolable->OnAcquiredFromPool();
+    //# IPoolableGameplayCueActor* Poolable = Cast<IPoolableGameplayCueActor>(Actor);
+    //# if (Poolable) Poolable->OnAcquiredFromPool();
 }
 
 void FSKCueActorPool::Clear()

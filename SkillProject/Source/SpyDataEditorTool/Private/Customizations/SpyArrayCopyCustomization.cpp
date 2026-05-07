@@ -20,7 +20,7 @@ void FSpyArrayCopyCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBu
 {
     TArray<TWeakObjectPtr<UObject>> Objects;
     DetailBuilder.GetObjectsBeingCustomized(Objects);
-    if (Objects.Num() == 0 || !Objects[0].IsValid()) return;
+    if (Objects.Num() == 0 || Objects[0].IsValid() == false) return;
 
     UClass* Class = Objects[0]->GetClass();
 
@@ -30,7 +30,7 @@ void FSpyArrayCopyCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBu
         TSharedRef<IPropertyHandle> ArrayHandle =
             DetailBuilder.GetProperty(ArrayProp->GetFName(), Class);
 
-        if (!ArrayHandle->IsValidHandle()) continue;
+        if (ArrayHandle->IsValidHandle() == false) continue;
 
         DetailBuilder.HideProperty(ArrayHandle);
 
@@ -82,7 +82,7 @@ void FSpyArrayCopyCustomization::GenerateElementWidget(
             ElementHandle->GetValueAsFormattedString(ExportedValue, PPF_Copy);
 
             TSharedPtr<IPropertyHandleArray> ArrayHandleArray = ArrayHandle->AsArray();
-            if (!ArrayHandleArray.IsValid()) return FReply::Handled();
+            if (ArrayHandleArray.IsValid() == false) return FReply::Handled();
 
             ArrayHandleArray->AddItem();
 

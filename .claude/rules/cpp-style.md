@@ -32,7 +32,9 @@
 
 - 한 줄 주석은 항상 `//#`로 시작 — 일반 `//`나 `///`, `/* */` 사용 금지.
   - 헤더의 doxygen 스타일 주석도 `//#`로 통일.
-  - 자동 생성된 주석(`// Fill out your copyright notice ...` 등)은 예외이며 필요 시 `//#`로 정리.
+  - **예외**: UE 자동 생성 저작권 헤더는 그대로 유지 (새 클래스 생성 시 자동 삽입되므로 매번 정리하지 않음).
+    - `// Fill out your copyright notice in the Description page of Project Settings.`
+    - `// Copyright Epic Games, Inc. All Rights Reserved.`
 
 ```cpp
 //# 서버 권한에서 실행

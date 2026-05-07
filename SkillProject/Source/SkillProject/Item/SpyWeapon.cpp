@@ -26,7 +26,7 @@ void ASpyWeapon::UnEquipWeapon()
 
 void ASpyWeapon::ActivateTrail()
 {
-	if (!IsValid(TrailEffect) || GetNetMode() == NM_DedicatedServer)
+	if (IsValid(TrailEffect) == false || GetNetMode() == NM_DedicatedServer)
 		return;
 
 	if (IsValid(ActiveTrailComponent))

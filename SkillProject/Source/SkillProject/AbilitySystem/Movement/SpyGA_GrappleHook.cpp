@@ -21,7 +21,7 @@ bool USpyGA_GrappleHook::CanActivateAbility(
     const FGameplayTagContainer* TargetTags,
     FGameplayTagContainer* OptionalRelevantTags) const
 {
-    if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+    if (Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags) == false)
         return false;
 
     APawn* Pawn = Cast<APawn>(ActorInfo->AvatarActor.Get());
@@ -64,7 +64,7 @@ void USpyGA_GrappleHook::ActivateAbility(
 
     AActor* AvatarActor = GetAvatarActorFromActorInfo();
     ACharacter* Char    = Cast<ACharacter>(AvatarActor);
-    if (!Char)
+    if (Char == nullptr)
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
         return;
@@ -84,7 +84,7 @@ void USpyGA_GrappleHook::ActivateAbility(
         UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] TargetComp class=%s"),
             TargetComp ? *TargetComp->GetClass()->GetName() : TEXT("NULL"));
 
-        if (!TargetComp)
+        if (TargetComp == nullptr)
         {
             UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] TargetComp NOT FOUND → EndAbility"));
             EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -95,7 +95,7 @@ void USpyGA_GrappleHook::ActivateAbility(
         UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] CurrentGrappleTarget=%s"),
             Target ? *Target->GetName() : TEXT("NULL"));
 
-        if (!Target)
+        if (Target == nullptr)
         {
             UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] Target is NULL → EndAbility"));
             EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -107,12 +107,12 @@ void USpyGA_GrappleHook::ActivateAbility(
         FActorSpawnParameters SpawnParams;
         SpawnParams.Owner = Char;
         TSubclassOf<AGrappleCableActor> SpawnClass = CableActorClass;
-        if (!SpawnClass)
+        if (SpawnClass == nullptr)
         {
             SpawnClass = AGrappleCableActor::StaticClass();
         }
         CableActor = GetWorld()->SpawnActor<AGrappleCableActor>(SpawnClass, SpawnParams);
-        if (!CableActor)
+        if (CableActor == nullptr)
         {
             EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
             return;
@@ -134,7 +134,7 @@ void USpyGA_GrappleHook::ActivateAbility(
         UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] LocalCachedTarget=%s"),
             LocalTarget ? *LocalTarget->GetName() : TEXT("NULL"));
 
-        if (!LocalTarget)
+        if (LocalTarget == nullptr)
         {
             UE_LOG(LogTemp, Error, TEXT("[GrappleGA][CLI] LocalTarget NULL → early return (no task)"));
             return;

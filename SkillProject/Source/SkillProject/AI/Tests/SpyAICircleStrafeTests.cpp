@@ -10,8 +10,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FSpyStrafeDirVectorTest::RunTest(const FString& Parameters)
 {
-    // Querier=(0,0,0), Target=(100,0,0) → Forward=(1,0,0)
-    // RightVec = Cross(Up, Forward) = (0,1,0) = +Y
+    //# Querier=(0,0,0), Target=(100,0,0) → Forward=(1,0,0)
+    //# RightVec = Cross(Up, Forward) = (0,1,0) = +Y
     FVector QuerierLoc(0.0, 0.0, 0.0);
     FVector TargetLoc(100.0, 0.0, 0.0);
     FVector Forward = (TargetLoc - QuerierLoc).GetSafeNormal2D();
@@ -40,27 +40,27 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FSpyCalcDirectionTest::RunTest(const FString& Parameters)
 {
-    // 전방 이동 (Velocity=+X, Rotation=0) → 0도
+    //# 전방 이동 (Velocity=+X, Rotation=0) → 0도
     float Dir = USpyAnimManagerComponent::CalcDirectionFromVelocity(
         FVector(100.0, 0.0, 0.0), FRotator::ZeroRotator);
     TestNearlyEqual(TEXT("Forward = 0 deg"), (double)Dir, 0.0, 0.5);
 
-    // 우측 이동 (Velocity=+Y) → +90도
+    //# 우측 이동 (Velocity=+Y) → +90도
     Dir = USpyAnimManagerComponent::CalcDirectionFromVelocity(
         FVector(0.0, 100.0, 0.0), FRotator::ZeroRotator);
     TestNearlyEqual(TEXT("Right = +90 deg"), (double)Dir, 90.0, 0.5);
 
-    // 좌측 이동 (Velocity=-Y) → -90도
+    //# 좌측 이동 (Velocity=-Y) → -90도
     Dir = USpyAnimManagerComponent::CalcDirectionFromVelocity(
         FVector(0.0, -100.0, 0.0), FRotator::ZeroRotator);
     TestNearlyEqual(TEXT("Left = -90 deg"), (double)Dir, -90.0, 0.5);
 
-    // 후방 이동 (Velocity=-X) → ±180도 근사
+    //# 후방 이동 (Velocity=-X) → ±180도 근사
     Dir = USpyAnimManagerComponent::CalcDirectionFromVelocity(
         FVector(-100.0, 0.0, 0.0), FRotator::ZeroRotator);
     TestTrue(TEXT("Backward near ±180"), FMath::Abs(Dir) > 170.0f);
 
-    // 액터가 90도 회전된 상태에서 World +X 이동 → 로컬로는 -Y → -90도
+    //# 액터가 90도 회전된 상태에서 World +X 이동 → 로컬로는 -Y → -90도
     Dir = USpyAnimManagerComponent::CalcDirectionFromVelocity(
         FVector(100.0, 0.0, 0.0), FRotator(0.0, 90.0, 0.0));
     TestNearlyEqual(TEXT("Rotated actor right = -90 deg"), (double)Dir, -90.0, 0.5);
@@ -68,4 +68,4 @@ bool FSpyCalcDirectionTest::RunTest(const FString& Parameters)
     return true;
 }
 
-#endif // WITH_DEV_AUTOMATION_TESTS
+#endif //# WITH_DEV_AUTOMATION_TESTS

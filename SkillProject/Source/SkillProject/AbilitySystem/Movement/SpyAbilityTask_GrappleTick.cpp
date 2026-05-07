@@ -36,14 +36,14 @@ void USpyAbilityTask_GrappleTick::TickTask(float DeltaTime)
     Super::TickTask(DeltaTime);
 
     ACharacter* Character = Cast<ACharacter>(GetAvatarActor());
-    if (!Character) return;
+    if (Character == nullptr) return;
 
     const FVector CharLoc  = Character->GetActorLocation();
     const FVector ToTarget = (TargetLocation - CharLoc).GetSafeNormal();
 
     if (Character->HasAuthority())
     {
-        if (!CableActor.IsValid())
+        if (CableActor.IsValid() == false)
         {
             if (SpyDebugDrawEnabled())
                 GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleTick] CableActor invalid — EndTask"));
@@ -66,9 +66,9 @@ void USpyAbilityTask_GrappleTick::TickTask(float DeltaTime)
         }
     }
 
-    // 클라이언트·서버 모두: CMC LocalPredicted 예측 이동 + 회전
+    //# 클라이언트·서버 모두: CMC LocalPredicted 예측 이동 + 회전
     const FVector HorizDir = FVector(ToTarget.X, ToTarget.Y, 0.f).GetSafeNormal();
-    if (!HorizDir.IsNearlyZero())
+    if (HorizDir.IsNearlyZero() == false)
     {
         const FRotator Current    = Character->GetActorRotation();
         const FRotator DesiredYaw = FRotator(Current.Pitch, HorizDir.Rotation().Yaw, Current.Roll);

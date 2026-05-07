@@ -54,8 +54,8 @@ void USKCueManager::UpdateDelayLoadDelegateListeners()
 
 	//# 에디터에서는 이런 복잡한 지연 로딩 리스너가 필요 없음
 //#if WITH_EDITOR
-//	if (GIsEditor)
-//		return;
+//#	if (GIsEditor)
+//#		return;
 //#endif
 
 	//# 서버도 필요 없음
@@ -165,12 +165,12 @@ void USKCueManager::ProcessLoadedTags()
         {
             for (const FLoadedTag& TagData : TagsToProcess)
             {
-                // 이 태그가 매니저가 관리하는 큐 세트에 포함되어 있는지 확인
+                //# 이 태그가 매니저가 관리하는 큐 세트에 포함되어 있는지 확인
                 if (RuntimeGameplayCueObjectLibrary.CueSet->GameplayCueDataMap.Contains(TagData.Tag))
                 {
                     if (TagData.OwningObject.IsValid())
                     {
-                        // 포함되어 있다면 실제 로딩 함수 호출
+                        //# 포함되어 있다면 실제 로딩 함수 호출
                         ProcessTagToPreload(TagData.Tag, TagData.OwningObject.Get());
                     }
                 }
@@ -183,8 +183,8 @@ void USKCueManager::ProcessTagToPreload(const FGameplayTag& Tag, UObject* Owning
 {
     //# 에디터에서는 프리로딩을 스킵함
 //#if WITH_EDITOR
-//    if (GIsEditor)
-//        return;
+//#    if (GIsEditor)
+//#        return;
 //#endif
 
     //# 서버는 로드할 필요 없음

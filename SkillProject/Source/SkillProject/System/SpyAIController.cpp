@@ -83,21 +83,21 @@ void ASpyAIController::Tick(float DeltaSeconds)
 	if (SightConfig)
 	{
 		//# 시각 범위
-		//DrawDebugSphere(GetWorld(), Location, SightConfig->SightRadius, 32, FColor::Green, false, 0.f, 0, 1.5f);
+		//#DrawDebugSphere(GetWorld(), Location, SightConfig->SightRadius, 32, FColor::Green, false, 0.f, 0, 1.5f);
 
 		//# 시야에 타겟이 보이고 나서 어그로 없어지는 시야 범위
-		//DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
+		//#DrawDebugSphere(GetWorld(), Location, SightConfig->LoseSightRadius, 32, FColor::Yellow, false, 0.f, 0, 1.f);
 
 		//# 시야각
 		float HalfAngleRad = FMath::DegreesToRadians(SightConfig->PeripheralVisionAngleDegrees);
 
-		//DrawDebugCone(GetWorld(), Location, Forward, SightConfig->SightRadius, HalfAngleRad, HalfAngleRad, 32, FColor::Green, false, 0.f, 0, 1.2f);
+		//#DrawDebugCone(GetWorld(), Location, Forward, SightConfig->SightRadius, HalfAngleRad, HalfAngleRad, 32, FColor::Green, false, 0.f, 0, 1.2f);
 	}
 
 	if (HearingConfig)
 	{
 		//# 청각 범위
-		//DrawDebugSphere(GetWorld(), Location, HearingConfig->HearingRange, 32, FColor::Blue, false, 0.f, 0, 1.5f );
+		//#DrawDebugSphere(GetWorld(), Location, HearingConfig->HearingRange, 32, FColor::Blue, false, 0.f, 0, 1.5f );
 	}
 }
 
@@ -328,7 +328,7 @@ void ASpyAIController::RefreshBlackboardTarget()
 	{
 		bCurrentGone = true;
 	}
-	else if (!IsValid(CurrentTarget))
+	else if (IsValid(CurrentTarget) == false)
 	{
 		bCurrentGone = true;
 	}
@@ -353,7 +353,7 @@ void ASpyAIController::RefreshBlackboardTarget()
 	}
 
 	//# 살아있는 타겟이면 위치만 갱신하고 유지 (시야 잃어도 BB는 그대로)
-	if (!bCurrentGone)
+	if (bCurrentGone == false)
 	{
 		BB->SetValueAsVector("TargetLocation", CurrentTarget->GetActorLocation());
 		return;
@@ -370,9 +370,9 @@ void ASpyAIController::RefreshBlackboardTarget()
 	for (AActor* Perceived : PerceivedActors)
 	{
 		APawn* CandidatePawn = ResolvePawnFromActor(Perceived);
-		if (!IsValid(CandidatePawn))
+		if (IsValid(CandidatePawn) == false)
 			continue;
-		if (!IsHostileAndAlive(CandidatePawn))
+		if (IsHostileAndAlive(CandidatePawn) == false)
 			continue;
 
 		const float DistSq = FVector::DistSquared(MyLoc, CandidatePawn->GetActorLocation());
@@ -416,7 +416,7 @@ void ASpyAIController::OnTrackedTargetDestroyed(AActor* DestroyedActor)
 
 bool ASpyAIController::IsHostileAndAlive(AActor* InActor) const
 {
-	if (!IsValid(InActor))
+	if (IsValid(InActor) == false)
 		return false;
 
 	if (GetTeamAttitudeTowards(*InActor) != ETeamAttitude::Hostile)

@@ -42,7 +42,7 @@ UAbilitySystemComponent* ASpyPlayerState::GetAbilitySystemComponent() const
 void ASpyPlayerState::SetPlayerConnectionType(EPlayerConnectionType NewType)
 {
 	//# 수정 마크 표시
-	//MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PlayerConnectionType, this);
+	//#MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PlayerConnectionType, this);
 	PlayerConnectionType = NewType;
 }
 

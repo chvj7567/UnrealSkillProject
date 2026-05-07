@@ -23,7 +23,7 @@ void USpyUIManager::Deinitialize()
 
 USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 {
-	if (!WorldContextObject)
+	if (WorldContextObject == nullptr)
 		return nullptr;
 
 	if (const UWorld* World = WorldContextObject->GetWorld())
@@ -143,7 +143,7 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 	TWeakObjectPtr<UWidgetComponent> WeakWidget = WidgetComponent;
 	LoadDelegate.BindLambda([InUIName, WeakWidget, Space](UObject* LoadedAsset)
 		{
-			if (LoadedAsset == nullptr || !WeakWidget.IsValid())
+			if (LoadedAsset == nullptr || WeakWidget.IsValid() == false)
 				return;
 
 			if (TSubclassOf<USKUserWidget> UI = USpyAssetManager::GetSubclassByName<USKUserWidget>(InUIName))

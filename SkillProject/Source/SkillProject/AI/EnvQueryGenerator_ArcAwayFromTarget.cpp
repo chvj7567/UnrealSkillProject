@@ -14,25 +14,25 @@ UEnvQueryGenerator_ArcAwayFromTarget::UEnvQueryGenerator_ArcAwayFromTarget()
 void UEnvQueryGenerator_ArcAwayFromTarget::GenerateItems(FEnvQueryInstance& QueryInstance) const
 {
 	APawn* QuerierPawn = Cast<APawn>(QueryInstance.Owner.Get());
-	if (!IsValid(QuerierPawn))
+	if (IsValid(QuerierPawn) == false)
 	{
 		return;
 	}
 
 	AAIController* AIController = Cast<AAIController>(QuerierPawn->GetController());
-	if (!IsValid(AIController))
+	if (IsValid(AIController) == false)
 	{
 		return;
 	}
 
 	UBlackboardComponent* BB = AIController->GetBlackboardComponent();
-	if (!IsValid(BB))
+	if (IsValid(BB) == false)
 	{
 		return;
 	}
 
 	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(TargetKeyName));
-	if (!IsValid(TargetActor))
+	if (IsValid(TargetActor) == false)
 	{
 		return;
 	}
@@ -43,7 +43,7 @@ void UEnvQueryGenerator_ArcAwayFromTarget::GenerateItems(FEnvQueryInstance& Quer
 	//# 타겟 → Querier 방향 = 타겟 반대 방향
 	FVector AwayDir = QuerierLoc - TargetLoc;
 	AwayDir.Z = 0.f;
-	if (!AwayDir.Normalize())
+	if (AwayDir.Normalize() == false)
 	{
 		return;
 	}

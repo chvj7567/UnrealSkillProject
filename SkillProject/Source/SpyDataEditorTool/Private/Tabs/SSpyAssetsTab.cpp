@@ -41,8 +41,8 @@ void SSpyAssetsTab::Construct(const FArguments& InArgs)
 
     auto PropertyFilter = FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P) -> bool
     {
-        return !P.Property.GetName().EndsWith(TEXT("Cache")) &&
-               !P.Property.GetName().EndsWith(TEXT("ToPath"));
+        return P.Property.GetName().EndsWith(TEXT("Cache")) == false &&
+               P.Property.GetName().EndsWith(TEXT("ToPath")) == false;
     });
     AssetDataView->SetIsPropertyVisibleDelegate(PropertyFilter);
     AnimAssetDataView->SetIsPropertyVisibleDelegate(PropertyFilter);
@@ -91,7 +91,7 @@ void SSpyAssetsTab::Construct(const FArguments& InArgs)
 
 FReply SSpyAssetsTab::OnScanClicked()
 {
-    if (!AnimAssetData) return FReply::Handled();
+    if (AnimAssetData == nullptr) return FReply::Handled();
 
     TMap<FName, FSoftObjectPath> AnimLayers = FSpyDataScanner::ScanAnimLayers();
 
@@ -119,7 +119,7 @@ FReply SSpyAssetsTab::OnApplyClicked()
     if (AssetData)     Names.Add(TEXT("SpyAssetData"));
     if (AnimAssetData) Names.Add(TEXT("SpyAnimAssetData"));
 
-    if (!SpyEditorUtils::ConfirmApply(Names)) return FReply::Handled();
+    if (SpyEditorUtils::ConfirmApply(Names) == false) return FReply::Handled();
 
     int32 Saved = 0, Failed = 0;
     if (SpyEditorUtils::SaveAsset(AssetData.Get()))     ++Saved; else ++Failed;

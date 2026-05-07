@@ -31,7 +31,7 @@ void FSpyAbilitySet_GrantedHandles::TakeFromAbilitySystem(UAbilitySystemComponen
 {
 	check(SpyASC);
 
-	if (!SpyASC->IsOwnerActorAuthoritative())
+	if (SpyASC->IsOwnerActorAuthoritative() == false)
 	{
 		return;
 	}

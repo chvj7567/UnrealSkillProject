@@ -233,7 +233,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
                 if (TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death))
                     continue;
 
-                if (!bIsHeal && TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
+                if (bIsHeal == false && TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
                 {
                     FVector DefenderForward = TargetCharacter->GetActorForwardVector();
                     FVector ToAttacker = (OwnerCharacter->GetActorLocation() - TargetCharacter->GetActorLocation()).GetSafeNormal();
@@ -330,7 +330,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
                 if (Degree < TargetDegree)
                     continue;
 
-                if (!bIsHeal && TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
+                if (bIsHeal == false && TargetASC && TargetASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Parry))
                 {
                     FVector DefenderForward = TargetCharacter->GetActorForwardVector();
                     FVector ToAttacker = (OwnerCharacter->GetActorLocation() - TargetCharacter->GetActorLocation()).GetSafeNormal();

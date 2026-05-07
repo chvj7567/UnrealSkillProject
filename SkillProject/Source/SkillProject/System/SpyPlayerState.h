@@ -61,10 +61,10 @@ public:
 
     static const FName NAME_AbilityReady;
 
-    //~IGenericTeamAgentInterface interface
+    //#~IGenericTeamAgentInterface interface
     virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
     virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }
-    //~End of IGenericTeamAgentInterface interface
+    //#~End of IGenericTeamAgentInterface interface
 
 protected:
     UFUNCTION()

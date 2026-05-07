@@ -37,7 +37,7 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	}
 
 	AActor* Avatar = ActorInfo->AvatarActor.Get();
-	if (!Avatar) return;
+	if (Avatar == nullptr) return;
 
 	UAISense_Hearing::ReportNoiseEvent(
 		Avatar->GetWorld(),

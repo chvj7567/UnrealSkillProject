@@ -31,7 +31,7 @@ void FSpyAssetPathCustomization::CustomizeHeader(
     FString PropPath = PropertyHandle->GeneratePathToProperty();
     bool bChanged = ChangedPaths.Contains(PropPath);
 
-    // 기본 값 위젯을 사용하되 하이라이트만 오버레이
+    //# 기본 값 위젯을 사용하되 하이라이트만 오버레이
     TSharedRef<SWidget> ValueWidget = PropertyHandle->CreatePropertyValueWidget();
 
     HeaderRow

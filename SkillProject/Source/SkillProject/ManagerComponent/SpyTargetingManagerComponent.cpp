@@ -110,12 +110,12 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
             GetWorld(),
             Owner->GetActorLocation(),
             Radius,
-            24,                // 세그먼트 수 (구의 디테일)
-            FColor::Blue,       // 선 색상
-            false,             // 영구 지속 여부
-            0.5f,              // 지속 시간 (초)
-            0,                 // Depth Priority
-            1.0f               // 선 두께
+            24,                //# 세그먼트 수 (구의 디테일)
+            FColor::Blue,       //# 선 색상
+            false,             //# 영구 지속 여부
+            0.5f,              //# 지속 시간 (초)
+            0,                 //# Depth Priority
+            1.0f               //# 선 두께
         );
     }
 

@@ -110,7 +110,7 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
             }
         }
 
-        //UE_LOG(LogTemp, Warning, TEXT("# CurrentOffsetHL X: %f Y: %f, Z: %f"), CurrentOffsetHL.X, CurrentOffsetHL.Y, CurrentOffsetHL.Z);
+        //#UE_LOG(LogTemp, Warning, TEXT("# CurrentOffsetHL X: %f Y: %f, Z: %f"), CurrentOffsetHL.X, CurrentOffsetHL.Y, CurrentOffsetHL.Z);
     }
 
     //# Set DirectionAngle (스트레이프 애니메이션용)
@@ -157,5 +157,5 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 
 void USpyCharacterAnimInstance::AnimNotify_AttackHit(UAnimNotify* Notify)
 {
-    //Player->TestHit();
+    //#Player->TestHit();
 }

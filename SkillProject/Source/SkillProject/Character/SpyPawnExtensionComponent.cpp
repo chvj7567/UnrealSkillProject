@@ -145,7 +145,7 @@ void USpyPawnExtensionComponent::HandleChangeInitState(UGameFrameworkComponentMa
 			if (ComponentClass == nullptr)
 				continue;
 
-			////# 런타임 컴포넌트 등록
+			//#/# 런타임 컴포넌트 등록
 			if (Pawn->GetComponentByClass(ComponentClass) != nullptr)
 				continue;
 			
@@ -241,7 +241,7 @@ void USpyPawnExtensionComponent::InitializeAbilitySystem(USpyAbilitySystemCompon
 	//# 권한이 있는 경우만(아바타가 나인 경우)
 	if ((ExistingAvatar != nullptr) && (ExistingAvatar != Pawn))
 	{
-		ensure(!ExistingAvatar->HasAuthority());
+		ensure(ExistingAvatar->HasAuthority() == false);
 
 		if (USpyPawnExtensionComponent* OtherExtensionComponent = FindPawnExtensionComponent(ExistingAvatar))
 		{

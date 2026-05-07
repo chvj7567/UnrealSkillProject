@@ -20,11 +20,11 @@ void UBTService_CheckCooldown::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	if (!IsValid(BB)) return;
+	if (IsValid(BB) == false) return;
 
 	bool bOnCooldown = false;
 
-	if (!CooldownTags.IsEmpty())
+	if (CooldownTags.IsEmpty() == false)
 	{
 		AAIController* AIController = OwnerComp.GetAIOwner();
 		APawn* Pawn = IsValid(AIController) ? AIController->GetPawn() : nullptr;
@@ -37,7 +37,7 @@ void UBTService_CheckCooldown::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 			{
 				ASC = PS->FindComponentByClass<UAbilitySystemComponent>();
 			}
-			if (!IsValid(ASC))
+			if (IsValid(ASC) == false)
 			{
 				ASC = Pawn->FindComponentByClass<UAbilitySystemComponent>();
 			}

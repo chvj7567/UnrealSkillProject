@@ -18,7 +18,7 @@ TArray<FSpyTagGroup> FSpyTagFileEditor::ParseHeaderGroups()
 {
 	TArray<FSpyTagGroup> Groups;
 	TArray<FString> Lines;
-	if (!FFileHelper::LoadFileToStringArray(Lines, *GetHeaderPath()))
+	if (FFileHelper::LoadFileToStringArray(Lines, *GetHeaderPath()) == false)
 		return Groups;
 
 	FSpyTagGroup* Current = nullptr;
@@ -51,13 +51,13 @@ TMap<FString, FString> FSpyTagFileEditor::ParseCppTagMap()
 {
 	TMap<FString, FString> Result;
 	TArray<FString> Lines;
-	if (!FFileHelper::LoadFileToStringArray(Lines, *GetCppPath()))
+	if (FFileHelper::LoadFileToStringArray(Lines, *GetCppPath()) == false)
 		return Result;
 
 	for (const FString& Line : Lines)
 	{
 		FString T = Line.TrimStartAndEnd();
-		if (!T.StartsWith(TEXT("UE_DEFINE_GAMEPLAY_TAG("))) continue;
+		if (T.StartsWith(TEXT("UE_DEFINE_GAMEPLAY_TAG(")) == false) continue;
 
 		FString Inner = T;
 		Inner.RemoveFromStart(TEXT("UE_DEFINE_GAMEPLAY_TAG("));
@@ -105,7 +105,7 @@ bool FSpyTagFileEditor::RenameGroup(const FString& OldComment, const FString& Ne
     auto ReplaceInFile = [&](const FString& Path) -> bool
     {
         TArray<FString> Lines;
-        if (!FFileHelper::LoadFileToStringArray(Lines, *Path)) return false;
+        if (FFileHelper::LoadFileToStringArray(Lines, *Path) == false) return false;
 
         for (FString& Line : Lines)
         {
@@ -137,14 +137,14 @@ bool FSpyTagFileEditor::AppendTags(
 {
     if (NewEntries.IsEmpty()) return true;
 
-    // ── h 파일 수정 ──────────────────────────────────────────────
+    //# ── h 파일 수정 ──────────────────────────────────────────────
     TArray<FString> HLines;
-    if (!FFileHelper::LoadFileToStringArray(HLines, *GetHeaderPath()))
+    if (FFileHelper::LoadFileToStringArray(HLines, *GetHeaderPath()) == false)
         return false;
 
     if (bIsNewGroup)
     {
-        // namespace 닫기 } 직전에 삽입
+        //# namespace 닫기 } 직전에 삽입
         int32 CloseIdx = INDEX_NONE;
         for (int32 i = HLines.Num() - 1; i >= 0; --i)
         {
@@ -163,7 +163,7 @@ bool FSpyTagFileEditor::AppendTags(
     }
     else
     {
-        // 대상 그룹 헤더 줄 찾기
+        //# 대상 그룹 헤더 줄 찾기
         int32 HeaderIdx = INDEX_NONE;
         for (int32 i = 0; i < HLines.Num(); ++i)
         {
@@ -173,7 +173,7 @@ bool FSpyTagFileEditor::AppendTags(
         }
         if (HeaderIdx == INDEX_NONE) return false;
 
-        // 그룹 범위 내 마지막 UE_DECLARE 줄
+        //# 그룹 범위 내 마지막 UE_DECLARE 줄
         int32 LastTag = HeaderIdx;
         for (int32 i = HeaderIdx + 1; i < HLines.Num(); ++i)
         {
@@ -190,17 +190,17 @@ bool FSpyTagFileEditor::AppendTags(
     }
 
     FString HContent = FString::Join(HLines, TEXT("\n")) + TEXT("\n");
-    if (!FFileHelper::SaveStringToFile(HContent, *GetHeaderPath()))
+    if (FFileHelper::SaveStringToFile(HContent, *GetHeaderPath()) == false)
         return false;
 
-    // ── cpp 파일 수정 ─────────────────────────────────────────────
+    //# ── cpp 파일 수정 ─────────────────────────────────────────────
     TArray<FString> CppLines;
-    if (!FFileHelper::LoadFileToStringArray(CppLines, *GetCppPath()))
+    if (FFileHelper::LoadFileToStringArray(CppLines, *GetCppPath()) == false)
         return false;
 
     if (bIsNewGroup)
     {
-        // 마지막 UE_DEFINE_GAMEPLAY_TAG 줄 뒤에 삽입
+        //# 마지막 UE_DEFINE_GAMEPLAY_TAG 줄 뒤에 삽입
         int32 LastDef = INDEX_NONE;
         for (int32 i = 0; i < CppLines.Num(); ++i)
             if (CppLines[i].TrimStartAndEnd().StartsWith(TEXT("UE_DEFINE_GAMEPLAY_TAG(")))
@@ -217,16 +217,16 @@ bool FSpyTagFileEditor::AppendTags(
     }
     else
     {
-        // 대상 그룹의 마지막 VarName을 cpp에서 찾기
+        //# 대상 그룹의 마지막 VarName을 cpp에서 찾기
         FString LastVar = TargetGroup.Tags.IsEmpty() ? TEXT("") : TargetGroup.Tags.Last().VarName;
         int32 InsertIdx = INDEX_NONE;
-        if (!LastVar.IsEmpty())
+        if (LastVar.IsEmpty() == false)
             for (int32 i = 0; i < CppLines.Num(); ++i)
                 if (CppLines[i].Contains(TEXT("UE_DEFINE_GAMEPLAY_TAG(")) &&
                     CppLines[i].Contains(LastVar))
                     InsertIdx = i;
 
-        // Fallback: 마지막 UE_DEFINE 줄
+        //# Fallback: 마지막 UE_DEFINE 줄
         if (InsertIdx == INDEX_NONE)
             for (int32 i = 0; i < CppLines.Num(); ++i)
                 if (CppLines[i].TrimStartAndEnd().StartsWith(TEXT("UE_DEFINE_GAMEPLAY_TAG(")))

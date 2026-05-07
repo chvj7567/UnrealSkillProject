@@ -50,18 +50,18 @@ void USpyGameplayAbility_SkillAction::EndAbility(const FGameplayAbilitySpecHandl
 void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-    if (!IsValid(OwnerCharacter))
+    if (IsValid(OwnerCharacter) == false)
         return;
 
     ASpyPlayerState* OwnerPS = OwnerCharacter->GetPlayerState<ASpyPlayerState>();
-    if (!IsValid(OwnerPS))
+    if (IsValid(OwnerPS) == false)
         return;
 
     if (CurrentActorInfo == nullptr)
         return;
 
     USpyAbilitySystemComponent* OwnerASC = Cast<USpyAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent.Get());
-    if (!IsValid(OwnerASC))
+    if (IsValid(OwnerASC) == false)
         return;
 
     if (OwnerASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Combo))

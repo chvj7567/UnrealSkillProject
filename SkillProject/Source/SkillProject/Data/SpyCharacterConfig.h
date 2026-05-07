@@ -11,14 +11,14 @@ class SKILLPROJECT_API USpyCharacterConfig : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	// Collision
+	//# Collision
 	UPROPERTY(EditDefaultsOnly, Category = "Collision")
 	float CapsuleRadius = 42.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Collision")
 	float CapsuleHalfHeight = 96.f;
 
-	// Movement
+	//# Movement
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float RotationRateYaw = 1080.f;
 
@@ -40,7 +40,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float BrakingDecelerationFalling = 1500.f;
 
-	// Camera
+	//# Camera
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	float CameraArmLength = 400.f;
 
@@ -50,11 +50,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (ClampMin = "0.0", ClampMax = "89.9"))
 	float ViewPitchMax = 60.f;
 
-	// UI
+	//# UI
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	FVector HPBarOffset = FVector(0.f, 0.f, 200.f);
 
-	// Weapon
+	//# Weapon
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float WeaponSpawnDelay = 1.0f;
 };

@@ -11,7 +11,7 @@ class SKILLPROJECT_API USpyMovementConfig : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	// Climbing ray cast
+	//# Climbing ray cast
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|RayCast")
 	float ClimbHangUpRayForwardOffset = 50.f;
 
@@ -24,11 +24,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|RayCast")
 	float HangUpCheckRayForwardOffset = 100.f;
 
-	// Climbing movement mode name
+	//# Climbing movement mode name
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing")
 	FName ClimbingMovementModeName = TEXT("Custom");
 
-	// IK Bone names
+	//# IK Bone names
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|IK")
 	FName IKBoneHandLeft = TEXT("hand_l");
 
@@ -41,7 +41,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|IK")
 	FName IKBoneFootRight = TEXT("foot_r");
 
-	// IK Curve names
+	//# IK Curve names
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|IK")
 	FName IKCurveHandLeft = TEXT("Hand_L_IK_Weight");
 
@@ -54,7 +54,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Climbing|IK")
 	FName IKCurveFootRight = TEXT("Foot_R_IK_Weight");
 
-	// Grapple Hook
+	//# Grapple Hook
 	UPROPERTY(EditDefaultsOnly, Category = "GrappleHook")
 	float GrappleMaxRange = 3000.f;
 

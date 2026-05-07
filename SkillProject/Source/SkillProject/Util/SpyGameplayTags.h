@@ -5,11 +5,11 @@
 #include "NativeGameplayTags.h"
 #include "SKGameplayTags.h"
 
-// ============================================================
-// SpyGameplayTags — SkillProject 게임 전용 태그
-// SKGameplayTags(플러그인 공통)를 확장한 자식 태그를 정의합니다.
-// 이 헤더를 포함하면 SKGameplayTags도 함께 사용할 수 있습니다.
-// ============================================================
+//# ============================================================
+//# SpyGameplayTags — SkillProject 게임 전용 태그
+//# SKGameplayTags(플러그인 공통)를 확장한 자식 태그를 정의합니다.
+//# 이 헤더를 포함하면 SKGameplayTags도 함께 사용할 수 있습니다.
+//# ============================================================
 namespace SpyGameplayTags
 {
 	//# 락 태그

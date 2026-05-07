@@ -37,13 +37,13 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
         return EBTNodeResult::Failed;
     }
 
-    if (!SpyAIUtils::CanMove(AIController))
+    if (SpyAIUtils::CanMove(AIController) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
     }
 
-    if (!SpyAIUtils::CanTargetAttack(Target, BlackBoardComp, Key))
+    if (SpyAIUtils::CanTargetAttack(Target, BlackBoardComp, Key) == false)
     {
         AIController->StopMovement();
         return EBTNodeResult::Failed;
@@ -52,7 +52,7 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
     //# 타겟을 향해 즉시 회전
     FVector Direction = Target->GetActorLocation() - AIController->GetPawn()->GetActorLocation();
     Direction.Z = 0.f;
-    if (!Direction.IsNearlyZero())
+    if (Direction.IsNearlyZero() == false)
     {
         const FRotator TargetRot = FRotationMatrix::MakeFromX(Direction).Rotator();
         AIController->SetControlRotation(TargetRot);
@@ -102,7 +102,7 @@ void UBTTask_MoveToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
     AAIController* AIC = OwnerComp.GetAIOwner();
     UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-    if (!IsValid(AIC) || !IsValid(BB))
+    if (IsValid(AIC) == false || IsValid(BB) == false)
     {
         FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
         return;
@@ -110,14 +110,14 @@ void UBTTask_MoveToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
     APawn* MyPawn = AIC->GetPawn();
     ACharacter* CurTarget = Cast<ACharacter>(BB->GetValueAsObject(GetSelectedBlackboardKey()));
-    if (!IsValid(MyPawn) || !IsValid(CurTarget))
+    if (IsValid(MyPawn) == false || IsValid(CurTarget) == false)
     {
         FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
         return;
     }
 
     //# 이동 차단 상태(Lock_Input_Move 등)면 중단
-    if (!SpyAIUtils::CanMove(AIC) || !SpyAIUtils::CanTargetAttack(CurTarget, BB, GetSelectedBlackboardKey()))
+    if (SpyAIUtils::CanMove(AIC) == false || SpyAIUtils::CanTargetAttack(CurTarget, BB, GetSelectedBlackboardKey()) == false)
     {
         AIC->StopMovement();
         FinishLatentTask(OwnerComp, EBTNodeResult::Failed);

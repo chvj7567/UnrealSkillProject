@@ -88,7 +88,7 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 		DamageMagnitude, DamageEffectSpec != nullptr,
 		*GetNameSafe(GetOwner()), *GetNameSafe(DamageInstigator));
 
-	// 컨텍스트에서 피격/크리티컬 정보 추출 — GA 차단과 무관하게 발화하기 위해 GA가 아닌 이 경로에서 처리
+	//# 컨텍스트에서 피격/크리티컬 정보 추출 — GA 차단과 무관하게 발화하기 위해 GA가 아닌 이 경로에서 처리
 	if (DamageEffectSpec == nullptr)
 		return;
 
@@ -106,16 +106,16 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] HealthComp Ctx — HitDir=%s bIsHit=%d bCritical=%d"),
 		*HitDirTag.ToString(), bIsHit, bCritical);
 
-	// BP 호환 OnHit (실제 피해가 발생한 경우만)
+	//# BP 호환 OnHit (실제 피해가 발생한 경우만)
 	if (DamageMagnitude < 0.0f)
 	{
 		OnHit.Broadcast(FMath::Abs(DamageMagnitude), bCritical, DamageCauser);
 	}
 
-	if (!bIsHit)
+	if (bIsHit == false)
 		return;
 
-	// 피격자 카메라 쉐이크 — 로컬 컨트롤러는 RPC 우회 (ProcessEvent 경로 BP 이슈 회피)
+	//# 피격자 카메라 쉐이크 — 로컬 컨트롤러는 RPC 우회 (ProcessEvent 경로 BP 이슈 회피)
 	ASpyPlayerController* DefenderPC = nullptr;
 	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
 	{
@@ -129,9 +129,9 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 		}
 	}
 
-	// 공격자 카메라 쉐이크 — DamageInstigator는 PlayerState일 수 있어 Pawn 변환 폴백
+	//# 공격자 카메라 쉐이크 — DamageInstigator는 PlayerState일 수 있어 Pawn 변환 폴백
 	APawn* InstigatorPawn = Cast<APawn>(DamageInstigator);
-	if (!InstigatorPawn)
+	if (InstigatorPawn == nullptr)
 	{
 		if (APlayerState* PS = Cast<APlayerState>(DamageInstigator))
 		{

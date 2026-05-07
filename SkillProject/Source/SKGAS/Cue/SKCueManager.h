@@ -21,12 +21,12 @@ public:
 	static USKCueManager* Get();
 
 public:
-	//~UGameplayCueManager interface
+	//#~UGameplayCueManager interface
 	virtual void OnCreated() override;
 	virtual bool ShouldAsyncLoadRuntimeObjectLibraries() const override;
 	virtual bool ShouldSyncLoadMissingGameplayCues() const override;
 	virtual bool ShouldAsyncLoadMissingGameplayCues() const override;
-	//~End of UGameplayCueManager interface
+	//#~End of UGameplayCueManager interface
 
 protected:
 	void UpdateDelayLoadDelegateListeners();

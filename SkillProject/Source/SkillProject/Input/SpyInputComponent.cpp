@@ -342,7 +342,7 @@ void USpyInputComponent::HandleChangeInitState(UGameFrameworkComponentManager* M
 	{
 		APawn* Pawn = GetPawn<APawn>();
 		ASpyPlayerState* SpyPS = GetPlayerState<ASpyPlayerState>();
-		if (!ensure(Pawn && SpyPS))
+		if (ensure(Pawn && SpyPS) == false)
 		{
 			return;
 		}

@@ -9,11 +9,11 @@
 
 class UCharacterMovementComponent;
 
-// ============================================================
-// FParkourWallBaseData — 벽 감지 결과 구조체들의 공통 기반
-// Distance / Height / Depth 측정값을 공유합니다.
-// FVaultWallData, FWallData가 이 구조체를 상속합니다.
-// ============================================================
+//# ============================================================
+//# FParkourWallBaseData — 벽 감지 결과 구조체들의 공통 기반
+//# Distance / Height / Depth 측정값을 공유합니다.
+//# FVaultWallData, FWallData가 이 구조체를 상속합니다.
+//# ============================================================
 USTRUCT(BlueprintType)
 struct FParkourWallBaseData
 {

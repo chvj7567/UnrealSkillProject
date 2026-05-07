@@ -8,12 +8,12 @@ namespace SpyEditorUtils
 {
     inline bool SaveAsset(UObject* Asset)
     {
-        if (!Asset) return false;
+        if (Asset == nullptr) return false;
         UPackage* Package = Asset->GetOutermost();
         Package->MarkPackageDirty();
         FString PackageFilename;
-        if (!FPackageName::TryConvertLongPackageNameToFilename(
-                Package->GetName(), PackageFilename, FPackageName::GetAssetPackageExtension()))
+        if (FPackageName::TryConvertLongPackageNameToFilename(
+                Package->GetName(), PackageFilename, FPackageName::GetAssetPackageExtension()) == false)
         {
             return false;
         }

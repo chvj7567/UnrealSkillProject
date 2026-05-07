@@ -39,7 +39,7 @@ void ASpyPlayerController::BeginPlay()
 
 void ASpyPlayerController::ToggleCursorMode()
 {
-	bCursorMode = !bCursorMode;
+	bCursorMode = (bCursorMode == false);
 	bShowMouseCursor = bCursorMode;
 
 	if (bCursorMode)
@@ -145,7 +145,7 @@ void ASpyPlayerController::TriggerShakeLocal(bool bCritical, bool bFromReceivedH
 	UE_LOG(LogTemp, Warning, TEXT("[CameraShake] %s — %s | CameraManager=%d ShakeLight=%d ShakeHeavy=%d"),
 		Source, Intensity, PlayerCameraManager != nullptr, HitShakeLight != nullptr, HitShakeHeavy != nullptr);
 
-	if (!PlayerCameraManager) return;
+	if (PlayerCameraManager == nullptr) return;
 
 	TSubclassOf<UCameraShakeBase> ShakeClass = bCritical ? HitShakeHeavy : HitShakeLight;
 	if (ShakeClass)

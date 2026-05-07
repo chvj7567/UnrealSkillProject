@@ -26,19 +26,19 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 public:
-	//~AController interface
+	//#~AController interface
 	virtual void InitPlayerState() override;
 	virtual void CleanupPlayerState() override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
-	//~End of AController interface
+	//#~End of AController interface
 
-	//~IGenericTeamAgentInterface interface
+	//#~IGenericTeamAgentInterface interface
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
-	//~End of IGenericTeamAgentInterface interface
+	//#~End of IGenericTeamAgentInterface interface
 
 public:
 	void SetBehaviorTree(UBehaviorTree* InBehaviorTreeAsset);

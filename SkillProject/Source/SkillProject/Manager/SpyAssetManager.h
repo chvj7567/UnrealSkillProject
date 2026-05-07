@@ -94,7 +94,7 @@ AssetType* USpyAssetManager::GetAssetByPath(const TSoftObjectPtr<AssetType>& Ass
 	if (AssetPath.IsValid())
 	{
 		LoadedAsset = AssetPointer.Get();
-		if (!LoadedAsset)
+		if (LoadedAsset == nullptr)
 		{
 			LoadedAsset = Cast<AssetType>(LoadAssetSync(AssetPath));
 		}
@@ -127,7 +127,7 @@ TSubclassOf<AssetType> USpyAssetManager::GetSubclassByPath(const TSoftClassPtr<A
 	if (AssetPath.IsValid())
 	{
 		LoadedSubclass = AssetPointer.Get();
-		if (!LoadedSubclass)
+		if (LoadedSubclass == nullptr)
 		{
 			LoadedSubclass = Cast<UClass>(LoadAssetSync(AssetPath));
 		}

@@ -83,7 +83,7 @@ void USpyGameplayAbility_Parry::EndAbility(
 
 void USpyGameplayAbility_Parry::OnWaitGameplayEvent(FGameplayEventData Payload)
 {
-	// Super::OnWaitGameplayEvent 호출 금지 — 기본 구현은 EndAbility를 호출함
+	//# Super::OnWaitGameplayEvent 호출 금지 — 기본 구현은 EndAbility를 호출함
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (OwnerCharacter == nullptr)
 		return;
@@ -94,7 +94,7 @@ void USpyGameplayAbility_Parry::OnWaitGameplayEvent(FGameplayEventData Payload)
 	FVector KnockbackDir = -OwnerCharacter->GetActorForwardVector();
 	OwnerCharacter->LaunchCharacter(KnockbackDir * KnockbackForce, true, false);
 
-	// 패링 성공 시 방어자/공격자 양쪽 카메라 쉐이크 — 로컬 컨트롤러는 RPC 우회
+	//# 패링 성공 시 방어자/공격자 양쪽 카메라 쉐이크 — 로컬 컨트롤러는 RPC 우회
 	if (ASpyPlayerController* DefenderPC = Cast<ASpyPlayerController>(OwnerCharacter->GetController()))
 	{
 		if (DefenderPC->IsLocalController())

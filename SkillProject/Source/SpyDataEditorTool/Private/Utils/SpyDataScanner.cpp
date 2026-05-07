@@ -47,11 +47,11 @@ TMap<FName, TArray<FSoftObjectPath>> FSpyDataScanner::ScanAssetGroups()
         FString PackagePath = Asset.PackagePath.ToString();
         FString Remainder = PackagePath.RightChop(SpyBase.Len());
         FString GroupName;
-        if (!Remainder.Split(TEXT("/"), &GroupName, nullptr))
+        if (Remainder.Split(TEXT("/"), &GroupName, nullptr) == false)
         {
             GroupName = Remainder;
         }
-        if (!GroupName.IsEmpty())
+        if (GroupName.IsEmpty() == false)
         {
             Result.FindOrAdd(FName(*GroupName)).Add(FSoftObjectPath(Asset.GetSoftObjectPath()));
         }

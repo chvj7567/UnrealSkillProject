@@ -21,37 +21,37 @@ public:
     void Construct(const FArguments& InArgs);
 
 private:
-    // ── Data ──
+    //# ── Data ──
     TArray<FSpyTagGroup> ParsedGroups;
     TArray<TSharedPtr<FTagTreeNode>> RootNodes;
     TArray<TSharedPtr<FSpyTagGroup>> GroupOptions;
     TSharedPtr<FSpyTagGroup> SelectedGroupOption;
 
-    // ── Add panel state ──
+    //# ── Add panel state ──
     FString ParentPath;
     FString NewGroupComment;
     TArray<TSharedPtr<FString>> LeafInputs;
 
-    // ── Widgets ──
+    //# ── Widgets ──
     TSharedPtr<STreeView<TSharedPtr<FTagTreeNode>>> TagTreeView;
     TSharedPtr<SComboBox<TSharedPtr<FSpyTagGroup>>> GroupComboBox;
     TSharedPtr<SEditableTextBox> ParentPathBox;
     TSharedPtr<SEditableTextBox> GroupCommentBox;
     TSharedPtr<SVerticalBox> LeafInputBox;
 
-    // ── Helpers ──
+    //# ── Helpers ──
     void RebuildData();
     TArray<TSharedPtr<FTagTreeNode>> BuildTreeNodes(const TArray<FSpyTagGroup>& Groups);
     void InsertTagIntoTree(TSharedPtr<FTagTreeNode> Root, const FString& TagString);
     TSharedRef<SWidget> BuildAddPanel();
     void RebuildLeafInputs();
 
-    // ── Tree callbacks ──
+    //# ── Tree callbacks ──
     TSharedRef<ITableRow> OnGenerateRow(TSharedPtr<FTagTreeNode> Node, const TSharedRef<STableViewBase>& Owner);
     void OnGetChildren(TSharedPtr<FTagTreeNode> Node, TArray<TSharedPtr<FTagTreeNode>>& Out);
     void OnTreeSelectionChanged(TSharedPtr<FTagTreeNode> Node, ESelectInfo::Type Type);
 
-    // ── Button / combo callbacks ──
+    //# ── Button / combo callbacks ──
     FReply OnRefreshClicked();
     FReply OnAddTagsClicked();
     FReply OnAddLeafRowClicked();

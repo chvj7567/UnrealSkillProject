@@ -21,7 +21,7 @@ void USpyGrappleUIComponent::BeginPlay()
     Super::BeginPlay();
 
     AActor* Owner = GetOwner();
-    if (!Owner) return;
+    if (Owner == nullptr) return;
 
     if (USpyGrappleTargetingComponent* TargetComp =
         Owner->FindComponentByClass<USpyGrappleTargetingComponent>())
@@ -31,11 +31,11 @@ void USpyGrappleUIComponent::BeginPlay()
 
     APawn* Pawn = Cast<APawn>(Owner);
     APlayerController* PC = Pawn ? Cast<APlayerController>(Pawn->GetController()) : nullptr;
-    if (!PC || !PC->IsLocalController()) return;
+    if (PC == nullptr || PC->IsLocalController() == false) return;
 
     TSubclassOf<UUserWidget> WidgetClass =
         USpyAssetManager::GetSubclassByName<UUserWidget>(SpyAssetNames::GrapplePromptWidget);
-    if (!WidgetClass) return;
+    if (WidgetClass == nullptr) return;
 
     PromptWidget = CreateWidget<UUserWidget>(PC, WidgetClass);
     if (PromptWidget)
@@ -82,7 +82,7 @@ void USpyGrappleUIComponent::OnTargetChanged(AActor* NewTarget)
 
 void USpyGrappleUIComponent::SetMeshCustomDepth(AActor* Actor, bool bEnable) const
 {
-    if (!Actor) return;
+    if (Actor == nullptr) return;
     if (UMeshComponent* Mesh = Actor->FindComponentByClass<UMeshComponent>())
     {
         Mesh->SetRenderCustomDepth(bEnable);

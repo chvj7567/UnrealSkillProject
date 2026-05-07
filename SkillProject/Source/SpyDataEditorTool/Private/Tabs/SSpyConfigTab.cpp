@@ -55,8 +55,8 @@ void SSpyConfigTab::Construct(const FArguments& InArgs)
 
     auto PropertyFilter = FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P) -> bool
     {
-        return !P.Property.GetName().EndsWith(TEXT("Cache")) &&
-               !P.Property.GetName().EndsWith(TEXT("ToPath"));
+        return P.Property.GetName().EndsWith(TEXT("Cache")) == false &&
+               P.Property.GetName().EndsWith(TEXT("ToPath")) == false;
     });
     AIConfigView->SetIsPropertyVisibleDelegate(PropertyFilter);
     CharacterConfigView->SetIsPropertyVisibleDelegate(PropertyFilter);
@@ -121,7 +121,7 @@ FReply SSpyConfigTab::OnApplyClicked()
     if (InputConfig)     Names.Add(TEXT("SpyInputConfig"));
     if (MovementConfig)  Names.Add(TEXT("SpyMovementConfig"));
 
-    if (!SpyEditorUtils::ConfirmApply(Names)) return FReply::Handled();
+    if (SpyEditorUtils::ConfirmApply(Names) == false) return FReply::Handled();
 
     int32 Saved = 0, Failed = 0;
     if (SpyEditorUtils::SaveAsset(AIConfig.Get()))        ++Saved; else ++Failed;
