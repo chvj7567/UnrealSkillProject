@@ -397,6 +397,8 @@ if (PlayerCameraManager)
 
 > `FCharacterAssetEntry`에 `TeamId` 필드를 도입해 캐릭터 클래스 단위로 팀 번호를 관리합니다. 기본값 `NoTeam(255)`로, 데이터 미설정 시 의도치 않은 아군 판정이 발생하지 않도록 설계했습니다.
 
+![Team System — TeamId 기반 아군/적군 분기](docs/gifs/TeamID.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
