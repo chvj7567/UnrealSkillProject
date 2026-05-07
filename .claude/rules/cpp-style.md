@@ -28,6 +28,41 @@
 #include "MyClass.generated.h" // generated는 항상 마지막
 ```
 
+## 주석 스타일
+
+- 한 줄 주석은 항상 `//#`로 시작 — 일반 `//`나 `///`, `/* */` 사용 금지.
+  - 헤더의 doxygen 스타일 주석도 `//#`로 통일.
+  - 자동 생성된 주석(`// Fill out your copyright notice ...` 등)은 예외이며 필요 시 `//#`로 정리.
+
+```cpp
+//# 서버 권한에서 실행
+if (HasAuthority(&ActivationInfo))
+{
+    //# 데미지 적용
+    ApplyDamage(Target);
+}
+```
+
+## 불리언/널 비교
+
+- `!` 단항 부정 연산자 사용 금지 — 가독성과 의도 명확성을 위해 명시적 비교 사용.
+  - 불리언: `!bFlag` → `bFlag == false`
+  - 포인터: `!Ptr` → `Ptr == nullptr`
+  - 함수 반환 불리언: `!IsValid(Obj)` → `IsValid(Obj) == false`
+- 예외: STL/UE 표준 표현식(`!operator bool()` 의도가 명백한 경우)은 PR 검토 시 합의로 허용. 기본은 명시적 비교.
+
+```cpp
+//# OK
+if (bFreeMoveMode == false) { ... }
+if (TargetActor == nullptr) { ... }
+if (IsValid(Comp) == false) { return; }
+
+//# 금지
+if (!bFreeMoveMode) { ... }
+if (!TargetActor) { ... }
+if (!IsValid(Comp)) { return; }
+```
+
 ## 기타
 
 - `UFUNCTION(BlueprintCallable)` 없이 BP 노출 금지
