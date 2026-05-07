@@ -320,6 +320,8 @@ if (Target.IsZero() == false)
 
 > 3인칭 카메라가 벽에 가려 캐릭터가 보이지 않거나, 시점이 비현실적으로 위/아래로 꺾이는 문제를 Config 기반으로 해결했습니다. SpringArm 충돌 테스트와 View Pitch 클램프를 `SpyCharacterConfig`로 노출해 데이터 수정만으로 캐릭터별 카메라 거동을 조정할 수 있습니다.
 
+![Camera Control — 벽 가림 회피 + 피치 제한](docs/gifs/Camera_Control.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
