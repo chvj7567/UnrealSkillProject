@@ -41,6 +41,7 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 - **모든 캐릭터 액션이 GA** — 점프 · 파쿠르 · 콤보 · 그래플링 · 패링 · 죽음까지 전부 Gameplay Ability로 캡슐화. 하드코딩 0, 서버 동기화 자동.
 - **Data-Driven 파이프라인** — `USpyAbilityData` 하나로 AttributeSet 동적 생성 + 초기 GE 적용 + GA 부여 일괄 처리, 핸들 트래킹으로 메모리 누수 차단.
 - **InitState 기반 안전한 초기화** — GameFeature 의존 없이 `IGameFrameworkInitStateInterface`로 서버-클라 초기화 동기화, 컴포넌트 런타임 동적 주입.
+- **매니저 컴포넌트 디커플링** — Parkour · Targeting · Grapple · Anim · SpawnBot 등 게임플레이 매니저 컴포넌트는 `SpyPawnExtensionComponent`가 `CharacterAssetData`의 컴포넌트 목록을 읽어 런타임에 `NewObject` + `RegisterComponent`로 일괄 주입. 캐릭터 클래스가 매니저 컴포넌트를 직접 `#include`/UPROPERTY로 보유하지 않아 코드 변경 없이 데이터만 갈아끼우면 매니저 세트를 교체 가능 (PawnExtension·Health·CharacterMovement 같은 핵심 컴포넌트는 캐릭터가 직접 보유).
 - **AI Kiting 사이클** — Behavior Tree Tasks + EQS `StrafeDirection` / `ArcAwayFromTarget` 커스텀 Generator로 추격 → 사거리 진입 → 어빌리티 → 후퇴로 이어지는 거리 유지형 전투 AI.
 - **자체 에디터 툴체인** — `SpyDataEditorTool` 3탭 데이터 편집기 + `SpyGACreatorTool` 원클릭 GA 생성 + `SpyTagManagerTool` 태그 파일 직접 편집 + Python MCP 서버로 에디터 원격 제어.
 - **검증/시연 인프라** — `spy.DebugDraw` CVar 한 줄로 파쿠르·타겟팅·CircleStrafe 등 모든 디버그 시각화 일괄 토글.
@@ -119,7 +120,7 @@ sequenceDiagram
 <summary>자세히 보기</summary>
 
 - **`SpyInputConfig` (DataAsset)**: `UInputAction` ↔ `GameplayTag`를 N:M 매핑으로 보관. 한 액션이 여러 어빌리티 태그를 발화시킬 수 있고, 그 반대도 가능.
-- **`SpyEnhancedInputComponent`**: `BindActionByTag` 헬퍼로 InputAction의 Pressed/Released를 ASC `AbilityLocalInputPressed/Released`로 즉시 포워딩.
+- **`SpyEnhancedInputComponent`**: `BindAbilityActions` 템플릿 헬퍼로 `SpyInputConfig`의 어빌리티 입력을 일괄 순회하며 InputAction의 Pressed/Released를 ASC `AbilityLocalInputPressed/Released`로 즉시 포워딩(단일 태그 바인딩은 `BindNativeAction`).
 - **GA 부여 시 태그 주입**: `GiveAbility` 시점에 `DynamicAbilityTags`에 `Input.Ability.Skill.NN` 태그를 꽂아 ASC가 입력 → 어빌리티 매칭을 즉시 처리.
 
 </details>
@@ -211,7 +212,7 @@ flowchart LR
 
 ### 3-1. 파쿠르 (Vault / WallClimb / HangUp)
 
-> 단순한 충돌 판정이 아닌 다중 LineTrace로 장애물의 형태(법선·높이·두께·착지점)를 정밀하게 분석한 뒤, 결과를 `FMotionWarpingData`로 변환해 클라에 리플리케이트합니다. 모든 파쿠르 액션은 `GA_Vault` / `GA_WallClimb` / `GA_HangUp` GA로 캡슐화되어 있습니다.
+> 단순한 충돌 판정이 아닌 다중 LineTrace로 장애물의 형태(법선·높이·두께·착지점)를 정밀하게 분석한 뒤, 결과를 `FMotionWarpingData`로 변환해 클라에 리플리케이트합니다. 모든 파쿠르 액션은 `SpyGA_SkillMove_Vault` / `SpyGA_WallClimb` / `SpyGA_SkillMove_HangUp` GA로 캡슐화되어 있습니다.
 
 **Vault**
 
@@ -228,18 +229,18 @@ flowchart LR
   1. **전방 검출 (Forward Raycast)**: 캐릭터 전방 LineTrace로 벽 법선과 거리 추출.
   2. **높이/상단 표면 검출 (Top-Down Iteration)**: 벽 법선을 역산해 `RayInterval`마다 위→아래 LineTrace로 정확한 높이(`Height`)와 손 짚을 위치(`HitVector`) 산출.
   3. **깊이 식별 + 착지점 (Depth Check)**: 상단 LineTrace가 벽을 벗어난 시점을 감지해 역방향 LineTrace로 두께(`Depth`) 산출, 최종 착지점(`LandVector`) 도출.
-- **GA 발동 흐름**: Vault와 Wall Climb는 **각자 별개 InputAction**으로 발동한다. 입력 시 `SpyParkourManagerComponent`의 `CanVaultAction()` / `TryToggleClimbAction()`이 자체 LineTrace로 지형 조건을 체크하고, 통과해야 `TryActivateAbility`. Hang Up만 별도 키 없이 — WallClimb 활성 중 `SpyCharacterMovementComponent::PhysCustom_WallClimb`가 `CanHangUp()` 충족 시 `Skill.Move.HangUp` GameplayEvent를 송신해 자동 시전.
+- **GA 발동 흐름**: Vault와 Wall Climb는 **각자 별개 InputAction**으로 발동한다. 입력 시 `SpyParkourManagerComponent`의 `CanVaultAction()` / `TryToggleClimbAction()`이 자체 LineTrace로 지형 조건을 체크하고, 통과해야 `TryActivateAbility`. Hang Up만 별도 키 없이 — WallClimb 활성 중 `SpyCharacterMovementComponent::PhysWallClimb`가 `CanHangUp()` 충족 시 `Skill.Move.HangUp` GameplayEvent를 송신해 자동 시전.
 - **Motion Warping 동기화**: 서버 계산 결과를 `OnRep_VaultMotionWarpingData` 등으로 클라에 푸시, 애니메이션 워핑 앵커가 도착 위치와 정합.
 
 ```mermaid
 flowchart LR
     VInput[Vault 입력] --> VCan[CanVaultAction · 자체 LineTrace]
-    VCan -->|조건 충족| Vault[GA_Vault]
+    VCan -->|조건 충족| Vault[SpyGA_SkillMove_Vault]
     CInput[Climb 입력] --> CCan[TryToggleClimbAction · 자체 LineTrace]
-    CCan -->|조건 충족| Climb[GA_WallClimb]
-    Climb --> Phys[PhysCustom_WallClimb tick]
+    CCan -->|조건 충족| Climb[SpyGA_WallClimb]
+    Climb --> Phys[PhysWallClimb tick]
     Phys -->|CanHangUp 충족| Event[Skill.Move.HangUp Event]
-    Event --> Hang[GA_HangUp 자동]
+    Event --> Hang[SpyGA_SkillMove_HangUp 자동]
 ```
 
 </details>
@@ -265,7 +266,7 @@ flowchart LR
 
 ### 3-3. 🆕 그래플링 훅 (타겟팅 + 케이블 + 공중 루프 + UI 프롬프트)
 
-> 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 빨간 케이블 액터가 손 본에서 타겟 위치로 펼쳐지며 캐릭터는 공중 자세 루핑 Montage로 매달린 채 끌려갑니다. `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행하고 도착 시 GA를 종료해 자연 블렌드로 풀어줍니다.
+> 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 빨간 케이블 액터가 손 본에서 타겟 위치로 펼쳐지며 캐릭터는 공중 자세 루핑 Montage로 매달린 채 끌려갑니다. `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행하고 도착 시 GA를 종료해 자연 블렌드로 풀어줍니다. 비행 도중 그래플 키를 다시 누르면 즉시 끊고 자유 낙하로 전환할 수 있어, 원하지 않는 위치로 끌려가는 상황을 사용자가 직접 회피할 수 있습니다.
 
 ![Grappling Hook — 타겟 스캔 → 케이블 → 도착](docs/gifs/Grappling.gif)
 
@@ -277,7 +278,9 @@ flowchart LR
 - **`USpyGA_GrappleHook` (LocalPredicted)**: 입력 → 타겟 조회(`GetGrappleTargetLocation`) → 서버에서 케이블 액터 스폰 → `SpyAbilityTask_GrappleTick` + `UAbilityTask_PlayMontageAndWait(AirLoopMontage)` 동시 시작. 양쪽(서버·로컬 클라)에서 Montage 재생, 시뮬 클라는 GAS 표준 Montage Replication으로 동기화.
 - **`USpyAbilityTask_GrappleTick`**: 서버에서 캐릭터-타겟 거리 체크. 임계값 도달 시 GA 종료 + 상태 태그 정리 + Montage 자동 Stop(Task OnDestroy).
 - **`AGrappleCableActor` (Replicated)**: `CableComponent` 플러그인 기반 시각화 액터. 손 본(`HandBoneName`) → 타겟 위치(`TargetLocation`)로 매 프레임 트랜스폼 갱신, 빨간 머티리얼 + `NumSegments` / `CableWidth`로 굵기 조절.
-- **재누름 취소**: 그래플링 도중 다시 입력하면 GA가 즉시 종료되어 케이블·Montage·태그가 한 번에 정리됨.
+- **중간 취소 (재누름)**: 비행 도중 같은 키를 다시 누르면 `USpyGA_GrappleHook::InputPressed`가 호출돼 `SpyASC->ConsumeInputForHandle`(취소 입력이 즉시 재발동으로 이어지지 않게 차단) + `CancelAbility`로 GA를 즉시 끊음. `EndAbility` 단일 경로에서 `Lock.Input.Move` / `Character.State.Grapple` Loose Tag 제거 + 서버 권한 시 `CableActor->Destroy()` + Montage Task의 OnDestroy로 공중 루프 자동 Stop이 한 번에 처리되어 어떤 종료 경로(도착·취소·타임아웃)에서도 동일하게 정리됨.
+- **서버 타임아웃 안전망**: 서버에서 `(Distance / GrapplePullSpeed) * 2.0`의 `WaitDelay` 태스크를 함께 띄워, 도착 이벤트가 누락되거나 타겟이 사라져도 GA가 영구 활성 상태로 남지 않도록 강제 종료.
+- **이중 활성 차단**: `ActivationBlockedTags`에 `Character.State.Grapple`을 등록 — 이미 그래플링 중이면 GA 재활성화 자체가 차단(중간 취소는 활성 GA의 재누름 입력 경로를 통하므로 별개).
 - **태그**: `Skill.Move.GrappleHook` / `Character.State.Grapple` / `Lock.Input.Move` / `Input.Ability.Skill.11`.
 - **방향 전환 지원**: 그래플링 도중 캐릭터가 타겟 방향으로 자연스럽게 회전.
 
@@ -417,6 +420,12 @@ if (PlayerCameraManager)
 <details>
 <summary>자세히 보기</summary>
 
+- **`AIPerceptionComponent` + 3센스 (Sight / Hearing / Damage)**: BT가 소비할 `TargetActor` / `TargetLocation` 블랙보드 값을 채우는 upstream 레이어. `SpyAIController` 생성자에서 세 센스를 모두 구성하고 시각을 Dominant Sense로 지정.
+  - **Sight**: SightRadius 500 / LoseSightRadius 700 / FOV 90°, MaxAge 5s, Affiliation으로 Enemy·Neutral·Friendly 모두 감지(§ 4-4 `TeamId`와 결합).
+  - **Hearing**: HearingRange 200, MaxAge 5s.
+  - **Damage**: 등 뒤·시야 밖 피격에도 반응하기 위해 도입. `OnTargetPerceptionUpdated`에서 Damage 자극은 별도 분기로 즉시 가해자를 `TargetActor`로 설정(시야 재탐색 단계 우회).
+  - **`RefreshBlackboardTarget()` 통합 재평가**: 시각/청각 자극은 현재 타겟의 생존 여부를 우선 검사 — 살아있으면 시야를 잃어도 BB 유지(추격 지속), 사망/파괴 확인 시에만 `GetCurrentlyPerceivedActors(Sight)`로 가장 가까운 살아있는 적으로 교체.
+  - **Tick 폴링**: Perception은 타겟 사망 이벤트를 발사하지 않으므로 `TargetRefreshInterval` 주기로 BB를 재검증해 사망 타겟에 묶이는 현상을 차단.
 - **`BTTask_ActivateAbility`**: BB의 어빌리티 태그를 입력 받아 ASC `TryActivateAbilitiesByTag` 호출. AI 행동 = GA 호출이 1:1로 매핑.
 - **`BTTask_MoveToTarget`**: BB의 타겟 액터를 향한 이동. AIController 표준 `MoveTo`를 직접 사용하지 않고 거리·재경로 산출·타임아웃 처리를 자체 관리해 추격 정확도와 안정성을 강화.
 - **`BTTask_CircleStrafe`**: 타겟 주위로 좌/우 회피 이동. EQS 컨텍스트(§ 5-2)에서 결정된 방향을 따라 회전 반경을 유지하며 측면 이동.
@@ -588,7 +597,7 @@ graph LR
     SpyDataEditorTool --> SkillProject
     SpyDataEditorTool --> UnrealEd
     SpyGACreatorTool --> UnrealEd
-    SpyGACreatorTool --> AssetTools
+    SpyGACreatorTool --> Kismet
     SpyTagManagerTool --> UnrealEd
     SpyTagManagerTool --> ToolMenus
 ```
@@ -613,7 +622,7 @@ SkillProject/
     ├── SkillProject/                  # 게임 로직 메인 (Runtime)
     │   ├── AbilitySystem/
     │   │   ├── Calculation/           # GE 계산 클래스
-    │   │   ├── Movement/              # GA_Jump / GA_WallClimb / GA_GrappleHook 등
+    │   │   ├── Movement/              # SpyGA_Jump / SpyGA_WallClimb / SpyGA_GrappleHook + GrappleCableActor / SpyAbilityTask_GrappleTick
     │   │   ├── Parry/                 # SpyGameplayAbility_Parry
     │   │   └── Skill/                 # SkillAction / SkillHit / Death / Targeting / Move
     │   ├── AI/                        # BTTask_*, BTService_*, EQS Context, AIUtils, Tests
