@@ -21,22 +21,18 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 
 ## 🎬 Showcase
 
-> 시스템별 데모 영상은 추후 추가 예정입니다.
+> 핵심 시스템 데모 — 각 항목을 클릭하면 해당 섹션의 GIF로 이동합니다.
 
-<!-- TODO: GIF — 파쿠르 (Vault / WallClimb / HangUp) 콤보 시연 -->
-**🏃 파쿠르** — 다중 LineTrace 기반 지형 분석 + Motion Warping 매칭
-
-<!-- TODO: GIF — 데이터 지향 콤보 (3타 이상 콤보 사이클) -->
-**⚔️ 콤보** — `SpyComboAssetData` 딕셔너리 기반 GA 체인
-
-<!-- TODO: GIF — 그래플링 훅 발사 → 케이블 → 도착 -->
-**🪝 그래플링 훅** — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
-
-<!-- TODO: GIF — 패링 윈도우 → 정면 공격 차단 → Skill_Parry_Hit -->
-**🛡️ 패링** — 홀드형 GA + AnimNotifyState 기반 윈도우
-
-<!-- TODO: GIF — AI EQS CircleStrafe + BTTask_ActivateAbility -->
-**🤖 AI 전투** — Behavior Tree + EQS 기반 회피·전략 위치 선정
+- [**🏃 파쿠르 (Vault / WallClimb / HangUp)**](#3-1-파쿠르-vault--wallclimb--hangup) — 다중 LineTrace 기반 지형 분석 + Motion Warping 매칭
+- [**⚔️ 데이터 지향 콤보**](#3-2-데이터-지향-콤보-시스템) — `SpyComboAssetData` 딕셔너리 기반 GA 체인
+- [**🪝 그래플링 훅**](#3-3--그래플링-훅-타겟팅--케이블--공중-루프--ui-프롬프트) — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
+- [**🛡️ 홀드형 패링**](#3-4--홀드형-패링-시스템) — 홀드형 GA + Loose Tag 윈도우 + `Skill_Parry_Hit` 역송
+- [**🎥 카메라 제어**](#3-5--카메라-제어-벽-가림-회피--피치-제한) — SpringArm 충돌 회피 + Config 기반 피치 클램프
+- [**🎯 타겟팅 매니저**](#4-1-타겟팅-매니저) — 시야/거리 기반 베스트 타겟 추적
+- [**💢 무기 AnimTrail**](#4-2-무기-animtrail-이펙트) — 데이터 지향 검격 잔상
+- [**💥 히트 카메라 셰이크**](#4-3-히트-카메라-셰이크) — 공격자/피격자 차등 셰이크 + 로컬 RPC 우회
+- [**🤖 AI Behavior Tree**](#5-1-behavior-tree-tasks--kiting-사이클) — BTTask = GA 1:1 매핑 + Kiting 사이클
+- [**🧭 AI EQS**](#5-2-eqs--strafedirection--arcawayfromtarget) — StrafeDirection + ArcAwayFromTarget 평가
 
 ---
 
