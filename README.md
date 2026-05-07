@@ -67,17 +67,17 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 - **Cue 시스템**: 모든 이펙트·사운드는 서버 GameplayCue → 클라 동기 재생. 서버가 미존재 액터에 큐를 발생시킬 가능성을 차단하기 위해 `SKCueManager`의 비동기 프리로딩(§ 2-4)으로 커버.
 
 ```cpp
-// 패턴 예: GA 내부 권한 분기
+//# 패턴 예: GA 내부 권한 분기
 void USpyGA_Example::ActivateAbility(...)
 {
     Super::ActivateAbility(...);
 
     if (HasAuthority(&ActivationInfo))
     {
-        // 서버 전용 게임플레이 로직 (데미지·태그·상태 변경)
+        //# 서버 전용 게임플레이 로직 (데미지·태그·상태 변경)
     }
 
-    // 클라이언트 포함 연출 (카메라·사운드·UI)
+    //# 클라이언트 포함 연출 (카메라·사운드·UI)
 }
 ```
 
@@ -156,10 +156,10 @@ sequenceDiagram
 - **`FSpyAbilitySet_GrantedHandles` 트래킹**: 부여된 모든 어빌리티/이펙트/AttributeSet 핸들을 단일 구조체로 묶어 보관. 장착 해제 또는 사망 시 `TakeFromAbilitySystem()` 한 번으로 전부 정리.
 
 ```cpp
-// 사용 예: 캐릭터에 무기 어빌리티 세트 부여/해제
+//# 사용 예: 캐릭터에 무기 어빌리티 세트 부여/해제
 FSpyAbilitySet_GrantedHandles Handles;
 WeaponAbilityData->GiveToAbilitySystem(ASC, &Handles, SourceObject);
-// ...
+//# ...
 Handles.TakeFromAbilitySystem(ASC);
 ```
 
@@ -252,6 +252,8 @@ flowchart LR
 
 > 애니메이션 노티파이로 콤보 윈도우를 열고, `SpyComboAssetData` 딕셔너리에서 다음 GA를 색인해 즉시 발동합니다. "A 스킬 → B 스킬" 연계 공식이 코드가 아닌 데이터 에셋에 정의됩니다.
 
+![Combo — 데이터 지향 콤보 사이클](docs/gifs/Combo.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -262,8 +264,6 @@ flowchart LR
   2. 보유 시 가장 최근 시전된 스킬 태그를 키로 `SpyComboAssetData` 색인.
   3. 매핑된 ComboTag의 GA를 즉시 `TryActivateAbility`.
 - 코드 변경 없이 데이터만 수정하면 콤보 트리가 바뀜.
-
-<!-- TODO: GIF — 콤보 (3타 이상 사이클) -->
 
 </details>
 
@@ -286,9 +286,9 @@ flowchart LR
 - **방향 전환 지원**: 그래플링 도중 캐릭터가 타겟 방향으로 자연스럽게 회전.
 
 ```cpp
-// USpyGA_GrappleHook 핵심 흐름 (의사 코드)
+//# USpyGA_GrappleHook 핵심 흐름 (의사 코드)
 const FVector Target = TargetingComponent->GetGrappleTargetLocation();
-if (!Target.IsZero())
+if (Target.IsZero() == false)
 {
     SpawnCable(GetAvatarActor(), Target);
     UAbilityTask_GrappleTick* Task = NewAbilityTask<UAbilityTask_GrappleTick>(this);
@@ -303,6 +303,8 @@ if (!Target.IsZero())
 
 > 패링 입력을 누르고 있는 동안 `Character_State_Parry` 태그가 유지되며, 이 윈도우 동안 들어온 정면 공격을 `SkillAction` 단계에서 차단하고 공격자에게 `Skill_Parry_Hit` 이벤트를 역송합니다.
 
+![Parry — 정면 공격 차단 → Parry_Hit 반응](docs/gifs/Parring.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -311,8 +313,6 @@ if (!Target.IsZero())
 - **양쪽 카메라 쉐이크**: 패링 성공 시 패링한 측과 공격자 측 모두에게 카메라 쉐이크가 트리거되어 타이밍 성공 임팩트가 양쪽에 전달.
 - **태그**: `Character.State.Parry` / `Skill.Parry.Hit` / `Input.Ability.Parry`.
 - **null 안전성**: `SendTagToTargetByWeapon`은 `BySphere` 헬퍼와 동일한 null 처리 패턴을 따름 (TargetASC null 시 조용히 스킵).
-
-<!-- TODO: GIF — 패링 (윈도우 → 정면 공격 차단 → Parry_Hit 반응) -->
 
 </details>
 
@@ -328,7 +328,7 @@ if (!Target.IsZero())
 - **Possession 시점 적용**: `ASpyPlayerController::AcknowledgePossession`에서 `SpyCharacter->GetCharacterConfig()`를 조회해 `PlayerCameraManager->ViewPitchMin/Max`에 주입. 캐릭터마다 다른 시점 제한을 데이터로 관리.
 
 ```cpp
-// SpyPlayerController::AcknowledgePossession 발췌
+//# SpyPlayerController::AcknowledgePossession 발췌
 if (PlayerCameraManager)
 {
     if (ASpyCharacter* SpyChar = Cast<ASpyCharacter>(InPawn))
@@ -352,6 +352,8 @@ if (PlayerCameraManager)
 
 > `SpyTargetingManagerComponent`가 캐릭터 주변/시야 안에 있는 적 후보를 추적하고, GA 시점에 즉시 베스트 타겟을 제공합니다. 그래플링 타겟팅(§ 3-3)과는 별개의 전투 전용 매니저입니다.
 
+![Targeting — 베스트 타겟 추적](docs/gifs/Targeting.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -364,19 +366,21 @@ if (PlayerCameraManager)
 
 > `GA_Skill` 발동 시 `SpyWeapon`이 무기 메시에 부착된 소켓 사이로 AnimTrail 파티클을 생성해 검격 잔상을 표현합니다. 데이터 지향으로 무기 에셋(`USkeletalMesh`)에 트레일 설정을 보관합니다.
 
+![AnimTrail — 검격 잔상](docs/gifs/AnimTrail.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
 - **트레일 발동 트리거**: GA 활성 시점에 `SpyWeapon`이 트레일 컴포넌트를 활성화, 종료 시점에 비활성화.
 - **무기 에셋 통합**: 무기별 트레일 머티리얼/소켓 페어를 `SpyWeapon` BP CDO 또는 무기 데이터에 보관해 코드 수정 없이 무기마다 다른 잔상 가능.
 
-<!-- TODO: GIF — 검격 트레일 (느린 모션) -->
-
 </details>
 
 ### 4-3. 히트 카메라 셰이크
 
 > 데미지 적중 시 공격자/피격자에게 강도가 다른 카메라 셰이크를 적용해 타격감을 강화합니다. 클라이언트 연출이므로 GA의 권한 블록 밖에서 처리됩니다.
+
+![Hit Camera Shake — 타격감 셰이크](docs/gifs/HitCameraShake.gif)
 
 <details>
 <summary>자세히 보기</summary>
@@ -409,6 +413,8 @@ if (PlayerCameraManager)
 ### 5-1. Behavior Tree Tasks + Kiting 사이클
 
 > 모든 AI 행동을 GA로 통일한 프로젝트 철학에 맞춰, BT의 끝단 Task가 직접 로직을 작성하지 않고 `BTTask_ActivateAbility`로 GA를 발화시키는 구조를 채택했습니다. 추격 → 사거리 진입 → 어빌리티 발동 → EQS 후퇴로 이어지는 **Kiting 사이클**로 단순 돌격 AI에서 벗어나 거리 유지형 액션 AI를 구현했습니다.
+
+![AI BT — Behavior Tree 기반 Kiting 사이클](docs/gifs/AI_BT.gif)
 
 <details>
 <summary>자세히 보기</summary>
@@ -444,6 +450,8 @@ flowchart TD
 
 > 회피 방향과 후퇴 위치 결정에 EQS(Environment Query System)를 도입했습니다. 좌/우 회피는 `StrafeDirection` 컨텍스트로, 어빌리티 사용 후 후퇴는 자체 작성한 `EnvQueryGenerator_ArcAwayFromTarget`으로 타겟 반대 방향 호(arc) 위 지점을 평가해 가장 유리한 쪽을 선택합니다.
 
+![AI EQS — CircleStrafe + Ability + Retreat Kiting 사이클](docs/gifs/AI_EQS.gif)
+
 <details>
 <summary>자세히 보기</summary>
 
@@ -452,8 +460,6 @@ flowchart TD
 - **`EnvQueryGenerator_ArcAwayFromTarget` (커스텀 Generator)**: Querier 위치를 중심으로 타겟의 반대 방향을 향한 호(`ArcAngleDegrees`) 위에 점(`NumPoints`)을 균등 생성, NavMesh로 투영. `Radius`는 후퇴 거리(기본 150cm)이며 짧은 사이드 스텝/백 스텝 회피용.
 - **EQS 관련 BB 변수**: `StrafeTargetLocation`, `StrafeDirection`, `RetreatLocation` 등 EQS 결과 저장용.
 - **AI 행동 결과**: 단순한 정면 돌격이 아닌, 사이드 스텝하면서 거리 유지 + 어빌리티 발동 + 후퇴로 이어지는 전형적인 액션 게임 AI 패턴 구현.
-
-<!-- TODO: GIF — AI CircleStrafe + Ability + Retreat Kiting 사이클 -->
 
 </details>
 
