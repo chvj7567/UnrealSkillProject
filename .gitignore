@@ -75,3 +75,14 @@ DerivedDataCache/*
 SkillProject/Intermediate
 SkillProject/Saved
 SkillProject/Binaries
+
+# Local-only video files (GitHub 100MB push limit — host on YouTube/CDN instead)
+docs/mp4/
+
+# DerivedDataCache (any depth)
+**/DerivedDataCache/
+
+# Plugin build artifacts (any depth)
+**/Plugins/*/Binaries/
+**/Plugins/*/Intermediate/
+**/Plugins/*/Saved/
