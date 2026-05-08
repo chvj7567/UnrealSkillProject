@@ -39,8 +39,15 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 
 void USpyUIManager::OpenUI(FName InUIName)
 {
+	//# 패키지 빌드에서 BP 오브젝트(BP_X.BP_X)는 cook 시 stripped되므로 generated class(BP_X.BP_X_C) 경로로 로드
 	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(InUIName);
+	FString ClassPathString = AssetPath.GetAssetPathString();
+	if (ClassPathString.EndsWith(TEXT("_C")) == false)
+	{
+		ClassPathString.Append(TEXT("_C"));
+	}
+	FSoftObjectPath ClassPath(ClassPathString);
 
 	FSpyAssetAndDelegate LoadDelegate;
 	LoadDelegate.BindLambda([this, InUIName](UObject* LoadedAsset)
@@ -94,7 +101,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 			}
 		});
 
-	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
+	USpyAssetManager::LoadAssetAsync(ClassPath, LoadDelegate);
 }
 
 void USpyUIManager::CloseUI(FName InUIName)
@@ -135,6 +142,12 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 {
 	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(InUIName);
+	FString ClassPathString = AssetPath.GetAssetPathString();
+	if (ClassPathString.EndsWith(TEXT("_C")) == false)
+	{
+		ClassPathString.Append(TEXT("_C"));
+	}
+	FSoftObjectPath ClassPath(ClassPathString);
 
 	if (WidgetComponent == nullptr)
 		return;
@@ -155,7 +168,7 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 			}
 		});
 
-	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
+	USpyAssetManager::LoadAssetAsync(ClassPath, LoadDelegate);
 }
 
 void USpyUIManager::AddCashingUI(USpyUserWidget* UserWidget)

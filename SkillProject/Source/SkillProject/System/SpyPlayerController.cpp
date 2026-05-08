@@ -34,7 +34,10 @@ void ASpyPlayerController::BeginPlay()
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 
-	USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::MainHUD);
+	if (USpyUIManager* UIMgr = USpyUIManager::Get(this))
+	{
+		UIMgr->OpenSpyUI(ESpyUIType::MainHUD);
+	}
 }
 
 void ASpyPlayerController::ToggleCursorMode()

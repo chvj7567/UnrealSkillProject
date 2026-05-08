@@ -296,8 +296,15 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 	const FName WeaponAssetName = Entry.WeaponAssetName;
 	const FName WeaponSocketName = Entry.WeaponSocketName.IsNone() ? FName(TEXT("weapon_socket")) : Entry.WeaponSocketName;
 
+	//# 패키지 빌드에서 BP 오브젝트(BP_X.BP_X)는 cook 시 stripped되므로 generated class(BP_X.BP_X_C) 경로로 로드
 	const USpyAssetData& SKAssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = SKAssetData.GetAssetPathByName(WeaponAssetName);
+	FString ClassPathString = AssetPath.GetAssetPathString();
+	if (ClassPathString.EndsWith(TEXT("_C")) == false)
+	{
+		ClassPathString.Append(TEXT("_C"));
+	}
+	FSoftObjectPath ClassPath(ClassPathString);
 
 	FSpyAssetAndDelegate LoadDelegate;
 	TWeakObjectPtr<ASpyCharacter> WeakThis = this;
@@ -314,9 +321,12 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				WeakThis->SpyWeapon = WeakThis->GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-				WeakThis->SpyWeapon->AttachToComponent(WeakThis->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+				if (WeakThis->SpyWeapon)
+				{
+					WeakThis->SpyWeapon->AttachToComponent(WeakThis->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+				}
 			}
 		});
 
-	USpyAssetManager::LoadAssetAsync(AssetPath, LoadDelegate);
+	USpyAssetManager::LoadAssetAsync(ClassPath, LoadDelegate);
 }
