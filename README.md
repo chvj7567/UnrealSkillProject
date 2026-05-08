@@ -8,18 +8,22 @@
 [![GAS](https://img.shields.io/badge/Gameplay_Ability_System-Custom_Wrapper-orange)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Modular_Lyra--Style-blueviolet)]()
 
-### ▶️ 풀 게임플레이 데모 (2:19) — 클릭해서 YouTube에서 재생
+### ▶️ 풀 게임플레이 데모 (2:19)
 
 [![SpyPlay — 풀 게임플레이 데모](https://img.youtube.com/vi/DMnJXSP48bY/maxresdefault.jpg)](https://youtu.be/DMnJXSP48bY)
 
 이 프로젝트는 언리얼 엔진 5.7 기반 스파이 테마 3인칭 액션 게임입니다.
-완벽한 멀티플레이 동기화를 목표로 데디케이티드 서버(Dedicated Server) 환경에서 동작하며,
+데디케이티드 서버(Dedicated Server) 환경에서 동작하며 — 모든 게임플레이 로직은 서버 권한 위에서 실행되고 클라이언트는 리플리케이션으로 결과를 수신합니다.
 Lyra 스타일의 모듈형 아키텍처, 자체 래핑한 SKGAS 프레임워크,
-그리고 모든 기획 데이터를 DataAsset으로 분리한 데이터 지향 설계(Data-Oriented Design)를 통해
-확장성과 유지보수성을 극대화했습니다.
+그리고 모든 기획 데이터를 DataAsset으로 분리한 데이터 지향 설계(Data-Oriented Design)를 채택하여,
+코드 변경 없이 데이터만 수정해도 캐릭터 · 어빌리티 · 콤보 트리를 교체할 수 있게 했습니다.
 
 파쿠르 · 콤보 · 그래플링 훅 · 패링 등 모든 캐릭터 액션은
 Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) 위에서 동기화됩니다.
+
+> **Solo project** · UE 5.4 → 5.7 · 359 commits · C++ ~16K LOC (196 files)
+> Gameplay Ability 10종 · Manager Component 6종 · BT/EQS 8종 · Editor tools 3종 · Custom Python MCP server
+> AI 활용: 2026-04부터 Claude를 설계 · 문서화 · 코드 리뷰 보조에 활용. 이전에는 GPT/Gemini를 검색 용도로만 사용.
 
 ---
 
@@ -42,13 +46,11 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 
 ## ✨ 핵심 셀링포인트
 
-- **모든 캐릭터 액션이 GA** — 점프 · 파쿠르 · 콤보 · 그래플링 · 패링 · 죽음까지 전부 Gameplay Ability로 캡슐화. 하드코딩 0, 서버 동기화 자동.
+- **모든 캐릭터 액션이 GA** — 점프 · 파쿠르 · 콤보 · 그래플링 · 패링 · 죽음까지 Gameplay Ability로 캡슐화. 캐릭터 클래스에 액션 로직 비포함, 서버 권한 위에서 자동 동기화.
 - **Data-Driven 파이프라인** — `USpyAbilityData` 하나로 AttributeSet 동적 생성 + 초기 GE 적용 + GA 부여 일괄 처리, 핸들 트래킹으로 메모리 누수 차단.
 - **InitState 기반 안전한 초기화** — GameFeature 의존 없이 `IGameFrameworkInitStateInterface`로 서버-클라 초기화 동기화, 컴포넌트 런타임 동적 주입.
-- **매니저 컴포넌트 디커플링** — Parkour · Targeting · Grapple · Anim · SpawnBot 등 게임플레이 매니저 컴포넌트는 `SpyPawnExtensionComponent`가 `CharacterAssetData`의 컴포넌트 목록을 읽어 런타임에 `NewObject` + `RegisterComponent`로 일괄 주입. 캐릭터 클래스가 매니저 컴포넌트를 직접 `#include`/UPROPERTY로 보유하지 않아 코드 변경 없이 데이터만 갈아끼우면 매니저 세트를 교체 가능 (PawnExtension·Health·CharacterMovement 같은 핵심 컴포넌트는 캐릭터가 직접 보유).
+- **매니저 컴포넌트 디커플링** — Parkour · Targeting · Grapple · Anim · SpawnBot 등 게임플레이 매니저 컴포넌트는 `SpyPawnExtensionComponent`가 `CharacterAssetData`의 컴포넌트 목록을 읽어 런타임에 `NewObject` + `RegisterComponent`로 일괄 주입. 캐릭터 클래스가 매니저 컴포넌트를 직접 `#include` / UPROPERTY로 보유하지 않아 코드 변경 없이 데이터만 갈아끼우면 매니저 세트를 교체 가능 (PawnExtension · Health · CharacterMovement 같은 핵심 컴포넌트는 캐릭터가 직접 보유).
 - **AI Kiting 사이클** — Behavior Tree Tasks + EQS `StrafeDirection` / `ArcAwayFromTarget` 커스텀 Generator로 추격 → 사거리 진입 → 어빌리티 → 후퇴로 이어지는 거리 유지형 전투 AI.
-- **자체 에디터 툴체인** — `SpyDataEditorTool` 3탭 데이터 편집기 + `SpyGACreatorTool` 원클릭 GA 생성 + `SpyTagManagerTool` 태그 파일 직접 편집 + Python MCP 서버로 에디터 원격 제어.
-- **검증/시연 인프라** — `spy.DebugDraw` CVar 한 줄로 파쿠르·타겟팅·CircleStrafe 등 모든 디버그 시각화 일괄 토글.
 
 ---
 
@@ -91,7 +93,7 @@ void USpyGA_Example::ActivateAbility(...)
 <details>
 <summary>자세히 보기</summary>
 
-- **Modular Gameplay Actors 통합**: `AModularCharacter`, `AModularPlayerController`, `AModularGameMode` 등 플러그인 형태의 기능 주입을 지원. 베이스 캐릭터에 하드코딩된 컴포넌트 없음.
+- **Modular Gameplay Actors 통합**: `AModularCharacter`, `AModularPlayerController`, `AModularGameMode` 등 플러그인 형태의 기능 주입을 지원. 매니저 컴포넌트(Parkour · Targeting · Anim · Grapple · SpawnBot)는 베이스 캐릭터가 직접 보유하지 않으며, 데이터 기반 런타임 주입으로 구성.
 - **`SpyPawnExtensionComponent` (`IGameFrameworkInitStateInterface` 구현)**: InitState 단계 머신을 통해 데이터 도착 → 컨트롤러 연동 → ASC 초기화 순서를 강제.
 - **런타임 컴포넌트 동적 주입**: `CharacterAssetData`에 정의된 컴포넌트 목록을 InitState 흐름에서 읽어 `NewObject` + `RegisterComponent`로 추가. `BeginPlay`에 컴포넌트 추가 코드를 하드코딩하지 않음.
 
@@ -135,13 +137,13 @@ sequenceDiagram
 
 ### 2-1. SKGAS 모듈 (커스텀 GAS 래퍼)
 
-> 언리얼 기본 GAS를 프로젝트 비의존 별도 모듈(`SKGAS`)로 한 겹 래핑해, 어빌리티의 공통 로직(스킬 액션 / 이동기 / 큐 매니저)을 베이스 클래스 계층에 캡슐화했습니다. 단순 전투 스킬뿐 아니라 점프 · 파쿠르 · 죽음까지 게임 내 모든 상태 변화를 GA로 통일했습니다.
+> 언리얼 기본 GAS를 프로젝트 비의존 별도 모듈(`SKGAS`)로 한 겹 래핑해, 어빌리티의 공통 로직(스킬 액션 / 이동기 / 큐 매니저)을 베이스 클래스 계층에 캡슐화했습니다. 단순 전투 스킬뿐 아니라 점프 · 파쿠르 · 죽음까지 캐릭터 행동을 GA로 일관 처리합니다.
 
 <details>
 <summary>자세히 보기</summary>
 
 - **모듈 구조**: `SKGameplayAbility` 베이스 → `SKGameplayAbility_SkillAction` → `SpyGameplayAbility_*` 구체 클래스 계층.
-- **모든 게임플레이 로직의 GA화**: 캐릭터의 스탯 초기화 GA, 기본 점프 GA, 파쿠르 액션 GA(Vault / WallClimb / HangUp), 그래플링 GA, 패링 GA, 죽음 GA. 하드코딩된 캐릭터 로직 없음.
+- **캐릭터 행동의 GA화**: 캐릭터의 스탯 초기화 GA, 기본 점프 GA, 파쿠르 액션 GA(Vault / WallClimb / HangUp), 그래플링 GA, 패링 GA, 죽음 GA. 액션 로직은 캐릭터 클래스가 아닌 GA에서 처리.
 - **입력 버퍼링 + 태그 매핑**: `SKAbilitySystemComponent`에서 입력을 단순 enum이 아닌 캐싱된 핸들 배열 + Gameplay Tag로 처리. 태그 기반 매칭이라 어빌리티 부여/회수 시 자동 정합.
 
 </details>
@@ -164,23 +166,11 @@ WeaponAbilityData->GiveToAbilitySystem(ASC, &Handles, SourceObject);
 Handles.TakeFromAbilitySystem(ASC);
 ```
 
-```mermaid
-flowchart LR
-    Data[USpyAbilityData] -->|순회| Loop{Entry}
-    Loop -->|AttributeSet| Attr[AttributeSet 동적 생성]
-    Loop -->|InitGE| GE[초기 GameplayEffect 적용]
-    Loop -->|Ability| Ability[GA 부여 + 인풋 태그 주입]
-    Attr --> H[FSpyAbilitySet_GrantedHandles]
-    GE --> H
-    Ability --> H
-    H -->|TakeFromAbilitySystem| Cleanup[일괄 해제]
-```
-
 </details>
 
 ### 2-3. DataAsset 계층 + SpyAssetManager
 
-> 모든 기획 요소(어빌리티 / 캐릭터 컴포넌트 / 콤보 / 애니메이션 레이어)를 `PrimaryDataAsset` 계층으로 분리하고, `SpyAssetManager`를 진실의 원천(Single Source of Truth)으로 두었습니다. 글로벌 코어 데이터만 시작 시 동기 로드하고 나머지는 시점에 따라 sync/async 메커니즘으로 제어합니다.
+> 모든 기획 요소(어빌리티 / 캐릭터 컴포넌트 / 콤보 / 애니메이션 레이어)를 `PrimaryDataAsset` 계층으로 분리하고, `SpyAssetManager`를 기획 에셋 접근의 단일 진입점으로 두었습니다. 글로벌 코어 데이터만 시작 시 동기 로드하고 나머지는 시점에 따라 sync / async 메커니즘으로 제어합니다.
 
 <details>
 <summary>자세히 보기</summary>
@@ -313,7 +303,7 @@ if (Target.IsZero() == false)
 
 - **`USpyGameplayAbility_Parry` (홀드형 GA)**: 입력 Pressed에서 ActivateAbility, Released에서 EndAbility. 활성 동안 ASC에 `Character_State_Parry` 태그 유지.
 - **`SKGameplayAbility_SkillAction` 통합**: 공격자가 데미지를 가하기 직전에 타겟 ASC가 `Character_State_Parry` 태그를 보유 중이고 정면 각도(dot product) 안에 들어왔는지 검사 → 충족 시 데미지 무효화 + 공격자에게 `Skill_Parry_Hit` 게임플레이 이벤트 전송 + `bInvalidCharacter` 플래그 설정.
-- **양쪽 카메라 쉐이크**: 패링 성공 시 패링한 측과 공격자 측 모두에게 카메라 쉐이크가 트리거되어 타이밍 성공 임팩트가 양쪽에 전달.
+- **양쪽 카메라 셰이크**: 패링 성공 시 패링한 측과 공격자 측 모두에게 카메라 셰이크가 트리거되어 타이밍 성공 임팩트가 양쪽에 전달.
 - **태그**: `Character.State.Parry` / `Skill.Parry.Hit` / `Input.Ability.Parry`.
 - **null 안전성**: `SendTagToTargetByWeapon`은 `BySphere` 헬퍼와 동일한 null 처리 패턴을 따름 (TargetASC null 시 조용히 스킵).
 
@@ -334,7 +324,7 @@ if (Target.IsZero() == false)
 
 - **별도 컴포넌트로 분리**: 그래플링 전용(`SpyGrappleTargetingComponent`)과 전투 전용(`SpyTargetingManagerComponent`)을 분리해 책임을 명확히. 두 컴포넌트는 서로 의존하지 않음.
 - **GA 통합**: `SKGameplayAbility_SkillAction` 등 공격성 GA가 발동 시 매니저에게 베스트 타겟을 질의. 타겟 부재 시에도 어빌리티 활성은 유지(미스/공중 공격 허용).
-- **카메라 자동 추적**: 타겟 락온 동안 카메라가 타겟에게 부드럽게 고정. `ASpyPlayerController::UpdateRotation`을 오버라이드해 타겟이 유효하면 `RInterpTo`로 `ControlRotation`을 타겟 방향으로 보간(속도 10/s, Z 오프셋 -100으로 발치보다 약간 위 조준), 타겟이 없으면 `Super::UpdateRotation()`으로 일반 마우스/스틱 입력 회복. `Character_State_Death` 태그 보유 중에는 회전 자체를 차단해 사망 후 카메라가 계속 도는 현상 방지.
+- **카메라 자동 추적**: 타겟 락온 동안 카메라가 타겟에게 부드럽게 고정. `ASpyPlayerController::UpdateRotation`을 오버라이드해 `RInterpTo`로 `ControlRotation`을 타겟 방향으로 보간, 타겟이 없으면 `Super::UpdateRotation()`으로 일반 마우스 / 스틱 입력 회복. `Character_State_Death` 태그 보유 중에는 회전 자체를 차단해 사망 후 카메라가 계속 도는 현상 방지.
 
 </details>
 
@@ -364,7 +354,7 @@ if (Target.IsZero() == false)
 - **공격자/피격자 분리**: 공격자에게는 가벼운 임팩트 셰이크, 피격자에게는 강한 셰이크 + 시간 보정.
 - **클라이언트 연출 패턴**: 셰이크는 클라 전용이므로 GA `HasAuthority` 분기 밖에서 `PlayerController->ClientStartCameraShake()` 호출.
 - **로컬 컨트롤러 RPC 우회**: 서버 호스트 자신이 피격자인 경우 Client RPC 경로 대신 로컬 직접 호출로 전환해, 호스트 화면에서 셰이크가 누락되던 케이스 해결.
-- **GA 차단 무관 트리거**: 카메라 쉐이크 트리거를 `SpyHealthComponent`의 데미지 수신 경로로 옮겨, 패링·무적 등으로 GA가 차단되어도 피격 연출이 정상 발동.
+- **GA 차단 무관 트리거**: 카메라 셰이크 트리거를 `SpyHealthComponent`의 데미지 수신 경로로 옮겨, 패링·무적 등으로 GA가 차단되어도 피격 연출이 정상 발동.
 
 </details>
 
@@ -471,19 +461,23 @@ flowchart TD
 
 ### 5-3. SpawnBot 매니저
 
-> `SpySpawnBotManagerComponent`가 레벨 내 봇 스폰 위치/타이밍/카운트를 중앙에서 관리합니다. 게임 모드와 분리된 컴포넌트로 두어, 다른 게임플레이 모드에서도 재사용 가능합니다.
+> `SpySpawnBotManagerComponent`가 레벨 내 봇 스폰 / 제거 / 풀 트래킹을 중앙에서 관리합니다. 게임 모드와 분리된 컴포넌트로 두어, 다른 게임플레이 모드에서도 부착만으로 재사용 가능합니다.
 
 <details>
 <summary>자세히 보기</summary>
 
 - **컴포넌트 기반 책임 분리**: GameMode에 봇 로직을 하드코딩하지 않고 컴포넌트로 추출. 다른 게임 모드에 부착만 하면 동일 기능 사용.
-- **데이터 주입**: 스폰 캐릭터 클래스/위치/카운트는 데이터 에셋이나 컴포넌트 디테일 패널에서 설정 가능.
+- **봇 풀 트래킹**: `SpawnedBotList`(`TArray<AAIController*>`)에 스폰된 봇을 보관해 `RemoveOneBot()` 호출 시 일관된 제거 보장.
+- **데이터 주입**: `BotControllerClass`(AIController 서브클래스)와 `BehaviorTreeAsset`을 디테일 패널에서 설정. 봇 캐릭터 클래스 자체는 AIController 측에서 결정해 봇 / 플레이어 컨트롤러 분리가 명확.
+- **`BlueprintNativeEvent` + `BlueprintAuthorityOnly`**: `ServerCreateBots()`를 BP에서 오버라이드해 레벨별 일괄 스폰 시퀀스를 데이터 지향으로 작성 가능. 서버 권한 강제로 클라이언트 호출 차단.
 
 </details>
 
 ---
 
 ## 6. 🧰 에디터 툴체인 & 워크플로우  🆕
+
+> 자체 제작 에디터 툴 3종(`SpyDataEditorTool` / `SpyGACreatorTool` / `SpyTagManagerTool`) + Python MCP 서버 + `spy.DebugDraw` CVar 통합 디버그 토글까지 — 데이터 편집·GA 생성·태그 관리·원격 자동화·디버깅 분리를 자체 도구로 해결합니다.
 
 ### 6-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
 
@@ -580,6 +574,8 @@ flowchart TD
 # 📎 부록
 
 ## A. 빌드 방법
+
+**Prerequisites:** UE 5.7 (Epic Launcher 설치) · Visual Studio 2022 (*Game Development with C++* 워크로드) · .NET 6.0 SDK
 
 1. `SkillProject/SkillProject.uproject` 우클릭 → **Generate Visual Studio project files**.
 2. 생성된 `SkillProject/SkillProject.sln`을 Visual Studio로 열기.
