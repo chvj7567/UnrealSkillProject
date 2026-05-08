@@ -2,6 +2,12 @@
 
 *UE 5.7 · Dedicated Server · 커스텀 GAS · 모듈형 아키텍처 — 확장 가능한 멀티플레이어 액션 프레임워크.*
 
+> 🎯 **Solo project** · UE 5.4 → 5.7 · 359 commits · C++ ~16K LOC (196 files)
+>
+> 📦 **Systems** · Gameplay Ability 10 · Manager Component 6 · BT/EQS 8 · Editor tools 3 · Python MCP server
+>
+> 🤖 **AI 활용** · 2026-04부터 Claude로 설계·문서화·코드 리뷰 보조 (이전: GPT/Gemini는 검색 용도로만)
+
 [![Unreal Engine](https://img.shields.io/badge/Unreal_Engine-5.7-313131?logo=unrealengine)]()
 [![Language](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus)]()
 [![Multiplayer](https://img.shields.io/badge/Dedicated_Server-Replicated-brightgreen)]()
@@ -20,10 +26,6 @@ Lyra 스타일의 모듈형 아키텍처, 자체 래핑한 SKGAS 프레임워크
 
 파쿠르 · 콤보 · 그래플링 훅 · 패링 등 모든 캐릭터 액션은
 Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) 위에서 동기화됩니다.
-
-> **Solo project** · UE 5.4 → 5.7 · 359 commits · C++ ~16K LOC (196 files)
-> Gameplay Ability 10종 · Manager Component 6종 · BT/EQS 8종 · Editor tools 3종 · Custom Python MCP server
-> AI 활용: 2026-04부터 Claude를 설계 · 문서화 · 코드 리뷰 보조에 활용. 이전에는 GPT/Gemini를 검색 용도로만 사용.
 
 ---
 
