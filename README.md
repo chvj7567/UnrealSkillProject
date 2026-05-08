@@ -8,6 +8,10 @@
 [![GAS](https://img.shields.io/badge/Gameplay_Ability_System-Custom_Wrapper-orange)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Modular_Lyra--Style-blueviolet)]()
 
+### ▶️ 풀 게임플레이 데모 (2:19) — 클릭해서 YouTube에서 재생
+
+[![SpyPlay — 풀 게임플레이 데모](https://img.youtube.com/vi/DMnJXSP48bY/maxresdefault.jpg)](https://youtu.be/DMnJXSP48bY)
+
 이 프로젝트는 언리얼 엔진 5.7 기반 스파이 테마 3인칭 액션 게임입니다.
 완벽한 멀티플레이 동기화를 목표로 데디케이티드 서버(Dedicated Server) 환경에서 동작하며,
 Lyra 스타일의 모듈형 아키텍처, 자체 래핑한 SKGAS 프레임워크,
