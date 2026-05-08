@@ -330,6 +330,7 @@ if (Target.IsZero() == false)
 
 - **별도 컴포넌트로 분리**: 그래플링 전용(`SpyGrappleTargetingComponent`)과 전투 전용(`SpyTargetingManagerComponent`)을 분리해 책임을 명확히. 두 컴포넌트는 서로 의존하지 않음.
 - **GA 통합**: `SKGameplayAbility_SkillAction` 등 공격성 GA가 발동 시 매니저에게 베스트 타겟을 질의. 타겟 부재 시에도 어빌리티 활성은 유지(미스/공중 공격 허용).
+- **카메라 자동 추적**: 타겟 락온 동안 카메라가 타겟에게 부드럽게 고정. `ASpyPlayerController::UpdateRotation`을 오버라이드해 타겟이 유효하면 `RInterpTo`로 `ControlRotation`을 타겟 방향으로 보간(속도 10/s, Z 오프셋 -100으로 발치보다 약간 위 조준), 타겟이 없으면 `Super::UpdateRotation()`으로 일반 마우스/스틱 입력 회복. `Character_State_Death` 태그 보유 중에는 회전 자체를 차단해 사망 후 카메라가 계속 도는 현상 방지.
 
 </details>
 
@@ -372,9 +373,13 @@ if (Target.IsZero() == false)
 <details>
 <summary>자세히 보기</summary>
 
-- **`CalcHitDirectionTag` (`SKGameplayAbility_SkillAction.cpp:23`)**: 데미지 적용 시점에 공격자 위치와 타겟의 forward 벡터 사이 각도를 `Atan2(Cross.Z, Dot)`로 부호 있는 각도로 환산해 4분할 — `±45°` 이내 → `Skill.Hit.Front`, `|135°| 이상` → `Skill.Hit.Back`, 그 외 양수/음수에 따라 `Skill.Hit.Right` / `Skill.Hit.Left`.
-- **`FSKGameplayEffectContext::HitDirectionTag` 운반**: 계산된 방향 태그를 데미지 GE의 커스텀 컨텍스트에 담아 함께 송신. 타겟 측은 GE 적용과 동시에 컨텍스트에서 태그를 추출해 어떤 방향 리액션을 쓸지 결정.
-- **`USpyGA_SkillHit` 4종 몽타주 분기**: 타겟 ASC가 받은 `Skill.Hit.*` 이벤트의 태그를 매칭해 `HitFront/Back/Left/RightAbilityMontage` 중 하나를 `PlayMontageAndWait`. 몽타주 슬롯은 데이터 지향이라 캐릭터마다 다른 리액션 세트 가능.
+- **방향 분류 (`CalcHitDirectionTag` — `SKGameplayAbility_SkillAction.cpp:23`)**: 데미지 적용 시점에 공격자 위치와 타겟의 forward 벡터 사이 각도를 `Atan2(Cross.Z, Dot)`로 부호 있는 각도로 환산해 4분할 — `±45°` 이내 → `Skill.Hit.Front`, `|135°| 이상` → `Skill.Hit.Back`, 그 외 양수/음수에 따라 `Skill.Hit.Right` / `Skill.Hit.Left`.
+- **GAS 이벤트 체인으로 태그 전달**: 직접 함수 호출이나 RPC 없이 **GAS 표준 메커니즘만으로** 공격 측 → 데미지 GE → 타겟 GA까지 태그가 자동 전파됩니다.
+  1. **공격 측 GA**: `Payload.TargetTags`에 4분할 결과 태그를 담아 `SendGameplayEventToActor`로 자기 ASC에 SkillAction 이벤트 송신 (`SKGameplayAbility_SkillAction.cpp:264`).
+  2. **GE Context 임베드**: SkillAction GA가 데미지 GE를 만들 때 `FSKGameplayEffectContext::SetHitDirectionTag(Payload.TargetTags.First())`로 커스텀 컨텍스트에 태그를 박아넣음 (`SKGameplayAbility_SkillAction.cpp:91`).
+  3. **타겟 AttributeSet에서 디스패치**: 데미지 GE가 타겟에 적용되면 `USKAttributeSet::PostGameplayEffectExecute`가 컨텍스트에서 `GetHitDirectionTag()`로 태그 추출 → `Data.Target.HandleGameplayEvent(HitTag, &Payload)`로 GAS 게임플레이 이벤트 발사 (`SKAttributeSet.cpp:86~94`).
+  4. **`AbilityTriggers` 자동 활성**: `USpyGA_SkillHit` BP CDO에 `Skill.Hit.Left/Right/Front/Back` 4 태그가 `GameplayEvent` 트리거로 등록되어 있어, 위 디스패치가 매칭되는 GA를 자동으로 발화. 타겟 GA 내부에서는 `TriggerEventData->EventTag`로 정확한 방향을 받음.
+- **`USpyGA_SkillHit` 4종 몽타주 분기**: 자동 활성된 GA가 `EventTag`를 매칭해 `HitFront/Back/Left/RightAbilityMontage` 중 하나를 `PlayMontageAndWait`. 몽타주 슬롯은 데이터 지향이라 캐릭터마다 다른 리액션 세트 가능.
 - **`SpyHealthComponent` 부가 분기**: GA가 패링·무적 등으로 차단되어도 카메라 셰이크 같은 부가 연출은 발화해야 하므로, HealthComponent도 컨텍스트에서 `HitDirTag`를 추출해 별도 경로로 활용(§ 4-3 히트 카메라 셰이크와 같은 패턴).
 - **태그**: `Skill.Hit.Front` / `Skill.Hit.Back` / `Skill.Hit.Left` / `Skill.Hit.Right` (`SKGameplayTags.cpp:36~39`에 등록).
 - **디버그 시각화**: `spy.DebugDraw 1`일 때 타겟 forward(파란선)와 공격자 방향(빨간선) + 분류 결과 로그를 그려 분할 정확도를 즉시 검증 가능.
