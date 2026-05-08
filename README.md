@@ -260,7 +260,7 @@ flowchart LR
 
 </details>
 
-### 3-3. 🆕 그래플링 훅 (타겟팅 + 케이블 + 공중 루프 + UI 프롬프트)
+### 3-3. 그래플링 훅 (타겟팅 + 케이블 + 공중 루프 + UI 프롬프트)
 
 > 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 빨간 케이블 액터가 손 본에서 타겟 위치로 펼쳐지며 캐릭터는 공중 자세 루핑 Montage로 매달린 채 끌려갑니다. `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행하고 도착 시 GA를 종료해 자연 블렌드로 풀어줍니다. 비행 도중 그래플 키를 다시 누르면 즉시 끊고 자유 낙하로 전환할 수 있어, 원하지 않는 위치로 끌려가는 상황을 사용자가 직접 회피할 수 있습니다.
 
@@ -294,7 +294,7 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 3-4. 🆕 홀드형 패링 시스템
+### 3-4. 홀드형 패링 시스템
 
 > 패링 입력을 누르고 있는 동안 `Character_State_Parry` 태그가 유지되며, 이 윈도우 동안 들어온 정면 공격을 `SkillAction` 단계에서 차단하고 공격자에게 `Skill_Parry_Hit` 이벤트를 역송합니다.
 
@@ -313,8 +313,7 @@ if (Target.IsZero() == false)
 
 ---
 
-## 4. ⚔️ 전투 / 인터랙션  🆕
-
+## 4. ⚔️ 전투 / 인터랙션
 ### 4-1. 타겟팅 매니저
 
 > `SpyTargetingManagerComponent`가 캐릭터 주변/시야 안에 있는 적 후보를 추적하고, GA 시점에 즉시 베스트 타겟을 제공합니다. 그래플링 타겟팅(§ 3-3)과는 별개의 전투 전용 매니저입니다.
@@ -360,7 +359,7 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 4-4. 🆕 방향별 Hit 리액션 애니메이션
+### 4-4. 방향별 Hit 리액션 애니메이션
 
 > 피격 시 공격자가 타겟의 어느 방향에 있는지를 4분할(Front · Back · Left · Right)로 분류해, 같은 데미지라도 방향에 맞는 별개의 리액션 몽타주가 재생됩니다. 정면 피격 한 장으로 끝나지 않고 측·후방 공격이 시각적으로 구분되어 전투 가독성을 높입니다.
 
@@ -400,8 +399,7 @@ if (Target.IsZero() == false)
 
 ---
 
-## 5. 🤖 AI 시스템  🆕
-
+## 5. 🤖 AI 시스템
 ### 5-1. Behavior Tree Tasks + Kiting 사이클
 
 > 모든 AI 행동을 GA로 통일한 프로젝트 철학에 맞춰, BT의 끝단 Task가 직접 로직을 작성하지 않고 `BTTask_ActivateAbility`로 GA를 발화시키는 구조를 채택했습니다. 추격 → 사거리 진입 → 어빌리티 발동 → EQS 후퇴로 이어지는 **Kiting 사이클**로 단순 돌격 AI에서 벗어나 거리 유지형 액션 AI를 구현했습니다.
@@ -477,8 +475,7 @@ flowchart TD
 
 ---
 
-## 6. 🧰 에디터 툴체인 & 워크플로우  🆕
-
+## 6. 🧰 에디터 툴체인 & 워크플로우
 > 자체 제작 에디터 툴 3종(`SpyDataEditorTool` / `SpyGACreatorTool` / `SpyTagManagerTool`) + Python MCP 서버 + `spy.DebugDraw` CVar 통합 디버그 토글까지 — 데이터 편집·GA 생성·태그 관리·원격 자동화·디버깅 분리를 자체 도구로 해결합니다.
 
 ### 6-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
@@ -541,7 +538,7 @@ flowchart TD
 
 </details>
 
-### 6-4. 🆕 SpyTagManagerTool — Gameplay Tag 직접 편집기
+### 6-4. SpyTagManagerTool — Gameplay Tag 직접 편집기
 
 > `SpyGameplayTags.h` / `.cpp` 파일을 직접 파싱·편집하는 에디터 탭입니다. 트리 뷰로 전체 태그 계층을 시각화하고, 그룹 선택 + 부모 경로 + 복수 리프 입력으로 여러 태그를 한 번에 추가할 수 있습니다.
 
@@ -558,7 +555,7 @@ flowchart TD
 
 </details>
 
-### 6-5. 🆕 SKDebug — `spy.DebugDraw` 일괄 토글 CVar
+### 6-5. SKDebug — `spy.DebugDraw` 일괄 토글 CVar
 
 > 파쿠르·타겟팅·CircleStrafe·SkillAction 등 곳곳에 흩어진 `DrawDebug*` / 진단 `UE_LOG` / `AddOnScreenDebugMessage`를 단일 콘솔 변수로 일괄 켜고 끕니다. 시연 시에는 끄고, 디버깅 시에는 한 줄로 켤 수 있습니다.
 
