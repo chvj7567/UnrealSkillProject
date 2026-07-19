@@ -1,6 +1,6 @@
 ---
 name: gameplay-programmer
-description: C++ 코드(.h/.cpp)를 작성·수정·리팩터링할 때 호출한다. SKGAS/SKAssetCore/SpyAssetManager 연동, GAS 구조, DataAsset 스키마 구현 전담. .h/.cpp 파일을 한 줄이라도 만지면 이 에이전트. 본격 테스트 스위트는 test-engineer 영역.
+description: C++ 코드(.h/.cpp)를 작성·수정·리팩터링할 때 호출한다. SKGAS/SpyAssetManager 연동(SKAssetCore 는 분리 예정), GAS 구조, DataAsset 스키마 구현 전담. .h/.cpp 파일을 한 줄이라도 만지면 이 에이전트. 본격 테스트 스위트는 test-engineer 영역.
 tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
