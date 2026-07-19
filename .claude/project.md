@@ -28,7 +28,7 @@
 - **test_framework**: Unreal Automation (SimpleAutomationTest / AutomationSpec)
 - **test_method_naming**: english (기존 `SpyAICircleStrafeTests.cpp` 스타일 준수)
 - **infrastructure**
-  - **modules**: `SKGAS` (범용 GAS 래퍼), `SKAssetCore` (에셋 매니저 플러그인 — 분리 진행 중)
+  - **modules**: `SKGAS` (범용 GAS 래퍼 — 실존). `SKAssetCore` 는 분리 예정 (아직 미구현 — `docs/superpowers/specs/2026-07-19-skassetcore-plugin-design.md` 참조)
   - **asset_access**: `SpyAssetManager` — `LoadAssetSync` / `LoadAssetAsync`, `USKAssetData` 이름 룩업(`GetAssetByName`)
   - **module_dependency**: `SkillProject` → `SKGAS` → `GameplayAbilities` (역방향 참조 금지)
 - **mcp**: `tools/unreal-mcp/` — 에디터 원격 제어 (`execute_python`, `get/set_asset_property`, `get_actors_in_level` 등). 전용 recompile/test-run 커맨드는 없음 — 빌드/테스트는 에디터·VS에서 사용자 수행.

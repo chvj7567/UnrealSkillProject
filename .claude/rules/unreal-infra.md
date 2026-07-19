@@ -1,6 +1,6 @@
 # unreal-infra — SpyProject 인프라 규칙
 
-> 원본 Unity 룰 03(ChvjPackage)·04(에셋) 대체. SpyProject 재사용 인프라(SKGAS·SKAssetCore·SpyAssetManager)와 GAS·DataAsset·모듈 규약을 정의한다.
+> 원본 Unity 룰 03(ChvjPackage)·04(에셋) 대체. SpyProject 재사용 인프라(SKGAS — SKAssetCore 는 분리 예정)와 GAS·DataAsset·모듈 규약을 정의한다.
 
 ---
 
@@ -64,11 +64,13 @@ USpyComboAssetData / USpyAnimAssetData / Config DataAsset 들
 ## 5. 모듈 의존 방향
 
 ```
-SkillProject (게임)  →  SKGAS / SKAssetCore  →  UE 표준 모듈
+SkillProject (게임)  →  SKGAS  →  UE 표준 모듈
 ```
 
-- 역방향 참조 금지 (SKGAS/SKAssetCore 가 SkillProject 를 참조하지 않음).
-- 공통 기능은 재사용 모듈(SKGAS/SKAssetCore)에 두고 게임 코드에서 중복 구현 금지.
+> SKAssetCore 는 분리 예정 (아직 미구현) — 에셋 매니저 플러그인 분리 설계는 `docs/superpowers/specs/2026-07-19-skassetcore-plugin-design.md` 참조.
+
+- 역방향 참조 금지 (SKGAS 가 SkillProject 를 참조하지 않음).
+- 공통 기능은 SKGAS에 두고 (SKAssetCore는 분리 예정) 게임 코드에서 중복 구현 금지.
 - 새 의존성은 해당 모듈 `.Build.cs` 에 명시.
 
 체크리스트:
