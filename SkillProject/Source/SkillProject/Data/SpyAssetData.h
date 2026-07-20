@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Data/SKAssetData.h"
+#include "SKAssetData.h"
 #include "SpyAssetData.generated.h"
 
 UCLASS()
