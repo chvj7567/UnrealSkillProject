@@ -50,7 +50,7 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 - **GAS·컴포넌트·InitState 흐름** (unreal-infra §2, §4): 게임플레이 로직은 GA(Ability)에, 상태는 AttributeSet/컴포넌트에 위치시킨다. GA 추가·ASC 조작은 반드시 `InitState_DataInitialized` 이후 순서를 지킨다. 서버 전용 로직(`HasAuthority` 블록 안)과 클라이언트 연출(블록 밖)을 명확히 분리한다 (unreal-infra §6).
 - **종속성 최소화**: 인터페이스/컴포넌트 주입 우선 — test-engineer 가 테스트 더블로 모킹할 수 있는 구조로 짠다. 이것이 test-engineer 의 작업 전제다.
 - 본인이 짜는 테스트는 **"최소 정상 케이스 + 엣지 케이스 1개"** 수준만. 엣지 망라·회귀·통합은 test-engineer.
-- 재사용 모듈(SKGAS) 안전 (unreal-infra §5): 공용 컴포넌트/GA는 초기화·해제 경로에서 상태를 완전히 리셋해, 다른 게임 코드가 잔여 상태에 영향받지 않게 한다.
+- 공용 컴포넌트/GA 상태 리셋: 재사용되는 공용 컴포넌트/GA(SKGAS·`SKCueActorPool` 등)는 초기화·해제 경로에서 상태를 완전히 리셋해, 다른 게임 코드가 잔여 상태에 영향받지 않게 한다. (모듈 역참조 금지는 별도 — unreal-infra §5)
 - 불필요한 추상화·미래 대비 코드를 넣지 않는다 (YAGNI).
 
 ### TDD 흐름 (자체 테스트 작성 시)

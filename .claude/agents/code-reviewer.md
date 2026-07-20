@@ -41,7 +41,7 @@ tools: Read, Glob, Grep, Bash
 | 룰 준수 | 위 매핑표의 룰 — 특히 C++ 스타일(cpp-style), 인프라·GAS·모듈(unreal-infra) |
 | 기획서 일치 | 구현이 `docs/design/` 명세대로인가 — 누락 기능, 임의 변경, 임의 수치 |
 | 종속성 | `TActorIterator` 남용, 구체 클래스 하드 참조, 재사용 모듈(SKGAS)의 게임 모듈(SkillProject) 역참조 |
-| 재사용 모듈 안전성 | unreal-infra §5 — 공용 컴포넌트/GA(SKGAS)·`SKCueActorPool` 등 풀링 대상이 초기화·해제 경로에서 상태를 완전히 리셋하는가 (재사용 시 이전 상태 잔류 금지) |
+| 공용 컴포넌트/풀 상태 리셋 | 공용 컴포넌트/GA(SKGAS)·`SKCueActorPool` 등 풀링·재사용 대상이 초기화·해제 경로에서 상태를 완전히 리셋하는가 (재사용 시 이전 상태 잔류 금지) |
 | 인프라 안전성 | unreal-infra §1(에셋 접근이 SpyAssetManager 경유인가) · §2(GA 부여 핸들 `FSpyAbilitySet_GrantedHandles` 트래킹·해제) · §6(서버 권한·레플리케이션) 해당 항목 |
 | 정적 결함 | 명백한 nullptr 역참조 경로, 델리게이트/이벤트 구독 해제 누락, 레이턴트 액션(Latent Ability Task) 콜백 누수 |
 | YAGNI | 기획서·룰에 없는 불필요한 추상화·미래 대비 코드 |
