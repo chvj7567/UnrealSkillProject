@@ -297,7 +297,7 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 	const FName WeaponSocketName = Entry.WeaponSocketName.IsNone() ? FName(TEXT("weapon_socket")) : Entry.WeaponSocketName;
 
 	//# 패키지 빌드에서 BP 오브젝트(BP_X.BP_X)는 cook 시 stripped되므로 generated class(BP_X.BP_X_C) 경로로 로드
-	const USpyAssetData& SKAssetData = USpyAssetManager::Get().GetAssetData();
+	const USKAssetData& SKAssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = SKAssetData.GetAssetPathByName(WeaponAssetName);
 	FString ClassPathString = AssetPath.GetAssetPathString();
 	if (ClassPathString.EndsWith(TEXT("_C")) == false)
@@ -306,7 +306,7 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 	}
 	FSoftObjectPath ClassPath(ClassPathString);
 
-	FSpyAssetAndDelegate LoadDelegate;
+	FSKAssetAndDelegate LoadDelegate;
 	TWeakObjectPtr<ASpyCharacter> WeakThis = this;
 	LoadDelegate.BindLambda([WeakThis, WeaponAssetName, WeaponSocketName](UObject* LoadedAsset)
 		{

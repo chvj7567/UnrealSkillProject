@@ -25,7 +25,7 @@ void USpyCharacterAnimInstance::NativeBeginPlay()
     {
         if (TSoftClassPtr<UAnimInstance> LayerSoftPtr = AnimData->AnimLayerMap.FindRef(SpyAnimLayerKeys::OneHandSword))
         {
-            FSpyAssetAndDelegate LoadDelegate;
+            FSKAssetAndDelegate LoadDelegate;
             LoadDelegate.BindLambda([this](UObject* LoadedAsset)
                 {
                     if (UClass* LoadedClass = Cast<UClass>(LoadedAsset))

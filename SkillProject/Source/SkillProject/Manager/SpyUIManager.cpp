@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UI/SpyUserWidget.h"
 
-#include "Data/SKAssetData.h"
+#include "SKAssetData.h"
 #include "Character/SpyCharacter.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyUIManager)
@@ -40,7 +40,7 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 void USpyUIManager::OpenUI(FName InUIName)
 {
 	//# 패키지 빌드에서 BP 오브젝트(BP_X.BP_X)는 cook 시 stripped되므로 generated class(BP_X.BP_X_C) 경로로 로드
-	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
+	const USKAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(InUIName);
 	FString ClassPathString = AssetPath.GetAssetPathString();
 	if (ClassPathString.EndsWith(TEXT("_C")) == false)
@@ -49,7 +49,7 @@ void USpyUIManager::OpenUI(FName InUIName)
 	}
 	FSoftObjectPath ClassPath(ClassPathString);
 
-	FSpyAssetAndDelegate LoadDelegate;
+	FSKAssetAndDelegate LoadDelegate;
 	LoadDelegate.BindLambda([this, InUIName](UObject* LoadedAsset)
 		{
 			if (LoadedAsset == nullptr)
@@ -140,7 +140,7 @@ void USpyUIManager::CloseLastUI()
 
 void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent, EWidgetSpace Space)
 {
-	const USpyAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
+	const USKAssetData& AssetData = USpyAssetManager::Get().GetAssetData();
 	const FSoftObjectPath& AssetPath = AssetData.GetAssetPathByName(InUIName);
 	FString ClassPathString = AssetPath.GetAssetPathString();
 	if (ClassPathString.EndsWith(TEXT("_C")) == false)
@@ -152,7 +152,7 @@ void USpyUIManager::OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent,
 	if (WidgetComponent == nullptr)
 		return;
 
-	FSpyAssetAndDelegate LoadDelegate;
+	FSKAssetAndDelegate LoadDelegate;
 	TWeakObjectPtr<UWidgetComponent> WeakWidget = WidgetComponent;
 	LoadDelegate.BindLambda([InUIName, WeakWidget, Space](UObject* LoadedAsset)
 		{
