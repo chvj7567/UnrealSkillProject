@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/SKUserWidget.h"
+#include "SKUserWidget.h"
 #include "SpyHPBar.generated.h"
 
 class UProgressBar;
