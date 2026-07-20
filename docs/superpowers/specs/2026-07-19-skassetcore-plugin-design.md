@@ -22,6 +22,23 @@ Date: 2026-07-19
 
 ---
 
+## 1.5 구현 정정 (2026-07-20 — 구현·검증 후)
+
+> 구현·런타임 검증 결과, **`GetAssetData()`·`AssetDataPath` 는 base(`USKAssetManager`)가 아니라 서브클래스(`USpyAssetManager`)에 둔다.** 아래 §3.2/§4/§5.1 의 "base 가 `GetOrLoadTypedGameData<USKAssetData>` 로 GetAssetData 제공" 부분은 이 정정으로 대체된다.
+
+**이유:** primary asset 로딩은 `PrimaryAssetType`(=concrete 클래스명 "SpyAssetData")과 캐시 키(`GameDataMap`)가 **concrete 클래스에 묶인다.** base에서 `GetOrLoadTypedGameData<USKAssetData>` 로 만들면:
+- 캐시 조회 키(`USKAssetData`) ≠ 저장 키(로드된 에셋의 concrete `USpyAssetData`) → **매번 캐시 미스 → SpyAssetData 반복 로드** (에디터 증상)
+- `PrimaryAssetType` = "SKAssetData" ≠ ini 등록 "SpyAssetData" → **패키지 빌드에서 로드 실패** (잠재 결함)
+
+**최종 설계:**
+- base `USKAssetManager`: `virtual const USKAssetData& GetAssetData();` (서브클래스가 override; base 본문은 `checkf` + 빈 fallback). `AssetDataPath` 는 base에 두지 않는다. `GetOrLoadTypedGameData<T>` 는 protected 유지.
+- 서브클래스 `USpyAssetManager`: `UPROPERTY(Config) TSoftObjectPtr<USpyAssetData> AssetDataPath;` + `virtual const USKAssetData& GetAssetData() override { return GetOrLoadTypedGameData<USpyAssetData>(AssetDataPath); }`
+- ini `[/Script/SkillProject.SpyAssetManager] AssetDataPath=...` 는 서브클래스 프로퍼티로 직접 읽힘 (무변경, 더 견고 — leaf 섹션 확정).
+
+**타 프로젝트 재사용:** `UMyAssetManager` 에서 `GetAssetData` override + 자기 `TSoftObjectPtr<UMyAssetData> AssetDataPath` 를 둔다.
+
+---
+
 ## 2. 플러그인 구조
 
 ### 신규 플러그인: `SKAssetCore` (Runtime)
