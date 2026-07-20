@@ -2,43 +2,21 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "SKUIManager.h"
 #include "Util/DefineEnum.h"
-#include "Components/WidgetComponent.h"
 
 #include "SpyUIManager.generated.h"
 
 class UWidgetComponent;
-class USKUserWidget;
 
 UCLASS()
-class SKILLPROJECT_API USpyUIManager : public UGameInstanceSubsystem
+class SKILLPROJECT_API USpyUIManager : public USKUIManager
 {
 	GENERATED_BODY()
 
 public:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
-
-public:
+	//# leaf 서브시스템 인스턴스 접근 (호출부가 쓰는 형태)
 	static USpyUIManager* Get(const UObject* WorldContextObject);
-
-public:
-	UFUNCTION(BlueprintCallable)
-	void OpenUI(FName InUIName);
-
-	UFUNCTION(BlueprintCallable)
-	void CloseUI(FName InUIName);
-
-	UFUNCTION(BlueprintCallable)
-	void CloseLastUI();
-
-	UFUNCTION(BlueprintCallable)
-	void OpenSubUI(FName InUIName, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
-
-	UFUNCTION(BlueprintCallable)
-	void AddCashingUI(USpyUserWidget* UserWidget);
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -49,15 +27,4 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
-
-protected:
-	const int MaxCashingUICount = 5;
-
-protected:
-	UPROPERTY()
-	TArray<TObjectPtr<USpyUserWidget>> OpenUIList;
-
-	UPROPERTY()
-	TArray<TObjectPtr<USpyUserWidget>> CashingUIList;
-
 };
