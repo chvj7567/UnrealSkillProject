@@ -11,6 +11,7 @@
 			"AdditionalDependencies": [
 				"SKGAS",
 				"SKAssetCore",
+				"SKUICore",
 				"MotionWarping",
 				"Engine"
 			]
@@ -70,6 +71,10 @@
 		},
 		{
 			"Name": "SKAssetCore",
+			"Enabled": true
+		},
+		{
+			"Name": "SKUICore",
 			"Enabled": true
 		}
 	]
