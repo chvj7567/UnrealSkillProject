@@ -31,6 +31,7 @@ public class SkillProject : ModuleRules
             "ModularGameplayActors",
             "MotionWarping",
             "SKGAS",
+            "SKAssetCore",
             "AIModule",
             "NavigationSystem",
             "CableComponent",

@@ -8,7 +8,7 @@ public class SpyDataEditorTool : ModuleRules
 
         PublicDependencyModuleNames.AddRange(new string[]
         {
-            "Core", "CoreUObject", "Engine", "SkillProject", "GameplayTags"
+            "Core", "CoreUObject", "Engine", "SkillProject", "GameplayTags", "SKAssetCore"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
