@@ -66,7 +66,9 @@ protected:
 	}
 
 public:
-	const USKAssetData& GetAssetData();
+	//# 프로젝트 서브클래스가 자신의 concrete AssetData 타입으로 오버라이드한다.
+	//# (PrimaryAssetType·캐시 키가 concrete 클래스명에 묶이므로 base 에서 직접 구현하지 않는다)
+	virtual const USKAssetData& GetAssetData();
 
 private:
 	UPROPERTY()
@@ -76,10 +78,6 @@ private:
 	TMap<TObjectPtr<UClass>, TObjectPtr<UPrimaryDataAsset>> GameDataMap;
 
 	FCriticalSection LoadedAssetsCritical;
-
-private:
-	UPROPERTY(Config)
-	TSoftObjectPtr<USKAssetData> AssetDataPath;
 };
 
 template<typename AssetType>

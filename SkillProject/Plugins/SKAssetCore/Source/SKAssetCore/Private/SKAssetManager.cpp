@@ -289,5 +289,8 @@ void USKAssetManager::RemovePrimaryAsset(UPrimaryDataAsset* Asset)
 
 const USKAssetData& USKAssetManager::GetAssetData()
 {
-	return GetOrLoadTypedGameData<USKAssetData>(AssetDataPath);
+	//# 프로젝트 서브클래스(예: USpyAssetManager)가 concrete 타입으로 오버라이드해야 한다.
+	checkf(false, TEXT("USKAssetManager::GetAssetData 는 프로젝트 서브클래스에서 오버라이드해야 합니다."));
+	static const USKAssetData* Fallback = NewObject<USKAssetData>();
+	return *Fallback;
 }
