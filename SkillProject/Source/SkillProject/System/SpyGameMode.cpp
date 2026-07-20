@@ -31,7 +31,6 @@ void ASpyGameMode::GenericPlayerInitialization(AController* NewPlayer)
 	//# PlayerController 및 PlayerState 초기화 후 단계
 	Super::GenericPlayerInitialization(NewPlayer);
 
-	USpyAssetManager& AssetManager = USpyAssetManager::Get();
 	if (USpyCharacterAssetData* CharacterAssetData = USpyAssetManager::GetAssetByName<USpyCharacterAssetData>(SpyAssetNames::CharacterAssetData))
 	{
 		//# PS에 데이터 Set
