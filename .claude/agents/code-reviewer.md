@@ -24,7 +24,7 @@ tools: Read, Glob, Grep, Bash
 1. **검토 대상 식별** — `git diff` / `git status` 로 gameplay-programmer 가 작성·수정한 `.h`/`.cpp` 파일을 파악한다.
 2. **기획서 확인** — 관련 `docs/design/[기능명].md` 를 읽는다. 구현이 기획 명세대로인지 판단하는 기준이다.
 3. **걸리는 룰 전문 읽기** — 변경 파일에 해당하는 `.claude/rules/*.md` **전문**을 읽는다 (요약만 보고 넘어가지 않는다). 매핑은 아래 표.
-4. **SKGAS/SpyAssetManager 실제 시그니처 확인** (SKAssetCore 는 분리 예정) — 연동 코드면 `SkillProject/Source/SKGAS/` 및 `SkillProject/Source/SkillProject/Manager/SpyAssetManager.h` 의 실제 API 시그니처를 확인해 오용 여부를 본다.
+4. **SKGAS/SKAssetCore/SpyAssetManager 실제 시그니처 확인** — 연동 코드면 `SkillProject/Source/SKGAS/` 및 `SkillProject/Source/SkillProject/Manager/SpyAssetManager.h` 의 실제 API 시그니처를 확인해 오용 여부를 본다.
 
 ### 작업 종류별 룰 매핑
 

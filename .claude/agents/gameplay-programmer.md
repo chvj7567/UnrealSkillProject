@@ -1,6 +1,6 @@
 ---
 name: gameplay-programmer
-description: C++ 코드(.h/.cpp)를 작성·수정·리팩터링할 때 호출한다. SKGAS/SpyAssetManager 연동(SKAssetCore 는 분리 예정), GAS 구조, DataAsset 스키마 구현 전담. .h/.cpp 파일을 한 줄이라도 만지면 이 에이전트. 본격 테스트 스위트는 test-engineer 영역.
+description: C++ 코드(.h/.cpp)를 작성·수정·리팩터링할 때 호출한다. SKGAS/SKAssetCore/SpyAssetManager 연동, GAS 구조, DataAsset 스키마 구현 전담. .h/.cpp 파일을 한 줄이라도 만지면 이 에이전트. 본격 테스트 스위트는 test-engineer 영역.
 tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
@@ -17,7 +17,7 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 
 1. **기획서 확인** — `docs/design/[기능명].md` 에 기획서가 있는지 본다. 없으면 구현을 시작하지 말고, game-designer 호출이 필요하다고 사용자에게 보고한다.
 2. **해당 작업의 필독 룰을 읽는다** — 아래 매핑표 참조. `.claude/rules/*.md` **전문**을 읽는다 (요약만 보고 넘어가지 않는다).
-3. **SpyAssetManager / SKGAS 우선 확인** (unreal-infra §1, §5) — 필요한 기능이 `SkillProject/Source/SKGAS/`(범용 GAS 래퍼) 또는 `SpyAssetManager` 에 이미 있는지 본다. 있으면 그것을 쓰고, 재사용 가능한 공통 기능이 없으면 SKGAS 쪽에 추가한다 (`SKAssetCore` 는 분리 예정 — 현재는 `SpyAssetManager` 가 에셋 허브).
+3. **SpyAssetManager / SKGAS 우선 확인** (unreal-infra §1, §5) — 필요한 기능이 `SkillProject/Source/SKGAS/`(범용 GAS 래퍼) 또는 `SpyAssetManager` 에 이미 있는지 본다. 있으면 그것을 쓰고, 재사용 가능한 공통 기능이 없으면 SKGAS 쪽에 추가한다 (`SKAssetCore` 플러그인이 `USKAssetManager`/`USKAssetData` 를 제공, `SpyAssetManager` 가 그 서브클래스).
 4. **기존 코드 패턴 확인** — 프로젝트 코드 루트(`project.md` 의 `code_root`) 의 유사 코드·네이밍·모듈(`.Build.cs`) 구성을 그대로 따른다.
 5. **File Structure 사전 매핑** — 코드를 쓰기 *전*, 어느 파일을 생성/수정할지와 각 파일의 책임을 먼저 매핑한다:
    - 생성할 파일 (경로 + 한 줄 책임)
