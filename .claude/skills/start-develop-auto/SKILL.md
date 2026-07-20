@@ -44,6 +44,7 @@ description: Use ONLY when the user explicitly invokes this skill by name. Runs 
 
 - "전자동"은 **단계 간 사용자 승인을 묻지 않는다**는 뜻이다. 그래도 다음 경우엔 멈춘다:
   - 호출 시 기능 설명이 없을 때 — 무엇을 만들지 묻는다.
+  - `uses_superpowers: true` 일 때 writing-plans 완료 후 **실행 방식 선택 게이트**(위 사전 단계) — 사용자가 두 갈래를 고를 때까지 멈춘다.
   - design-reviewer / code-reviewer 의 BLOCKER 가 3회 내에 안 풀릴 때 — 사용자에게 에스컬레이션.
   - 최종 커밋 — **절대 자동 커밋하지 않는다.** `git add` + 커밋 메시지(안) 까지만.
 - 룰·위임 기준은 `.claude/project.md` 의 "협업 흐름 (Workflow)" 표 및 "메인 오케스트레이터 행동 규칙" 섹션을 따른다.
