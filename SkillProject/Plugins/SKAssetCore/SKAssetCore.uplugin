@@ -1,0 +1,21 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "SK Asset Core",
+	"Description": "Project-agnostic AssetManager + name-to-path asset data lookup. Reusable across projects.",
+	"Category": "Gameplay",
+	"CreatedBy": "",
+	"CreatedByURL": "",
+	"EnabledByDefault": true,
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "SKAssetCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
