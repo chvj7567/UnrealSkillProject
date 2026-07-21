@@ -24,15 +24,18 @@ tools: Read, Glob, Grep, Bash
 1. **검토 대상 식별** — `git diff` / `git status` 로 gameplay-programmer 가 작성·수정한 `.h`/`.cpp` 파일을 파악한다.
 2. **기획서 확인** — 관련 `docs/design/[기능명].md` 를 읽는다. 구현이 기획 명세대로인지 판단하는 기준이다.
 3. **걸리는 룰 전문 읽기** — 변경 파일에 해당하는 `.claude/rules/*.md` **전문**을 읽는다 (요약만 보고 넘어가지 않는다). 매핑은 아래 표.
-4. **SKGAS/SKAssetCore/SpyAssetManager 실제 시그니처 확인** — 연동 코드면 `SkillProject/Source/SKGAS/` 및 `SkillProject/Source/SkillProject/Manager/SpyAssetManager.h` 의 실제 API 시그니처를 확인해 오용 여부를 본다.
+4. **SK 플러그인 실제 시그니처 확인** — 연동 코드면 `Plugins/SKGAS/Source/SKGAS/`, `Plugins/SKAssetCore/`, `Plugins/SKUICore/` 의 실제 API 시그니처를 확인해 오용 여부를 본다.
 
 ### 작업 종류별 룰 매핑
 
 | 변경 코드 성격 | 검토 룰 |
 |---|---|
 | 모든 코드 | git-conventions(커밋 포맷), cpp-style(C++ 스타일 — 주석 `//#`, `!` 금지, UPROPERTY 지정자, include 순서) |
-| SpyAssetManager/GAS 연동 · DataAsset · 모듈 구조 · 서버 권한 | unreal-infra (§1~7) |
-| 새 Gameplay Ability 추가 | new-ability-checklist |
+| 에셋 접근 · DataAsset 계층 | plugin-skassetcore |
+| GAS(어빌리티·ASC·어트리뷰트·태그·큐) · 새 어빌리티 추가 | plugin-skgas (§6 체크리스트) |
+| UI(위젯·매니저) | plugin-skuicore |
+| 모듈형 액터 · InitState 흐름 | plugin-modulargameplayactors |
+| 모듈 의존 방향 · 서버 권한/레플리케이션 | unreal-infra |
 
 ## 검토 체크리스트
 
@@ -40,12 +43,12 @@ tools: Read, Glob, Grep, Bash
 |---|---|
 | 룰 준수 | 위 매핑표의 룰 — 특히 C++ 스타일(cpp-style), 인프라·GAS·모듈(unreal-infra) |
 | 기획서 일치 | 구현이 `docs/design/` 명세대로인가 — 누락 기능, 임의 변경, 임의 수치 |
-| 종속성 | `TActorIterator` 남용, 구체 클래스 하드 참조, 재사용 모듈(SKGAS)의 게임 모듈(SkillProject) 역참조 |
+| 종속성 | `TActorIterator` 남용, 구체 클래스 하드 참조, 재사용 모듈(SK 플러그인)의 게임 모듈(`project.md` 의 `name`) 역참조 |
 | 공용 컴포넌트/풀 상태 리셋 | 공용 컴포넌트/GA(SKGAS)·`SKCueActorPool` 등 풀링·재사용 대상이 초기화·해제 경로에서 상태를 완전히 리셋하는가 (재사용 시 이전 상태 잔류 금지) |
-| 인프라 안전성 | unreal-infra §1(에셋 접근이 SpyAssetManager 경유인가) · §2(GA 부여 핸들 `FSpyAbilitySet_GrantedHandles` 트래킹·해제) · §6(서버 권한·레플리케이션) 해당 항목 |
+| 인프라 안전성 | plugin-skassetcore §2(에셋 접근이 `USKAssetManager` 경유인가) · plugin-skgas §6-3(GA 부여 핸들 트래킹·해제) · unreal-infra §2(서버 권한·레플리케이션) 해당 항목 |
 | 정적 결함 | 명백한 nullptr 역참조 경로, 델리게이트/이벤트 구독 해제 누락, 레이턴트 액션(Latent Ability Task) 콜백 누수 |
 | YAGNI | 기획서·룰에 없는 불필요한 추상화·미래 대비 코드 |
-| GAS·InitState 흐름 준수 | GA 추가·ASC 조작 코드가 `InitState_DataInitialized` 이후에만 실행되는가 (unreal-infra §4) |
+| GAS·InitState 흐름 준수 | GA 추가·ASC 조작 코드가 `DataInitialized`(InitAbilityActorInfo) 이후에만 실행되는가 (plugin-modulargameplayactors §3) |
 | 테스트 가능성 | 인터페이스/컴포넌트 주입 구조라 test-engineer 가 테스트 더블로 모킹 가능한가 |
 
 > 컴파일·테스트 실행은 네 범위가 아니다 (도구도 없다). 명백한 컴파일 에러는 정적으로 지적하되, 실제 빌드 검증은 사용자 빌드 / test-engineer 흐름이 담당한다.

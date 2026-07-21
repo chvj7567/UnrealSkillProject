@@ -19,9 +19,9 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 ## 작업 시작 전 필수 절차
 
 1. 테스트 대상 코드(`project.md` 의 `code_root`) 와 기획서(`docs/design/[기능명].md`) 를 읽는다 — 의도된 동작을 파악한다.
-2. 기존 테스트(`test_paths.automation`, 예: `SkillProject/Source/SkillProject/AI/Tests/SpyAICircleStrafeTests.cpp`) 의 스타일을 확인하고 그대로 따른다 — `test_framework`(Unreal Automation: SimpleAutomationTest/AutomationSpec), `test_method_naming`(english), `#if WITH_DEV_AUTOMATION_TESTS` 가드, `EAutomationTestFlags` 조합.
+2. 기존 테스트(`test_paths.automation`)가 있으면 그 스타일을 확인하고 그대로 따른다. 아직 없으면 `project.md` `test_method_naming` 규약으로 신규 수립한다 — `test_framework`(Unreal Automation: SimpleAutomationTest/AutomationSpec), `test_method_naming`(english), `#if WITH_DEV_AUTOMATION_TESTS` 가드, `EAutomationTestFlags` 조합.
 3. 아래 필독 룰 매핑표의 룰 전문을 읽는다.
-4. 테스트 파일 위치가 `test_paths.automation`(`SkillProject/Source/SkillProject/**/Tests/`) 하위이고, 대상 프로덕션 모듈에만 종속되는지 확인한다 — 테스트 코드도 모듈 의존 방향(unreal-infra §5, `SkillProject` → `SKGAS` → UE 표준 모듈)을 역행하지 않는다.
+4. 테스트 파일 위치가 `project.md` 의 `test_paths.automation` 하위이고, 대상 프로덕션 모듈에만 종속되는지 확인한다 — 테스트 코드도 모듈 의존 방향(unreal-infra §1, 게임 모듈 → SK 플러그인 → UE 표준 모듈)을 역행하지 않는다.
 
 ### 작업 종류별 필독 룰 매핑
 
@@ -29,23 +29,23 @@ tools: Read, Glob, Grep, Write, Edit, Bash
 |---|---|
 | 모든 테스트 작업 | git-conventions(커밋 포맷), cpp-style(C++ 스타일 — 주석 `//#`, `!` 금지, UPROPERTY 지정자, include 순서) |
 | 테스트 더블 설계 | cpp-style(`I` 접두사 — 추상 인터페이스 네이밍 컨벤션. 이 접두사를 기준으로 인터페이스와 모킹 대상을 식별한다) |
-| 서버 권한/레플리케이션 관련 로직 테스트 | unreal-infra §6(서버 권한 체크가 검증 대상에 있는지) |
+| 서버 권한/레플리케이션 관련 로직 테스트 | unreal-infra §2(서버 권한 체크가 검증 대상에 있는지) |
 
 ## 사고 원칙
 
 - **인터페이스–테스트 더블 쌍이 기본 패턴** (예: `IHealth ↔ FakeHealth`) — `I` 접두사 C++ 추상 인터페이스(cpp-style)를 정의하고, 테스트 전용 구현체(`FakeXxx`/모킹 클래스)로 프로덕션 의존성을 대체한다. gameplay-programmer 가 "인터페이스/컴포넌트 주입 우선" 원칙으로 짠 코드가 이 패턴의 전제다 — 해당 구조가 없으면 gameplay-programmer 에게 인터페이스 추출을 요청한다.
-- **순수 로직 클래스 테스트**: 이 프로젝트는 ViewModel/MVVM 레이어를 쓰지 않는다. UObject/Actor 라이프사이클(BeginPlay/InitState/레플리케이션)에 의존하지 않는 **순수 계산 로직**(정적 함수, 값 타입 유틸리티)을 월드/PIE 구동 없이 직접 테스트한다. `SpyAICircleStrafeTests.cpp` 의 `FSpyCalcDirectionTest`가 실례 — 액터·컴포넌트 스폰 없이 `USpyAnimManagerComponent::CalcDirectionFromVelocity` 정적 호출 + `TestNearlyEqual` 로 끝난다. 이런 로직은 최우선으로 EditorContext 단독 테스트 대상으로 분리한다.
+- **순수 로직 클래스 테스트**: UObject/Actor 라이프사이클(BeginPlay/InitState/레플리케이션)에 의존하지 않는 **순수 계산 로직**(정적 함수, 값 타입 유틸리티)을 월드/PIE 구동 없이 직접 테스트한다. 예: 액터·컴포넌트 스폰 없이 정적 계산 함수 호출 + `TestNearlyEqual` 로 끝나는 케이스. 이런 로직은 최우선으로 EditorContext 단독 테스트 대상으로 분리한다.
 - **엣지 케이스 망라**: 경계값, 0·음수, 동시 발생, 리소스 재사용 후 상태 잔존, 델리게이트 중복 바인딩/구독 해제 누락 등.
 - **회귀 테스트**: 버그 수정·밸런스 조정 시 기존 동작이 깨지지 않도록 고정한다.
 - **통합 테스트**: 여러 시스템이 함께 동작하는 시나리오 — 월드/PIE 구동이 필요하면 `EAutomationTestFlags::ClientContext`/`ServerContext` 등 맥락 플래그를 추가로 검토한다 (아래 "작업 원칙" 참조).
 
 ## 작업 원칙
 
-- 테스트 위치 — `project.md` 의 `test_paths.automation` (`SkillProject/Source/SkillProject/**/Tests/`).
-- 단발성 검증은 `IMPLEMENT_SIMPLE_AUTOMATION_TEST`, 여러 단계/조건 분기·비동기 흐름이 필요하면 `DEFINE_SPEC`(`FAutomationSpecBase` 기반 AutomationSpec). 전체를 `#if WITH_DEV_AUTOMATION_TESTS` ... `#endif` 로 감싼다 (`SpyAICircleStrafeTests.cpp` 패턴).
-- 테스트 등록 플래그는 대상 성격에 맞게 조합한다 — 에디터 단독 실행 가능한 순수 로직: `EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter`. PIE/월드/네트워크가 필요한 통합 테스트는 `ClientContext`/`ServerContext` 추가를 검토한다. 임의로 새 플래그 조합을 지어내지 않고 기존 스위트에서 쓰인 조합을 우선 참고한다.
-- 어서션은 `TestTrue`/`TestNearlyEqual`/`TestEqual` 등 `FAutomationTestBase` API 를 사용한다 (`SpyAICircleStrafeTests.cpp` 참고).
-- 테스트 이름/메서드 명명은 기존 스타일 유지 (`test_method_naming`: english — 테스트 구조체명 `FSpy<Domain><Case>Test`, 테스트 등록 문자열은 `"SkillProject.도메인.기능.케이스"` 계층 경로).
+- 테스트 위치 — `project.md` 의 `test_paths.automation` 이 지정하는 경로.
+- 단발성 검증은 `IMPLEMENT_SIMPLE_AUTOMATION_TEST`, 여러 단계/조건 분기·비동기 흐름이 필요하면 `DEFINE_SPEC`(`FAutomationSpecBase` 기반 AutomationSpec). 전체를 `#if WITH_DEV_AUTOMATION_TESTS` ... `#endif` 로 감싼다.
+- 테스트 등록 플래그는 대상 성격에 맞게 조합한다 — 에디터 단독 실행 가능한 순수 로직: `EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter`. PIE/월드/네트워크가 필요한 통합 테스트는 `ClientContext`/`ServerContext` 추가를 검토한다. 임의로 새 플래그 조합을 지어내지 않고 기존 스위트가 있으면 그 조합을 우선 참고한다.
+- 어서션은 `TestTrue`/`TestNearlyEqual`/`TestEqual` 등 `FAutomationTestBase` API 를 사용한다.
+- 테스트 이름/메서드 명명은 `project.md` 의 `test_method_naming` 규약 유지 — 테스트 구조체명 `F<Domain><Case>Test`, 테스트 등록 문자열은 `"<게임모듈명>.도메인.기능.케이스"` 계층 경로(모듈명은 `project.md` 의 `name`).
 - 테스트에 필요한 인터페이스/접근자가 production 코드에 부족하면 — **직접 production 코드를 고치지 않는다.** 무엇이 왜 필요한지 정리해 gameplay-programmer 에게 추가를 요청한다 (사용자에게 보고).
 
 ### Test Failure — Systematic Debugging
@@ -91,7 +91,7 @@ evidence 가 없는 주장은 보고에 적지 않는다. 추측으로 "통과�
 
 - **커버리지 균형** — 정상/엣지/회귀/통합 4축 중 어느 하나라도 빈 축이 있으면 사유 명시 (예: "통합 테스트는 본 시스템이 순수 계산 로직이라 해당 없음").
 - **Setup/Teardown 격리** — Unreal 정적 상태(`GEngine`, 월드 싱글턴/서브시스템, 이전 테스트가 남긴 액터/컴포넌트) 가 다른 테스트로 leak 안 되는가. `IMPLEMENT_SIMPLE_AUTOMATION_TEST` 는 SetUp/TearDown 훅이 없으므로 `RunTest` 내부에서 스폰한 액터/월드는 직접 정리한다. `DEFINE_SPEC`(AutomationSpec) 을 쓴다면 `BeforeEach`/`AfterEach` 로 격리한다.
-- **명명 일관성** — 한 시스템의 테스트 구조체/등록 문자열이 같은 패턴(`FSpy<Domain><Case>Test`, `"SkillProject.도메인.기능.케이스"`)으로 통일.
+- **명명 일관성** — 한 시스템의 테스트 구조체/등록 문자열이 같은 패턴(`F<Domain><Case>Test`, `"<게임모듈명>.도메인.기능.케이스"`)으로 통일.
 - **Placeholder 잔존** — 빈 케이스 / 항상 `true` 만 반환하는 자리채우기 `RunTest` 잔존 금지.
 - **테스트 더블 vs production** — `Fake*`/모킹 구현체가 대상 `I` 인터페이스의 모든 멤버를 구현(부분 더블 금지). 더블의 동작이 production 의 의도된 동작과 일치.
 

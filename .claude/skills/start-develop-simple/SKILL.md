@@ -1,13 +1,13 @@
 ---
 name: start-develop-simple
-description: Use ONLY when the user explicitly invokes this skill by name. Runs SpyProject's feature-development pipeline as a stripped-down prototype path — game-designer → gameplay-programmer → test-engineer, skipping design-reviewer and code-reviewer. Trades review gates for speed; intended for throwaway prototypes only. Do not auto-trigger from an ordinary feature request — explicit invocation required.
+description: 사용자가 이 스킬을 이름으로 명시적으로 호출했을 때만 사용한다. 이 프로젝트의 기능 개발 파이프라인을 프로토타입용 간소 경로 — game-designer → gameplay-programmer → test-engineer, design-reviewer 와 code-reviewer 생략 — 로 실행한다. 리뷰 게이트를 속도와 맞바꾼다; 버릴 프로토타입 전용. 일반적인 기능 요청에서 자동 발동하지 않는다 — 명시적 호출 필수.
 ---
 
 # start-develop-simple — 기획→구현→테스트 파이프라인 (프로토타입 간소 버전)
 
 ## 개요
 
-사용자가 **명시적으로 호출했을 때만**, SpyProject 의 표준 협업 흐름(`.claude/project.md` "협업 흐름 (Workflow)" 표)에서 **리뷰어 2명(design-reviewer / code-reviewer) 을 모두 생략**하고 game-designer → gameplay-programmer → test-engineer 만으로 빠르게 돌린다. **프로토타입을 짧게 짜볼 때 시간 절약용**으로만 쓴다.
+사용자가 **명시적으로 호출했을 때만**, 이 프로젝트의 표준 협업 흐름(`.claude/project.md` "협업 흐름 (Workflow)" 표)에서 **리뷰어 2명(design-reviewer / code-reviewer) 을 모두 생략**하고 game-designer → gameplay-programmer → test-engineer 만으로 빠르게 돌린다. **프로토타입을 짧게 짜볼 때 시간 절약용**으로만 쓴다.
 
 메인 오케스트레이터는 **직접 코드를 짜지 않는다** (`.claude/project.md` "메인 오케스트레이터 행동 규칙"). 각 단계를 해당 서브에이전트에 위임한다.
 

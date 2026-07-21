@@ -8,29 +8,30 @@
 
 ## 프로젝트
 
-- **name**: SpyProject (SkillProject)
-- **one_liner**: 스파이 테마 3인칭 액션 — 데디케이티드 서버 멀티플레이어, Lyra 스타일 모듈형 아키텍처, 커스텀 GAS 프레임워크
+- **name**: SpyProject (게임 모듈명 `SkillProject`)
+- **one_liner**: 스파이 테마 3인칭 액션 — 데디케이티드 서버 멀티플레이어, 모듈형 액터 + 커스텀 GAS. 재사용 플러그인(SKGAS·SKAssetCore·SKUICore·ModularGameplayActors) 기반.
 
 ## 컨셉 / 단계
 
-- **concept_doc**: `docs/design/spyproject_concept.md`
+- **concept_doc**: `docs/design/spyproject_concept.md` (§4 현 단계 범위 포함 — 다수 항목이 "사용자 확정 대기")
 - **stage**: (사용자 확정 대기)
-- **stage_goal**: (사용자 확정 대기)
+- **stage_goal**: (사용자 확정 대기 — 컨셉서 §2 코어 루프·§4 단계 범위가 미확정. 기획 작업 전에 사용자에게 먼저 확인할 것)
 
 ## 코드 / 인프라
 
 - **engine**: Unreal Engine 5.7
 - **language**: C++
-- **architecture**: Lyra 스타일 모듈형 + GAS + InitState 초기화 흐름
+- **architecture**: 모듈형 액터(ModularGameplayActors) + GAS(SKGAS) + InitState 초기화 흐름
 - **code_root**: `SkillProject/Source/`
 - **test_paths**
   - **automation**: `SkillProject/Source/SkillProject/**/Tests/`
 - **test_framework**: Unreal Automation (SimpleAutomationTest / AutomationSpec)
-- **test_method_naming**: english (기존 `SpyAICircleStrafeTests.cpp` 스타일 준수)
+- **test_method_naming**: english — 기존 `SkillProject/Source/SkillProject/AI/Tests/SpyAICircleStrafeTests.cpp` 스타일 준수. 구조체 `F<Domain><Case>Test`, 등록 문자열 `"SkillProject.도메인.기능.케이스"`, 파일 전체를 `#if WITH_DEV_AUTOMATION_TESTS` 로 감싼다.
 - **infrastructure**
-  - **modules**: `SKGAS` (범용 GAS 래퍼), `SKAssetCore` (에셋 매니저 플러그인 — `Plugins/SKAssetCore`, 실존)
-  - **asset_access**: `SpyAssetManager` — `LoadAssetSync` / `LoadAssetAsync`, `USKAssetData` 이름 룩업(`GetAssetByName`)
-  - **module_dependency**: `SkillProject` → `SKGAS` → `GameplayAbilities` (역방향 참조 금지)
+  - **modules** (모두 `SkillProject/Plugins/` 플러그인, `.uplugin` `EnabledByDefault: true` 로 자동 활성): `SKGAS` (GAS 코어 — ASC·AttributeSet·Ability·Cue·Calculation·Tag), `SKAssetCore` (에셋 매니저 + 이름→경로 룩업), `SKUICore` (UI 매니저 + 위젯 베이스), `ModularGameplayActors` (모듈형 액터 베이스)
+  - **game_modules** (`SkillProject/Source/`): `SkillProject` (게임 로직, Runtime), `SpyDataEditorTool` / `SpyGACreatorTool` / `SpyTagManagerTool` (에디터 전용 툴)
+  - **asset_access**: `USpyAssetManager`(`Manager/SpyAssetManager.h`, `USKAssetManager` 서브클래스 — `DefaultEngine.ini` 의 `AssetManagerClassName` 로 등록됨) — `LoadAssetSync` / `LoadAssetAsync`, `USKAssetData` 이름 룩업(`GetAssetByName` / `GetSubclassByName`). UI 는 `USpyUIManager`(`USKUIManager` 서브클래스) 경유.
+  - **module_dependency**: 게임 모듈 `SkillProject` → `SKGAS` / `SKUICore` / `SKAssetCore` / `ModularGameplayActors` → UE 표준 모듈. `SKUICore → SKAssetCore` (역방향 참조 금지, unreal-infra §1). 에디터 툴 모듈은 `SkillProject` + 에디터 전용 모듈에만 의존.
 - **mcp**: `tools/unreal-mcp/` — 에디터 원격 제어 (`execute_python`, `get_asset_properties`/`set_asset_property`, `get_actors_in_level` 등). 전용 recompile/test-run 커맨드는 없음 — 빌드/테스트는 에디터·VS에서 사용자 수행.
 
 ## 문서 위치

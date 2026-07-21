@@ -1,13 +1,13 @@
 ---
 name: start-develop-auto
-description: Use ONLY when the user explicitly invokes this skill by name. Runs SpyProject's feature-development pipeline (game-designer through test-engineer) end-to-end with no approval gate. Do not auto-trigger from an ordinary feature request — explicit invocation required.
+description: 사용자가 이 스킬을 이름으로 명시적으로 호출했을 때만 사용한다. 이 프로젝트의 기능 개발 파이프라인(game-designer 부터 test-engineer 까지)을 승인 게이트 없이 끝까지 실행한다. 일반적인 기능 요청에서 자동 발동하지 않는다 — 명시적 호출 필수.
 ---
 
 # start-develop-auto — 기획→구현→테스트 파이프라인 (전자동 버전)
 
 ## 개요
 
-사용자가 **명시적으로 호출했을 때만**, SpyProject 의 표준 협업 흐름(`.claude/project.md` "협업 흐름 (Workflow)" 표)을 **사용자 승인 게이트 없이 끝까지** 오케스트레이션한다. design-reviewer 검토를 통과한 기획서로 곧장 구현에 들어간다.
+사용자가 **명시적으로 호출했을 때만**, 이 프로젝트의 표준 협업 흐름(`.claude/project.md` "협업 흐름 (Workflow)" 표)을 **사용자 승인 게이트 없이 끝까지** 오케스트레이션한다. design-reviewer 검토를 통과한 기획서로 곧장 구현에 들어간다.
 
 메인 오케스트레이터는 **직접 코드를 짜지 않는다** (`.claude/project.md` "메인 오케스트레이터 행동 규칙"). 각 단계를 해당 서브에이전트에 위임한다.
 

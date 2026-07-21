@@ -1,13 +1,13 @@
 ---
 name: start-develop-quick
-description: Use ONLY when the user explicitly invokes this skill by name, or when the user selects it from the main orchestrator's pipeline-choice prompt. Runs SpyProject's lightest path — gameplay-programmer → code-reviewer only — for small bug fixes / renames / minor edits with no design or test work. Skips game-designer, design-reviewer, user-approval gate, test-engineer, and superpowers 0·1 stages. Do not auto-trigger from an ordinary feature request.
+description: 사용자가 이 스킬을 이름으로 명시적으로 호출했거나, 메인 오케스트레이터의 파이프라인 선택 프롬프트에서 사용자가 선택한 경우에만 사용한다. 이 프로젝트의 가장 가벼운 경로 — gameplay-programmer → code-reviewer 만 — 로 작은 버그 수정 / 리네임 / 사소한 편집을 기획·테스트 작업 없이 처리한다. game-designer, design-reviewer, 사용자 승인 게이트, test-engineer, superpowers 0·1 단계를 건너뛴다. 일반적인 기능 요청에서 자동 발동하지 않는다.
 ---
 
 # start-develop-quick — 간단 수정 전용 파이프라인 (최경량 버전)
 
 ## 개요
 
-사용자가 **명시적으로 호출했거나, 메인 오케스트레이터가 제시한 후보 중 사용자가 선택한 경우에만** 발동한다. SpyProject 의 협업 흐름 4종 중 가장 가볍다 — `gameplay-programmer` 와 `code-reviewer` 만 돌린다.
+사용자가 **명시적으로 호출했거나, 메인 오케스트레이터가 제시한 후보 중 사용자가 선택한 경우에만** 발동한다. 이 프로젝트의 협업 흐름 4종 중 가장 가볍다 — `gameplay-programmer` 와 `code-reviewer` 만 돌린다.
 
 오타 · 리네임 · 문구·색상값 변경 · 단일 함수 안의 소규모 버그 수정 같은 **사소한 수정** 전용. 본격 기능 · 머지 대상 · 회귀 위험 있는 변경은 `start-develop` 또는 `start-develop-auto` / `start-develop-simple` 을 쓴다.
 
