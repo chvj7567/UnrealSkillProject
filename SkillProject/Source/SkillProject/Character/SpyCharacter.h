@@ -18,6 +18,7 @@ class UWidgetComponent;
 class ASpyWeapon;
 class USpyPawnExtensionComponent;
 class USpyHealthComponent;
+class USpyLevelComponent;
 class USpyAbilitySystemComponent;
 
 struct FOnAttributeChangeData;
@@ -117,6 +118,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	TObjectPtr<USpyHealthComponent> SpyHealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level")
+	TObjectPtr<USpyLevelComponent> SpyLevelComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", Replicated)
 	TObjectPtr<ASpyWeapon> SpyWeapon;

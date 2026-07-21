@@ -118,6 +118,11 @@ namespace SpyGameplayTags
 	//# 커스텀 이동 모드 태그
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Movement_Mode_WallClimb);
 
+	//# SetByCaller 데이터 태그
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Experience_Gain);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Level_MaxHealthGrowth);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Level_MaxManaGrowth);
+
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> MovementModeTagMap;
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> CustomMovementModeTagMap;
 }

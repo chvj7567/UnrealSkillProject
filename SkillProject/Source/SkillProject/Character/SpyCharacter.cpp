@@ -2,23 +2,24 @@
 
 #include "SpyCharacter.h"
 #include "AIController.h"
+#include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "BrainComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Character/SpyHealthComponent.h"
+#include "Character/SpyLevelComponent.h"
+#include "Character/SpyPawnExtensionComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/Controller.h"
 #include "Components/WidgetComponent.h"
-#include "Util/SpyGameplayTags.h"
-#include "Manager/SpyUIManager.h"
-#include "UI/SpyHPBar.h"
+#include "Data/SpyCharacterAssetData.h"
+#include "Data/SpyCharacterConfig.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
-#include "Character/SpyPawnExtensionComponent.h"
-#include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "Character/SpyHealthComponent.h"
+#include "Manager/SpyUIManager.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
-#include "Data/SpyCharacterConfig.h"
-#include "Data/SpyCharacterAssetData.h"
+#include "UI/SpyHPBar.h"
+#include "Util/SpyGameplayTags.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -78,6 +79,8 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	SpyHealthComponent = CreateDefaultSubobject<USpyHealthComponent>(TEXT("HealthComponent"));
 	SpyHealthComponent->OnHealthChanged.AddDynamic(this, &ThisClass::OnHealthChanged);
 	SpyHealthComponent->OnDeath.AddDynamic(this, &ThisClass::OnDeath);
+
+	SpyLevelComponent = CreateDefaultSubobject<USpyLevelComponent>(TEXT("LevelComponent"));
 }
 
 void ASpyCharacter::PostInitializeComponents()
@@ -235,6 +238,7 @@ void ASpyCharacter::OnAbilitySystemInitialized()
 	check(SpyASC);
 
 	SpyHealthComponent->InitializeByAbilitySystem(SpyASC);
+	SpyLevelComponent->InitializeByAbilitySystem(SpyASC);
 
 	InitializeGameplayTags();
 
@@ -247,6 +251,7 @@ void ASpyCharacter::OnAbilitySystemInitialized()
 void ASpyCharacter::OnAbilitySystemUninitialized()
 {
 	SpyHealthComponent->UnInitializeByAbilitySystem();
+	SpyLevelComponent->UnInitializeByAbilitySystem();
 }
 
 void ASpyCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)

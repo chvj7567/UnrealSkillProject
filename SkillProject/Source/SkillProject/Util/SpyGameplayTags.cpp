@@ -97,6 +97,11 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_Custom, "Movement.Mode.Custom");
 	UE_DEFINE_GAMEPLAY_TAG(Movement_Mode_WallClimb, "Movement.Mode.WallClimb");
 
+	//# SetByCaller 데이터 태그
+	UE_DEFINE_GAMEPLAY_TAG(Data_Experience_Gain, "Data.Experience.Gain");
+	UE_DEFINE_GAMEPLAY_TAG(Data_Level_MaxHealthGrowth, "Data.Level.MaxHealthGrowth");
+	UE_DEFINE_GAMEPLAY_TAG(Data_Level_MaxManaGrowth, "Data.Level.MaxManaGrowth");
+
 	const TMap<uint8, FGameplayTag> MovementModeTagMap =
 	{
 		{ MOVE_Walking, Movement_Mode_Walking },
