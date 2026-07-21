@@ -7,6 +7,8 @@
 
 #include "SKCueNotify_Actor.generated.h"
 
+class UParticleSystemComponent;
+
 UCLASS()
 class SKGAS_API ASKCueNotify_Actor : public AGameplayCueNotify_Actor
 {
@@ -31,7 +33,7 @@ public:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class UParticleSystemComponent* ParticleSystemComponent;
+	TObjectPtr<UParticleSystemComponent> ParticleSystemComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector ParticleOffset;

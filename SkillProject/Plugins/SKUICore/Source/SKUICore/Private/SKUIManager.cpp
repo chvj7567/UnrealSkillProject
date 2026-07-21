@@ -33,7 +33,7 @@ USKUIManager* USKUIManager::Get(const UObject* WorldContextObject)
 	{
 		if (UGameInstance* GI = World->GetGameInstance())
 		{
-			//# 파생 포함 인스턴스 조회 — leaf(USpyUIManager) 하나가 잡힌다
+			//# 파생 포함 인스턴스 조회 — leaf(프로젝트 UIManager 서브클래스) 하나가 잡힌다
 			//# (UE5.4+ 에서 GetSubsystemArray → GetSubsystemArrayCopy 로 개명, 값 반환)
 			TArray<USKUIManager*> Subsystems = GI->GetSubsystemArrayCopy<USKUIManager>();
 			checkf(Subsystems.Num() <= 1, TEXT("USKUIManager 인스턴스가 2개 이상 — ShouldCreateSubsystem 확인"));

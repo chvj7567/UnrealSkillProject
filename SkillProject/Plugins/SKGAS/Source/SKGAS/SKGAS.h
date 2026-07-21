@@ -9,7 +9,7 @@ class FSKGASModule : public IModuleInterface
 {
 public:
 
-	/** IModuleInterface implementation */
+	//# IModuleInterface 구현
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 };

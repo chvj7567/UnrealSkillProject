@@ -15,7 +15,7 @@ class SKUICORE_API USKUIManager : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	//# 파생 서브클래스(예: USpyUIManager)가 있으면 base 는 생성하지 않음 → leaf 인스턴스 1개만
+	//# 파생 서브클래스(프로젝트 UIManager)가 있으면 base 는 생성하지 않음 → leaf 인스턴스 1개만
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

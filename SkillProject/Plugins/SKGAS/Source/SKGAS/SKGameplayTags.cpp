@@ -47,7 +47,8 @@ namespace SKGameplayTags
 		FGameplayTagContainer OwnedTags;
 		ASC->GetOwnedGameplayTags(OwnedTags);
 
-		FGameplayTag ParentTag = FGameplayTag::RequestGameplayTag(FName("Skill.Action"));
+		//# 네이티브 태그 직접 참조 — 문자열 리터럴 조회 금지
+		const FGameplayTag ParentTag = Skill_Action.GetTag();
 
 		for (const FGameplayTag& Tag : OwnedTags)
 		{
@@ -68,7 +69,8 @@ namespace SKGameplayTags
 		FGameplayTagContainer OwnedTags;
 		ASC->GetOwnedGameplayTags(OwnedTags);
 
-		FGameplayTag ParentTag = FGameplayTag::RequestGameplayTag(FName("Effect.Skill.Action"));
+		//# 네이티브 태그 직접 참조 — 문자열 리터럴 조회 금지
+		const FGameplayTag ParentTag = Effect_Skill_Action.GetTag();
 
 		for (const FGameplayTag& Tag : OwnedTags)
 		{

@@ -13,7 +13,7 @@ void FSKCueActorPool::Initialize(UWorld* InWorld)
 
 AActor* FSKCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayTag GameplayCueTag, AActor* TargetActor)
 {
-    if (ActorClass == nullptr || World == nullptr)
+    if (ActorClass == nullptr || World.IsValid() == false)
         return nullptr;
 
     AActor* RentActor = nullptr;
@@ -41,7 +41,7 @@ AActor* FSKCueActorPool::RentCueActor(TSubclassOf<AActor> ActorClass, FGameplayT
         //# 스폰 위치에 충돌 여부 상관 없이 스폰하도록 설정
         SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-        if (AActor* NewActor = World->SpawnActor<AActor>(ActorClass, TargetActor->GetActorTransform(), SpawnParams))
+        if (AActor* NewActor = World.Get()->SpawnActor<AActor>(ActorClass, TargetActor->GetActorTransform(), SpawnParams))
         {
             Entry.Tag = GameplayCueTag;
             Entry.InUse.Add(NewActor);
