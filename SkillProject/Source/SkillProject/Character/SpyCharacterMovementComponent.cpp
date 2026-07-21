@@ -127,7 +127,7 @@ void USpyCharacterMovementComponent::PhysWallClimb(float DeltaTime, int32 Iterat
 		Params.AddIgnoredActor(GetOwner());
 
 		bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-		if (SpyDebugDrawEnabled())
+		if (SKDebugDrawEnabled())
 			DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
 		FGameplayAbilityTargetData_LocationInfo* LocData = new FGameplayAbilityTargetData_LocationInfo();
@@ -205,7 +205,7 @@ bool USpyCharacterMovementComponent::CanHangUp()
 	Params.AddIgnoredActor(OwnerCharacter);
 
 	bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-	if (SpyDebugDrawEnabled())
+	if (SKDebugDrawEnabled())
 		DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
 	return bHit == false;

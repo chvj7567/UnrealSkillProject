@@ -377,7 +377,7 @@ if (Target.IsZero() == false)
 - **`USpyGA_SkillHit` 4종 몽타주 분기**: 자동 활성된 GA가 `EventTag`를 매칭해 `HitFront/Back/Left/RightAbilityMontage` 중 하나를 `PlayMontageAndWait`. 몽타주 슬롯은 데이터 지향이라 캐릭터마다 다른 리액션 세트 가능.
 - **`SpyHealthComponent` 부가 분기**: GA가 패링·무적 등으로 차단되어도 카메라 셰이크 같은 부가 연출은 발화해야 하므로, HealthComponent도 컨텍스트에서 `HitDirTag`를 추출해 별도 경로로 활용(§ 4-3 히트 카메라 셰이크와 같은 패턴).
 - **태그**: `Skill.Hit.Front` / `Skill.Hit.Back` / `Skill.Hit.Left` / `Skill.Hit.Right` (`SKGameplayTags.cpp:36~39`에 등록).
-- **디버그 시각화**: `spy.DebugDraw 1`일 때 타겟 forward(파란선)와 공격자 방향(빨간선) + 분류 결과 로그를 그려 분할 정확도를 즉시 검증 가능.
+- **디버그 시각화**: `sk.DebugDraw 1`일 때 타겟 forward(파란선)와 공격자 방향(빨간선) + 분류 결과 로그를 그려 분할 정확도를 즉시 검증 가능.
 
 </details>
 
@@ -476,7 +476,7 @@ flowchart TD
 ---
 
 ## 6. 🧰 에디터 툴체인 & 워크플로우
-> 자체 제작 에디터 툴 3종(`SpyDataEditorTool` / `SpyGACreatorTool` / `SpyTagManagerTool`) + Python MCP 서버 + `spy.DebugDraw` CVar 통합 디버그 토글까지 — 데이터 편집·GA 생성·태그 관리·원격 자동화·디버깅 분리를 자체 도구로 해결합니다.
+> 자체 제작 에디터 툴 3종(`SpyDataEditorTool` / `SpyGACreatorTool` / `SpyTagManagerTool`) + Python MCP 서버 + `sk.DebugDraw` CVar 통합 디버그 토글까지 — 데이터 편집·GA 생성·태그 관리·원격 자동화·디버깅 분리를 자체 도구로 해결합니다.
 
 ### 6-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
 
@@ -555,16 +555,16 @@ flowchart TD
 
 </details>
 
-### 6-5. SKDebug — `spy.DebugDraw` 일괄 토글 CVar
+### 6-5. SKDebug — `sk.DebugDraw` 일괄 토글 CVar
 
 > 파쿠르·타겟팅·CircleStrafe·SkillAction 등 곳곳에 흩어진 `DrawDebug*` / 진단 `UE_LOG` / `AddOnScreenDebugMessage`를 단일 콘솔 변수로 일괄 켜고 끕니다. 시연 시에는 끄고, 디버깅 시에는 한 줄로 켤 수 있습니다.
 
 <details>
 <summary>자세히 보기</summary>
 
-- **`SKGAS_API bool SpyDebugDrawEnabled()`**: 모든 시각 디버그 코드가 이 함수를 분기 조건으로 사용. CVar `spy.DebugDraw 1 / 0`로 토글.
+- **`SKGAS_API bool SKDebugDrawEnabled()`**: 모든 시각 디버그 코드가 이 함수를 분기 조건으로 사용. CVar `sk.DebugDraw 1 / 0`로 토글.
 - **적용 지점**: `SKGameplayAbility_SkillAction`, `SpyAbilityTask_GrappleTick`, `SpyCharacterMovementComponent`, `SpyGrappleTargetingComponent`, `SpyParkourManagerComponent`, `SpyTargetingManagerComponent`, `BTTask_CircleStrafe`.
-- **이전 상황**: 디버그 시각화가 항상 켜져 있어 패키징 빌드/시연 영상에 불필요한 라인이 노출되거나, 끄려면 각 파일을 일일이 주석 처리해야 했음. CVar 도입 후 `~ spy.DebugDraw 0` 한 줄로 정리.
+- **이전 상황**: 디버그 시각화가 항상 켜져 있어 패키징 빌드/시연 영상에 불필요한 라인이 노출되거나, 끄려면 각 파일을 일일이 주석 처리해야 했음. CVar 도입 후 `~ sk.DebugDraw 0` 한 줄로 정리.
 
 </details>
 
@@ -597,7 +597,7 @@ graph LR
 ```
 
 - `SkillProject` (Runtime) — 게임 로직 메인 모듈, `SKGAS`와 `ModularGameplayActors` 플러그인에 의존.
-- `SKGAS` (Runtime) — 프로젝트 비의존 GAS 래퍼 모듈.
+- `SKGAS` (Runtime, 플러그인) — 프로젝트 비의존 GAS 코어. `Plugins/SKGAS/`.
 - `SpyDataEditorTool` (Editor) — `SkillProject` + 에디터 전용 모듈에 의존.
 - `SpyGACreatorTool` (Editor) — `SpyDataEditorTool`과 코드/의존 분리된 별도 에디터 모듈.
 - `SpyTagManagerTool` (Editor) — `SkillProject`에 비의존. `UnrealEd` / `ToolMenus`만 참조해 태그 파일을 직접 파싱·편집.
@@ -609,10 +609,6 @@ SkillProject/
 ├── SkillProject.uproject              # 엔진 버전 / 모듈 / 플러그인 등록
 ├── SkillProject.sln                   # Visual Studio 솔루션
 └── Source/
-    ├── SKGAS/                         # 범용 GAS 래퍼 (Runtime, 프로젝트 비의존)
-    │   ├── Ability/                   # SKGameplayAbility 베이스 계층
-    │   ├── Attribute/                 # SKAttributeSet 베이스
-    │   └── Cue/                       # SKCueManager / SKCueActorPool
     ├── SkillProject/                  # 게임 로직 메인 (Runtime)
     │   ├── AbilitySystem/
     │   │   ├── Calculation/           # GE 계산 클래스
@@ -644,6 +640,14 @@ SkillProject/
     │   │   └── SpyTagFileEditor.h     # h/cpp 파일 파서 + AppendTags / RenameGroup
     │   └── Private/
     └── Plugins/
+        ├── SKGAS/                     # 범용 GAS 코어 (Runtime, 프로젝트 비의존)
+        │   └── Source/SKGAS/
+        │       ├── Ability/           # SKGameplayAbility 베이스 계층
+        │       ├── Attribute/         # SKAttributeSet 베이스
+        │       ├── Calculation/       # SKBaseMagnitudeCalculation / SKExecCalculation
+        │       └── Cue/               # SKCueManager / SKCueActorPool
+        ├── SKAssetCore/               # 범용 에셋 매니저 + 이름→경로 룩업 DataAsset
+        ├── SKUICore/                  # 범용 UI 매니저(open/cache/reuse) + 위젯 베이스
         └── ModularGameplayActors/     # 에픽 ModularGameplay 통합 플러그인
 
 tools/

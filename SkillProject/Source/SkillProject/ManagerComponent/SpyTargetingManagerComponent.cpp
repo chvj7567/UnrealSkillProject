@@ -104,7 +104,7 @@ bool USpyTargetingManagerComponent::FindTarget(float Radius)
         OutActors
     );
 
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         DrawDebugSphere(
             GetWorld(),

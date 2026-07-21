@@ -45,14 +45,14 @@ void USpyAbilityTask_GrappleTick::TickTask(float DeltaTime)
     {
         if (CableActor.IsValid() == false)
         {
-            if (SpyDebugDrawEnabled())
+            if (SKDebugDrawEnabled())
                 GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("[GrappleTick] CableActor invalid — EndTask"));
             EndTask();
             return;
         }
 
         const float Distance = FVector::Dist(CharLoc, TargetLocation);
-        if (SpyDebugDrawEnabled())
+        if (SKDebugDrawEnabled())
         {
             GEngine->AddOnScreenDebugMessage(10, 0.f, FColor::Cyan,
                 FString::Printf(TEXT("[GrappleTick] Dist=%.0f  Speed=%.0f"), Distance, PullSpeed));

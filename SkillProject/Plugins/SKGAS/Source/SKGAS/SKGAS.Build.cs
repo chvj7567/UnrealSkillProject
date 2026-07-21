@@ -10,7 +10,7 @@ public class SKGAS : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-                "SKGAS"
+                ModuleDirectory
             });
 
 		PublicDependencyModuleNames.AddRange(

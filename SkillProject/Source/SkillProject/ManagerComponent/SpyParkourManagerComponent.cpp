@@ -106,7 +106,7 @@ bool USpyParkourManagerComponent::TryToggleClimbAction()
     Params.AddIgnoredActor(OwnerCharacter);
 
     bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
         DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, 2.f);
 
     if (bHit)
@@ -224,7 +224,7 @@ void USpyParkourManagerComponent::SetVaultMotionWarpingData()
         (UpVector * VaultData.VaultEndOffset.Z); //# Z Offset
 
     //# 디버그는 Offset 적용 안함
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         DrawDebugSphere(GetWorld(), VaultWallData.HandLocVector, 10.f, 12, FColor::Yellow, false, 1.f);
         DrawDebugSphere(GetWorld(), VaultWallData.LandLocVector, 10.f, 12, FColor::Green, false, 1.f);
@@ -268,7 +268,7 @@ void USpyParkourManagerComponent::SetHangUpMotionWarpingData(const FVector& HitV
         (UpVector * HangUpData.HangUpEndOffset.Z); //# Z Offset
 
     //# 디버그는 Offset 적용 안함
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
         DrawDebugSphere(GetWorld(), HitVector, 10.f, 12, FColor::Blue, false, 1.f);
 
     if (OwnerCharacter->HasAuthority())
@@ -310,7 +310,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
     Params.AddIgnoredActor(OwnerCharacter);
 
     bool bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
         DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
     if (bHit)
@@ -346,7 +346,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
             HitResult.Reset();
 
             bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-            if (SpyDebugDrawEnabled())
+            if (SKDebugDrawEnabled())
                 DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
             //# Hit 되면 벽의 높이 검사
@@ -380,7 +380,7 @@ bool USpyParkourManagerComponent::SetValidWallData(float InValidDistance, float 
                 HitResult.Reset();
 
                 bHit = World->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params);
-                if (SpyDebugDrawEnabled())
+                if (SKDebugDrawEnabled())
                     DrawDebugLine(World, Start, End, bHit ? FColor::Green : FColor::Red, false, 1.f, 0, -1.f);
 
                 //# Hit 되면 벽의 두께 계산 후 반복문 종료

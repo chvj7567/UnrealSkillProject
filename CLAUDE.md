@@ -22,14 +22,21 @@ SkillProject/Launch.bat
 
 ## Source Module Architecture
 
-프로젝트는 4개 C++ 모듈로 분리되어 있다:
+재사용 레이어는 `SkillProject/Plugins/` 로 분리되어 있고, 게임/에디터 모듈만 `Source/` 에 남는다:
 
 ```
+SkillProject/Plugins/
+├── SKGAS/                  # 범용 GAS 코어 (Runtime) — 프로젝트 비의존
+│   └── Source/SKGAS/
+│       ├── Ability/        # SKGameplayAbility 베이스 클래스 계층
+│       ├── Attribute/      # SKAttributeSet 베이스
+│       ├── Calculation/    # SKBaseMagnitudeCalculation / SKExecCalculation
+│       └── Cue/            # SKCueManager (비동기 프리로딩), SKCueActorPool
+├── SKAssetCore/            # 범용 에셋 매니저 + 이름→경로 룩업 DataAsset
+├── SKUICore/               # 범용 UI 매니저(open/cache/reuse) + 위젯 베이스
+└── ModularGameplayActors/  # 에픽 ModularGameplay 통합 플러그인
+
 SkillProject/Source/
-├── SKGAS/                  # 범용 GAS 래퍼 레이어 (Runtime) — 프로젝트 비의존
-│   ├── Ability/            # SKGameplayAbility 베이스 클래스 계층
-│   ├── Attribute/          # SKAttributeSet 베이스
-│   └── Cue/                # SKCueManager (비동기 프리로딩), SKCueActorPool
 ├── SkillProject/           # 게임 로직 메인 모듈 (Runtime)
 │   ├── AbilitySystem/      # GA 구현체 (Skill, Movement, Calculation)
 │   ├── Character/          # SpyCharacter + 컴포넌트들
@@ -42,11 +49,10 @@ SkillProject/Source/
 │   ├── Item/               # SpyWeapon
 │   ├── UI/                 # HUD, Widget 클래스
 │   └── Util/               # DefineEnum.h, SpyGameplayTags
-├── SpyDataEditorTool/      # 에디터 전용 데이터 세팅 툴 (Editor)
-│   ├── Tabs/               # SSpyAssetsTab, SSpyAbilityTab, SSpyConfigTab
-│   ├── Customizations/     # IDetailCustomization, IPropertyTypeCustomization
-│   └── Utils/              # SpyDataScanner, SpyEditorUtils
-└── ModularGameplayActors/  # 에픽 ModularGameplay 통합 플러그인
+└── SpyDataEditorTool/      # 에디터 전용 데이터 세팅 툴 (Editor)
+    ├── Tabs/               # SSpyAssetsTab, SSpyAbilityTab, SSpyConfigTab
+    ├── Customizations/     # IDetailCustomization, IPropertyTypeCustomization
+    └── Utils/              # SpyDataScanner, SpyEditorUtils
 ```
 
 **모듈 의존 방향:** `SkillProject` → `SKGAS` → `GameplayAbilities`. `SpyDataEditorTool`은 `SkillProject` + 에디터 전용 모듈에만 의존.

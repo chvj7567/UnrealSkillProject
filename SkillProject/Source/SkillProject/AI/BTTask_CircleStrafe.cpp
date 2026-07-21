@@ -192,7 +192,7 @@ void UBTTask_CircleStrafe::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result,
 	UBehaviorTreeComponent* OwnerComp = WeakOwner.Get();
 	AAIController* AIController = OwnerComp->GetAIOwner();
 
-	if (SpyDebugDrawEnabled())
+	if (SKDebugDrawEnabled())
 		DrawDebugEQSResults(GetWorld(), Result);
 
 	//# 빈 결과 — C++ 자체 계산으로 fallback

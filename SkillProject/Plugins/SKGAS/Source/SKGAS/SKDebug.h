@@ -4,6 +4,6 @@
 
 #include "CoreMinimal.h"
 
-//# 콘솔: spy.DebugDraw 1 / 0
+//# 콘솔: sk.DebugDraw 1 / 0
 //# DrawDebug* / AddOnScreenDebugMessage / 진단 UE_LOG 등 시각 디버깅을 일괄 토글
-SKGAS_API bool SpyDebugDrawEnabled();
+SKGAS_API bool SKDebugDrawEnabled();

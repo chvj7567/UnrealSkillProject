@@ -43,7 +43,7 @@ FGameplayTag CalcHitDirectionTag(const FVector& AttackerLocation, const ACharact
     else
         ResultTag = SKGameplayTags::Skill_Hit_Left;
 
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         UE_LOG(LogTemp, Warning, TEXT("[HitDir] Target=%s Angle=%.1f° → %s"),
             *TargetCharacter->GetName(), AngleDeg, *ResultTag.ToString());
@@ -269,7 +269,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetByWeapon(ACharacter* OwnerCh
         }
     }
 
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         const FColor Color = bInvalidCharacter ? FColor::Red : FColor::Green;
         DrawDebugCapsule(OwnerCharacter->GetWorld(), (CurrentStart + CurrentEnd) * 0.5f,
@@ -366,7 +366,7 @@ void USKGameplayAbility_SkillAction::SendTagToTargetBySphere(ACharacter* OwnerCh
         }
     }
 
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         const FColor Color = bInvalidCharacter ? FColor::Red : FColor::Green;
         DrawDebugSphere(OwnerCharacter->GetWorld(), TargetLoc, Radius, 12, Color, false, 1.0f);

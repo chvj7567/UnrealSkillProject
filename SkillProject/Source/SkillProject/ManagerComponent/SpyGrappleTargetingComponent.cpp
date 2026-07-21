@@ -105,7 +105,7 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
 {
     if (MovementConfig == nullptr)
     {
-        if (SpyDebugDrawEnabled())
+        if (SKDebugDrawEnabled())
             GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, TEXT("[GrappleTgt] MovementConfig is NULL"));
         return nullptr;
     }
@@ -119,7 +119,7 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
     const FVector2D ViewportCenter = ViewportSize * 0.5f;
 
     //# 탐색 반경 구체
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         DrawDebugSphere(GetWorld(), OwnerPawn->GetActorLocation(),
             MovementConfig->GrapplePromptRange, 16, FColor::Cyan, false, 0.f, 0, 1.f);
@@ -143,7 +143,7 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         OutActors
     );
 
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::White,
             FString::Printf(TEXT("[GrappleTgt] Overlap=%d  Center=%s  Radius=%.0f"),
@@ -172,7 +172,7 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
         }
     }
 
-    if (SpyDebugDrawEnabled())
+    if (SKDebugDrawEnabled())
     {
         if (BestTarget)
         {
