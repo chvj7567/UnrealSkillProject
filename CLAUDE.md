@@ -6,6 +6,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Unreal Engine **5.7** 기반 스파이 테마 3인칭 액션 게임. 데디케이티드 서버 멀티플레이어, Lyra 스타일 모듈형 아키텍처, 커스텀 GAS 프레임워크를 핵심으로 한다.
 
+## 작업 시작 전 필독 — 룰 / 에이전트 / 스킬
+
+이 저장소의 작업 규약은 `.claude/` 에 있다. **중복 기술하지 않는다 — 아래는 포인터이고, 각 파일이 SoT다.**
+
+### 코딩 룰 (`.claude/rules/`)
+
+코드를 한 줄이라도 만지기 전에 해당 룰을 읽는다.
+
+| 룰 파일 | 적용 시점 |
+|---|---|
+| [cpp-style.md](.claude/rules/cpp-style.md) | 모든 `.h`/`.cpp` 작성·수정 시 (주석 `//#`, `!` 금지, `TObjectPtr`, UPROPERTY 지정자) |
+| [git-conventions.md](.claude/rules/git-conventions.md) | 스테이징·커밋 메시지 작성 시 (`[Tag] ClassName — 요약`) |
+| [unreal-infra.md](.claude/rules/unreal-infra.md) | 모듈 의존 방향·서버 권한·플러그인 소비 패턴 결정 시 |
+| [plugin-skgas.md](.claude/rules/plugin-skgas.md) | GA/AttributeSet/Cue/태그 추가 시 (§6 새 어빌리티 체크리스트) |
+| [plugin-skassetcore.md](.claude/rules/plugin-skassetcore.md) | 에셋 로드·DataAsset 추가 시 (하드코딩 경로 금지) |
+| [plugin-skuicore.md](.claude/rules/plugin-skuicore.md) | UI 위젯·UI 매니저 작업 시 |
+| [plugin-modulargameplayactors.md](.claude/rules/plugin-modulargameplayactors.md) | 액터 베이스 상속·InitState 초기화 흐름 작업 시 |
+
+### 에이전트 메타 (`.claude/project.md`)
+
+`.claude/project.md` 는 서브에이전트가 작업 시작 시 가장 먼저 읽는 **구조화된 프로젝트 메타**다. 엔진·모듈·테스트 경로·문서 위치·협업 흐름·메인 오케스트레이터 행동 규칙이 여기 있다.  
+**CLAUDE.md 와 `.claude/project.md` 에 같은 정보가 있으면 `.claude/project.md` 가 SoT다.**
+
+### 서브에이전트 (`.claude/agents/`)
+
+| 에이전트 | 담당 |
+|---|---|
+| `game-designer` | 기획서 작성 (`docs/design/`) — 코드 작성 금지 |
+| `design-reviewer` | 기획서 1차 검토 (읽기 전용) |
+| `gameplay-programmer` | C++ 구현 — `.h`/`.cpp` 변경은 전부 이 에이전트 |
+| `code-reviewer` | 룰 준수 + 기획서 일치 검토 (읽기 전용) |
+| `test-engineer` | Unreal Automation 테스트 스위트 |
+
+### 개발 파이프라인 스킬 (`.claude/skills/`)
+
+| 스킬 | 용도 |
+|---|---|
+| `/start-develop` | 본격 기능 — 기획서 후 **사용자 승인 게이트** 포함 (기본 권장) |
+| `/start-develop-auto` | 본격 기능 — 승인 게이트 없이 끝까지 |
+| `/start-develop-simple` | 프로토타입 — 리뷰 생략, 테스트 유지 |
+| `/start-develop-quick` | 사소 수정·리네임·작은 버그 — 구현 + 코드리뷰만 |
+
+**메인 오케스트레이터 규칙** (`.claude/project.md` "메인 오케스트레이터 행동 규칙"):
+- 코드/에셋 변경이 명확한 요청인데 스킬 이름이 없으면 → 위 후보 표를 제시하고 **사용자 선택까지 멈춘다.** 메인이 임의로 "이건 quick 이면 충분" 판단해 직진 금지.
+- 메타 질문·단순 조회·조언 요청은 게이트 없이 즉시 답변.
+- 메인은 직접 `.h`/`.cpp` 를 수정하지 않는다 — `gameplay-programmer` 에 위임.
+- **`git commit` 자동 실행 금지** — 관련 파일 `git add` 까지만 하고 커밋 메시지(안)를 제시한다.
+
 ## Build & Development
 
 **프로젝트 파일 생성 (solution 재생성 필요 시):**
@@ -49,10 +97,12 @@ SkillProject/Source/
 │   ├── Item/               # SpyWeapon
 │   ├── UI/                 # HUD, Widget 클래스
 │   └── Util/               # DefineEnum.h, SpyGameplayTags
-└── SpyDataEditorTool/      # 에디터 전용 데이터 세팅 툴 (Editor)
-    ├── Tabs/               # SSpyAssetsTab, SSpyAbilityTab, SSpyConfigTab
-    ├── Customizations/     # IDetailCustomization, IPropertyTypeCustomization
-    └── Utils/              # SpyDataScanner, SpyEditorUtils
+├── SpyDataEditorTool/      # 에디터 전용 데이터 세팅 툴 (Editor)
+│   ├── Tabs/               # SSpyAssetsTab, SSpyAbilityTab, SSpyConfigTab
+│   ├── Customizations/     # IDetailCustomization, IPropertyTypeCustomization
+│   └── Utils/              # SpyDataScanner, SpyEditorUtils
+├── SpyGACreatorTool/       # GA 클래스 생성 툴 (Editor)
+└── SpyTagManagerTool/      # 게임플레이 태그 관리 툴 (Editor)
 ```
 
 **모듈 의존 방향:** `SkillProject` → `SKGAS` → `GameplayAbilities`. `SpyDataEditorTool`은 `SkillProject` + 에디터 전용 모듈에만 의존.
@@ -90,7 +140,7 @@ Config DataAsset: `SpyAIConfig`, `SpyCharacterConfig`, `SpyInputConfig`, `SpyMov
 ## Gameplay Tags
 
 `SkillProject/Source/SkillProject/Util/SpyGameplayTags.h` — 프로젝트 전역 태그 선언.  
-`SkillProject/Source/SKGAS/SKGameplayTags.h` — SKGAS 레이어 공용 태그.  
+`SkillProject/Plugins/SKGAS/Source/SKGAS/SKGameplayTags.h` — SKGAS 레이어 공용 태그.  
 새 태그는 반드시 이 파일들에 `UE_DECLARE_GAMEPLAY_TAG_EXTERN` + .cpp에 `UE_DEFINE_GAMEPLAY_TAG`로 등록할 것. 문자열 리터럴로 태그를 직접 참조하지 말 것.
 
 ## 중요 규칙
