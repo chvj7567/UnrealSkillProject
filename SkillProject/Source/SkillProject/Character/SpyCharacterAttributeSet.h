@@ -18,7 +18,7 @@ protected:
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 
 public:
-	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(ReplicatedUsing = OnRep_MoveNormalSpeed, BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData MoveNormalSpeed;
 	ATTRIBUTE_ACCESSORS(USpyCharacterAttributeSet, MoveNormalSpeed);
 
