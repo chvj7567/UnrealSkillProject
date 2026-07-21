@@ -28,6 +28,8 @@
 #include "MyClass.generated.h" // generated는 항상 마지막
 ```
 
+**포매터는 이 순서를 강제하지 않는다.** 위 순서는 알파벳순이 아니라 의미 기반이라 clang-format 이 자동 판정할 수 없다 — UE 헤더(`GameFramework/Character.h`)와 프로젝트 헤더(`Character/SpyCharacter.h`)를 정규식으로 안정적으로 구분할 수 없기 때문이다. 그래서 `SkillProject/.clang-format` 에 `SortIncludes: Never` 를 지정해 포매터가 include 를 재정렬하지 못하게 막아 뒀다(그전에는 저장할 때마다 알파벳순으로 되돌려 이 룰을 깨뜨렸다). **순서 준수는 작성자와 code-reviewer 의 몫이다.**
+
 ## 주석 스타일
 
 - 한 줄 주석은 항상 `//#`로 시작 — 일반 `//`나 `///`, `/* */` 사용 금지.
