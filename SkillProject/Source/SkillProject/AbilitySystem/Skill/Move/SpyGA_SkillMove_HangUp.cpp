@@ -45,10 +45,18 @@ void USpyGA_SkillMove_HangUp::EndAbility(const FGameplayAbilitySpecHandle Handle
 		{
 			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 			{
-				ParkourComponent->SetFreeMoveMode(false);
+				//# 이 GA 가 FreeMoveMode 를 켠 적이 있을 때만 되돌린다.
+				//# (매달리기가 성립하지 않아 워핑 데이터가 산출되지 않은 경우에는
+				//#  켠 적이 없으므로 이동 모드·캡슐 충돌을 건드리지 않는다)
+				if (bFreeMoveEngaged)
+				{
+					ParkourComponent->SetFreeMoveMode(false);
+				}
 			}
 		}
 	}
+
+	bFreeMoveEngaged = false;
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
@@ -63,6 +71,7 @@ void USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData(FMotionWarpingData InHangU
 			if (HasAuthority(&CurrentActivationInfo))
 			{
 				ParkourComponent->SetFreeMoveMode(true);
+				bFreeMoveEngaged = true;
 			}
 		}
 

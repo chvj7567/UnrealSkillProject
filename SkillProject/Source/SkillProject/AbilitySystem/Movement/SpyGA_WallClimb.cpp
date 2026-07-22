@@ -40,16 +40,10 @@ void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const
 {
     EndWallClimb();
 
-    if (HasAuthority(&CurrentActivationInfo))
-    {
-        if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-        {
-            if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
-            {
-                ParkourComponent->SetFreeMoveMode(false);
-            }
-        }
-    }
+    //# 등반은 FreeMoveMode 를 켜지 않는다 (MOVE_Custom/WallClimb 로만 동작).
+    //# 따라서 여기서 SetFreeMoveMode(false) 를 부르면 켠 적 없는 상태를 끄는 셈이 되어,
+    //# 벽이 없는 공중 입력 시에도 낙하 중 캐릭터를 MOVE_Walking 으로 스냅시킨다.
+    //# 이동 모드 복구는 EndWallClimb(bWallClimbing 가드) 가 담당한다.
 
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

@@ -60,10 +60,18 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 		{
 			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
 			{
-				ParkourComponent->SetFreeMoveMode(false);
+				//# 이 GA 가 FreeMoveMode 를 켠 적이 있을 때만 되돌린다.
+				//# (넘기가 성립하지 않아 워핑 데이터가 나오지 않은 경우 — 공중 입력 등 — 에는
+				//#  켠 적이 없으므로 이동 모드·캡슐 충돌을 건드리지 않는다)
+				if (bFreeMoveEngaged)
+				{
+					ParkourComponent->SetFreeMoveMode(false);
+				}
 			}
 		}
 	}
+
+	bFreeMoveEngaged = false;
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
@@ -79,6 +87,7 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultD
 			if (HasAuthority(&CurrentActivationInfo))
 			{
 				ParkourComponent->SetFreeMoveMode(true);
+				bFreeMoveEngaged = true;
 
 				//# 미션 진행 — 워핑 데이터가 실제로 산출된 시점이라 "넘기를 수행했다"가 성립한다.
 				//# 활성화 시점(ActivateAbility)은 벽이 없어도 진입하므로 쓰지 않는다.
