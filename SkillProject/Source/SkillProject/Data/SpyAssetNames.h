@@ -13,6 +13,7 @@ namespace SpyAssetNames
 	//# 클래스 등록명 (GameMode 초기화용)
 	inline const FName DefaultCharacter        = TEXT("SpyCharacter");
 	inline const FName DefaultPlayerController = TEXT("SpyPlayerController");
+	inline const FName DefaultPlayerState      = TEXT("SpyPlayerState");
 	inline const FName DefaultGameState        = TEXT("SpyGameState");
 }
 

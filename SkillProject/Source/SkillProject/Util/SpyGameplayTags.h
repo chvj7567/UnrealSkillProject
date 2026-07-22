@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "NativeGameplayTags.h"
 #include "SKGameplayTags.h"
 
@@ -100,6 +101,9 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Combo4);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Skill_Util_Combo5);
 
+	//# 콤보 태그 5종 묶음. 부모 태그(Skill.Util) 매칭은 Skill.Util.Death 까지 걸리므로 쓸 수 없다
+	SKILLPROJECT_API const FGameplayTagContainer& GetComboTags();
+
 	//# Actor 게임플레이큐
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Attack);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Target);
@@ -122,6 +126,11 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Experience_Gain);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Level_MaxHealthGrowth);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Level_MaxManaGrowth);
+
+	//# 미션 진행 이벤트 태그
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Kill);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Combo);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Level);
 
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> MovementModeTagMap;
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> CustomMovementModeTagMap;

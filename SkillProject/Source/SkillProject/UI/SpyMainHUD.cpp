@@ -7,7 +7,9 @@
 #include "Components/TextBlock.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Manager/SpyUIManager.h"
+#include "System/SpyMissionComponent.h"
 #include "TimerManager.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyMainHUD)
@@ -22,15 +24,22 @@ void USpyMainHUD::NativeConstruct()
 	}
 
 	//# 클라이언트에서는 이 시점에 Pawn/PlayerState/ASC가 아직 없을 수 있다.
-	//# 준비될 때까지 짧은 주기로 재시도하고, 성공하면 타이머를 끈다.
+	//# 준비될 때까지 짧은 주기로 재시도하고, 둘 다 성공하면 타이머를 끈다.
 	BindRetryCount = 0;
 
-	if (TryBindLevelComponent() == false)
+	const bool bLevelBound = TryBindLevelComponent();
+	const bool bMissionBound = TryBindMissionComponent();
+
+	if (bLevelBound == false || bMissionBound == false)
 	{
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().SetTimer(BindRetryTimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
-												  if (TryBindLevelComponent())
+												  const bool bLevelOk = TryBindLevelComponent();
+												  const bool bMissionOk = TryBindMissionComponent();
+
+												  //# 미션 바인딩이 남아 있으면 계속 재시도해야 하므로 둘 다 성공했을 때만 멈춘다
+												  if (bLevelOk && bMissionOk)
 												  {
 													  if (UWorld* InnerWorld = GetWorld())
 													  {
@@ -48,9 +57,10 @@ void USpyMainHUD::NativeConstruct()
 													  return;
 
 												  UE_LOG(LogTemp, Warning,
-													  TEXT("# [SpyMainHUD] 경험치/레벨 위젯 바인딩에 %.1f초간 실패해 재시도를 중단합니다. ")
-													  TEXT("캐릭터 BP의 LevelComponent에 LevelConfig(DA_SpyLevelConfig)가 지정됐는지 확인하세요."),
-													  BindRetryMaxCount * 0.25f);
+													  TEXT("# [SpyMainHUD] 위젯 바인딩에 %.1f초간 실패해 재시도를 중단합니다. Level=%d Mission=%d — ")
+													  TEXT("캐릭터 BP의 LevelComponent에 LevelConfig(DA_SpyLevelConfig)가, ")
+													  TEXT("PlayerState BP의 MissionComponent에 MissionConfig가 지정됐는지 확인하세요."),
+													  BindRetryMaxCount * 0.25f, bLevelOk, bMissionOk);
 
 												  if (UWorld* InnerWorld = GetWorld())
 												  {
@@ -70,6 +80,7 @@ void USpyMainHUD::NativeDestruct()
 	}
 
 	UnbindLevelComponent();
+	UnbindMissionComponent();
 
 	Super::NativeDestruct();
 
@@ -151,5 +162,84 @@ void USpyMainHUD::RefreshAll()
 	if (Txt_Level)
 	{
 		Txt_Level->SetText(FText::Format(NSLOCTEXT("SpyMainHUD", "LevelFormat", "Lv.{0}"), FText::AsNumber(BoundLevelComponent->GetLevel())));
+	}
+}
+
+bool USpyMainHUD::TryBindMissionComponent()
+{
+	if (BoundMissionComponent)
+		return true;
+
+	APlayerController* OwningController = GetOwningPlayer();
+	if (OwningController == nullptr)
+		return false;
+
+	APlayerState* OwningState = OwningController->PlayerState;
+	if (OwningState == nullptr)
+		return false;
+
+	USpyMissionComponent* MissionComponent = USpyMissionComponent::FindMissionComponent(OwningState);
+	if (MissionComponent == nullptr)
+		return false;
+
+	BoundMissionComponent = MissionComponent;
+
+	BoundMissionComponent->OnMissionProgressChanged.AddDynamic(this, &USpyMainHUD::HandleMissionProgressChanged);
+	BoundMissionComponent->OnAllMissionsCompleted.AddDynamic(this, &USpyMainHUD::HandleAllMissionsCompleted);
+
+	//# 구독 전에 이미 진행된 값을 놓치지 않도록 즉시 1회 갱신
+	RefreshMission();
+
+	return true;
+}
+
+void USpyMainHUD::UnbindMissionComponent()
+{
+	if (BoundMissionComponent)
+	{
+		BoundMissionComponent->OnMissionProgressChanged.RemoveDynamic(this, &USpyMainHUD::HandleMissionProgressChanged);
+		BoundMissionComponent->OnAllMissionsCompleted.RemoveDynamic(this, &USpyMainHUD::HandleAllMissionsCompleted);
+	}
+
+	BoundMissionComponent = nullptr;
+}
+
+void USpyMainHUD::HandleMissionProgressChanged(USpyMissionComponent* InMissionComponent, int32 InMissionIndex, int32 InCount, int32 InTargetCount)
+{
+	RefreshMission();
+}
+
+void USpyMainHUD::HandleAllMissionsCompleted(USpyMissionComponent* InMissionComponent)
+{
+	RefreshMission();
+}
+
+void USpyMainHUD::RefreshMission()
+{
+	if (BoundMissionComponent == nullptr)
+		return;
+
+	const bool bAllDone = BoundMissionComponent->IsAllCompleted();
+
+	if (Txt_MissionName)
+	{
+		Txt_MissionName->SetText(bAllDone
+			? NSLOCTEXT("SpyMainHUD", "MissionAllCompleted", "모든 미션 완료")
+			: BoundMissionComponent->GetDisplayName());
+	}
+
+	if (Txt_MissionProgress)
+	{
+		if (bAllDone)
+		{
+			Txt_MissionProgress->SetText(FText::GetEmpty());
+		}
+		else
+		{
+			Txt_MissionProgress->SetText(FText::Format(
+				NSLOCTEXT("SpyMainHUD", "MissionProgressFormat", "{0} / {1}"),
+				FText::AsNumber(BoundMissionComponent->GetCount()),
+				FText::AsNumber(BoundMissionComponent->GetTargetCount())));
+		}
 	}
 }

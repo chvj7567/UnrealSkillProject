@@ -80,6 +80,10 @@ protected:
     UPROPERTY()
     TObjectPtr<const class USpyCharacterAttributeSet> CharacterAttributeSet;
 
+    //# 미션 진행도 — PlayerState 에 두어 폰 수명과 무관하게 유지한다
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<class USpyMissionComponent> MissionComponent;
+
     UPROPERTY(Replicated)
     EPlayerConnectionType PlayerConnectionType;
 

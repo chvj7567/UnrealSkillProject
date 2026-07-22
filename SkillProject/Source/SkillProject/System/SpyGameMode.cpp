@@ -78,7 +78,19 @@ void ASpyGameMode::HandleGameStartInitialization()
 {
 	DefaultPawnClass = USpyAssetManager::GetSubclassByName<APawn>(SpyAssetNames::DefaultCharacter);
 	PlayerControllerClass = USpyAssetManager::GetSubclassByName<APlayerController>(SpyAssetNames::DefaultPlayerController);
-	PlayerStateClass = ASpyPlayerState::StaticClass();
+	//# BP_SpyPlayerState 를 쓰려면 형제 항목들처럼 이름 룩업이어야 한다.
+	//# C++ 클래스를 직접 지정하면 BP 기본값(MissionComponent 의 MissionConfig 등)이 런타임에 반영되지 않는다
+	PlayerStateClass = USpyAssetManager::GetSubclassByName<ASpyPlayerState>(SpyAssetNames::DefaultPlayerState);
+
+	//# 형제 항목과 달리 폴백을 둔다 — PlayerState 가 nullptr 이면 ASC·어트리뷰트까지 전부 사라져
+	//# 게임이 통째로 깨지므로, 에셋 등록 누락 시에도 C++ 기본 클래스로 최소 동작을 보장한다
+	if (PlayerStateClass == nullptr)
+	{
+		PlayerStateClass = ASpyPlayerState::StaticClass();
+
+		UE_LOG(LogTemp, Warning, TEXT("# [SpyGameMode] PlayerState 클래스 룩업 실패(%s) — ASpyPlayerState로 폴백합니다. BP 기본값(MissionConfig 등)이 적용되지 않습니다."), *SpyAssetNames::DefaultPlayerState.ToString());
+	}
+
 	GameStateClass = USpyAssetManager::GetSubclassByName<ASpyGameState>(SpyAssetNames::DefaultGameState);
 }
 

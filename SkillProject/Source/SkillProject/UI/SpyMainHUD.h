@@ -32,6 +32,12 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> Txt_Level;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> Txt_MissionName;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> Txt_MissionProgress;
+
 protected:
 	UFUNCTION(BlueprintCallable)
 	void ShowMenu();
@@ -49,9 +55,25 @@ protected:
 
 	void RefreshAll();
 
+	//# 로컬 PlayerState 의 MissionComponent 를 찾아 구독한다. 아직 없으면 false
+	bool TryBindMissionComponent();
+
+	void UnbindMissionComponent();
+
+	UFUNCTION()
+	void HandleMissionProgressChanged(class USpyMissionComponent* InMissionComponent, int32 InMissionIndex, int32 InCount, int32 InTargetCount);
+
+	UFUNCTION()
+	void HandleAllMissionsCompleted(class USpyMissionComponent* InMissionComponent);
+
+	void RefreshMission();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USpyLevelComponent> BoundLevelComponent;
+
+	UPROPERTY()
+	TObjectPtr<class USpyMissionComponent> BoundMissionComponent;
 
 	FTimerHandle BindRetryTimerHandle;
 

@@ -3,6 +3,7 @@
 
 #include "System/SpyPlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "System/SpyMissionComponent.h"
 #include "Character/SpyCharacter.h"
 #include "UI/SpyHPBar.h"
 #include "UI/SpyUserWidget.h"
@@ -32,6 +33,8 @@ ASpyPlayerState::ASpyPlayerState(const FObjectInitializer& ObjectInitializer)
 
 	//# UObject 를 상속 받기에 ObjectInitializer 미사용
 	CharacterAttributeSet = CreateDefaultSubobject<USpyCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
+
+	MissionComponent = CreateDefaultSubobject<USpyMissionComponent>(TEXT("MissionComponent"));
 }
 
 UAbilitySystemComponent* ASpyPlayerState::GetAbilitySystemComponent() const
@@ -67,6 +70,12 @@ void ASpyPlayerState::PostInitializeComponents()
 	check(AbilitySystemComponent);
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, GetPawn());
+
+	//# ASC 초기화 이후에만 미션 컴포넌트를 붙인다 (plugin-modulargameplayactors §InitState)
+	if (MissionComponent)
+	{
+		MissionComponent->InitializeByAbilitySystem(AbilitySystemComponent);
+	}
 }
 
 void ASpyPlayerState::Reset()

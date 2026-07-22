@@ -8,7 +8,9 @@
 #include "Data/SpyMovementConfig.h"
 #include "Util/SpyGameplayTags.h"
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"
+#include "System/SpyMissionComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerState.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 
@@ -119,7 +121,14 @@ void USpyGA_GrappleHook::ActivateAbility(
         }
         CableActor->InitCable(Char, TargetLocation, HandBoneName);
         UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] CableActor spawned  TargetLoc=%s"), *TargetLocation.ToString());
-    }
+
+		//# 미션 진행 — 서버가 타겟을 확정하고 케이블이 실제로 걸린 시점.
+		//# 이 블록은 bAuthority 분기 안이고 위에서 Target == nullptr 을 이미 걸러냈다
+		if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(Char->GetPlayerState()))
+		{
+			MissionComp->AddProgress(SpyGameplayTags::Skill_Move_GrappleHook, 1);
+		}
+	}
     else
     {
         APawn* Pawn = Cast<APawn>(AvatarActor);

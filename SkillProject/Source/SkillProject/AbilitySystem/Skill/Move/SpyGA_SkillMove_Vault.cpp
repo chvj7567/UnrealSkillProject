@@ -4,9 +4,12 @@
 #include "SpyGA_SkillMove_Vault.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerState.h"
 #include "MotionWarpingComponent.h"
 #include "Perception/AISense_Hearing.h"
 #include "Data/SpyAssetNames.h"
+#include "System/SpyMissionComponent.h"
+#include "Util/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_SkillMove_Vault)
 
@@ -76,6 +79,15 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultD
 			if (HasAuthority(&CurrentActivationInfo))
 			{
 				ParkourComponent->SetFreeMoveMode(true);
+
+				//# 미션 진행 — 워핑 데이터가 실제로 산출된 시점이라 "넘기를 수행했다"가 성립한다.
+				//# 활성화 시점(ActivateAbility)은 벽이 없어도 진입하므로 쓰지 않는다.
+				//# 서버에서는 SetVaultMotionWarpingData 가 HasAuthority 분기에서 OnRep_VaultMotionWarpingData 를
+				//# 직접 호출하므로 이 콜백이 서버에서도 확실히 발화한다 (SpyParkourManagerComponent.cpp:233-244)
+				if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(OwnerCharacter->GetPlayerState()))
+				{
+					MissionComp->AddProgress(SpyGameplayTags::Skill_Move_Vault, 1);
+				}
 			}
 		}
 

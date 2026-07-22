@@ -2,6 +2,7 @@
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Util/SpyGameplayTags.h"
 #include "System/SpyPlayerState.h"
+#include "System/SpyMissionComponent.h"
 #include "GameFramework/Character.h"
 #include "Data/SpyCharacterAssetData.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
@@ -14,6 +15,24 @@
 void USpyGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+    //# 미션 진행 — 콤보로 연결되어 활성화된 경우만 센다.
+    //# 최초 입력 활성화는 TriggerEventData가 없으므로 세지 않는다 (3연타 = 연결 2회).
+    //# InputPressed는 bReplicateInputDirectly가 False라 데디케이티드 서버에서 원격 폰에 대해 실행되지 않으므로
+    //# 서버까지 확정 전달되는 이 경로(ServerTryActivateAbilityWithEventData)에서 잡는다
+    if (HasAuthority(&ActivationInfo) && TriggerEventData != nullptr)
+    {
+        if (SpyGameplayTags::GetComboTags().HasTagExact(TriggerEventData->EventTag))
+        {
+            if (ASpyCharacter* ComboOwner = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+            {
+                if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(ComboOwner->GetPlayerState()))
+                {
+                    MissionComp->AddProgress(SpyGameplayTags::Event_Mission_Combo, 1);
+                }
+            }
+        }
+    }
 
     ASpyCharacter* SpyChar = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo());
     if (IsValid(SpyChar) && IsValid(SpyChar->GetSpyWeapon()))

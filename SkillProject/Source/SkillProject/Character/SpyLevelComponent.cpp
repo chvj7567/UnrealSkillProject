@@ -10,6 +10,7 @@
 #include "Data/SpyLevelConfig.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
+#include "System/SpyMissionComponent.h"
 #include "Util/SpyGameplayTags.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyLevelComponent)
@@ -155,6 +156,13 @@ void USpyLevelComponent::HandleDeath(AActor* OwningActor, AActor* CauserActor)
 
 	SpecHandle.Data->SetSetByCallerMagnitude(SpyGameplayTags::Data_Experience_Gain, RewardAmount);
 	KillerASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+
+	//# 미션 진행 — 킬러의 미션 컴포넌트는 PlayerState 에 있다.
+	//# GetOwnerActor()가 ASC 소유 액터(= ASpyPlayerState)이고, GetAvatarActor()(= Pawn)가 아니다
+	if (USpyMissionComponent* KillerMission = USpyMissionComponent::FindMissionComponent(KillerASC->GetOwnerActor()))
+	{
+		KillerMission->AddProgress(SpyGameplayTags::Event_Mission_Kill, 1);
+	}
 }
 
 void USpyLevelComponent::HandleExperienceChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue)
@@ -241,6 +249,17 @@ void USpyLevelComponent::TryLevelUp()
 		}
 
 		OnLevelChanged.Broadcast(this, OldLevel, Result.Level);
+
+		//# 미션 진행 — 미션 컴포넌트는 PlayerState 에 있다.
+		//# AttributeSet 의 OnLevelChanged 는 서버에서 발화하지 않으므로 이 지점에서 직접 보낸다
+		if (APawn* OwnerPawn = Cast<APawn>(Owner))
+		{
+			if (USpyMissionComponent* OwnerMission = USpyMissionComponent::FindMissionComponent(OwnerPawn->GetPlayerState()))
+			{
+				//# Threshold 모드이므로 누적이 아니라 도달한 레벨값을 그대로 넘긴다
+				OwnerMission->AddProgress(SpyGameplayTags::Event_Mission_Level, Result.Level);
+			}
+		}
 
 		UE_LOG(LogTemp, Log, TEXT("# [SpyLevelComponent] LevelUp %s: %d -> %d"), *GetNameSafe(Owner), OldLevel, Result.Level);
 	}

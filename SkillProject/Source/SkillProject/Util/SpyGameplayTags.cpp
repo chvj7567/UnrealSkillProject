@@ -102,6 +102,29 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Data_Level_MaxHealthGrowth, "Data.Level.MaxHealthGrowth");
 	UE_DEFINE_GAMEPLAY_TAG(Data_Level_MaxManaGrowth, "Data.Level.MaxManaGrowth");
 
+	//# 미션 진행 이벤트 태그
+	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Kill, "Event.Mission.Kill");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Combo, "Event.Mission.Combo");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Level, "Event.Mission.Level");
+
+	const FGameplayTagContainer& GetComboTags()
+	{
+		//# 태그 정의(UE_DEFINE_GAMEPLAY_TAG)가 끝난 뒤 최초 호출 시점에 1회만 만든다
+		static FGameplayTagContainer ComboTags = []()
+		{
+			FGameplayTagContainer Container;
+			Container.AddTag(Skill_Util_Combo1);
+			Container.AddTag(Skill_Util_Combo2);
+			Container.AddTag(Skill_Util_Combo3);
+			Container.AddTag(Skill_Util_Combo4);
+			Container.AddTag(Skill_Util_Combo5);
+
+			return Container;
+		}();
+
+		return ComboTags;
+	}
+
 	const TMap<uint8, FGameplayTag> MovementModeTagMap =
 	{
 		{ MOVE_Walking, Movement_Mode_Walking },
