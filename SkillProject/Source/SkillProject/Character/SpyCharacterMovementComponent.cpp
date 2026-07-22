@@ -18,8 +18,6 @@
 USpyCharacterMovementComponent::USpyCharacterMovementComponent()
 {
 	SetIsReplicatedByDefault(true);
-
-	bHangUp = false;
 }
 
 void USpyCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -164,7 +162,13 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 
 	SetMovementMode(MOVE_Custom, (uint8)ECustomMovementMode::MOVE_WallClimb);
 
-	CachedGravityScale = GravityScale;
+	//# 등반 중에 다시 들어오면 이미 0 인 GravityScale 을 캐시에 덮어써 복구값이 0 이 된다 — 최초 1회만 캐시한다
+	if (bWallClimbing == false)
+	{
+		bWallClimbing = true;
+		CachedGravityScale = GravityScale;
+	}
+
 	GravityScale = 0.0f;
 	bOrientRotationToMovement = false;
 	Velocity = FVector::ZeroVector;
@@ -179,7 +183,15 @@ void USpyCharacterMovementComponent::StartWallClimb(const FClimbData& InClimbDat
 
 void USpyCharacterMovementComponent::EndWallClimb()
 {
+	//# 등반을 시작한 적이 없으면 되돌릴 상태도 없다.
+	//# (벽이 없을 때 USpyGA_WallClimb::ActivateAbility 가 곧바로 EndAbility → EndWallClimb 을 부르는 경로가 있어
+	//#  이 가드가 없으면 중력이 캐시 초기값으로 덮어써지고 이동 모드까지 강제로 Walking 이 된다)
+	if (bWallClimbing == false)
+		return;
+
 	UE_LOG(LogTemp, Warning, TEXT("EndWallClimb %s"), *GetOwner()->GetName());
+
+	bWallClimbing = false;
 
 	GravityScale = CachedGravityScale;
 	bOrientRotationToMovement = true;

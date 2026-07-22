@@ -64,6 +64,12 @@ public:
 	TObjectPtr<USpyMovementConfig> MovementConfig;
 
 private:
-	bool bHangUp;
-	float CachedGravityScale;
+	bool bHangUp = false;
+
+	//# StartWallClimb 이 중력을 0 으로 바꾼 상태인지. 이 플래그가 참일 때만 EndWallClimb 이 복구한다.
+	//# (등반이 시작된 적 없는데 EndWallClimb 이 불려 CachedGravityScale 로 덮어쓰는 것을 막는다)
+	bool bWallClimbing = false;
+
+	//# 등반 전 GravityScale 백업. 캐시 전에 EndWallClimb 이 불려도 중력이 0 이 되지 않도록 기본값을 둔다
+	float CachedGravityScale = 1.0f;
 };
