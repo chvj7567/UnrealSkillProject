@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Data/SpySkillBarConfig.h"
 #include "UI/SpySkillBarWidget.h"
 #include "Util/SpyGameplayTags.h"
 
@@ -73,6 +74,39 @@ bool FSpySkillBarUniquenessTest::RunTest(const FString& Parameters)
 			TestTrue(*Label, Tags[I] != Tags[J]);
 		}
 	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpySkillBarConfigExtractTest,
+	"SkillProject.HUD.SkillBar.ConfigExtract",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpySkillBarConfigExtractTest::RunTest(const FString& Parameters)
+{
+	//# (a) null → 기본 6태그 폴백
+	TestEqual(TEXT("null -> default 6"), USpySkillBarWidget::ExtractSlotInputTags(nullptr).Num(), 6);
+
+	//# (b) 빈 config → 기본 6태그 폴백
+	USpySkillBarConfig* Empty = NewObject<USpySkillBarConfig>();
+	TestEqual(TEXT("empty -> default 6"), USpySkillBarWidget::ExtractSlotInputTags(Empty).Num(), 6);
+
+	//# (c) 3슬롯 config → 그 3태그 순서대로
+	USpySkillBarConfig* Cfg = NewObject<USpySkillBarConfig>();
+	FSpySkillBarSlot S1;
+	S1.InputTag = SpyGameplayTags::Input_Ability_Skill_3;
+	FSpySkillBarSlot S2;
+	S2.InputTag = SpyGameplayTags::Input_Ability_Skill_1;
+	FSpySkillBarSlot S3;
+	S3.InputTag = SpyGameplayTags::Input_Ability_Skill_2;
+	Cfg->Slots = {S1, S2, S3};
+
+	const TArray<FGameplayTag> Tags = USpySkillBarWidget::ExtractSlotInputTags(Cfg);
+	TestEqual(TEXT("3 slots"), Tags.Num(), 3);
+	TestTrue(TEXT("order[0]"), Tags[0] == SpyGameplayTags::Input_Ability_Skill_3);
+	TestTrue(TEXT("order[1]"), Tags[1] == SpyGameplayTags::Input_Ability_Skill_1);
+	TestTrue(TEXT("order[2]"), Tags[2] == SpyGameplayTags::Input_Ability_Skill_2);
 
 	return true;
 }

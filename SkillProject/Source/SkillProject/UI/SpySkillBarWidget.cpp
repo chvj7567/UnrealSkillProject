@@ -5,10 +5,16 @@
 #include "AbilitySystemComponent.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/PanelWidget.h"
+#include "EnhancedInputSubsystems.h"
+#include "Engine/LocalPlayer.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "TimerManager.h"
 #include "AbilitySystem/Skill/SpyGameplayAbility_SkillAction.h"
+#include "Data/SpyCharacterAssetData.h"
+#include "Data/SpySkillBarConfig.h"
+#include "Input/SpyInputConfig.h"
+#include "System/SpyPlayerState.h"
 #include "UI/SpySkillSlotWidget.h"
 #include "Util/SpyGameplayTags.h"
 
@@ -45,6 +51,24 @@ TArray<FGameplayTag> USpySkillBarWidget::BuildSlotInputTags()
 		SpyGameplayTags::Input_Ability_Skill_4,
 		SpyGameplayTags::Input_Ability_Skill_5,
 		SpyGameplayTags::Input_Ability_Skill_6};
+}
+
+TArray<FGameplayTag> USpySkillBarWidget::ExtractSlotInputTags(const USpySkillBarConfig* Config)
+{
+	//# config 가 슬롯을 정의하면 그 순서를 그대로 쓴다
+	if (Config != nullptr && Config->Slots.Num() > 0)
+	{
+		TArray<FGameplayTag> Tags;
+		Tags.Reserve(Config->Slots.Num());
+		for (const FSpySkillBarSlot& Slot : Config->Slots)
+		{
+			Tags.Add(Slot.InputTag);
+		}
+		return Tags;
+	}
+
+	//# config 미지정/빈 배열이면 하위호환 — 하드코딩 Skill_1~6 폴백
+	return BuildSlotInputTags();
 }
 
 void USpySkillBarWidget::NativeConstruct()
@@ -119,8 +143,9 @@ bool USpySkillBarWidget::TryBuildSlots()
 	if (ASC == nullptr)
 		return false;
 
-	//# 슬롯 태그 중 하나라도 어빌리티가 부여됐을 때 빌드한다(빈 스킬바 방지)
-	const TArray<FGameplayTag> InputTags = BuildSlotInputTags();
+	//# 슬롯 태그 중 하나라도 어빌리티가 부여됐을 때 빌드한다(빈 스킬바 방지).
+	//# 게이트도 config 슬롯 기준으로 통일한다(BuildSlots 와 동일한 목록)
+	const TArray<FGameplayTag> InputTags = ExtractSlotInputTags(ResolveConfig());
 	bool bAnyGranted = false;
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
@@ -166,7 +191,11 @@ void USpySkillBarWidget::BuildSlots(UAbilitySystemComponent* ASC)
 	if (ASC == nullptr || Panel_Slots == nullptr || ResolvedSlotClass == nullptr)
 		return;
 
-	const TArray<FGameplayTag> InputTags = BuildSlotInputTags();
+	//# 슬롯 구성 config 도 인스턴스→CDO 폴백 (SlotWidgetClass 폴백과 동일 패턴)
+	const USpySkillBarConfig* ResolvedConfig = ResolveConfig();
+
+	//# 슬롯 태그 목록: config 있으면 그것, 없으면 하드코딩 Skill_1~6 폴백
+	const TArray<FGameplayTag> InputTags = ExtractSlotInputTags(ResolvedConfig);
 	for (const FGameplayTag& InputTag : InputTags)
 	{
 		USpySkillSlotWidget* SlotWidget = CreateWidget<USpySkillSlotWidget>(this, ResolvedSlotClass);
@@ -198,7 +227,21 @@ void USpySkillBarWidget::BuildSlots(UAbilitySystemComponent* ASC)
 			}
 		}
 
-		SlotWidget->Setup(ASC, InputTag, CooldownTags, SlotKeyHint(InputTag), SlotManaCost);
+		//# 이 InputTag 에 대응하는 config 아이콘을 찾아 로드한다(없으면 nullptr → 더미색 유지)
+		UTexture2D* SlotIcon = nullptr;
+		if (ResolvedConfig != nullptr)
+		{
+			for (const FSpySkillBarSlot& CfgSlot : ResolvedConfig->Slots)
+			{
+				if (CfgSlot.InputTag == InputTag)
+				{
+					SlotIcon = CfgSlot.Icon.LoadSynchronous();
+					break;
+				}
+			}
+		}
+
+		SlotWidget->Setup(ASC, InputTag, CooldownTags, ResolveSlotKeyHint(InputTag), SlotManaCost, SlotIcon);
 
 		//# 어빌리티 미부여 슬롯은 비활성(회색) 표시로 남긴다(기획 §6-1)
 		SlotWidget->SetIsEnabled(bHasAbility);
@@ -216,4 +259,67 @@ void USpySkillBarWidget::BuildSlots(UAbilitySystemComponent* ASC)
 	}
 
 	bSlotsBuilt = true;
+}
+
+const USpySkillBarConfig* USpySkillBarWidget::ResolveConfig() const
+{
+	//# 인스턴스 값이 유효하면 그것, 아니면 클래스 기본값(CDO)에서 폴백
+	if (SkillBarConfig != nullptr)
+		return SkillBarConfig;
+
+	if (const USpySkillBarWidget* DefaultBar = GetClass()->GetDefaultObject<USpySkillBarWidget>())
+		return DefaultBar->SkillBarConfig;
+
+	return nullptr;
+}
+
+FText USpySkillBarWidget::ResolveSlotKeyHint(FGameplayTag InputTag) const
+{
+	APlayerController* OwningController = GetOwningPlayer();
+	if (OwningController == nullptr)
+		return SlotKeyHint(InputTag);
+
+	//# CharacterAssetData → (엔트리별) InputConfig 에서 이 InputTag 의 InputAction 을 찾는다
+	const UInputAction* InputAction = nullptr;
+	if (const ASpyPlayerState* OwningState = OwningController->GetPlayerState<ASpyPlayerState>())
+	{
+		if (const USpyCharacterAssetData* CharacterAssetData = OwningState->GetCharacterAssetData())
+		{
+			for (const FCharacterAssetEntry& Entry : CharacterAssetData->CharacterAssets.AssetEntries)
+			{
+				if (const USpyInputConfig* InputConfig = Entry.InputConfig)
+				{
+					if (const UInputAction* Found = InputConfig->FindAbilityInputActionForTag(InputTag))
+					{
+						InputAction = Found;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	if (InputAction == nullptr)
+		return SlotKeyHint(InputTag);
+
+	//# InputAction 에 실제 매핑된 첫 유효 키의 표시문자를 쓴다 — config/리바인드와 무관하게 항상 정확
+	const ULocalPlayer* LocalPlayer = OwningController->GetLocalPlayer();
+	if (LocalPlayer == nullptr)
+		return SlotKeyHint(InputTag);
+
+	UEnhancedInputLocalPlayerSubsystem* InputSubsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	if (InputSubsystem == nullptr)
+		return SlotKeyHint(InputTag);
+
+	const TArray<FKey> MappedKeys = InputSubsystem->QueryKeysMappedToAction(InputAction);
+	for (const FKey& Key : MappedKeys)
+	{
+		if (Key.IsValid())
+		{
+			return Key.GetDisplayName();
+		}
+	}
+
+	//# 매핑된 키가 없으면 하드코딩 폴백
+	return SlotKeyHint(InputTag);
 }

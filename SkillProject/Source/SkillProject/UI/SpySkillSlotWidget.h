@@ -12,6 +12,7 @@ class UAbilitySystemComponent;
 class UImage;
 class UProgressBar;
 class UTextBlock;
+class UTexture2D;
 
 //# 스킬바 한 칸 — 키힌트/아이콘/쿨다운 스윕/마나코스트를 표시한다 (순수 로컬 표시, 상태 변경 없음)
 UCLASS()
@@ -20,8 +21,8 @@ class SKILLPROJECT_API USpySkillSlotWidget : public USpyUserWidget
 	GENERATED_BODY()
 
 public:
-	//# 슬롯 초기화 — 스킬바(Task 7)가 어빌리티 스펙/데이터를 해석해 넘긴다
-	void Setup(UAbilitySystemComponent* InASC, FGameplayTag InInputTag, FGameplayTagContainer InCooldownTags, FText InKeyHint, float InManaCost);
+	//# 슬롯 초기화 — 스킬바가 어빌리티 스펙/데이터·config 아이콘을 해석해 넘긴다
+	void Setup(UAbilitySystemComponent* InASC, FGameplayTag InInputTag, FGameplayTagContainer InCooldownTags, FText InKeyHint, float InManaCost, UTexture2D* InIcon);
 
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

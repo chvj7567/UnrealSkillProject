@@ -5,18 +5,26 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 #include "GameplayEffect.h"
 #include "Attribute/SKAttributeSet.h"
 #include "UI/SpyHUDMath.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpySkillSlotWidget)
 
-void USpySkillSlotWidget::Setup(UAbilitySystemComponent* InASC, FGameplayTag InInputTag, FGameplayTagContainer InCooldownTags, FText InKeyHint, float InManaCost)
+void USpySkillSlotWidget::Setup(UAbilitySystemComponent* InASC, FGameplayTag InInputTag, FGameplayTagContainer InCooldownTags, FText InKeyHint, float InManaCost, UTexture2D* InIcon)
 {
 	AbilitySystemComponent = InASC;
 	InputTag = InInputTag;
 	CooldownTags = InCooldownTags;
 	ManaCost = InManaCost;
+
+	//# 아이콘이 있으면 브러시로 설정(플레이스홀더 더미색 대체). null 이면 기존 브러시 유지.
+	//# 마나부족 적색 틴트(SetColorAndOpacity)는 브러시 위 곱연산이라 그대로 동작한다
+	if (InIcon != nullptr && Img_Icon != nullptr)
+	{
+		Img_Icon->SetBrushFromTexture(InIcon);
+	}
 
 	if (Txt_KeyHint)
 	{
