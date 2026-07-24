@@ -38,3 +38,15 @@ void USpyUIManager::OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComp
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
 	OpenSubUI(FName(*EnumName), WidgetComponent, Space);
 }
+
+USKUserWidget* USpyUIManager::OpenPersistentSpyUI(ESpyUIType UIType, int32 ZOrder)
+{
+	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
+	return OpenPersistentUI(FName(*EnumName), ZOrder);
+}
+
+void USpyUIManager::ClosePersistentSpyUI(ESpyUIType UIType)
+{
+	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
+	ClosePersistentUI(FName(*EnumName));
+}

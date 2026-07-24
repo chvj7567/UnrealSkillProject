@@ -69,3 +69,17 @@ FSoftObjectPath USKAssetData::GetAssetPathByName(const FName& AssetName) const
 	ensureAlwaysMsgf(AssetPath, TEXT("Can't find Asset Path from Asset Name [%s]."), *AssetName.ToString());
 	return *AssetPath;
 }
+
+void USKAssetData::GetAllAssetPaths(TArray<FSoftObjectPath>& OutPaths) const
+{
+	OutPaths.Reset();
+	OutPaths.Reserve(AssetNameToPath.Num());
+
+	for (const TPair<FName, FSoftObjectPath>& Pair : AssetNameToPath)
+	{
+		if (Pair.Value.IsValid())
+		{
+			OutPaths.Add(Pair.Value);
+		}
+	}
+}

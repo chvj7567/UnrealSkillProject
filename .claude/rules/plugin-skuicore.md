@@ -24,10 +24,21 @@
 - 인스턴스 접근: `USKUIManager::Get(WorldContextObject)` — base·leaf 어디서 호출해도 동일한 leaf 인스턴스 반환.
 - UI 에셋(위젯 BP)은 이름으로 참조하며 실제 로드는 `SKAssetCore` 경유 (하드코딩 경로 금지, plugin-skassetcore.md §2).
 
+### 2-1. persistent UI — 트래블(맵 전환)을 넘어 살아남는 UI
+
+- 열기/닫기: `OpenPersistentUI(FName, ZOrder = 100)` / `ClosePersistentUI(FName)` / `IsPersistentUIOpen(FName)`
+- **로딩 화면처럼 맵 전환 중에도 계속 보여야 하는 UI 전용.** 일반 UI 는 `OpenUI` 를 쓴다.
+- GameInstance 를 아우터로 생성하고 `UGameViewportClient::AddViewportWidgetContent` 로 얹으므로 월드가 파괴돼도 유지된다. (`OpenUI` 는 `CreateWidget(GetWorld(), ...)` + `AddToViewport` 라 월드와 함께 소멸한다.)
+- 위젯 클래스를 **동기 로드**한다 — 즉시 표시가 목적이기 때문. `OpenUI` 의 비동기 로드는 표시가 지연된다(실측 1.23초). 큰 위젯에는 쓰지 않는다.
+- 뷰포트가 없는 환경(데디케이티드 서버)에서는 아무것도 하지 않고 `nullptr` 을 반환한다.
+- persistent UI 는 `OpenUIList` · 캐시 풀과 **분리 관리**된다 — `CloseLastUI` 로 닫히지 않고 `AddCashingUI` 대상도 아니다(뷰포트 콘텐츠와 `AddToViewport` 가 이중 부착되면 안 됨).
+- 게임 모듈은 여전히 매니저 API 만 호출한다. `GEngine->GameViewport` 를 게임 코드에서 직접 만지지 않는다.
+
 체크리스트:
 - [ ] 위젯을 직접 생성/뷰포트 추가하지 않고 `USKUIManager` API 로 여는가?
 - [ ] UI 위젯이 `USKUserWidget` 을 상속하는가?
 - [ ] UI 에셋 참조가 이름 룩업(SKAssetCore) 을 통하는가?
+- [ ] 맵 전환을 넘어야 하는 UI 에 `OpenUI` 대신 `OpenPersistentUI` 를 썼는가?
 
 ---
 

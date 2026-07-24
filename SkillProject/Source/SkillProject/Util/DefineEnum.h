@@ -8,10 +8,11 @@
 UENUM(BlueprintType)
 enum ESpyUIType : uint8
 {
-    None            UMETA(DisplayName = "None"),
-    MainHUD         UMETA(DisplayName = "MainHUD"),
-    HpBar           UMETA(DisplayName = "HpBar"),
-    Menu            UMETA(DisplayName = "Menu"),
+	None UMETA(DisplayName = "None"),
+	MainHUD UMETA(DisplayName = "MainHUD"),
+	HpBar UMETA(DisplayName = "HpBar"),
+	Menu UMETA(DisplayName = "Menu"),
+	Loading UMETA(DisplayName = "Loading"),
 };
 
 UENUM(BlueprintType)

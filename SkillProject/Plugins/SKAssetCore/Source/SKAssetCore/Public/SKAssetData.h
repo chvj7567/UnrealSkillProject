@@ -45,6 +45,9 @@ protected:
 public:
 	FSoftObjectPath GetAssetPathByName(const FName& AssetName) const;
 
+	//# 등록된 모든 에셋 경로를 열거한다 (로딩 화면 프리로드 등 배치 로드용)
+	void GetAllAssetPaths(TArray<FSoftObjectPath>& OutPaths) const;
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FName, FAssetSet> AssetGroupNameToSet;

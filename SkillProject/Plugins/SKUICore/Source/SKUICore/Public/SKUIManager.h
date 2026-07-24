@@ -40,6 +40,25 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AddCashingUI(USKUserWidget* UserWidget);
 
+public:
+	//# 트래블(맵 전환)을 넘어 살아남는 UI 를 연다.
+	//# GameInstance 를 아우터로 생성하고 뷰포트 Slate 레이어에 직접 얹으므로 월드가 파괴돼도 유지된다.
+	//# 로딩 화면처럼 맵 전환 중에도 계속 보여야 하는 UI 전용. 일반 UI 는 OpenUI 를 쓴다.
+	//# 위젯 클래스를 동기 로드하므로 호출 즉시 화면에 뜬다.
+	UFUNCTION(BlueprintCallable)
+	USKUserWidget* OpenPersistentUI(FName InUIName, int32 ZOrder = 100);
+
+	UFUNCTION(BlueprintCallable)
+	void ClosePersistentUI(FName InUIName);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsPersistentUIOpen(FName InUIName) const;
+
+protected:
+	//# persistent UI 는 OpenUIList 와 분리해 관리한다 (CloseLastUI 등 스택 동작에 섞이면 안 됨)
+	UPROPERTY()
+	TArray<TObjectPtr<USKUserWidget>> PersistentUIList;
+
 protected:
 	const int MaxCashingUICount = 5;
 

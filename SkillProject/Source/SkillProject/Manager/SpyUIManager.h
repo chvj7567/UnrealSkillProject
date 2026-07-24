@@ -8,6 +8,7 @@
 #include "SpyUIManager.generated.h"
 
 class UWidgetComponent;
+class USKUserWidget;
 
 UCLASS()
 class SKILLPROJECT_API USpyUIManager : public USKUIManager
@@ -27,4 +28,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
+
+public:
+	//# 트래블을 넘어 유지되는 UI (로딩 화면 등)
+	UFUNCTION(BlueprintCallable)
+	USKUserWidget* OpenPersistentSpyUI(ESpyUIType UIType, int32 ZOrder = 100);
+
+	UFUNCTION(BlueprintCallable)
+	void ClosePersistentSpyUI(ESpyUIType UIType);
 };

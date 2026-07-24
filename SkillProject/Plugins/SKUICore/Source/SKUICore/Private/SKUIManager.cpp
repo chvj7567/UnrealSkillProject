@@ -1,8 +1,12 @@
 #include "SKUIManager.h"
+
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
+#include "Engine/GameViewportClient.h"
+#include "Blueprint/UserWidget.h"
 #include "SKUserWidget.h"
 #include "SKAssetManager.h"
 #include "SKAssetData.h"
-#include "Blueprint/UserWidget.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SKUIManager)
 
@@ -21,6 +25,20 @@ void USKUIManager::Initialize(FSubsystemCollectionBase& Collection)
 
 void USKUIManager::Deinitialize()
 {
+	//# 뷰포트에 얹어 둔 persistent UI 를 모두 걷어낸다
+	if (GEngine != nullptr && GEngine->GameViewport != nullptr)
+	{
+		for (const TObjectPtr<USKUserWidget>& UserWidget : PersistentUIList)
+		{
+			if (IsValid(UserWidget))
+			{
+				GEngine->GameViewport->RemoveViewportWidgetContent(UserWidget->TakeWidget());
+			}
+		}
+	}
+
+	PersistentUIList.Empty();
+
 	Super::Deinitialize();
 }
 
@@ -196,4 +214,97 @@ void USKUIManager::AddCashingUI(USKUserWidget* UserWidget)
 			CashingUIList.RemoveAt(0);
 		}
 	}
+}
+
+USKUserWidget* USKUIManager::OpenPersistentUI(FName InUIName, int32 ZOrder)
+{
+	//# 이미 열려 있으면 그것을 돌려준다 (중복 생성 금지)
+	for (const TObjectPtr<USKUserWidget>& Existing : PersistentUIList)
+	{
+		if (IsValid(Existing) && Existing->GetUIName() == InUIName)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Already Opening Persistent UI: %s"), *InUIName.ToString());
+			return Existing;
+		}
+	}
+
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance == nullptr)
+	{
+		return nullptr;
+	}
+
+	//# 데디케이티드 서버 등 뷰포트가 없는 환경에서는 아무것도 하지 않는다
+	if (GEngine == nullptr || GEngine->GameViewport == nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("# [SKUIManager] 뷰포트가 없어 Persistent UI 를 열지 않습니다: %s"), *InUIName.ToString());
+		return nullptr;
+	}
+
+	//# 위젯 클래스 동기 로드 — 비동기로 하면 표시가 지연된다
+	TSubclassOf<USKUserWidget> WidgetClass = USKAssetManager::GetSubclassByName<USKUserWidget>(InUIName);
+	if (WidgetClass == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("# [SKUIManager] Persistent UI 클래스를 찾을 수 없습니다: %s"), *InUIName.ToString());
+		return nullptr;
+	}
+
+	//# GameInstance 를 아우터로 생성 — 월드가 파괴돼도 위젯이 살아남는다
+	USKUserWidget* UserWidget = CreateWidget<USKUserWidget>(GameInstance, WidgetClass);
+	if (UserWidget == nullptr)
+	{
+		return nullptr;
+	}
+
+	UserWidget->SetUIName(InUIName);
+
+	//# AddToViewport 가 아니라 Slate 뷰포트 콘텐츠로 직접 얹는다 (월드 비의존)
+	GEngine->GameViewport->AddViewportWidgetContent(UserWidget->TakeWidget(), ZOrder);
+
+	PersistentUIList.Add(UserWidget);
+
+	UE_LOG(LogTemp, Log, TEXT("# [SKUIManager] New Persistent UI: %s (ZOrder %d)"), *InUIName.ToString(), ZOrder);
+
+	return UserWidget;
+}
+
+void USKUIManager::ClosePersistentUI(FName InUIName)
+{
+	for (int32 Index = PersistentUIList.Num() - 1; Index >= 0; --Index)
+	{
+		TObjectPtr<USKUserWidget> UserWidget = PersistentUIList[Index];
+
+		if (IsValid(UserWidget) == false)
+		{
+			PersistentUIList.RemoveAt(Index);
+			continue;
+		}
+
+		if (UserWidget->GetUIName() != InUIName)
+		{
+			continue;
+		}
+
+		if (GEngine != nullptr && GEngine->GameViewport != nullptr)
+		{
+			GEngine->GameViewport->RemoveViewportWidgetContent(UserWidget->TakeWidget());
+		}
+
+		PersistentUIList.RemoveAt(Index);
+
+		UE_LOG(LogTemp, Log, TEXT("# [SKUIManager] Close Persistent UI: %s"), *InUIName.ToString());
+	}
+}
+
+bool USKUIManager::IsPersistentUIOpen(FName InUIName) const
+{
+	for (const TObjectPtr<USKUserWidget>& UserWidget : PersistentUIList)
+	{
+		if (IsValid(UserWidget) && UserWidget->GetUIName() == InUIName)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }

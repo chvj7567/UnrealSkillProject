@@ -117,6 +117,17 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 
 	SpyPawnExtensionComponent->HandleControllerChanged();
 
+	//# 로컬 플레이어가 빙의한 본인 캐릭터에만 HP바를 연다 (AI·리모트 제외). 데디서버 제외.
+	//# standalone/리슨서버 authority 는 OnRep_Controller 가 안 불리므로 여기서 직접 연다
+	//# (네트워크 클라는 OnRep_Controller 가 담당 — 서로 다른 머신이라 중복 오픈 없음)
+	if (GetNetMode() != NM_DedicatedServer && NewController->IsLocalPlayerController())
+	{
+		if (USpyUIManager* UIManager = USpyUIManager::Get(this))
+		{
+			UIManager->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
+		}
+	}
+
 	//# 조종하는 컨트롤러가 AI인지 확인
 	if (NewController->IsPlayerController() == false)
 	{
@@ -137,7 +148,14 @@ void ASpyCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
 
-	USpyUIManager::Get(this)->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
+	//# 네트워크 클라의 본인 캐릭터에만 HP바를 연다 (AI·리모트 제외)
+	if (Controller != nullptr && Controller->IsLocalPlayerController())
+	{
+		if (USpyUIManager* UIManager = USpyUIManager::Get(this))
+		{
+			UIManager->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
+		}
+	}
 
 	SpyPawnExtensionComponent->HandleControllerChanged();
 }

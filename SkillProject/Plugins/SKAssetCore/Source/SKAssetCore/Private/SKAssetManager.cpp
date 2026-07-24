@@ -90,6 +90,59 @@ void USKAssetManager::UnloadAsset(const FSoftObjectPath& AssetPath)
 	UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Primary Asset Unloaded: %s"), *AssetPath.ToString());
 }
 
+void USKAssetManager::LoadAssetsAsync(const TArray<FSoftObjectPath>& AssetPaths, const FSKAssetBatchProgressDelegate& OnProgress, const FSimpleDelegate& OnComplete)
+{
+	const int32 TotalCount = AssetPaths.Num();
+
+	//# 대상이 없으면 진행률 없이 즉시 완료
+	if (TotalCount == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Batch Async Load: 대상 0개 — 즉시 완료"));
+		OnComplete.ExecuteIfBound();
+		return;
+	}
+
+	TSharedRef<int32> LoadedCount = MakeShared<int32>(0);
+
+	//# 성공/실패 공통 완료 처리 — 실패해도 카운트는 반드시 증가시킨다
+	auto CompleteOne = [this, LoadedCount, TotalCount, OnProgress, OnComplete](const FSoftObjectPath& AssetPath)
+	{
+		if (UObject* Asset = AssetPath.ResolveObject())
+		{
+			//# GC 참조 유지
+			AddLoadedAsset(Asset);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("# [SKAssetManager] Batch Async Load Failed: %s"), *AssetPath.ToString());
+		}
+
+		(*LoadedCount)++;
+		OnProgress.ExecuteIfBound(*LoadedCount, TotalCount);
+
+		if (*LoadedCount >= TotalCount)
+		{
+			UE_LOG(LogTemp, Log, TEXT("# [SKAssetManager] Batch Async Load Complete (%d)"), TotalCount);
+			OnComplete.ExecuteIfBound();
+		}
+	};
+
+	for (const FSoftObjectPath& AssetPath : AssetPaths)
+	{
+		//# 경로가 무효하거나 이미 메모리에 있으면 즉시 완료로 카운트
+		if (AssetPath.IsValid() == false || AssetPath.ResolveObject() != nullptr)
+		{
+			CompleteOne(AssetPath);
+			continue;
+		}
+
+		GetStreamableManager().RequestAsyncLoad(AssetPath, FStreamableDelegate::CreateLambda([CompleteOne, AssetPath]()
+			{
+				CompleteOne(AssetPath);
+			}));
+	}
+}
+
 void USKAssetManager::LoadAllPrimaryAssetsSync()
 {
 	//# 에디터 설정 창에서 정한 타입 정보 가져옴

@@ -7,6 +7,9 @@
 
 DECLARE_DELEGATE_OneParam(FSKAssetAndDelegate, UObject*);
 
+//# 배치 비동기 로드 진행률 — (완료 개수, 전체 개수)
+DECLARE_DELEGATE_TwoParams(FSKAssetBatchProgressDelegate, int32, int32);
+
 UCLASS(Config = Game)
 class SKASSETCORE_API USKAssetManager : public UAssetManager
 {
@@ -36,6 +39,10 @@ public:
 	static UObject* LoadAssetSync(const FSoftObjectPath& AssetPath);
 	static void LoadAssetAsync(const FSoftObjectPath& AssetPath, const FSKAssetAndDelegate& OnComplete);
 	static void UnloadAsset(const FSoftObjectPath& AssetPath);
+
+	//# 경로 배열을 한 번에 비동기 로드한다. 개별 실패해도 완료 카운트는 증가한다(진행률이 멈추면 안 됨).
+	//# 배열이 비었으면 OnProgress 없이 즉시 OnComplete 를 호출한다.
+	void LoadAssetsAsync(const TArray<FSoftObjectPath>& AssetPaths, const FSKAssetBatchProgressDelegate& OnProgress, const FSimpleDelegate& OnComplete);
 
 protected:
 	UPrimaryDataAsset* LoadPrimaryAssetSync(TSubclassOf<UPrimaryDataAsset> DataClass, const TSoftObjectPtr<UPrimaryDataAsset>& DataClassPath, FPrimaryAssetType PrimaryAssetType);
