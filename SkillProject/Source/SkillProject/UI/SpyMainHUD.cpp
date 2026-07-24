@@ -1,6 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "UI/SpyMainHUD.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "Character/SpyCharacterAttributeSet.h"
 #include "Character/SpyLevelComponent.h"
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
@@ -29,17 +32,19 @@ void USpyMainHUD::NativeConstruct()
 
 	const bool bLevelBound = TryBindLevelComponent();
 	const bool bMissionBound = TryBindMissionComponent();
+	const bool bManaBound = TryBindManaAttribute();
 
-	if (bLevelBound == false || bMissionBound == false)
+	if (bLevelBound == false || bMissionBound == false || bManaBound == false)
 	{
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().SetTimer(BindRetryTimerHandle, FTimerDelegate::CreateWeakLambda(this, [this]() {
 												  const bool bLevelOk = TryBindLevelComponent();
 												  const bool bMissionOk = TryBindMissionComponent();
+												  const bool bManaOk = TryBindManaAttribute();
 
-												  //# 미션 바인딩이 남아 있으면 계속 재시도해야 하므로 둘 다 성공했을 때만 멈춘다
-												  if (bLevelOk && bMissionOk)
+												  //# 세 바인딩 중 하나라도 남아 있으면 계속 재시도하므로 전부 성공했을 때만 멈춘다
+												  if (bLevelOk && bMissionOk && bManaOk)
 												  {
 													  if (UWorld* InnerWorld = GetWorld())
 													  {
@@ -57,10 +62,11 @@ void USpyMainHUD::NativeConstruct()
 													  return;
 
 												  UE_LOG(LogTemp, Warning,
-													  TEXT("# [SpyMainHUD] 위젯 바인딩에 %.1f초간 실패해 재시도를 중단합니다. Level=%d Mission=%d — ")
-													  TEXT("캐릭터 BP의 LevelComponent에 LevelConfig(DA_SpyLevelConfig)가, ")
-													  TEXT("PlayerState BP의 MissionComponent에 MissionConfig가 지정됐는지 확인하세요."),
-													  BindRetryMaxCount * 0.25f, bLevelOk, bMissionOk);
+														 TEXT("# [SpyMainHUD] 위젯 바인딩에 %.1f초간 실패해 재시도를 중단합니다. Level=%d Mission=%d Mana=%d — ")
+															 TEXT("캐릭터 BP의 LevelComponent에 LevelConfig(DA_SpyLevelConfig)가, ")
+																 TEXT("PlayerState BP의 MissionComponent에 MissionConfig가, ")
+																	 TEXT("GE_InitStat에 MaxMana 모디파이어가 지정됐는지 확인하세요."),
+														 BindRetryMaxCount * 0.25f, bLevelOk, bMissionOk, bManaOk);
 
 												  if (UWorld* InnerWorld = GetWorld())
 												  {
@@ -81,6 +87,7 @@ void USpyMainHUD::NativeDestruct()
 
 	UnbindLevelComponent();
 	UnbindMissionComponent();
+	UnbindManaAttribute();
 
 	Super::NativeDestruct();
 
@@ -241,5 +248,108 @@ void USpyMainHUD::RefreshMission()
 				FText::AsNumber(BoundMissionComponent->GetCount()),
 				FText::AsNumber(BoundMissionComponent->GetTargetCount())));
 		}
+	}
+}
+
+bool USpyMainHUD::TryBindManaAttribute()
+{
+	if (BoundManaSet)
+		return true;
+
+	APlayerController* OwningController = GetOwningPlayer();
+	if (OwningController == nullptr)
+		return false;
+
+	APawn* OwningPawn = OwningController->GetPawn();
+	if (OwningPawn == nullptr)
+		return false;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwningPawn);
+	if (ASC == nullptr)
+		return false;
+
+	const USpyCharacterAttributeSet* AttributeSet = ASC->GetSet<USpyCharacterAttributeSet>();
+	if (AttributeSet == nullptr)
+		return false;
+
+	//# MaxMana 가 아직 초기화(GE_InitStat)·복제되지 않았으면 어트리뷰트 준비 전이다 — 다음 주기에 다시 시도
+	if (AttributeSet->GetMaxMana() <= 0.f)
+		return false;
+
+	BoundManaSet = AttributeSet;
+
+	//# FSKAttributeEvent 는 비동적 멀티캐스트라 AddUObject 로 연결한다(mutable 이라 const 포인터에서 호출 가능)
+	BoundManaSet->OnManaChanged.AddUObject(this, &USpyMainHUD::HandleManaChanged);
+	BoundManaSet->OnMaxManaChanged.AddUObject(this, &USpyMainHUD::HandleMaxManaChanged);
+
+	//# 같은 AttributeSet 이므로 Health 도 이 경로에서 함께 구독한다
+	BoundManaSet->OnHealthChanged.AddUObject(this, &USpyMainHUD::HandleHealthChanged);
+	BoundManaSet->OnMaxHealthChanged.AddUObject(this, &USpyMainHUD::HandleMaxHealthChanged);
+
+	//# 구독 전에 이미 설정된 값을 놓치지 않도록 즉시 1회 갱신
+	RefreshMana();
+	RefreshHealth();
+
+	return true;
+}
+
+void USpyMainHUD::UnbindManaAttribute()
+{
+	if (BoundManaSet)
+	{
+		BoundManaSet->OnManaChanged.RemoveAll(this);
+		BoundManaSet->OnMaxManaChanged.RemoveAll(this);
+		BoundManaSet->OnHealthChanged.RemoveAll(this);
+		BoundManaSet->OnMaxHealthChanged.RemoveAll(this);
+	}
+
+	BoundManaSet = nullptr;
+}
+
+void USpyMainHUD::HandleManaChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue)
+{
+	RefreshMana();
+}
+
+void USpyMainHUD::HandleMaxManaChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue)
+{
+	RefreshMana();
+}
+
+void USpyMainHUD::RefreshMana()
+{
+	if (BoundManaSet == nullptr)
+		return;
+
+	if (PB_Mana)
+	{
+		const float MaxMana = BoundManaSet->GetMaxMana();
+
+		//# 0 나눗셈 방어 — USpyHPBar::UpdateHP 와 동일한 처리
+		PB_Mana->SetPercent((MaxMana > 0.f) ? (BoundManaSet->GetMana() / MaxMana) : 0.f);
+	}
+}
+
+void USpyMainHUD::HandleHealthChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue)
+{
+	RefreshHealth();
+}
+
+void USpyMainHUD::HandleMaxHealthChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue)
+{
+	RefreshHealth();
+}
+
+void USpyMainHUD::RefreshHealth()
+{
+	if (BoundManaSet == nullptr)
+		return;
+
+	if (PB_HP)
+	{
+		const float MaxHealth = BoundManaSet->GetMaxHealth();
+
+		//# 0 나눗셈 방어 — USpyHPBar::UpdateHP 와 동일한 처리
+		PB_HP->SetPercent((MaxHealth > 0.f) ? (BoundManaSet->GetHealth() / MaxHealth) : 0.f);
 	}
 }

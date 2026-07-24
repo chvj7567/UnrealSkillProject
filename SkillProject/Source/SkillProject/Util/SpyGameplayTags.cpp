@@ -101,6 +101,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Data_Experience_Gain, "Data.Experience.Gain");
 	UE_DEFINE_GAMEPLAY_TAG(Data_Level_MaxHealthGrowth, "Data.Level.MaxHealthGrowth");
 	UE_DEFINE_GAMEPLAY_TAG(Data_Level_MaxManaGrowth, "Data.Level.MaxManaGrowth");
+	UE_DEFINE_GAMEPLAY_TAG(Data_Cost_Mana, "Data.Cost.Mana");
 
 	//# 미션 진행 이벤트 태그
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Kill, "Event.Mission.Kill");

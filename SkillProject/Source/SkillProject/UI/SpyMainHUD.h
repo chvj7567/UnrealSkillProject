@@ -11,6 +11,9 @@ class UProgressBar;
 class UButton;
 class UTextBlock;
 class USpyLevelComponent;
+class USpyCharacterAttributeSet;
+class AActor;
+struct FGameplayEffectSpec;
 
 UCLASS()
 class SKILLPROJECT_API USpyMainHUD : public USpyUserWidget
@@ -28,6 +31,12 @@ protected:
 	//# 아직 WBP에 배치되지 않았을 수 있어 Optional로 바인딩한다
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UProgressBar> PB_Exp;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
+	TObjectPtr<UProgressBar> PB_Mana;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
+	TObjectPtr<UProgressBar> PB_HP;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> Txt_Level;
@@ -68,9 +77,31 @@ protected:
 
 	void RefreshMission();
 
+	//# 로컬 폰의 ASC 에서 AttributeSet 을 찾아 마나 변경을 구독한다. 아직 준비 안 됐으면 false
+	bool TryBindManaAttribute();
+
+	void UnbindManaAttribute();
+
+	//# FSKAttributeEvent(비동적 6-param) 시그니처 — AddUObject 로 연결한다
+	void HandleManaChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue);
+
+	void HandleMaxManaChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue);
+
+	void RefreshMana();
+
+	//# Mana 와 동일 AttributeSet 를 공유하므로 Health 도 같은 바인딩 경로에서 구독한다(FSKAttributeEvent 6-param)
+	void HandleHealthChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue);
+
+	void HandleMaxHealthChanged(AActor* Instigator, AActor* Causer, const FGameplayEffectSpec* Spec, float Magnitude, float OldValue, float NewValue);
+
+	void RefreshHealth();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USpyLevelComponent> BoundLevelComponent;
+
+	UPROPERTY()
+	TObjectPtr<const USpyCharacterAttributeSet> BoundManaSet;
 
 	UPROPERTY()
 	TObjectPtr<class USpyMissionComponent> BoundMissionComponent;

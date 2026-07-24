@@ -23,6 +23,7 @@ Unreal Engine **5.7** 기반 스파이 테마 3인칭 액션 게임. 데디케�
 | [plugin-skassetcore.md](.claude/rules/plugin-skassetcore.md) | 에셋 로드·DataAsset 추가 시 (하드코딩 경로 금지) |
 | [plugin-skuicore.md](.claude/rules/plugin-skuicore.md) | UI 위젯·UI 매니저 작업 시 |
 | [plugin-modulargameplayactors.md](.claude/rules/plugin-modulargameplayactors.md) | 액터 베이스 상속·InitState 초기화 흐름 작업 시 |
+| [ui-workflow.md](.claude/rules/ui-workflow.md) | UI 화면 배치·HUD 구성 작업 시 (목업 우선 승인 게이트 + unreal-mcp 편집 방법·함정) |
 
 ### 에이전트 메타 (`.claude/project.md`)
 

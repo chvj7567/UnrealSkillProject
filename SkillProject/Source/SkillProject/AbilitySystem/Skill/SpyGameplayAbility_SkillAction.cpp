@@ -1,5 +1,7 @@
 #include "SpyGameplayAbility_SkillAction.h"
+#include "AbilitySystem/Effect/SpyGE_ManaCost.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Attribute/SKAttributeSet.h"
 #include "Util/SpyGameplayTags.h"
 #include "System/SpyPlayerState.h"
 #include "System/SpyMissionComponent.h"
@@ -102,4 +104,54 @@ void USpyGameplayAbility_SkillAction::InputPressed(const FGameplayAbilitySpecHan
             }
         }
     }
+}
+
+bool USpyGameplayAbility_SkillAction::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	//# 코스트가 없는 어빌리티는 기존(CostGameplayEffectClass) 동작으로 폴백한다
+	if (ManaCost <= 0.f)
+	{
+		return Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags);
+	}
+
+	const UAbilitySystemComponent* ASC = (ActorInfo != nullptr) ? ActorInfo->AbilitySystemComponent.Get() : nullptr;
+	if (ASC == nullptr)
+	{
+		return false;
+	}
+
+	//# 현재 마나가 코스트 이상이어야 발동 가능 (클라·서버 모두 복제된 Mana 로 판정)
+	const float CurMana = ASC->GetNumericAttribute(USKAttributeSet::GetManaAttribute());
+	return CurMana >= ManaCost;
+}
+
+void USpyGameplayAbility_SkillAction::ApplyCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
+{
+	//# 코스트가 없는 어빌리티는 기존(CostGameplayEffectClass) 동작으로 폴백한다
+	if (ManaCost <= 0.f)
+	{
+		Super::ApplyCost(Handle, ActorInfo, ActivationInfo);
+		return;
+	}
+
+	//# 마나 감산은 게임플레이 상태 변경이므로 서버 권한에서만 적용한다 (클라는 복제로 반영)
+	if (HasAuthority(&ActivationInfo) == false)
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* ASC = (ActorInfo != nullptr) ? ActorInfo->AbilitySystemComponent.Get() : nullptr;
+	if (ASC == nullptr)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle Context = MakeEffectContext(Handle, ActorInfo);
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(USpyGE_ManaCost::StaticClass(), GetAbilityLevel(), Context);
+	if (SpecHandle.IsValid())
+	{
+		//# Additive 모디파이어에 음수 코스트를 실어 마나를 감산한다
+		SpecHandle.Data->SetSetByCallerMagnitude(SpyGameplayTags::Data_Cost_Mana, -ManaCost);
+		ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
 }

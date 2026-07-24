@@ -100,6 +100,20 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
             OnHealthChanged.Broadcast(InstigatorActor, EffectCauser, &Data.EffectSpec, DeltaValue, NewHealth - DeltaValue, NewHealth);
         }
     }
+	//# Mana 를 [0, MaxMana] 로 클램프 — 코스트 감산·재생 GE 가 범위를 벗어나지 않게 한다.
+	//# (Health 분기는 클램프 없이 보고·이벤트만 하고, Mana 만 이 분기에서 [0,MaxMana] 로 클램프한다)
+	else if (Data.EvaluatedData.Attribute == GetManaAttribute())
+	{
+		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
+
+		//# 서버에서 OnManaChanged 브로드캐스트 (클라이언트는 OnRep_Mana에서 처리) — 로컬 폰 HUD 갱신용.
+		//# 코스트·재생 GE 는 커스텀 컨텍스트를 싣지 않으므로 Health 분기처럼 컨텍스트를 요구하지 않는다
+		const float DeltaValue = Data.EvaluatedData.Magnitude;
+		AActor* InstigatorActor = Data.EffectSpec.GetContext().GetInstigator();
+		AActor* EffectCauser = Data.EffectSpec.GetContext().GetEffectCauser();
+		const float NewMana = GetMana();
+		OnManaChanged.Broadcast(InstigatorActor, EffectCauser, &Data.EffectSpec, DeltaValue, NewMana - DeltaValue, NewMana);
+	}
 }
 
 void USKAttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
