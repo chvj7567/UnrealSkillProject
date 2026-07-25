@@ -111,11 +111,16 @@ void USpySkillSlotWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 		}
 	}
 
-	//# 마나 부족 적색 틴트 — 쿨다운이 우선(§6-3)이라 쿨다운 중이 아닐 때만 판정한다
-	if (Img_Icon)
+	//# 마나 부족 — 쿨다운이 우선(§6-3)이라 쿨다운 중이 아닐 때만 판정.
+	//# 곱연산 틴트는 어두운 아이콘에서 안 보여서, 별도 반투명 빨강 오버레이로 확실히 표시한다
+	const float CurMana = ASC->GetNumericAttribute(USKAttributeSet::GetManaAttribute());
+	const bool bManaShort = (bOnCooldown == false) && (ManaCost > 0.f) && (CurMana < ManaCost);
+	if (Img_Icon != nullptr)
 	{
-		const float CurMana = ASC->GetNumericAttribute(USKAttributeSet::GetManaAttribute());
-		const bool bManaShort = (bOnCooldown == false) && (ManaCost > 0.f) && (CurMana < ManaCost);
-		Img_Icon->SetColorAndOpacity(bManaShort ? FLinearColor(1.f, 0.3f, 0.3f, 1.f) : FLinearColor::White);
+		Img_Icon->SetColorAndOpacity(FLinearColor::White);
+	}
+	if (Img_ManaShort != nullptr)
+	{
+		Img_ManaShort->SetVisibility(bManaShort ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 }

@@ -54,6 +54,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> CooldownMID;
 
+	//# 마나 부족 시 슬롯을 덮는 반투명 빨강 오버레이(곱연산 틴트 대체 — 어두운 아이콘에서도 확실히 읽힘)
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Img_ManaShort;
+
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> Txt_KeyHint;
 
