@@ -8,7 +8,6 @@
 #include "SpyMainHUD.generated.h"
 
 class UProgressBar;
-class UButton;
 class UTextBlock;
 class USpyLevelComponent;
 class USpyCharacterAttributeSet;
@@ -25,9 +24,6 @@ protected:
 	virtual void NativeDestruct() override;
 
 protected:
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	TObjectPtr<UButton> Btn_Menu;
-
 	//# 아직 WBP에 배치되지 않았을 수 있어 Optional로 바인딩한다
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UProgressBar> PB_Exp;
@@ -48,9 +44,6 @@ protected:
 	TObjectPtr<UTextBlock> Txt_MissionProgress;
 
 protected:
-	UFUNCTION(BlueprintCallable)
-	void ShowMenu();
-
 	//# 로컬 폰의 LevelComponent를 찾아 구독한다. 아직 없으면 false
 	bool TryBindLevelComponent();
 

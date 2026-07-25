@@ -5,13 +5,11 @@
 #include "AbilitySystemComponent.h"
 #include "Character/SpyCharacterAttributeSet.h"
 #include "Character/SpyLevelComponent.h"
-#include "Components/Button.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
-#include "Manager/SpyUIManager.h"
 #include "System/SpyMissionComponent.h"
 #include "TimerManager.h"
 
@@ -20,11 +18,6 @@
 void USpyMainHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	if (Btn_Menu)
-	{
-		Btn_Menu->OnClicked.AddDynamic(this, &USpyMainHUD::ShowMenu);
-	}
 
 	//# 클라이언트에서는 이 시점에 Pawn/PlayerState/ASC가 아직 없을 수 있다.
 	//# 준비될 때까지 짧은 주기로 재시도하고, 둘 다 성공하면 타이머를 끈다.
@@ -90,16 +83,6 @@ void USpyMainHUD::NativeDestruct()
 	UnbindManaAttribute();
 
 	Super::NativeDestruct();
-
-	if (Btn_Menu)
-	{
-		Btn_Menu->OnClicked.Clear();
-	}
-}
-
-void USpyMainHUD::ShowMenu()
-{
-	USpyUIManager::Get(this)->OpenSpyUI(ESpyUIType::Menu);
 }
 
 bool USpyMainHUD::TryBindLevelComponent()
