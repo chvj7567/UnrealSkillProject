@@ -50,10 +50,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (ClampMin = "0.0", ClampMax = "89.9"))
 	float ViewPitchMax = 60.f;
 
-	//# UI
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	FVector HPBarOffset = FVector(0.f, 0.f, 200.f);
-
 	//# Weapon
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float WeaponSpawnDelay = 1.0f;

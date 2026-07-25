@@ -9,16 +9,13 @@
 #include "Character/SpyLevelComponent.h"
 #include "Character/SpyPawnExtensionComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/WidgetComponent.h"
 #include "Data/SpyCharacterAssetData.h"
 #include "Data/SpyCharacterConfig.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
-#include "Manager/SpyUIManager.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
-#include "UI/SpyHPBar.h"
 #include "Util/SpyGameplayTags.h"
 
 #include "Net/UnrealNetwork.h"
@@ -32,7 +29,7 @@ void ASpyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 }
 
 ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
-	:Super(ObjectInitializer.SetDefaultSubobjectClass<USpyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<USpyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;
@@ -68,10 +65,6 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	HPBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarComponent"));
-	HPBarComponent->SetupAttachment(GetMesh());
-	HPBarComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
-
 	SpyPawnExtensionComponent = CreateDefaultSubobject<USpyPawnExtensionComponent>(TEXT("SpyPawnExtensionComponent"));
 	SpyPawnExtensionComponent->OnAbilitySystemInitialized_RegisterAndCall(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemInitialized));
 	SpyPawnExtensionComponent->OnAbilitySystemUninitialized_Register(FSimpleMulticastDelegate::FDelegate::CreateUObject(this, &ThisClass::OnAbilitySystemUninitialized));
@@ -101,8 +94,6 @@ void ASpyCharacter::PostInitializeComponents()
 		GetCharacterMovement()->BrakingDecelerationFalling = CharacterConfig->BrakingDecelerationFalling;
 
 		CameraBoom->TargetArmLength = CharacterConfig->CameraArmLength;
-
-		HPBarComponent->SetRelativeLocation(CharacterConfig->HPBarOffset);
 	}
 }
 
@@ -116,17 +107,6 @@ void ASpyCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	SpyPawnExtensionComponent->HandleControllerChanged();
-
-	//# 로컬 플레이어가 빙의한 본인 캐릭터에만 HP바를 연다 (AI·리모트 제외). 데디서버 제외.
-	//# standalone/리슨서버 authority 는 OnRep_Controller 가 안 불리므로 여기서 직접 연다
-	//# (네트워크 클라는 OnRep_Controller 가 담당 — 서로 다른 머신이라 중복 오픈 없음)
-	if (GetNetMode() != NM_DedicatedServer && NewController->IsLocalPlayerController())
-	{
-		if (USpyUIManager* UIManager = USpyUIManager::Get(this))
-		{
-			UIManager->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
-		}
-	}
 
 	//# 조종하는 컨트롤러가 AI인지 확인
 	if (NewController->IsPlayerController() == false)
@@ -147,15 +127,6 @@ void ASpyCharacter::UnPossessed()
 void ASpyCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
-
-	//# 네트워크 클라의 본인 캐릭터에만 HP바를 연다 (AI·리모트 제외)
-	if (Controller != nullptr && Controller->IsLocalPlayerController())
-	{
-		if (USpyUIManager* UIManager = USpyUIManager::Get(this))
-		{
-			UIManager->OpenSubSpyUI(ESpyUIType::HpBar, HPBarComponent, EWidgetSpace::Screen);
-		}
-	}
 
 	SpyPawnExtensionComponent->HandleControllerChanged();
 }
@@ -214,14 +185,8 @@ USpyAbilitySystemComponent* ASpyCharacter::GetSpyAbilitySystemComponent() const
 
 void ASpyCharacter::OnHealthChanged(USpyHealthComponent* InHealthComponent, float InOldValue, float InNewValue, AActor* InInstigator)
 {
-	if (GetNetMode() == NM_DedicatedServer)
-		return;
-
-	if (USpyHPBar* HpBar = Cast<USpyHPBar>(HPBarComponent->GetWidget()))
-	{
-		HpBar->UpdateHP(InNewValue, InHealthComponent->GetMaxHealth());
-		UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnHealthChanged: %f -> %f"), InOldValue, InNewValue);
-	}
+	//# 머리 위 HP바는 제거됨 — HP 표시는 MainHUD 가 담당한다.
+	//# 델리게이트 바인딩은 유지하되(향후 연출 훅 여지) 현재 캐릭터 측 처리는 없다.
 }
 
 void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
@@ -331,25 +296,24 @@ void ASpyCharacter::SpawnAndAttachWeapon()
 
 	FSKAssetAndDelegate LoadDelegate;
 	TWeakObjectPtr<ASpyCharacter> WeakThis = this;
-	LoadDelegate.BindLambda([WeakThis, WeaponAssetName, WeaponSocketName](UObject* LoadedAsset)
+	LoadDelegate.BindLambda([WeakThis, WeaponAssetName, WeaponSocketName](UObject* LoadedAsset) {
+		if (WeakThis.IsValid() == false || LoadedAsset == nullptr)
+			return;
+
+		if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(WeaponAssetName))
 		{
-			if (WeakThis.IsValid() == false || LoadedAsset == nullptr)
-				return;
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = WeakThis.Get();
+			SpawnParams.Instigator = WeakThis.Get();
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			if (TSubclassOf<ASpyWeapon> SpyWeaponClass = USpyAssetManager::GetSubclassByName<ASpyWeapon>(WeaponAssetName))
+			WeakThis->SpyWeapon = WeakThis->GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+			if (WeakThis->SpyWeapon)
 			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.Owner = WeakThis.Get();
-				SpawnParams.Instigator = WeakThis.Get();
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				WeakThis->SpyWeapon = WeakThis->GetWorld()->SpawnActor<ASpyWeapon>(SpyWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-				if (WeakThis->SpyWeapon)
-				{
-					WeakThis->SpyWeapon->AttachToComponent(WeakThis->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-				}
+				WeakThis->SpyWeapon->AttachToComponent(WeakThis->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 			}
-		});
+		}
+	});
 
 	USpyAssetManager::LoadAssetAsync(ClassPath, LoadDelegate);
 }

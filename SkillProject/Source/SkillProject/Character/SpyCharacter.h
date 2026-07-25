@@ -14,7 +14,6 @@ class USpyCharacterConfig;
 class USpringArmComponent;
 class UCameraComponent;
 class UBoxComponent;
-class UWidgetComponent;
 class ASpyWeapon;
 class USpyPawnExtensionComponent;
 class USpyHealthComponent;
@@ -29,66 +28,62 @@ class ASpyCharacter : public AModularCharacter, public IAbilitySystemInterface
 	GENERATED_BODY()
 
 public:
-	ASpyCharacter(const FObjectInitializer &ObjectInitializer);
+	ASpyCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
-	virtual void PossessedBy(AController *NewController) override;
+	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 
 	virtual void OnRep_Controller() override;
 	virtual void OnRep_PlayerState() override;
 
 	virtual void
-	SetupPlayerInputComponent(UInputComponent *PlayerInputComponent) override;
+	SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	//# # IAbilitySystemInterface
-	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	//# # ~IAbilitySystemInterface
 public:
-	FORCEINLINE USpringArmComponent *GetCameraBoom() const
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const
 	{
 		return CameraBoom;
 	}
-	FORCEINLINE UCameraComponent *GetFollowCamera() const
+	FORCEINLINE UCameraComponent* GetFollowCamera() const
 	{
 		return FollowCamera;
 	}
-	FORCEINLINE UWidgetComponent *GetHPBarComponent() const
-	{
-		return HPBarComponent;
-	}
-	FORCEINLINE USpyHealthComponent *GetSpyHealthComponent() const
+	FORCEINLINE USpyHealthComponent* GetSpyHealthComponent() const
 	{
 		return SpyHealthComponent;
 	}
-	FORCEINLINE USpyCharacterMovementComponent *
+	FORCEINLINE USpyCharacterMovementComponent*
 	GetSpyCharacterMovementComponent() const
 	{
 		return GetCharacterMovement<USpyCharacterMovementComponent>();
 	}
-	FORCEINLINE ASpyWeapon *GetSpyWeapon() const
+	FORCEINLINE ASpyWeapon* GetSpyWeapon() const
 	{
 		return SpyWeapon;
 	}
-	FORCEINLINE USpyCharacterConfig *GetCharacterConfig() const
+	FORCEINLINE USpyCharacterConfig* GetCharacterConfig() const
 	{
 		return CharacterConfig;
 	}
 
 public:
 	UFUNCTION(BlueprintCallable)
-	USpyAbilitySystemComponent *GetSpyAbilitySystemComponent() const;
+	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
 
 	UFUNCTION()
-	virtual void OnHealthChanged(USpyHealthComponent *InHealthComponent,
+	virtual void OnHealthChanged(USpyHealthComponent* InHealthComponent,
 								 float InOldValue, float InNewValue,
-								 AActor *InInstigator);
+								 AActor* InInstigator);
 
 	UFUNCTION()
-	virtual void OnDeath(AActor *InOwningActor, AActor *InCauserActor);
+	virtual void OnDeath(AActor* InOwningActor, AActor* InCauserActor);
 
 protected:
 	virtual void OnAbilitySystemInitialized();
@@ -109,9 +104,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> FollowCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	TObjectPtr<UWidgetComponent> HPBarComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PawnExtension")
 	TObjectPtr<USpyPawnExtensionComponent> SpyPawnExtensionComponent;
