@@ -10,7 +10,7 @@
 
 class UAbilitySystemComponent;
 class UImage;
-class UProgressBar;
+class UMaterialInstanceDynamic;
 class UTextBlock;
 class UTexture2D;
 
@@ -45,11 +45,14 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Img_Icon;
 
-	//# 쿨다운 어둠 스윕 — 세로 ProgressBar(하단 앵커, 어둠 fill). SetPercent(CooldownNormalized) 로
-	//# 발동=가득(1)→준비=0 으로 높이가 아래로 줄어든다(기획 §6-1 하단 앵커 높이 스윕).
-	//# fill 방향(하단 앵커·수직)은 WBP(Task 8) 설정이고 코드는 채움 비율만 구동한다
+	//# 쿨다운 레이디얼 오버레이(M_RadialCooldown 머티리얼). 세로 ProgressBar 대체 —
+	//# tick 마다 MID 의 Percent(=CooldownNormalized)로 원형 언와인드를 그린다
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
-	TObjectPtr<UProgressBar> PB_Cooldown;
+	TObjectPtr<UImage> Img_Cooldown;
+
+	//# Img_Cooldown 브러시 머티리얼의 동적 인스턴스 — Percent/Icon 파라미터 세팅용
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> CooldownMID;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> Txt_KeyHint;

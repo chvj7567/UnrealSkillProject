@@ -3,10 +3,10 @@
 #include "UI/SpySkillSlotWidget.h"
 #include "AbilitySystemComponent.h"
 #include "Components/Image.h"
-#include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "GameplayEffect.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Attribute/SKAttributeSet.h"
 #include "UI/SpyHUDMath.h"
 
@@ -24,6 +24,17 @@ void USpySkillSlotWidget::Setup(UAbilitySystemComponent* InASC, FGameplayTag InI
 	if (InIcon != nullptr && Img_Icon != nullptr)
 	{
 		Img_Icon->SetBrushFromTexture(InIcon);
+	}
+
+	//# 쿨다운 레이디얼 MID 준비(브러시 머티리얼 기반, 경로 하드코딩 없음).
+	//# 아이콘이 있으면 오버레이도 그 텍스처를 어둡게 쓴다
+	if (Img_Cooldown != nullptr)
+	{
+		CooldownMID = Img_Cooldown->GetDynamicMaterial();
+		if (CooldownMID != nullptr && InIcon != nullptr)
+		{
+			CooldownMID->SetTextureParameterValue(TEXT("Icon"), InIcon);
+		}
 	}
 
 	if (Txt_KeyHint)
@@ -76,12 +87,14 @@ void USpySkillSlotWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaT
 	const float Normalized = SpyHUDMath::CooldownNormalized(Remaining, Duration);
 	const bool bOnCooldown = Normalized > 0.f;
 
-	//# 어둠 스윕 — 하단 앵커 높이 채움. 발동 순간(1.0)에 가득 차고 준비될수록(0.0) 아래로 줄어든다(기획 §6-1).
-	//# 균일 페이드가 아니라 세로 fill 비율로 구동해 방향성 있는 스윕을 만든다(fill 방향은 WBP 설정)
-	if (PB_Cooldown)
+	//# 레이디얼 언와인드 — Percent=CooldownNormalized(1=방금발동→0=준비). 각도 마스크는 머티리얼이 처리
+	if (Img_Cooldown)
 	{
-		PB_Cooldown->SetVisibility(bOnCooldown ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		PB_Cooldown->SetPercent(Normalized);
+		Img_Cooldown->SetVisibility(bOnCooldown ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (CooldownMID != nullptr)
+		{
+			CooldownMID->SetScalarParameterValue(TEXT("Percent"), Normalized);
+		}
 	}
 
 	//# 잔여 초 — X.X, 준비 시 숨김
