@@ -226,14 +226,14 @@ Handles.TakeFromAbilitySystem(ASC);
 
 ### 3-2. 나침반 (Compass)
 
-> `USpyCompassWidget`가 카메라 방위(heading)와 목표 웨이포인트의 상대 방향·거리를 표시해 목표 지점을 잃지 않게 합니다.
+> `USpyCompassWidget`가 플레이어의 조준/이동 의도 방향(컨트롤 회전 yaw)을 8방위(N · NE · E · …) 라벨로 표시합니다.
 
 <details>
 <summary>자세히 보기</summary>
 
-- **방위 표시**: 컨트롤 회전(yaw) 기준으로 나침반 눈금을 스크롤.
-- **웨이포인트**: 목표 지점과 캐릭터의 상대 방위·거리를 계산해 마커로 표시.
-- 순수 계산 로직은 `SpyHUDMath` 헬퍼로 분리(렌더 비의존, 단위 테스트 가능).
+- **헤딩 표시**: 매 tick 컨트롤 회전 yaw 를 읽어 `SpyHUDMath::HeadingToCardinal` 로 8방위 enum(`ESpyCardinal`)을 산출 → `N/NE/E/SE/S/SW/W/NW` 라벨 갱신. 카메라 회전이 아니라 컨트롤 회전을 쓰는 이유는 플레이어의 조준/이동 의도 방향을 나타내기 위함.
+- **순수 로컬 표시**: 서버 통신 없이 로컬 컨트롤러의 회전만 사용.
+- **순수함수 분리**: `SpyHUDMath::HeadingToCardinal`(yaw→8방위)은 렌더 비의존 순수함수라 Automation 테스트로 검증 가능.
 
 </details>
 
