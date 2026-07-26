@@ -33,16 +33,17 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 
 > 핵심 시스템 데모 — 각 항목을 클릭하면 해당 섹션의 GIF로 이동합니다.
 
-- [**🏃 파쿠르 (Vault / WallClimb / HangUp)**](#3-1-파쿠르-vault--wallclimb--hangup) — 다중 LineTrace 기반 지형 분석 + Motion Warping 매칭
-- [**⚔️ 데이터 지향 콤보**](#3-2-데이터-지향-콤보-시스템) — `SpyComboAssetData` 딕셔너리 기반 GA 체인
-- [**🪝 그래플링 훅**](#3-3--그래플링-훅-타겟팅--케이블--공중-루프--ui-프롬프트) — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
-- [**🛡️ 홀드형 패링**](#3-4--홀드형-패링-시스템) — 홀드형 GA + Loose Tag 윈도우 + `Skill_Parry_Hit` 역송
-- [**🎯 타겟팅 매니저**](#4-1-타겟팅-매니저) — 시야/거리 기반 베스트 타겟 추적
-- [**💢 무기 AnimTrail**](#4-2-무기-animtrail-이펙트) — 데이터 지향 검격 잔상
-- [**💥 히트 카메라 셰이크**](#4-3-히트-카메라-셰이크) — 공격자/피격자 차등 셰이크 + 로컬 RPC 우회
-- [**🥊 방향별 Hit 리액션**](#4-4--방향별-hit-리액션-애니메이션) — Front/Back/Left/Right 4분할 + Context 운반 + 4종 몽타주 분기
-- [**🤖 AI Behavior Tree**](#5-1-behavior-tree-tasks--kiting-사이클) — BTTask = GA 1:1 매핑 + Kiting 사이클
-- [**🧭 AI EQS**](#5-2-eqs--strafedirection--arcawayfromtarget) — StrafeDirection + ArcAwayFromTarget 평가
+- [**🏃 파쿠르 (Vault / WallClimb / HangUp)**](#4-1-파쿠르-vault--wallclimb--hangup) — 다중 LineTrace 기반 지형 분석 + Motion Warping 매칭
+- [**⚔️ 데이터 지향 콤보**](#4-2-데이터-지향-콤보-시스템) — `SpyComboAssetData` 딕셔너리 기반 GA 체인
+- [**🪝 그래플링 훅**](#4-3--그래플링-훅-타겟팅--케이블--공중-루프--ui-프롬프트) — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
+- [**🛡️ 홀드형 패링**](#4-4--홀드형-패링-시스템) — 홀드형 GA + Loose Tag 윈도우 + `Skill_Parry_Hit` 역송
+- [**🎯 타겟팅 매니저**](#5-1-타겟팅-매니저) — 시야/거리 기반 베스트 타겟 추적
+- [**💢 무기 AnimTrail**](#5-2-무기-animtrail-이펙트) — 데이터 지향 검격 잔상
+- [**💥 히트 카메라 셰이크**](#5-3-히트-카메라-셰이크) — 공격자/피격자 차등 셰이크 + 로컬 RPC 우회
+- [**🥊 방향별 Hit 리액션**](#5-4--방향별-hit-리액션-애니메이션) — Front/Back/Left/Right 4분할 + Context 운반 + 4종 몽타주 분기
+- [**🤖 AI Behavior Tree**](#6-1-behavior-tree-tasks--kiting-사이클) — BTTask = GA 1:1 매핑 + Kiting 사이클
+- [**🧭 AI EQS**](#6-2-eqs--strafedirection--arcawayfromtarget) — StrafeDirection + ArcAwayFromTarget 평가
+- [**🖥️ HUD & 스킬바**](#3--hud--플레이어-ui) — 이벤트 기반 바이탈 바인딩 + 원형 레이디얼 쿨다운 + Enhanced Input 키힌트 자동 유도
 
 ---
 
@@ -180,11 +181,11 @@ Handles.TakeFromAbilitySystem(ASC);
 - **DataAsset 계층**:
   - `USKAssetData` — 이름→경로 룩업 베이스
   - `USpyAssetData` — 전체 에셋 중앙 허브 (시작 시 동기 로드)
-  - `USpyCharacterAssetData` — 캐릭터별 컴포넌트 목록 + 어빌리티 세트 + 입력 설정 + 콤보 데이터 + `TeamId`(§ 4-4)
+  - `USpyCharacterAssetData` — 캐릭터별 컴포넌트 목록 + 어빌리티 세트 + 입력 설정 + 콤보 데이터 + `TeamId`(§ 5-5)
   - `USpyAbilityData` — GAS 어빌리티/AttributeSet/GameplayEffect 묶음
   - `USpyComboAssetData` — `StartSkillTag → ComboTag` 딕셔너리
   - `USpyAnimAssetData` — AnimLayer 맵 (`FName → TSoftClassPtr`)
-- **Config DataAsset**: `SpyAIConfig` / `SpyCharacterConfig` / `SpyInputConfig` / `SpyMovementConfig` — 하드코딩된 수치를 점진적으로 이전하는 중 (`docs/hardcoded-values.md`).
+- **Config DataAsset**: `SpyAIConfig` / `SpyCharacterConfig` / `SpyInputConfig` / `SpyMovementConfig` / `SpyLevelConfig` / `SpyMissionConfig` / `SpyLoadingConfig` / `SpySkillBarConfig` — 하드코딩된 수치·구성을 점진적으로 이전하는 중 (`docs/hardcoded-values.md`). `Content/Spy/Data/Config/`.
 - **글로벌 필수 데이터 한정 동기 로드**: `PrimaryAssetTypesToScan`을 글로벌 코어 데이터로만 엄격히 제한, 시작 시 `LoadAllPrimaryAssetsSync`로 보장. 나머지는 `LoadAssetSync` / `LoadAssetAsync`로 시점 제어.
 - **머지 충돌 회피 협업 규칙**: 팀원이 각자 개별 PrimaryDataAsset을 작성하고, 통합 시점에만 `SpyAssetData`에 등록하는 파이프라인. 바이너리 머지 충돌 최소화.
 
@@ -204,9 +205,79 @@ Handles.TakeFromAbilitySystem(ASC);
 
 ---
 
-## 3. 🏃 캐릭터 액션
+## 3. 🖥️ HUD & 플레이어 UI
 
-### 3-1. 파쿠르 (Vault / WallClimb / HangUp)
+> 런타임 플레이어 UI는 범용 `SKUICore`(UI 매니저 + 위젯 베이스)를 소비해 구성했습니다. HUD의 모든 수치는 하드코딩 폴링이 아니라 어트리뷰트·컴포넌트의 변경 델리게이트를 구독해 **이벤트 기반**으로 갱신되며, 스킬바의 키 안내는 Enhanced Input 실제 바인딩에서 자동 유도됩니다.
+
+![MainHUD — 바이탈 + 나침반 + 미션 · 우측 조작 안내 · 하단 스킬바](docs/images/MainHUD.png)
+
+### 3-1. MainHUD — 데이터 바인딩 바이탈 + 미션
+
+> `USpyMainHUD`가 좌상단 바이탈 3바(HP / MP / EXP)와 레벨·미션 진행을 표시합니다. 클라이언트에서 Pawn / PlayerState / ASC가 늦게 준비되는 타이밍 문제를 재시도 바인딩으로 흡수합니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **이벤트 기반 갱신**: `USKAttributeSet`의 `OnHealthChanged` / `OnManaChanged`, `SpyLevelComponent`의 `OnExperienceChanged` / `OnLevelChanged`, `SpyMissionComponent`의 `OnMissionProgressChanged` / `OnAllMissionsCompleted`를 각각 구독. Tick 폴링 없이 값 변경 시에만 위젯 갱신.
+- **지연 바인딩 재시도**: `NativeConstruct` 시점엔 클라에 Pawn/PS/ASC/어트리뷰트가 아직 없을 수 있어, 0.25초 주기로 세 바인딩(Level · Mission · Mana)을 재시도하고 전부 성공하면 타이머 종료. 상한(40회 = 10초) 도달 시 원인 힌트를 로그로 남김.
+- **`USKUserWidget` 상속**: 위젯 생성·표시는 `USpyUIManager`(`USKUIManager` 서브클래스) 경유 이름 기반 open. HP는 캐릭터 머리 위 별도 위젯이 아니라 MainHUD 바이탈로 통합.
+
+</details>
+
+### 3-2. 나침반 (Compass)
+
+> `USpyCompassWidget`가 카메라 방위(heading)와 목표 웨이포인트의 상대 방향·거리를 표시해 목표 지점을 잃지 않게 합니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **방위 표시**: 컨트롤 회전(yaw) 기준으로 나침반 눈금을 스크롤.
+- **웨이포인트**: 목표 지점과 캐릭터의 상대 방위·거리를 계산해 마커로 표시.
+- 순수 계산 로직은 `SpyHUDMath` 헬퍼로 분리(렌더 비의존, 단위 테스트 가능).
+
+</details>
+
+### 3-3. 스킬바 + 레이디얼 쿨다운
+
+> `USpySkillBarWidget`(6슬롯)과 `USpySkillSlotWidget`이 스킬 아이콘·쿨다운·마나 코스트를 표시합니다. 쿨다운은 세로 바가 아닌 **원형(360°) 레이디얼 언와인드**로, 사용 불가(쿨다운·마나 부족) 상태를 시각적으로 즉시 구분합니다.
+
+![Skill Bar — 원형(360°) 레이디얼 쿨다운 언와인드](docs/gifs/Cooltime.gif)
+
+<details>
+<summary>자세히 보기</summary>
+
+- **원형 레이디얼 쿨다운**: `M_RadialCooldown`(UI 도메인 Translucent) 머티리얼의 MID를 슬롯 이미지에 얹어, tick마다 `Percent = CooldownNormalized`를 세팅해 오버레이가 시계방향으로 풀림. 잔여/지속은 ASC의 `GetActiveEffectsTimeRemainingAndDuration`(쿨다운 태그 쿼리)로 조회.
+- **마나 코스트 + 부족 표시**: 슬롯에 코스트 숫자 표시. 마나 부족 시(쿨다운 우선) 곱연산 틴트 대신 **반투명 빨강 오버레이**로 슬롯을 덮어, 어두운 아이콘에서도 "사용 불가"를 명확히 읽힘.
+- **키 안내 자동 유도**: 슬롯 키 힌트를 하드코딩하지 않고 **실제 입력 바인딩에서 역유도** — `SpyInputConfig`의 태그→`UInputAction` 매핑 + IMC의 `QueryKeysMappedToAction` → `FKey::GetDisplayName`. 키를 리바인딩하면 안내도 자동 갱신.
+- **슬롯 config**: `USpySkillBarConfig` DataAsset으로 슬롯별 스킬(InputTag)과 아이콘을 데이터로 지정 — 코드 수정 없이 슬롯 구성 변경.
+- **순수함수 + 테스트**: `SpyHUDMath::CooldownNormalized`(정규화 비율)는 렌더 비의존 순수함수로 분리해 Automation 테스트로 검증.
+
+```cpp
+//# 슬롯 키 힌트 = 실제 Enhanced Input 바인딩에서 유도 (하드코딩 없음)
+const UInputAction* IA = InputConfig->FindAbilityInputActionForTag(SlotInputTag);
+const TArray<FKey> Keys = Subsystem->QueryKeysMappedToAction(IA);
+Txt_KeyHint->SetText(Keys[0].GetDisplayName());
+```
+
+</details>
+
+### 3-4. 조작 안내 패널
+
+> `WBP_KeyGuide`가 화면 우측에 상시 표시되는 컴팩트 조작 안내입니다. 전체화면 메뉴 대신 MainHUD에 임베드되어 핵심 조작을 한눈에 제공합니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **`USKUserWidget` 상속 · MainHUD 임베드**: 별도 모달 메뉴 없이 HUD 우측에 항상 표시. 키캡 + 설명 7행 컴팩트 패널.
+- **표시 항목**: `Q` 타겟팅 · `R` 그래플링 · `1 → 5` 콤보(연속 입력) · `L.Shift` 벽 넘기 · `Tab` 벽 타기 · `Alt` 커서 표시/숨김 · `Space` 점프.
+
+</details>
+
+---
+
+## 4. 🏃 캐릭터 액션
+
+### 4-1. 파쿠르 (Vault / WallClimb / HangUp)
 
 > 단순한 충돌 판정이 아닌 다중 LineTrace로 장애물의 형태(법선·높이·두께·착지점)를 정밀하게 분석한 뒤, 결과를 `FMotionWarpingData`로 변환해 클라에 리플리케이트합니다. 모든 파쿠르 액션은 `SpyGA_SkillMove_Vault` / `SpyGA_WallClimb` / `SpyGA_SkillMove_HangUp` GA로 캡슐화되어 있습니다.
 
@@ -241,7 +312,7 @@ flowchart LR
 
 </details>
 
-### 3-2. 데이터 지향 콤보 시스템
+### 4-2. 데이터 지향 콤보 시스템
 
 > 애니메이션 노티파이로 콤보 윈도우를 열고, `SpyComboAssetData` 딕셔너리에서 다음 GA를 색인해 즉시 발동합니다. "A 스킬 → B 스킬" 연계 공식이 코드가 아닌 데이터 에셋에 정의됩니다.
 
@@ -260,7 +331,7 @@ flowchart LR
 
 </details>
 
-### 3-3. 그래플링 훅 (타겟팅 + 케이블 + 공중 루프 + UI 프롬프트)
+### 4-3. 그래플링 훅 (타겟팅 + 케이블 + 공중 루프 + UI 프롬프트)
 
 > 화면 중앙 근처의 `GrappleAnchor` 액터를 스캔해 베스트 타겟을 결정하고, GA 발동 시 빨간 케이블 액터가 손 본에서 타겟 위치로 펼쳐지며 캐릭터는 공중 자세 루핑 Montage로 매달린 채 끌려갑니다. `AbilityTask_GrappleTick`이 서버에서 도착 거리 체크를 수행하고 도착 시 GA를 종료해 자연 블렌드로 풀어줍니다. 비행 도중 그래플 키를 다시 누르면 즉시 끊고 자유 낙하로 전환할 수 있어, 원하지 않는 위치로 끌려가는 상황을 사용자가 직접 회피할 수 있습니다.
 
@@ -294,7 +365,7 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 3-4. 홀드형 패링 시스템
+### 4-4. 홀드형 패링 시스템
 
 > 패링 입력을 누르고 있는 동안 `Character_State_Parry` 태그가 유지되며, 이 윈도우 동안 들어온 정면 공격을 `SkillAction` 단계에서 차단하고 공격자에게 `Skill_Parry_Hit` 이벤트를 역송합니다.
 
@@ -313,10 +384,10 @@ if (Target.IsZero() == false)
 
 ---
 
-## 4. ⚔️ 전투 / 인터랙션
-### 4-1. 타겟팅 매니저
+## 5. ⚔️ 전투 / 인터랙션
+### 5-1. 타겟팅 매니저
 
-> `SpyTargetingManagerComponent`가 캐릭터 주변/시야 안에 있는 적 후보를 추적하고, GA 시점에 즉시 베스트 타겟을 제공합니다. 그래플링 타겟팅(§ 3-3)과는 별개의 전투 전용 매니저입니다.
+> `SpyTargetingManagerComponent`가 캐릭터 주변/시야 안에 있는 적 후보를 추적하고, GA 시점에 즉시 베스트 타겟을 제공합니다. 그래플링 타겟팅(§ 4-3)과는 별개의 전투 전용 매니저입니다.
 
 ![Targeting — 베스트 타겟 추적](docs/gifs/Targeting.gif)
 
@@ -329,7 +400,7 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 4-2. 무기 AnimTrail 이펙트
+### 5-2. 무기 AnimTrail 이펙트
 
 > `GA_Skill` 발동 시 `SpyWeapon`이 무기 메시에 부착된 소켓 사이로 AnimTrail 파티클을 생성해 검격 잔상을 표현합니다. 데이터 지향으로 무기 에셋(`USkeletalMesh`)에 트레일 설정을 보관합니다.
 
@@ -343,7 +414,7 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 4-3. 히트 카메라 셰이크
+### 5-3. 히트 카메라 셰이크
 
 > 데미지 적중 시 공격자/피격자에게 강도가 다른 카메라 셰이크를 적용해 타격감을 강화합니다. 클라이언트 연출이므로 GA의 권한 블록 밖에서 처리됩니다.
 
@@ -359,7 +430,7 @@ if (Target.IsZero() == false)
 
 </details>
 
-### 4-4. 방향별 Hit 리액션 애니메이션
+### 5-4. 방향별 Hit 리액션 애니메이션
 
 > 피격 시 공격자가 타겟의 어느 방향에 있는지를 4분할(Front · Back · Left · Right)로 분류해, 같은 데미지라도 방향에 맞는 별개의 리액션 몽타주가 재생됩니다. 정면 피격 한 장으로 끝나지 않고 측·후방 공격이 시각적으로 구분되어 전투 가독성을 높입니다.
 
@@ -375,13 +446,13 @@ if (Target.IsZero() == false)
   3. **타겟 AttributeSet에서 디스패치**: 데미지 GE가 타겟에 적용되면 `USKAttributeSet::PostGameplayEffectExecute`가 컨텍스트에서 `GetHitDirectionTag()`로 태그 추출 → `Data.Target.HandleGameplayEvent(HitTag, &Payload)`로 GAS 게임플레이 이벤트 발사 (`SKAttributeSet.cpp:86~94`).
   4. **`AbilityTriggers` 자동 활성**: `USpyGA_SkillHit` BP CDO에 `Skill.Hit.Left/Right/Front/Back` 4 태그가 `GameplayEvent` 트리거로 등록되어 있어, 위 디스패치가 매칭되는 GA를 자동으로 발화. 타겟 GA 내부에서는 `TriggerEventData->EventTag`로 정확한 방향을 받음.
 - **`USpyGA_SkillHit` 4종 몽타주 분기**: 자동 활성된 GA가 `EventTag`를 매칭해 `HitFront/Back/Left/RightAbilityMontage` 중 하나를 `PlayMontageAndWait`. 몽타주 슬롯은 데이터 지향이라 캐릭터마다 다른 리액션 세트 가능.
-- **`SpyHealthComponent` 부가 분기**: GA가 패링·무적 등으로 차단되어도 카메라 셰이크 같은 부가 연출은 발화해야 하므로, HealthComponent도 컨텍스트에서 `HitDirTag`를 추출해 별도 경로로 활용(§ 4-3 히트 카메라 셰이크와 같은 패턴).
+- **`SpyHealthComponent` 부가 분기**: GA가 패링·무적 등으로 차단되어도 카메라 셰이크 같은 부가 연출은 발화해야 하므로, HealthComponent도 컨텍스트에서 `HitDirTag`를 추출해 별도 경로로 활용(§ 5-3 히트 카메라 셰이크와 같은 패턴).
 - **태그**: `Skill.Hit.Front` / `Skill.Hit.Back` / `Skill.Hit.Left` / `Skill.Hit.Right` (`SKGameplayTags.cpp:36~39`에 등록).
 - **디버그 시각화**: `sk.DebugDraw 1`일 때 타겟 forward(파란선)와 공격자 방향(빨간선) + 분류 결과 로그를 그려 분할 정확도를 즉시 검증 가능.
 
 </details>
 
-### 4-5. 팀 시스템 (TeamId)
+### 5-5. 팀 시스템 (TeamId)
 
 > `FCharacterAssetEntry`에 `TeamId` 필드를 도입해 캐릭터 클래스 단위로 팀 번호를 관리합니다. 기본값 `NoTeam(255)`로, 데이터 미설정 시 의도치 않은 아군 판정이 발생하지 않도록 설계했습니다.
 
@@ -399,8 +470,8 @@ if (Target.IsZero() == false)
 
 ---
 
-## 5. 🤖 AI 시스템
-### 5-1. Behavior Tree Tasks + Kiting 사이클
+## 6. 🤖 AI 시스템
+### 6-1. Behavior Tree Tasks + Kiting 사이클
 
 > 모든 AI 행동을 GA로 통일한 프로젝트 철학에 맞춰, BT의 끝단 Task가 직접 로직을 작성하지 않고 `BTTask_ActivateAbility`로 GA를 발화시키는 구조를 채택했습니다. 추격 → 사거리 진입 → 어빌리티 발동 → EQS 후퇴로 이어지는 **Kiting 사이클**로 단순 돌격 AI에서 벗어나 거리 유지형 액션 AI를 구현했습니다.
 
@@ -410,14 +481,14 @@ if (Target.IsZero() == false)
 <summary>자세히 보기</summary>
 
 - **`AIPerceptionComponent` + 3센스 (Sight / Hearing / Damage)**: BT가 소비할 `TargetActor` / `TargetLocation` 블랙보드 값을 채우는 upstream 레이어. `SpyAIController` 생성자에서 세 센스를 모두 구성하고 시각을 Dominant Sense로 지정.
-  - **Sight**: SightRadius 500 / LoseSightRadius 700 / FOV 90°, MaxAge 5s, Affiliation으로 Enemy·Neutral·Friendly 모두 감지(§ 4-5 `TeamId`와 결합).
+  - **Sight**: SightRadius 500 / LoseSightRadius 700 / FOV 90°, MaxAge 5s, Affiliation으로 Enemy·Neutral·Friendly 모두 감지(§ 5-5 `TeamId`와 결합).
   - **Hearing**: HearingRange 200, MaxAge 5s.
   - **Damage**: 등 뒤·시야 밖 피격에도 반응하기 위해 도입. `OnTargetPerceptionUpdated`에서 Damage 자극은 별도 분기로 즉시 가해자를 `TargetActor`로 설정(시야 재탐색 단계 우회).
   - **`RefreshBlackboardTarget()` 통합 재평가**: 시각/청각 자극은 현재 타겟의 생존 여부를 우선 검사 — 살아있으면 시야를 잃어도 BB 유지(추격 지속), 사망/파괴 확인 시에만 `GetCurrentlyPerceivedActors(Sight)`로 가장 가까운 살아있는 적으로 교체.
   - **Tick 폴링**: Perception은 타겟 사망 이벤트를 발사하지 않으므로 `TargetRefreshInterval` 주기로 BB를 재검증해 사망 타겟에 묶이는 현상을 차단.
 - **`BTTask_ActivateAbility`**: BB의 어빌리티 태그를 입력 받아 ASC `TryActivateAbilitiesByTag` 호출. AI 행동 = GA 호출이 1:1로 매핑.
 - **`BTTask_MoveToTarget`**: BB의 타겟 액터를 향한 이동. AIController 표준 `MoveTo`를 직접 사용하지 않고 거리·재경로 산출·타임아웃 처리를 자체 관리해 추격 정확도와 안정성을 강화.
-- **`BTTask_CircleStrafe`**: 타겟 주위로 좌/우 회피 이동. EQS 컨텍스트(§ 5-2)에서 결정된 방향을 따라 회전 반경을 유지하며 측면 이동.
+- **`BTTask_CircleStrafe`**: 타겟 주위로 좌/우 회피 이동. EQS 컨텍스트(§ 6-2)에서 결정된 방향을 따라 회전 반경을 유지하며 측면 이동.
 - **`BTTask_FindRandomPos`**: 정찰용 랜덤 위치 결정.
 - **`BTService_CheckCooldown`**: 어빌리티 쿨다운을 BB 변수로 동기화. BT가 사용 가능 어빌리티만 선택하도록 필터.
 - **`SpyAIController` 안정화**:
@@ -442,7 +513,7 @@ flowchart TD
 
 </details>
 
-### 5-2. EQS + StrafeDirection / ArcAwayFromTarget
+### 6-2. EQS + StrafeDirection / ArcAwayFromTarget
 
 > 회피 방향과 후퇴 위치 결정에 EQS(Environment Query System)를 도입했습니다. 좌/우 회피는 `StrafeDirection` 컨텍스트로, 어빌리티 사용 후 후퇴는 자체 작성한 `EnvQueryGenerator_ArcAwayFromTarget`으로 타겟 반대 방향 호(arc) 위 지점을 평가해 가장 유리한 쪽을 선택합니다.
 
@@ -459,7 +530,7 @@ flowchart TD
 
 </details>
 
-### 5-3. SpawnBot 매니저
+### 6-3. SpawnBot 매니저
 
 > `SpySpawnBotManagerComponent`가 레벨 내 봇 스폰 / 제거 / 풀 트래킹을 중앙에서 관리합니다. 게임 모드와 분리된 컴포넌트로 두어, 다른 게임플레이 모드에서도 부착만으로 재사용 가능합니다.
 
@@ -475,10 +546,10 @@ flowchart TD
 
 ---
 
-## 6. 🧰 에디터 툴체인 & 워크플로우
+## 7. 🧰 에디터 툴체인 & 워크플로우
 > 자체 제작 에디터 툴 3종(`SpyDataEditorTool` / `SpyGACreatorTool` / `SpyTagManagerTool`) + Python MCP 서버 + `sk.DebugDraw` CVar 통합 디버그 토글까지 — 데이터 편집·GA 생성·태그 관리·원격 자동화·디버깅 분리를 자체 도구로 해결합니다.
 
-### 6-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
+### 7-1. SpyDataEditorTool — 3탭 데이터 일괄 편집기
 
 > `Content/Spy/Data/`의 모든 DataAsset을 한 곳에서 일괄 편집하기 위한 별도 에디터 모듈. Assets / Ability / Config 3탭으로 책임을 분리했고, **Scan → 검토/편집 → Apply** 흐름을 따릅니다.
 
@@ -497,7 +568,7 @@ flowchart TD
 
 </details>
 
-### 6-2. SpyGACreatorTool — GA Blueprint 원클릭 생성
+### 7-2. SpyGACreatorTool — GA Blueprint 원클릭 생성
 
 > Window 메뉴에 추가된 "Spy GA Creator" 탭에서 부모 클래스/이름/GAS 기본 설정을 입력하고 버튼 한 번이면 `/Game/Spy/Blueprints/GameplayAbilities/GA_<Name>.uasset` Blueprint가 생성되고 에디터가 자동으로 열립니다.
 
@@ -516,7 +587,7 @@ flowchart TD
 
 </details>
 
-### 6-3. Unreal MCP 서버 — Python 원격 제어
+### 7-3. Unreal MCP 서버 — Python 원격 제어
 
 > `tools/unreal-mcp/` 디렉터리의 Python MCP(Model Context Protocol) 서버를 통해 외부 LLM 도구가 Unreal Editor를 원격 제어할 수 있습니다. 에셋 스캔 / Blueprint CDO 수정 / Spy DataAsset CRUD / 액터 스폰 / Python 임의 실행 등 도구 함수를 노출합니다.
 
@@ -538,7 +609,7 @@ flowchart TD
 
 </details>
 
-### 6-4. SpyTagManagerTool — Gameplay Tag 직접 편집기
+### 7-4. SpyTagManagerTool — Gameplay Tag 직접 편집기
 
 > `SpyGameplayTags.h` / `.cpp` 파일을 직접 파싱·편집하는 에디터 탭입니다. 트리 뷰로 전체 태그 계층을 시각화하고, 그룹 선택 + 부모 경로 + 복수 리프 입력으로 여러 태그를 한 번에 추가할 수 있습니다.
 
@@ -555,7 +626,7 @@ flowchart TD
 
 </details>
 
-### 6-5. SKDebug — `sk.DebugDraw` 일괄 토글 CVar
+### 7-5. SKDebug — `sk.DebugDraw` 일괄 토글 CVar
 
 > 파쿠르·타겟팅·CircleStrafe·SkillAction 등 곳곳에 흩어진 `DrawDebug*` / 진단 `UE_LOG` / `AddOnScreenDebugMessage`를 단일 콘솔 변수로 일괄 켜고 끕니다. 시연 시에는 끄고, 디버깅 시에는 한 줄로 켤 수 있습니다.
 
