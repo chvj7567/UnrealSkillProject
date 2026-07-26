@@ -70,7 +70,7 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 
 - **서버 권한 모델**: 게임플레이 상태 변경(데미지·이동·태그)은 모두 서버에서 실행하고 결과만 클라에 리플리케이트. GA `ActivateAbility`의 첫 줄에 `HasAuthority(&ActivationInfo)` 체크 후 서버 전용 로직과 클라 포함 연출을 분리.
 - **Motion Warping 동기화**: 서버에서 계산한 파쿠르·그래플링 위치 데이터를 `FMotionWarpingData`로 변환 → `OnRep_*MotionWarpingData`로 클라에 푸시 → 클라는 도착한 워핑 앵커로 애니메이션 정합. 딜레이 없이 부드러운 밀착 액션.
-- **Cue 시스템**: 모든 이펙트·사운드는 서버 GameplayCue → 클라 동기 재생. 서버가 미존재 액터에 큐를 발생시킬 가능성을 차단하기 위해 `SKCueManager`의 비동기 프리로딩(§ 2-6)으로 커버.
+- **Cue 시스템**: 모든 이펙트·사운드는 서버 GameplayCue → 클라 동기 재생. 서버가 미존재 액터에 큐를 발생시킬 가능성을 차단하기 위해 `SKCueManager`의 비동기 프리로딩(§ 2-4)으로 커버.
 
 ```cpp
 //# 패턴 예: GA 내부 권한 분기
@@ -138,37 +138,7 @@ sequenceDiagram
 
 ## 2. ⚡ GAS & 데이터 파이프라인
 
-### 2-1. 레벨 · 경험치 시스템
-
-> `USpyLevelComponent`와 `USpyLevelConfig`(DataAsset)로 경험치 획득 → 레벨업 → 스탯 성장을 서버 권한에서 처리합니다. 경험치 곡선과 성장 수치는 데이터로 정의하고, 레벨업 판정은 부수효과 없는 순수함수로 분리합니다.
-
-<details>
-<summary>자세히 보기</summary>
-
-- **데이터 정의(`USpyLevelConfig`)**: `ExperienceToNextLevel[]` 곡선(인덱스 i = 레벨 i+1→i+2 필요치, 배열 길이 + 1 = 최대 레벨) + `MaxHealthPerLevel` / `MaxManaPerLevel`(레벨업당 성장) + `bFullHealOnLevelUp` + `ExperienceRewardPerLevel`(처치 보상 = 대상 레벨 × 값). 코드 기본값 없이 `DA_SpyLevelConfig` 에서 입력.
-- **경험치는 어트리뷰트**: Experience/Level 을 `USpyCharacterAttributeSet` 어트리뷰트로 보관·복제. `USpyLevelComponent` 가 AttributeSet 변경 델리게이트를 구독해 레벨업을 판정하고 `OnExperienceChanged` / `OnLevelChanged` 로 HUD(§3-1 EXP 바)에 전달.
-- **순수 판정 `ResolveLevelUp`**: 현재 레벨·경험치를 받아 결과(`FSpyLevelUpResult` — 레벨·잔여경험치·다음필요치·상승 레벨수)를 반환하는 부수효과 없는 계산. **한 번에 여러 레벨 상승 + 잔여 경험치 이월**을 함께 처리.
-- **처치 보상(서버)**: 캐릭터 사망 시 `HandleDeath` 가 킬러의 ASC 를 해석해 `대상 레벨 × ExperienceRewardPerLevel` 경험치를 지급. `bDeathRewardGranted` 로 1회만 지급(Health 가 0 이하로 여러 번 갱신돼도 중복 방지).
-- **재진입 가드**: 레벨업이 어트리뷰트를 바꿔 다시 판정을 부르는 경로를 `bProcessingLevelUp` 으로 차단.
-
-</details>
-
-### 2-2. 미션 시스템 (데이터 지향 순차 진행)
-
-> `USpyMissionComponent`(PlayerState)와 `USpyMissionConfig`(DataAsset)로 순차 미션 진행·완료 보상을 서버 권한에서 처리합니다. "무엇을 몇 번 하면 완료되고 무엇을 보상하는가"가 코드가 아닌 데이터로 정의되며, 진행 판정은 부수효과 없는 순수함수로 분리해 테스트합니다.
-
-<details>
-<summary>자세히 보기</summary>
-
-- **데이터 정의(`USpyMissionConfig`)**: `Missions[]` 배열의 **인덱스가 곧 진행 순서**. 각 엔트리 = `MatchTag`(계층 태그 매칭으로 하위 이벤트 묶음) + `Mode`(`Accumulate` 누적 / `Threshold` 값 도달) + `TargetCount` + `ExperienceReward` + `DisplayName`(HUD 표시). 코드 기본값 없이 `DA_SpyMissionConfig` 에서 입력.
-- **단일 진입점 `AddProgress(EventTag, Amount)` (서버)**: 모든 진행 신호가 이 함수 하나로 모인다. 신호원은 **"실제로 수행된 지점"에서 명시 호출** — 어빌리티 활성화 같은 범용 훅을 쓰지 않는다(활성화 ≠ 실행: 벽이 없는데 키만 눌러도 카운트되던 문제 회피).
-- **순수 판정 함수 `ResolveMissionProgress`**: 현재 인덱스·카운트 + 이벤트를 받아 결과(`FSpyMissionProgressResult` — 진행 인덱스·카운트·완료여부·전체완료)를 반환하는 **부수효과 없는 계산**. 1회 호출당 최대 1개 미션만 완료. 렌더/월드 비의존이라 Automation 테스트(`SpyMissionTests`)로 검증.
-- **재진입 가드 + 대기 큐**: 완료 보상 XP 가 레벨업(§2-1)을 유발하고 그 레벨업이 다시 `AddProgress` 를 부르는 경로가 실재 → `bProcessingProgress` 가드로 재진입을 막고, 가드에 걸린 이벤트는 `PendingEvents` 큐에 보관해 유실 없이 순차 처리.
-- **복제 → HUD**: `FSpyMissionState{MissionIndex, Count}` 를 한 구조체로 묶어 `ReplicatedUsing=OnRep` 으로 푸시(둘 중 하나만 바뀌어도 발화). `OnMissionProgressChanged` / `OnMissionCompleted` / `OnAllMissionsCompleted` 델리게이트로 MainHUD(§3-1)가 구독.
-
-</details>
-
-### 2-3. SKGAS 모듈 (커스텀 GAS 래퍼)
+### 2-1. SKGAS 모듈 (커스텀 GAS 래퍼)
 
 > 언리얼 기본 GAS를 프로젝트 비의존 별도 모듈(`SKGAS`)로 한 겹 래핑해, 어빌리티의 공통 로직(스킬 액션 / 이동기 / 큐 매니저)을 베이스 클래스 계층에 캡슐화했습니다. 단순 전투 스킬뿐 아니라 점프 · 파쿠르 · 죽음까지 캐릭터 행동을 GA로 일관 처리합니다.
 
@@ -181,7 +151,7 @@ sequenceDiagram
 
 </details>
 
-### 2-4. Data-Driven GiveAbility (USpyAbilityData)
+### 2-2. Data-Driven GiveAbility (USpyAbilityData)
 
 > 어빌리티 부여를 코드 한 줄도 하드코딩하지 않고, `USpyAbilityData` DataAsset 하나에서 AttributeSet 동적 생성 + 초기 GE 적용 + GA 부여를 일괄 처리합니다. 발급된 모든 핸들은 `FSpyAbilitySet_GrantedHandles` 단위로 트래킹해 장착 해제·사망 시 메모리 누수를 차단합니다.
 
@@ -201,7 +171,7 @@ Handles.TakeFromAbilitySystem(ASC);
 
 </details>
 
-### 2-5. DataAsset 계층 + SpyAssetManager
+### 2-3. DataAsset 계층 + SpyAssetManager
 
 > 모든 기획 요소(어빌리티 / 캐릭터 컴포넌트 / 콤보 / 애니메이션 레이어)를 `PrimaryDataAsset` 계층으로 분리하고, `SpyAssetManager`를 기획 에셋 접근의 단일 진입점으로 두었습니다. 글로벌 코어 데이터만 시작 시 동기 로드하고 나머지는 시점에 따라 sync / async 메커니즘으로 제어합니다.
 
@@ -221,7 +191,7 @@ Handles.TakeFromAbilitySystem(ASC);
 
 </details>
 
-### 2-6. SKCueManager 비동기 프리로딩
+### 2-4. SKCueManager 비동기 프리로딩
 
 > 런타임 빈발하는 이펙트·사운드용 큐(Cue) 액터의 첫 발동 히치(hitch)를 방지하기 위해, `SKCueManager`가 게임 시작 직후 사용 후보 큐들을 백그라운드로 프리로드하고, 풀(`SKCueActorPool`)에서 즉시 꺼내 재생하도록 설계했습니다.
 
@@ -241,7 +211,37 @@ Handles.TakeFromAbilitySystem(ASC);
 
 ![MainHUD — 바이탈 + 나침반 + 미션 · 우측 조작 안내 · 하단 스킬바](docs/images/MainHUD.png)
 
-### 3-1. MainHUD — 데이터 바인딩 바이탈 + 미션
+### 3-1. 레벨 · 경험치 시스템
+
+> `USpyLevelComponent`와 `USpyLevelConfig`(DataAsset)로 경험치 획득 → 레벨업 → 스탯 성장을 서버 권한에서 처리합니다. 경험치 곡선과 성장 수치는 데이터로 정의하고, 레벨업 판정은 부수효과 없는 순수함수로 분리합니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **데이터 정의(`USpyLevelConfig`)**: `ExperienceToNextLevel[]` 곡선(인덱스 i = 레벨 i+1→i+2 필요치, 배열 길이 + 1 = 최대 레벨) + `MaxHealthPerLevel` / `MaxManaPerLevel`(레벨업당 성장) + `bFullHealOnLevelUp` + `ExperienceRewardPerLevel`(처치 보상 = 대상 레벨 × 값). 코드 기본값 없이 `DA_SpyLevelConfig` 에서 입력.
+- **경험치는 어트리뷰트**: Experience/Level 을 `USpyCharacterAttributeSet` 어트리뷰트로 보관·복제. `USpyLevelComponent` 가 AttributeSet 변경 델리게이트를 구독해 레벨업을 판정하고 `OnExperienceChanged` / `OnLevelChanged` 로 HUD(§3-3 EXP 바)에 전달.
+- **순수 판정 `ResolveLevelUp`**: 현재 레벨·경험치를 받아 결과(`FSpyLevelUpResult` — 레벨·잔여경험치·다음필요치·상승 레벨수)를 반환하는 부수효과 없는 계산. **한 번에 여러 레벨 상승 + 잔여 경험치 이월**을 함께 처리.
+- **처치 보상(서버)**: 캐릭터 사망 시 `HandleDeath` 가 킬러의 ASC 를 해석해 `대상 레벨 × ExperienceRewardPerLevel` 경험치를 지급. `bDeathRewardGranted` 로 1회만 지급(Health 가 0 이하로 여러 번 갱신돼도 중복 방지).
+- **재진입 가드**: 레벨업이 어트리뷰트를 바꿔 다시 판정을 부르는 경로를 `bProcessingLevelUp` 으로 차단.
+
+</details>
+
+### 3-2. 미션 시스템 (데이터 지향 순차 진행)
+
+> `USpyMissionComponent`(PlayerState)와 `USpyMissionConfig`(DataAsset)로 순차 미션 진행·완료 보상을 서버 권한에서 처리합니다. "무엇을 몇 번 하면 완료되고 무엇을 보상하는가"가 코드가 아닌 데이터로 정의되며, 진행 판정은 부수효과 없는 순수함수로 분리해 테스트합니다.
+
+<details>
+<summary>자세히 보기</summary>
+
+- **데이터 정의(`USpyMissionConfig`)**: `Missions[]` 배열의 **인덱스가 곧 진행 순서**. 각 엔트리 = `MatchTag`(계층 태그 매칭으로 하위 이벤트 묶음) + `Mode`(`Accumulate` 누적 / `Threshold` 값 도달) + `TargetCount` + `ExperienceReward` + `DisplayName`(HUD 표시). 코드 기본값 없이 `DA_SpyMissionConfig` 에서 입력.
+- **단일 진입점 `AddProgress(EventTag, Amount)` (서버)**: 모든 진행 신호가 이 함수 하나로 모인다. 신호원은 **"실제로 수행된 지점"에서 명시 호출** — 어빌리티 활성화 같은 범용 훅을 쓰지 않는다(활성화 ≠ 실행: 벽이 없는데 키만 눌러도 카운트되던 문제 회피).
+- **순수 판정 함수 `ResolveMissionProgress`**: 현재 인덱스·카운트 + 이벤트를 받아 결과(`FSpyMissionProgressResult` — 진행 인덱스·카운트·완료여부·전체완료)를 반환하는 **부수효과 없는 계산**. 1회 호출당 최대 1개 미션만 완료. 렌더/월드 비의존이라 Automation 테스트(`SpyMissionTests`)로 검증.
+- **재진입 가드 + 대기 큐**: 완료 보상 XP 가 레벨업(§3-1)을 유발하고 그 레벨업이 다시 `AddProgress` 를 부르는 경로가 실재 → `bProcessingProgress` 가드로 재진입을 막고, 가드에 걸린 이벤트는 `PendingEvents` 큐에 보관해 유실 없이 순차 처리.
+- **복제 → HUD**: `FSpyMissionState{MissionIndex, Count}` 를 한 구조체로 묶어 `ReplicatedUsing=OnRep` 으로 푸시(둘 중 하나만 바뀌어도 발화). `OnMissionProgressChanged` / `OnMissionCompleted` / `OnAllMissionsCompleted` 델리게이트로 MainHUD(§3-3)가 구독.
+
+</details>
+
+### 3-3. MainHUD — 데이터 바인딩 바이탈 + 미션
 
 > `USpyMainHUD`가 좌상단 바이탈 3바(HP / MP / EXP)와 레벨·미션 진행을 표시합니다. 클라이언트에서 Pawn / PlayerState / ASC가 늦게 준비되는 타이밍 문제를 재시도 바인딩으로 흡수합니다.
 
@@ -254,7 +254,7 @@ Handles.TakeFromAbilitySystem(ASC);
 
 </details>
 
-### 3-2. 나침반 (Compass)
+### 3-4. 나침반 (Compass)
 
 > `USpyCompassWidget`가 플레이어의 조준/이동 의도 방향(컨트롤 회전 yaw)을 8방위(N · NE · E · …) 라벨로 표시합니다.
 
@@ -267,7 +267,7 @@ Handles.TakeFromAbilitySystem(ASC);
 
 </details>
 
-### 3-3. 스킬바 + 레이디얼 쿨다운
+### 3-5. 스킬바 + 레이디얼 쿨다운
 
 > `USpySkillBarWidget`(6슬롯)과 `USpySkillSlotWidget`이 스킬 아이콘·쿨다운·마나 코스트를 표시합니다. 쿨다운은 세로 바가 아닌 **원형(360°) 레이디얼 언와인드**로, 사용 불가(쿨다운·마나 부족) 상태를 시각적으로 즉시 구분합니다.
 
@@ -291,7 +291,7 @@ Txt_KeyHint->SetText(Keys[0].GetDisplayName());
 
 </details>
 
-### 3-4. 조작 안내 패널
+### 3-6. 조작 안내 패널
 
 > `WBP_KeyGuide`가 화면 우측에 상시 표시되는 컴팩트 조작 안내입니다. 전체화면 메뉴 대신 MainHUD에 임베드되어 핵심 조작을 한눈에 제공합니다.
 
