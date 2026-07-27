@@ -122,10 +122,24 @@ void UBTTask_CircleStrafe::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 		return;
 	}
 
-	//# 스킬 시전(Lock_Input_Move) / 죽음 중에는 타겟 회전·시선 락 모두 해제
-	if (SpyAIUtils::CanMove(AIC) == false)
+	//# 죽음 — 시체가 타겟을 계속 쳐다보지 않도록 시선 락 해제
+	//# (실제로는 ASpyCharacter::OnDeath 가 StopLogic 으로 BT 를 먼저 멈추므로 거의 도달하지 않는 방어 분기)
+	if (SpyAIUtils::IsDead(AIC))
 	{
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
+	}
+	//# 스킬 시전·피격(Lock_Input_Move) 중에는 아래 else 분기의 명시적 회전 호출(SetControlRotation·
+	//# SetActorRotation)만 생략하고 타겟 시선 락은 유지한다. 본체가 안 도는 것은 아니다 —
+	//# 포커스가 남아 있으면 엔진의 AAIController::Tick → UpdateControlRotation → APawn::FaceRotation 이
+	//# bUseControllerRotationYaw = true 인 AI 폰의 yaw 를 매 틱 타겟 방향으로 스냅시킨다.
+	//# 그럼에도 focus 를 지우면 안 되는 이유: PathFollowing 이 이동 중 매 틱 갱신하는
+	//# Move 우선순위 focus(= 경로 진행 방향 = 타겟 반대편 EQS 지점)가 승격돼 몸이 홱 돌아간다.
+	else if (SpyAIUtils::CanMove(AIC) == false)
+	{
+		if (AIC->GetFocusActor() != CurTarget)
+		{
+			AIC->SetFocus(CurTarget);
+		}
 	}
 	else
 	{
@@ -289,6 +303,14 @@ void UBTTask_CircleStrafe::FinishStrafe(UBehaviorTreeComponent& OwnerComp, EBTNo
 	if (IsValid(AIController))
 	{
 		SetStrafeSpeed(AIController, OriginalMaxWalkSpeed);
+		//# 잠금(Lock_Input_Move·사망) 중 종료일 때만 StopMovement — 경로 이동이 살아 있으면
+		//# PathFollowing 이 Move 우선순위 focus 를 계속 갱신하므로, Gameplay focus 만 지우면
+		//# 이동 방향으로 몸이 돌아간다. (ClearFocus 앞 순서는 AbortTask 와 동일)
+		//# 정상 종료는 후속 태스크(BTTask_MoveToTarget)가 곧바로 새 MoveTo 를 걸므로 멈추지 않는다.
+		if (SpyAIUtils::CanMove(AIController) == false)
+		{
+			AIController->StopMovement();
+		}
 		AIController->ClearFocus(EAIFocusPriority::Gameplay);
 	}
 	FinishLatentTask(OwnerComp, Result);

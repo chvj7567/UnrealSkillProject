@@ -2,6 +2,7 @@
 
 
 #include "Character/SpyCharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
 #include "Util/DefineEnum.h"
 #include "Character/SpyCharacter.h"
 #include "Net/UnrealNetwork.h"
@@ -60,6 +61,22 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 			if (OwnerCharacter == nullptr)
 				break;
 
+			//# 아래 타겟팅 분기는 플레이어 전용 로직이다.
+			//# AI 는 ASpyCharacter::PossessedBy 에서 bUseControllerRotationYaw = true /
+			//# bOrientRotationToMovement = false 로 설정되고, 회전은 컨트롤러의 FaceRotation 이 담당한다.
+			//# 타겟이 없는 AI 가 이 분기에 들어오면 매 프레임 bOrientRotationToMovement 를 true 로 되돌려
+			//# 그 설정을 무효화한다 → 공격 중(Lock.Input.Move) BT 가 회전을 놓는 순간 엔진이 경로 이동 방향
+			//# (CircleStrafe EQS = 플레이어 반대편)으로 회전시켜 180° 스핀이 발생한다.
+			//# 판정은 설정을 넣은 PossessedBy 와 동일한 기준(IsPlayerController)으로 맞춘다 —
+			//# 두 곳이 다른 기준을 쓰면 어긋날 수 있다. 컨트롤러가 아직 없는 스폰 직후 프레임도
+			//# 이 경로로 빠지지만, 플래그를 건드리지 않는 쪽이라 오판해도 안전하다.
+			AController* OwnerController = OwnerCharacter->GetController();
+			if (OwnerController == nullptr || OwnerController->IsPlayerController() == false)
+			{
+				Super::PhysicsRotation(DeltaTime);
+				break;
+			}
+
 			USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
 			if (TargetingComp == nullptr)
 				break;
@@ -76,12 +93,16 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 				LookDir.Z = 0.f;
 				FRotator TargetRot = LookDir.Rotation();
 
+				//# 플레이어 전용 토글 — 유지한다. EndWallClimb 이 bOrientRotationToMovement 를 무조건 true 로
+				//# 되돌리므로, 타겟 락 중 등반이 끝난 프레임을 여기서 다시 false 로 복구해 준다.
 				OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
 				OwnerCharacter->SetActorRotation(TargetRot);
 				break;
 			}
 			else
 			{
+				//# 엔진 PhysicsRotation 은 bOrientRotationToMovement / bUseControllerDesiredRotation 이
+				//# 모두 false 면 즉시 반환한다 — 타겟 해제 후 이동 방향 회전을 되살리려면 이 대입이 필요하다.
 				OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
 			}
 

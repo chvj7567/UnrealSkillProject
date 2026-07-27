@@ -27,6 +27,26 @@ bool SpyAIUtils::CanMove(AAIController* InAIController)
     return true;
 }
 
+bool SpyAIUtils::IsDead(AAIController* InAIController)
+{
+	if (InAIController == nullptr)
+		return false;
+
+	APawn* Pawn = InAIController->GetPawn();
+	if (Pawn == nullptr)
+		return false;
+
+	APlayerState* PS = Pawn->GetPlayerState();
+	if (PS == nullptr)
+		return false;
+
+	UAbilitySystemComponent* ASC = PS->FindComponentByClass<UAbilitySystemComponent>();
+	if (ASC == nullptr)
+		return false;
+
+	return ASC->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
+}
+
 bool SpyAIUtils::CanTargetAttack(ACharacter* InTarget, UBlackboardComponent* InBlackboard, FName TargetKeyName)
 {
     if (InTarget == nullptr) return false;
