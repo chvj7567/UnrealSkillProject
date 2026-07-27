@@ -98,21 +98,40 @@ void ASpyPlayerController::UpdateRotation(float DeltaTime)
 			return;
 	}
 
-	if (TargetingComp != nullptr && TargetingComp->GetTarget().IsValid())
-	{
-		FVector LookDir = TargetingComp->GetTarget()->GetActorLocation() - GetPawn()->GetActorLocation();
-		LookDir.Z -= 100.f;
+	APawn* ControlledPawn = GetPawn();
+	AActor* TargetActor = (ControlledPawn != nullptr && TargetingComp != nullptr) ? TargetingComp->GetTarget().Get() : nullptr;
 
-		FRotator TargetRot = LookDir.Rotation();
-		FRotator CurrentRot = GetControlRotation();
-		FRotator SoftRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 10.f);
+	//# 타겟팅 중에는 Yaw(좌우) 만 타겟이 소유하고, Pitch(상하) 는 플레이어 입력에 맡긴다
+	const bool bTargetLocked = (TargetActor != nullptr);
 
-		SetControlRotation(SoftRot);
-	}
-	else
+	if (bTargetLocked)
 	{
-		Super::UpdateRotation(DeltaTime);
+		//# Super 가 만드는 DeltaRot 에서 yaw 성분을 제거 — 컨트롤 회전 Yaw 가 입력으로 움직이지 않게
+		//# 전제: 플레이어 폰은 bUseControllerRotationYaw == false. 이를 켜게 되면 Super 이후 보간된 Yaw 로 FaceRotation 을 재적용해야 한다
+		RotationInput.Yaw = 0.f;
 	}
+
+	//# 엔진 표준 경로 — RotationInput 소비 + PlayerCameraManager 의 ViewPitchMin/Max 클램프(LimitViewPitch)
+	Super::UpdateRotation(DeltaTime);
+
+	if (bTargetLocked == false)
+		return;
+
+	//# Yaw 만 사용하므로 높이 차(Z) 는 결과에 영향을 주지 않는다
+	const FVector LookDir = TargetActor->GetActorLocation() - ControlledPawn->GetActorLocation();
+
+	//# 수직으로 겹친 프레임 — Yaw 를 0 으로 스냅시키지 않고 현재 값을 유지
+	if (LookDir.SizeSquared2D() <= KINDA_SMALL_NUMBER)
+		return;
+
+	const FRotator CurrentRot = GetControlRotation();
+	const FRotator TargetRot = FRotator(0.f, LookDir.Rotation().Yaw, 0.f);
+
+	//# Yaw 스칼라만 보간 — RInterpTo 가 델타를 정규화해 ±180° 경계에서 최단 경로로 돈다
+	const float SoftYaw = FMath::RInterpTo(FRotator(0.f, CurrentRot.Yaw, 0.f), TargetRot, DeltaTime, 10.f).Yaw;
+
+	//# Pitch 는 Super 가 클램프한 값 그대로 유지, Roll 은 0
+	SetControlRotation(FRotator(CurrentRot.Pitch, SoftYaw, 0.f));
 }
 
 void ASpyPlayerController::PreProcessInput(const float DeltaTime, const bool bGamePaused)
