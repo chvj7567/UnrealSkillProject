@@ -218,7 +218,7 @@ Handles.TakeFromAbilitySystem(ASC);
 <details>
 <summary>자세히 보기</summary>
 
-- **데이터 정의(`USpyLevelConfig`)**: `ExperienceToNextLevel[]` 곡선(인덱스 i = 레벨 i+1→i+2 필요치, 배열 길이 + 1 = 최대 레벨) + `MaxHealthPerLevel` / `MaxManaPerLevel`(레벨업당 성장) + `bFullHealOnLevelUp` + `ExperienceRewardPerLevel`(처치 보상 = 대상 레벨 × 값). 코드 기본값 없이 `DA_SpyLevelConfig` 에서 입력.
+- **데이터 정의(`USpyLevelConfig`)**: `ExperienceToNextLevel[]` 곡선(인덱스 i = 레벨 i+1→i+2 필요치, 배열 길이 + 1 = 최대 레벨) + `MaxHealthPerLevel` / `MaxManaPerLevel`(레벨업당 성장) + `bFullHealOnLevelUp` + `ExperienceRewardPerLevel`(처치 보상 = 대상 레벨 × 값). 코드 기본값 없이 `SpyLevelConfig` 에셋(`Content/Spy/Data/Config/`)에서 입력.
 - **경험치는 어트리뷰트**: Experience/Level 을 `USpyCharacterAttributeSet` 어트리뷰트로 보관·복제. `USpyLevelComponent` 가 AttributeSet 변경 델리게이트를 구독해 레벨업을 판정하고 `OnExperienceChanged` / `OnLevelChanged` 로 HUD(§3-3 EXP 바)에 전달.
 - **순수 판정 `ResolveLevelUp`**: 현재 레벨·경험치를 받아 결과(`FSpyLevelUpResult` — 레벨·잔여경험치·다음필요치·상승 레벨수)를 반환하는 부수효과 없는 계산. **한 번에 여러 레벨 상승 + 잔여 경험치 이월**을 함께 처리.
 - **처치 보상(서버)**: 캐릭터 사망 시 `HandleDeath` 가 킬러의 ASC 를 해석해 `대상 레벨 × ExperienceRewardPerLevel` 경험치를 지급. `bDeathRewardGranted` 로 1회만 지급(Health 가 0 이하로 여러 번 갱신돼도 중복 방지).
@@ -233,7 +233,7 @@ Handles.TakeFromAbilitySystem(ASC);
 <details>
 <summary>자세히 보기</summary>
 
-- **데이터 정의(`USpyMissionConfig`)**: `Missions[]` 배열의 **인덱스가 곧 진행 순서**. 각 엔트리 = `MatchTag`(계층 태그 매칭으로 하위 이벤트 묶음) + `Mode`(`Accumulate` 누적 / `Threshold` 값 도달) + `TargetCount` + `ExperienceReward` + `DisplayName`(HUD 표시). 코드 기본값 없이 `DA_SpyMissionConfig` 에서 입력.
+- **데이터 정의(`USpyMissionConfig`)**: `Missions[]` 배열의 **인덱스가 곧 진행 순서**. 각 엔트리 = `MatchTag`(계층 태그 매칭으로 하위 이벤트 묶음) + `Mode`(`Accumulate` 누적 / `Threshold` 값 도달) + `TargetCount` + `ExperienceReward` + `DisplayName`(HUD 표시). 코드 기본값 없이 `SpyMissionConfig` 에셋(`Content/Spy/Data/Config/`)에서 입력.
 - **단일 진입점 `AddProgress(EventTag, Amount)` (서버)**: 모든 진행 신호가 이 함수 하나로 모인다. 신호원은 **"실제로 수행된 지점"에서 명시 호출** — 어빌리티 활성화 같은 범용 훅을 쓰지 않는다(활성화 ≠ 실행: 벽이 없는데 키만 눌러도 카운트되던 문제 회피).
 - **순수 판정 함수 `ResolveMissionProgress`**: 현재 인덱스·카운트 + 이벤트를 받아 결과(`FSpyMissionProgressResult` — 진행 인덱스·카운트·완료여부·전체완료)를 반환하는 **부수효과 없는 계산**. 1회 호출당 최대 1개 미션만 완료. 렌더/월드 비의존이라 Automation 테스트(`SpyMissionTests`)로 검증.
 - **재진입 가드 + 대기 큐**: 완료 보상 XP 가 레벨업(§3-1)을 유발하고 그 레벨업이 다시 `AddProgress` 를 부르는 경로가 실재 → `bProcessingProgress` 가드로 재진입을 막고, 가드에 걸린 이벤트는 `PendingEvents` 큐에 보관해 유실 없이 순차 처리.
