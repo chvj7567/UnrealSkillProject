@@ -74,6 +74,20 @@ public:
 	}
 
 public:
+	//# 파쿠르처럼 캐릭터가 벽에 밀착하는 액션 동안 SpringArm 콜리전 테스트를 억제한다.
+	//# 밀착 상태에서는 프로브 시작점이 벽 지오메트리 안으로 들어가 팔 길이가 0 근처로 붕괴한다.
+	//# 액션이 체이닝될 수 있으므로 bool 이 아니라 참조 카운트로 관리한다 —
+	//# 먼저 끝난 액션이 아직 진행 중인 다른 액션의 억제를 풀어 버리면 안 된다.
+	//# 레플리케이트되지 않는 순수 로컬 카메라 연출이라 서버/클라 어디서 불러도 무방하다.
+	void PushCameraCollisionSuppress();
+	void PopCameraCollisionSuppress();
+
+	FORCEINLINE int32 GetCameraCollisionSuppressCount() const
+	{
+		return CameraCollisionSuppressCount;
+	}
+
+public:
 	UFUNCTION(BlueprintCallable)
 	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const;
 
@@ -122,4 +136,11 @@ protected:
 
 private:
 	FTimerHandle WeaponSpawnTimerHandle;
+
+	//# 카메라 콜리전 억제를 요청한 액션 수. 0 -> 1 에서 끄고 1 -> 0 에서 되돌린다.
+	int32 CameraCollisionSuppressCount = 0;
+
+	//# 억제 진입 시점의 bDoCollisionTest 원래 값. 하드코딩 true 로 되돌리면
+	//# BP 에서 false 로 세팅한 캐릭터의 설정을 덮어쓰게 된다.
+	bool bCachedDoCollisionTest = true;
 };

@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Util/DefineEnum.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Character/SpyCharacter.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "System/SpyPlayerController.h"
@@ -24,28 +25,44 @@ USpyGA_WallClimb::USpyGA_WallClimb()
 
 void USpyGA_WallClimb::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-    Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    CurrentSpecHandle = Handle;
-    CurrentActorInfo = ActorInfo;
-    CurrentActivationInfo = ActivationInfo;
+	CurrentSpecHandle = Handle;
+	CurrentActorInfo = ActorInfo;
+	CurrentActivationInfo = ActivationInfo;
 
-    if (TryToggleClimbAction() == false)
-    {
-        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-    }
+	//# 등반 중에는 캐릭터가 벽에 밀착해 SpringArm 프로브가 벽 안에서 시작되고 팔 길이가 붕괴한다.
+	//# bDoCollisionTest 는 레플리케이트되지 않는 로컬 카메라 연출이라 Authority 블록 밖에서 처리한다.
+	//# 어떤 조기 종료 경로로 빠져도 EndAbility 가 짝을 맞추도록 등반 판정보다 먼저 건다.
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+	{
+		SpyCharacter->PushCameraCollisionSuppress();
+		CameraSuppressedCharacter = SpyCharacter;
+	}
+
+	if (TryToggleClimbAction() == false)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	}
 }
 
 void USpyGA_WallClimb::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-    EndWallClimb();
+	EndWallClimb();
 
-    //# 등반은 FreeMoveMode 를 켜지 않는다 (MOVE_Custom/WallClimb 로만 동작).
-    //# 따라서 여기서 SetFreeMoveMode(false) 를 부르면 켠 적 없는 상태를 끄는 셈이 되어,
-    //# 벽이 없는 공중 입력 시에도 낙하 중 캐릭터를 MOVE_Walking 으로 스냅시킨다.
-    //# 이동 모드 복구는 EndWallClimb(bWallClimbing 가드) 가 담당한다.
+	//# 등반은 FreeMoveMode 를 켜지 않는다 (MOVE_Custom/WallClimb 로만 동작).
+	//# 따라서 여기서 SetFreeMoveMode(false) 를 부르면 켠 적 없는 상태를 끄는 셈이 되어,
+	//# 벽이 없는 공중 입력 시에도 낙하 중 캐릭터를 MOVE_Walking 으로 스냅시킨다.
+	//# 이동 모드 복구는 EndWallClimb(bWallClimbing 가드) 가 담당한다.
 
-    Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	//# 취소·중단·사망 경로도 전부 EndAbility 로 흘러오므로 여기서만 해제하면 카운트가 새지 않는다.
+	if (ASpyCharacter* SuppressedCharacter = CameraSuppressedCharacter.Get())
+	{
+		SuppressedCharacter->PopCameraCollisionSuppress();
+	}
+	CameraSuppressedCharacter = nullptr;
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void USpyGA_WallClimb::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)

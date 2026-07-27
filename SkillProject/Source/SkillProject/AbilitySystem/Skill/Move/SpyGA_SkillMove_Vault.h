@@ -7,6 +7,8 @@
 
 #include "SpyGA_SkillMove_Vault.generated.h"
 
+class ASpyCharacter;
+
 UCLASS()
 class SKILLPROJECT_API USpyGA_SkillMove_Vault : public USKGameplayAbility_SkillMove
 {
@@ -35,9 +37,14 @@ protected:
     //# SetFreeMoveMode 호출은 전부 HasAuthority 안이라 이 플래그도 서버 인스턴스에서만 의미가 있다.
     bool bFreeMoveEngaged = false;
 
-    UPROPERTY(EditAnywhere)
-    FName MotionWarpingStartName;
+	//# 이 GA 가 카메라 콜리전 억제를 건 캐릭터. 건 주체만 해제한다.
+	//# 약참조로 들고 있는 이유 — 사망·파괴 경로의 EndAbility 에서는 ActorInfo 의 Avatar 가
+	//# 이미 비어 있을 수 있어 다시 조회하면 해제를 놓치고 카운트가 샌다.
+	TWeakObjectPtr<ASpyCharacter> CameraSuppressedCharacter;
 
-    UPROPERTY(EditAnywhere)
-    FName MotionWarpingEndName;
+	UPROPERTY(EditAnywhere)
+	FName MotionWarpingStartName;
+
+	UPROPERTY(EditAnywhere)
+	FName MotionWarpingEndName;
 };

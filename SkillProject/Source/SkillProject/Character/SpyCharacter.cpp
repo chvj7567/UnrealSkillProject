@@ -145,6 +145,34 @@ void ASpyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	SpyPawnExtensionComponent->SetupPlayerInputComponent();
 }
 
+void ASpyCharacter::PushCameraCollisionSuppress()
+{
+	++CameraCollisionSuppressCount;
+
+	//# 첫 요청에서만 원래 값을 저장하고 끈다. 이후 중첩 요청은 카운트만 올린다.
+	if (CameraCollisionSuppressCount == 1 && IsValid(CameraBoom))
+	{
+		//# bDoCollisionTest 는 uint32:1 비트필드라 bool 로 명시 변환해 보관한다.
+		bCachedDoCollisionTest = (CameraBoom->bDoCollisionTest != 0);
+		CameraBoom->bDoCollisionTest = false;
+	}
+}
+
+void ASpyCharacter::PopCameraCollisionSuppress()
+{
+	//# 짝이 맞지 않는 해제로 카운트가 음수로 내려가지 않게 막는다.
+	if (CameraCollisionSuppressCount <= 0)
+		return;
+
+	--CameraCollisionSuppressCount;
+
+	//# 마지막 요청이 풀렸을 때만 원래 값으로 되돌린다.
+	if (CameraCollisionSuppressCount == 0 && IsValid(CameraBoom))
+	{
+		CameraBoom->bDoCollisionTest = bCachedDoCollisionTest;
+	}
+}
+
 UAbilitySystemComponent* ASpyCharacter::GetAbilitySystemComponent() const
 {
 	if (SpyPawnExtensionComponent == nullptr)

@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "MotionWarpingComponent.h"
 #include "Perception/AISense_Hearing.h"
+#include "Character/SpyCharacter.h"
 #include "Data/SpyAssetNames.h"
 #include "System/SpyMissionComponent.h"
 #include "Util/SpyGameplayTags.h"
@@ -16,6 +17,15 @@
 void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	//# 넘기 중에는 캐릭터가 벽에 밀착해 SpringArm 프로브가 벽 안에서 시작되고 팔 길이가 붕괴한다.
+	//# bDoCollisionTest 는 레플리케이트되지 않는 로컬 카메라 연출이라 Authority 블록 밖에서 처리한다.
+	//# 어떤 조기 종료 경로로 빠져도 EndAbility 가 짝을 맞추도록 커밋 판정보다 먼저 건다.
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+	{
+		SpyCharacter->PushCameraCollisionSuppress();
+		CameraSuppressedCharacter = SpyCharacter;
+	}
 
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
@@ -72,6 +82,13 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	}
 
 	bFreeMoveEngaged = false;
+
+	//# 취소·중단·사망 경로도 전부 EndAbility 로 흘러오므로 여기서만 해제하면 카운트가 새지 않는다.
+	if (ASpyCharacter* SuppressedCharacter = CameraSuppressedCharacter.Get())
+	{
+		SuppressedCharacter->PopCameraCollisionSuppress();
+	}
+	CameraSuppressedCharacter = nullptr;
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
