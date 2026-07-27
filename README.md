@@ -209,7 +209,7 @@ Handles.TakeFromAbilitySystem(ASC);
 
 > 런타임 플레이어 UI는 범용 `SKUICore`(UI 매니저 + 위젯 베이스)를 소비해 구성했습니다. HUD의 모든 수치는 하드코딩 폴링이 아니라 어트리뷰트·컴포넌트의 변경 델리게이트를 구독해 **이벤트 기반**으로 갱신되며, 스킬바의 키 안내는 Enhanced Input 실제 바인딩에서 자동 유도됩니다.
 
-![MainHUD — 바이탈 + 나침반 + 미션 · 우측 조작 안내 · 하단 스킬바](docs/images/MainHUD.png)
+![MainHUD — 바이탈 + 미션 · 우측 조작 안내 · 하단 스킬바](docs/images/MainHUD.png)
 
 ### 3-1. 레벨 · 경험치 시스템
 
@@ -254,20 +254,7 @@ Handles.TakeFromAbilitySystem(ASC);
 
 </details>
 
-### 3-4. 나침반 (Compass)
-
-> `USpyCompassWidget`가 플레이어의 조준/이동 의도 방향(컨트롤 회전 yaw)을 8방위(N · NE · E · …) 라벨로 표시합니다.
-
-<details>
-<summary>자세히 보기</summary>
-
-- **헤딩 표시**: 매 tick 컨트롤 회전 yaw 를 읽어 `SpyHUDMath::HeadingToCardinal` 로 8방위 enum(`ESpyCardinal`)을 산출 → `N/NE/E/SE/S/SW/W/NW` 라벨 갱신. 카메라 회전이 아니라 컨트롤 회전을 쓰는 이유는 플레이어의 조준/이동 의도 방향을 나타내기 위함.
-- **순수 로컬 표시**: 서버 통신 없이 로컬 컨트롤러의 회전만 사용.
-- **순수함수 분리**: `SpyHUDMath::HeadingToCardinal`(yaw→8방위)은 렌더 비의존 순수함수라 Automation 테스트로 검증 가능.
-
-</details>
-
-### 3-5. 스킬바 + 레이디얼 쿨다운
+### 3-4. 스킬바 + 레이디얼 쿨다운
 
 > `USpySkillBarWidget`(6슬롯)과 `USpySkillSlotWidget`이 스킬 아이콘·쿨다운·마나 코스트를 표시합니다. 쿨다운은 세로 바가 아닌 **원형(360°) 레이디얼 언와인드**로, 사용 불가(쿨다운·마나 부족) 상태를 시각적으로 즉시 구분합니다.
 
@@ -291,7 +278,7 @@ Txt_KeyHint->SetText(Keys[0].GetDisplayName());
 
 </details>
 
-### 3-6. 조작 안내 패널
+### 3-5. 조작 안내 패널
 
 > `WBP_KeyGuide`가 화면 우측에 상시 표시되는 컴팩트 조작 안내입니다. 전체화면 메뉴 대신 MainHUD에 임베드되어 핵심 조작을 한눈에 제공합니다.
 
