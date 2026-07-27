@@ -23,11 +23,11 @@ Unreal Engine **5.7** 기반 스파이 테마 3인칭 액션 게임. 데디케�
 | [plugin-skassetcore.md](.claude/rules/plugin-skassetcore.md) | 에셋 로드·DataAsset 추가 시 (하드코딩 경로 금지) |
 | [plugin-skuicore.md](.claude/rules/plugin-skuicore.md) | UI 위젯·UI 매니저 작업 시 |
 | [plugin-modulargameplayactors.md](.claude/rules/plugin-modulargameplayactors.md) | 액터 베이스 상속·InitState 초기화 흐름 작업 시 |
-| [ui-workflow.md](.claude/rules/ui-workflow.md) | UI 화면 배치·HUD 구성 작업 시 (목업 우선 승인 게이트 + unreal-mcp 편집 방법·함정) |
+| [ui-workflow.md](.claude/rules/ui-workflow.md) | UI 편집 착수 **후** — unreal-mcp 편집 방법·함정 (착수 **전** 목업 승인 게이트는 `.claude/project.md`) |
 
 ### 에이전트 메타 (`.claude/project.md`)
 
-`.claude/project.md` 는 서브에이전트가 작업 시작 시 가장 먼저 읽는 **구조화된 프로젝트 메타**다. 엔진·모듈·테스트 경로·문서 위치·협업 흐름·메인 오케스트레이터 행동 규칙이 여기 있다.  
+`.claude/project.md` 는 서브에이전트가 작업 시작 시 가장 먼저 읽는 **구조화된 프로젝트 메타**다. 엔진·모듈·테스트 경로·문서 위치·협업 흐름·메인 오케스트레이터 행동 규칙이 여기 있다. **메인이 멈춰야 하는 게이트 3종**(스킬 후보 제시 · 에셋 한정 사이클 · UI 목업 승인)도 전부 이 파일에 모여 있다.  
 **CLAUDE.md 와 `.claude/project.md` 에 같은 정보가 있으면 `.claude/project.md` 가 SoT다.**
 
 ### 서브에이전트 (`.claude/agents/`)
