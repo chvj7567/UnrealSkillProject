@@ -16,7 +16,7 @@
 
 ### ▶️ 풀 게임플레이 데모 (2:19)
 
-[![SpyPlay — 풀 게임플레이 데모](https://img.youtube.com/vi/DMnJXSP48bY/maxresdefault.jpg)](https://youtu.be/DMnJXSP48bY)
+[![SpyPlay — 풀 게임플레이 데모](https://img.youtube.com/vi/i-2IGaEMYe8/maxresdefault.jpg)](https://youtu.be/i-2IGaEMYe8)
 
 이 프로젝트는 언리얼 엔진 5.7 기반 스파이 테마 3인칭 액션 게임입니다.
 데디케이티드 서버(Dedicated Server) 환경에서 동작하며 — 모든 게임플레이 로직은 서버 권한 위에서 실행되고 클라이언트는 리플리케이션으로 결과를 수신합니다.
