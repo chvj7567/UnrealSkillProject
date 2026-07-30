@@ -14,7 +14,7 @@
 [![GAS](https://img.shields.io/badge/Gameplay_Ability_System-Custom_Wrapper-orange)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Modular_Lyra--Style-blueviolet)]()
 
-### ▶️ 풀 게임플레이 데모 (2:19)
+### ▶️ 풀 게임플레이 데모
 
 [![SpyPlay — 풀 게임플레이 데모](https://img.youtube.com/vi/i-2IGaEMYe8/maxresdefault.jpg)](https://youtu.be/i-2IGaEMYe8)
 
@@ -35,15 +35,15 @@ Gameplay Ability(GA) 단위로 캡슐화되어 서버 권한(Server Authority) �
 
 - [**🏃 파쿠르 (Vault / WallClimb / HangUp)**](#4-1-파쿠르-vault--wallclimb--hangup) — 다중 LineTrace 기반 지형 분석 + Motion Warping 매칭
 - [**⚔️ 데이터 지향 콤보**](#4-2-데이터-지향-콤보-시스템) — `SpyComboAssetData` 딕셔너리 기반 GA 체인
-- [**🪝 그래플링 훅**](#4-3--그래플링-훅-타겟팅--케이블--공중-루프--ui-프롬프트) — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
-- [**🛡️ 홀드형 패링**](#4-4--홀드형-패링-시스템) — 홀드형 GA + Loose Tag 윈도우 + `Skill_Parry_Hit` 역송
+- [**🪝 그래플링 훅**](#4-3-그래플링-훅-타겟팅--케이블--공중-루프--ui-프롬프트) — 타겟 스캔 + 케이블 시각화 + 서버 도착 판정
+- [**🛡️ 홀드형 패링**](#4-4-홀드형-패링-시스템) — 홀드형 GA + Loose Tag 윈도우 + `Skill_Parry_Hit` 역송
 - [**🎯 타겟팅 매니저**](#5-1-타겟팅-매니저) — 시야/거리 기반 베스트 타겟 추적
 - [**💢 무기 AnimTrail**](#5-2-무기-animtrail-이펙트) — 데이터 지향 검격 잔상
 - [**💥 히트 카메라 셰이크**](#5-3-히트-카메라-셰이크) — 공격자/피격자 차등 셰이크 + 로컬 RPC 우회
-- [**🥊 방향별 Hit 리액션**](#5-4--방향별-hit-리액션-애니메이션) — Front/Back/Left/Right 4분할 + Context 운반 + 4종 몽타주 분기
+- [**🥊 방향별 Hit 리액션**](#5-4-방향별-hit-리액션-애니메이션) — Front/Back/Left/Right 4분할 + Context 운반 + 4종 몽타주 분기
 - [**🤖 AI Behavior Tree**](#6-1-behavior-tree-tasks--kiting-사이클) — BTTask = GA 1:1 매핑 + Kiting 사이클
 - [**🧭 AI EQS**](#6-2-eqs--strafedirection--arcawayfromtarget) — StrafeDirection + ArcAwayFromTarget 평가
-- [**🖥️ HUD & 스킬바**](#3--hud--플레이어-ui) — 이벤트 기반 바이탈 바인딩 + 원형 레이디얼 쿨다운 + Enhanced Input 키힌트 자동 유도
+- [**🖥️ HUD & 스킬바**](#hud--플레이어-ui) — 이벤트 기반 바이탈 바인딩 + 원형 레이디얼 쿨다운 + Enhanced Input 키힌트 자동 유도
 
 ---
 
@@ -204,6 +204,8 @@ Handles.TakeFromAbilitySystem(ASC);
 </details>
 
 ---
+
+<a id="hud--플레이어-ui"></a>
 
 ## 3. 🖥️ HUD & 플레이어 UI
 
