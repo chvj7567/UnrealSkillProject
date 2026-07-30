@@ -2663,7 +2663,11 @@ git add SkillProject/Content/Spy/UI/WBP_SessionBrowser.uasset SkillProject/Conte
 
 1. 창 B 에서 "새로고침" → A 의 방이 목록에 뜨는가 (방 이름·인원·핑)
 
-> **인원이 `0 / 4` 로 나와도 실패가 아니다.** Null 은 `CreateSession` 시 `NumOpenPublicConnections = NumPublicConnections` 로 시작하므로(`OnlineSessionInterfaceNull.cpp:202`), 호스트만 있는 방이 `0 / 4` 로 광고될 수 있다. **관측 항목이지 판정 기준이 아니다** — 실제 실패는 방이 안 뜨거나 조인이 안 되는 것이다.
+> **인원 표기는 `1 / 4` 여야 한다** (2026-07-30 패키지 실측으로 정정 — 이전에 "0/4 도 정상"으로 적었던 것은 **틀렸다**).
+>
+> Null 은 `CreateSession` 시 `NumOpenPublicConnections` 를 최대치로 시작하고 **`RegisterPlayers` 호출로 깎는다** — 엔진 주석이 `OnlineSessionInterfaceNull.cpp:202` 에서 `local player will register later` 라고 명시한다(감소는 `:912-914`).
+> 그런데 호스트의 `PostLogin`(→ `AGameSession::RegisterPlayer`)은 DevMap 로딩 중에 끝나고, 우리 `CreateSession` 은 `ScheduleHostSessionAfterArrival()` 로 **그 다음 틱**에 돌아 등록 시점을 놓친다. **포트 0 을 고치려고 순서를 뒤집은 부작용이다.**
+> → 조치: `HandleCreateSessionComplete` 성공 경로에서 로컬 플레이어를 `RegisterPlayer` 로 직접 등록한다. `FSKSessionInfo::Make` 의 `Current = Max - Open` 계산식은 옳다(입력값이 틀렸을 뿐).
 2. 방 행의 "참가" 클릭 → 로그에 `# [SKOnlineSessionSubsystem] 조인 완료 — 접속 문자열:` 과 `# [SpyLoadingSubsystem] 서버 접속 개시:` 가 찍히는가
 3. B 가 A 의 월드에 합류해 **둘이 서로 보이고 움직임이 동기화되는가** (이 항목이 이번 기능의 성공 기준)
 
