@@ -12,6 +12,7 @@ enum ESpyUIType : uint8
 	MainHUD UMETA(DisplayName = "MainHUD"),
 	HpBar UMETA(DisplayName = "HpBar"),
 	Loading UMETA(DisplayName = "Loading"),
+	SessionBrowser UMETA(DisplayName = "SessionBrowser"),
 };
 
 UENUM(BlueprintType)

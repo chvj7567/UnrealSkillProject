@@ -20,8 +20,9 @@ public:
 	static USpyUIManager* Get(const UObject* WorldContextObject);
 
 public:
+	//# ZOrder 는 base 로 그대로 전달된다 — persistent UI(100) 위에 띄우려면 그보다 큰 값
 	UFUNCTION(BlueprintCallable)
-	void OpenSpyUI(ESpyUIType UIType);
+	void OpenSpyUI(ESpyUIType UIType, int32 ZOrder = 0);
 
 	UFUNCTION(BlueprintCallable)
 	void CloseSpyUI(ESpyUIType UIType);

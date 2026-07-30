@@ -25,8 +25,9 @@ public:
 	static USKUIManager* Get(const UObject* WorldContextObject);
 
 public:
+	//# ZOrder 는 뷰포트 레이어 순서. 기본 0 — persistent UI(기본 100) 위에 띄우려면 그보다 큰 값을 넘긴다.
 	UFUNCTION(BlueprintCallable)
-	void OpenUI(FName InUIName);
+	void OpenUI(FName InUIName, int32 ZOrder = 0);
 
 	UFUNCTION(BlueprintCallable)
 	void CloseUI(FName InUIName);

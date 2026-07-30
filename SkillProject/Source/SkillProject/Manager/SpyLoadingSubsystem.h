@@ -60,8 +60,12 @@ public:
 	//# 접속 실패 후 재시도 — 위젯 버튼이 호출
 	void RetryConnect();
 
-	//# "접속" 버튼이 호출 — 로딩 완료 후 게임플레이 맵으로 전환 개시
-	void EnterGameplay();
+	//# 게임플레이 전환 개시. OverrideAddress 가 비어 있으면 기존 config 경로(자동 접속/오프라인 폴백)를 탄다.
+	//# 방 목록에서 조인하면 해석된 접속 문자열이 여기로 들어온다.
+	void EnterGameplay(const FString& OverrideAddress = TEXT(""));
+
+	//# 방 만들기 — 맵 로드 후 리슨 서버로 자기 월드를 연다
+	void HostAndEnter();
 
 public:
 	//# 진행률 합성 — Raw(0~1). MapPercent 는 -1(미시작)을 0 으로 바닥 잡는다
@@ -85,6 +89,21 @@ public:
 	//# 접속 단계 표시 진행률 — 프리로드 가중치에서 시작해 도착 전에는 1.0 에 못 닿는다(상한 0.95 비율)
 	static float ConnectPhaseDisplayed(float PreloadWeight, float ConnectElapsed, float ConnectPacingSeconds);
 
+	//# 트래블 주소 결정 — override(조인) 가 config(자동 접속) 보다 우선. 둘 다 비면 빈 문자열
+	static FString ResolveTravelAddress(const FString& OverrideAddress, const FString& ConfigAddress);
+
+	//# 리슨 서버 트래블 URL — 맵 패키지명에 ?listen 을 붙인다(중복 방지)
+	static FString MakeListenTravelURL(const FString& InMapPackageName);
+
+	//# 방 목록을 띄울지 — config 주소가 비어 있을 때만. 채워져 있으면 기존 자동 접속을 유지한다
+	static bool ShouldShowSessionBrowser(const FString& ConfigAddress);
+
+	//# config → 게임플레이 맵 롱 패키지명. 무효하면 NAME_None (호출부가 전환을 중단한다)
+	static FName GetGameplayMapPackageName(const USpyLoadingConfig* InConfig);
+
+	//# 에셋에서 LoadingConfig 를 읽어 맵 패키지명을 해석한다 — 서브시스템이 없는 데디 서버도 쓴다
+	static FName ResolveGameplayMapPackageName();
+
 public:
 	//# Config 유효성 검사 + 내부 상태 반영. 무효하면 Error 로그 후 false
 	bool ApplyConfig(const USpyLoadingConfig* InConfig);
@@ -92,6 +111,12 @@ public:
 	float GetDisplayedProgress() const
 	{
 		return DisplayedProgress;
+	}
+
+	//# 위젯이 분기에 쓰는 조회 — config 에 서버 주소가 지정돼 있는가
+	bool HasConfiguredServerAddress() const
+	{
+		return ShouldShowSessionBrowser(ServerAddress) == false;
 	}
 
 public:
@@ -111,6 +136,12 @@ protected:
 
 	//# 게임플레이 맵으로 전환
 	void TransitionToGameplayMap();
+
+	//# 전환을 시작했다가 중단했을 때 — 다시 시도할 수 있게 진입 상태를 되돌린다
+	void RestoreAfterAbortedTransition();
+
+	//# 리슨 서버 도착 후 세션 생성 — CreateSession 이 NetDriver 포트를 세션에 박으므로 트래블 뒤에 만든다
+	void ScheduleHostSessionAfterArrival();
 
 	//# 트래블 완료 시점 — 로딩 UI 를 내린다
 	void HandlePostLoadMap(UWorld* LoadedWorld);
@@ -164,6 +195,12 @@ protected:
 
 	//# 맵 로딩 단계(phase 2) 활성 — "접속" 버튼 입력 후 DevMap 로드 바를 그린다
 	bool bMapPhase = false;
+
+	//# 이번 전환이 리슨 서버 호스팅인지 — true 면 ClientTravel 대신 ServerTravel(?listen)
+	bool bHostingListenServer = false;
+
+	//# 조인이 넘긴 접속 문자열. 비어 있으면 config ServerAddress 를 쓴다
+	FString PendingOverrideAddress;
 
 	//# 접속 개시 시각(월드 무관, FPlatformTime 기준)
 	double ConnectStartTime = 0.0;

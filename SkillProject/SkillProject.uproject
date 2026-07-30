@@ -75,6 +75,10 @@
 		{
 			"Name": "SKUICore",
 			"Enabled": true
+		},
+		{
+			"Name": "SKOnline",
+			"Enabled": true
 		}
 	]
 }

@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerController.h"
 #include "TimerManager.h"
 #include "SKAssetManager.h"
+#include "SKOnlineSessionSubsystem.h"
 #include "SKAssetData.h"
 #include "Data/SpyLoadingConfig.h"
 #include "Data/SpyAssetNames.h"
@@ -94,22 +95,65 @@ float USpyLoadingSubsystem::ConnectPhaseDisplayed(float PreloadWeight, float Con
 	return FMath::Clamp(PreloadWeight, 0.f, 1.f) + Remaining * Fraction * ConnectDisplayCap;
 }
 
-bool USpyLoadingSubsystem::ApplyConfig(const USpyLoadingConfig* InConfig)
+FString USpyLoadingSubsystem::ResolveTravelAddress(const FString& OverrideAddress, const FString& ConfigAddress)
+{
+	//# 방 목록에서 조인한 주소가 항상 우선한다
+	if (OverrideAddress.IsEmpty() == false)
+		return OverrideAddress;
+
+	return ConfigAddress;
+}
+
+FString USpyLoadingSubsystem::MakeListenTravelURL(const FString& InMapPackageName)
+{
+	if (InMapPackageName.IsEmpty())
+		return FString();
+
+	//# 이미 리슨 옵션이 붙어 있으면 그대로 둔다
+	if (InMapPackageName.Contains(TEXT("?listen")))
+		return InMapPackageName;
+
+	return InMapPackageName + TEXT("?listen");
+}
+
+bool USpyLoadingSubsystem::ShouldShowSessionBrowser(const FString& ConfigAddress)
+{
+	//# 주소가 지정돼 있으면 그쪽이 우선한다(데디서버 붙이기·CI 용 경로 보존)
+	return ConfigAddress.IsEmpty();
+}
+
+FName USpyLoadingSubsystem::GetGameplayMapPackageName(const USpyLoadingConfig* InConfig)
 {
 	if (InConfig == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] LoadingConfig 를 찾을 수 없습니다 — 맵 전환을 중단합니다"));
-		return false;
+		return NAME_None;
 	}
 
 	if (InConfig->GameplayMap.IsNull())
 	{
 		UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] LoadingConfig 의 GameplayMap 이 비어 있습니다 — 맵 전환을 중단합니다"));
-		return false;
+		return NAME_None;
 	}
 
+	return FName(*InConfig->GameplayMap.ToSoftObjectPath().GetLongPackageName());
+}
+
+FName USpyLoadingSubsystem::ResolveGameplayMapPackageName()
+{
+	//# 하드코딩 맵으로 폴백하지 않는다 — 무효하면 NAME_None 을 돌려 호출부가 중단하게 한다
+	const USpyLoadingConfig* Config = USpyAssetManager::GetAssetByName<USpyLoadingConfig>(SpyAssetNames::LoadingConfig);
+	return GetGameplayMapPackageName(Config);
+}
+
+bool USpyLoadingSubsystem::ApplyConfig(const USpyLoadingConfig* InConfig)
+{
+	const FName ResolvedMapName = GetGameplayMapPackageName(InConfig);
+	if (ResolvedMapName.IsNone())
+		return false;
+
 	LoadingConfig = InConfig;
-	MapPackageName = FName(*InConfig->GameplayMap.ToSoftObjectPath().GetLongPackageName());
+	MapPackageName = ResolvedMapName;
 
 	//# 접속 설정 복사
 	ServerAddress = InConfig->ServerAddress;
@@ -132,28 +176,8 @@ void USpyLoadingSubsystem::StartLoading()
 		return;
 	}
 
-	//# 데디케이티드 서버는 헤드리스라 로딩 화면이 없다. 로딩맵에 떨어졌으면 게임플레이 맵으로 서버 트래블한다.
-	//# (IsRunningDedicatedServer() 는 PIE 에서 false 이므로 월드 넷모드로 판정)
-	if (UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr)
-	{
-		if (World->GetNetMode() == NM_DedicatedServer)
-		{
-			//# BeginPlay 흐름 도중 즉시 ServerTravel 하지 않고 다음 틱으로 지연한다 — 월드 초기화 중
-			//# 트래블을 피하는 프로젝트 표준 패턴(ASpyGameMode::InitGame 의 SetTimerForNextTick 참고).
-			const FString TravelURL = MapPackageName.ToString();
-			UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 데디서버 — 로딩 생략, 게임플레이 맵 서버 트래블: %s"), *TravelURL);
-
-			TWeakObjectPtr<UWorld> WeakWorld = World;
-			World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [WeakWorld, TravelURL]()
-			{
-				if (WeakWorld.IsValid())
-				{
-					WeakWorld->ServerTravel(TravelURL);
-				}
-			}));
-			return;
-		}
-	}
+	//# 데디 서버 트래블은 ASpyLoadingGameMode::BeginPlay 가 담당한다 — 이 서브시스템은 데디에서
+	//# ShouldCreateSubsystem 으로 생성이 막히므로 여기에 그 분기를 두면 도달할 수 없다.
 
 	//# 1단계 대상 = 이름 맵에 등록된 secondary 에셋 전체
 	TArray<FSoftObjectPath> AssetPaths;
@@ -302,15 +326,17 @@ void USpyLoadingSubsystem::Tick(float DeltaTime)
 	}
 }
 
-void USpyLoadingSubsystem::EnterGameplay()
+void USpyLoadingSubsystem::EnterGameplay(const FString& OverrideAddress)
 {
 	//# 에셋 로딩이 끝나 버튼이 떠 있을 때만, 중복 없이
 	if (bReadyToEnter == false || bMapPhase)
-	{
 		return;
-	}
 
-	UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 접속 버튼 입력 — 맵 로딩 시작"));
+	//# 조인 경로면 해석된 접속 문자열을 기억해 둔다(전환 시 config 보다 우선)
+	PendingOverrideAddress = OverrideAddress;
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 접속 개시 — 맵 로딩 시작 (override=%s)"),
+		OverrideAddress.IsEmpty() ? TEXT("<none>") : *OverrideAddress);
 
 	//# phase 2 진입 — 바를 0 으로 리셋해 맵 로딩바가 새로 차오르게 한다
 	bReadyToEnter = false;
@@ -334,6 +360,27 @@ void USpyLoadingSubsystem::EnterGameplay()
 	bLoading = true;
 }
 
+void USpyLoadingSubsystem::HostAndEnter()
+{
+	if (bReadyToEnter == false || bMapPhase)
+		return;
+
+	//# 리슨 서버 플래그를 세운 뒤 공용 전환 경로를 탄다
+	bHostingListenServer = true;
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 방 만들기 — 리슨 서버 전환 개시"));
+	EnterGameplay(TEXT(""));
+}
+
+void USpyLoadingSubsystem::RestoreAfterAbortedTransition()
+{
+	//# 중단 지점에서 상태가 굳으면 어떤 입력으로도 복구되지 않는다 — 버튼/목록 대기 상태로 되돌린다
+	bHostingListenServer = false;
+	bMapPhase = false;
+	bTransitionStarted = false;
+	bReadyToEnter = true;
+}
+
 void USpyLoadingSubsystem::TransitionToGameplayMap()
 {
 	bTransitionStarted = true;
@@ -341,8 +388,39 @@ void USpyLoadingSubsystem::TransitionToGameplayMap()
 	//# 로딩 단계 틱 종료 — 이후는 접속(타이머) 또는 오프라인 OpenLevel 이 담당
 	bLoading = false;
 
-	//# 접속 모드 — 서버 주소로 ClientTravel. 클라는 자기 월드를 열지 않고 서버에 합류한다.
-	if (ShouldConnectToServer(ServerAddress))
+	//# 리슨 서버 호스팅 — 자기 월드를 서버로 연다. 로딩맵은 NM_Standalone(권한 보유)이라 ServerTravel 이 성립한다.
+	if (bHostingListenServer)
+	{
+		const FString ListenURL = MakeListenTravelURL(MapPackageName.ToString());
+		if (ListenURL.IsEmpty())
+		{
+			UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] 리슨 트래블 URL 이 비어 있습니다 — 전환 중단"));
+			RestoreAfterAbortedTransition();
+			return;
+		}
+
+		UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+		if (World == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] 월드가 없습니다 — 리슨 전환 중단"));
+			RestoreAfterAbortedTransition();
+			return;
+		}
+
+		if (DisplayedProgress < 1.f)
+		{
+			DisplayedProgress = 1.f;
+			OnProgressChanged.Broadcast(DisplayedProgress);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 리슨 서버 전환: %s"), *ListenURL);
+		World->ServerTravel(ListenURL);
+		return;
+	}
+
+	//# 접속 모드 — override(조인) 또는 config 주소로 ClientTravel. 클라는 자기 월드를 열지 않고 서버에 합류한다.
+	const FString TravelAddress = ResolveTravelAddress(PendingOverrideAddress, ServerAddress);
+	if (ShouldConnectToServer(TravelAddress))
 	{
 		APlayerController* PC = GetGameInstance() ? GetGameInstance()->GetFirstLocalPlayerController() : nullptr;
 		if (PC == nullptr)
@@ -356,8 +434,8 @@ void USpyLoadingSubsystem::TransitionToGameplayMap()
 		ConnectStartTime = FPlatformTime::Seconds();
 		StartConnectWatch();
 
-		UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 서버 접속 개시: %s"), *ServerAddress);
-		PC->ClientTravel(ServerAddress, ETravelType::TRAVEL_Absolute);
+		UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 서버 접속 개시: %s"), *TravelAddress);
+		PC->ClientTravel(TravelAddress, ETravelType::TRAVEL_Absolute);
 		return;
 	}
 
@@ -403,6 +481,9 @@ void USpyLoadingSubsystem::HandlePostLoadMap(UWorld* LoadedWorld)
 	StopConnectWatch();
 	bConnecting = false;
 
+	//# 리셋보다 먼저 잡아둔다 — 이번 도착이 호스팅이었는지 판단할 유일한 근거다
+	const bool bArrivedAsListenHost = bHostingListenServer;
+
 	if (DisplayedProgress < 1.f)
 	{
 		DisplayedProgress = 1.f;
@@ -421,6 +502,44 @@ void USpyLoadingSubsystem::HandlePostLoadMap(UWorld* LoadedWorld)
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 도착 — 로딩 UI 종료"));
+
+	//# 호스팅 도착이면 여기서 세션을 만든다(리셋보다 먼저 트리거한다)
+	if (bArrivedAsListenHost)
+	{
+		ScheduleHostSessionAfterArrival();
+	}
+
+	//# 이번 전환은 끝났다 — 다음 전환이 잔여 상태를 물려받지 않게 되돌린다
+	bHostingListenServer = false;
+	PendingOverrideAddress.Reset();
+}
+
+void USpyLoadingSubsystem::ScheduleHostSessionAfterArrival()
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance == nullptr)
+		return;
+
+	//# 엔진 LoadMap 스택(PostLoadMapWithWorld) 안에서 OSS 작업을 재진입시키지 않도록 한 틱 미룬다.
+	//# 리슨 NetDriver 는 이 시점 이미 준비돼 있다(LoadMap 이 Listen 을 먼저 수행한다).
+	GameInstance->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]()
+	{
+		UGameInstance* OwningGameInstance = GetGameInstance();
+		if (OwningGameInstance == nullptr)
+			return;
+
+		USKOnlineSessionSubsystem* SessionSubsystem = OwningGameInstance->GetSubsystem<USKOnlineSessionSubsystem>();
+		if (SessionSubsystem == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] 세션 서브시스템이 없어 방을 만들지 못했습니다"));
+			return;
+		}
+
+		//# 여기서 생성이 실패해도 되돌리지 않는다 — 이미 인게임이고 브라우저가 없다.
+		//# 귀결은 "방이 목록에 뜨지 않을 뿐 플레이는 가능" 이며, 실패는 SKOnline 이 Error 로 남긴다.
+		UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 리슨 서버 도착 — 세션 생성 요청"));
+		SessionSubsystem->HostSession();
+	}));
 }
 
 void USpyLoadingSubsystem::StartConnectWatch()
@@ -511,6 +630,16 @@ void USpyLoadingSubsystem::HandleConnectFailed(const FString& Reason)
 
 	StopConnectWatch();
 
+	//# 방 목록 경로는 재시도 버튼이 아니라 목록 복귀로 회복하므로, 다시 조인할 수 있게 상태를 되돌린다
+	if (ShouldShowSessionBrowser(ServerAddress))
+	{
+		bMapPhase = false;
+		bTransitionStarted = false;
+		bHostingListenServer = false;
+		PendingOverrideAddress.Reset();
+		bReadyToEnter = true;
+	}
+
 	UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] 접속 실패: %s"), *Reason);
 	OnConnectionFailed.Broadcast(Reason);
 }
@@ -537,9 +666,11 @@ void USpyLoadingSubsystem::HandleTravelFailure(UWorld* World, ETravelFailure::Ty
 
 void USpyLoadingSubsystem::RetryConnect()
 {
-	if (ShouldConnectToServer(ServerAddress) == false)
+	//# 조인 주소가 있으면 그쪽으로 재시도한다 — config 주소로 가면 엉뚱한 서버에 붙는다
+	const FString TravelAddress = ResolveTravelAddress(PendingOverrideAddress, ServerAddress);
+	if (ShouldConnectToServer(TravelAddress) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] RetryConnect — ServerAddress 가 없습니다"));
+		UE_LOG(LogTemp, Error, TEXT("# [SpyLoadingSubsystem] RetryConnect — 접속 주소가 없습니다"));
 		return;
 	}
 
@@ -561,8 +692,8 @@ void USpyLoadingSubsystem::RetryConnect()
 	ConnectStartTime = FPlatformTime::Seconds();
 	StartConnectWatch();
 
-	UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 접속 재시도: %s"), *ServerAddress);
-	PC->ClientTravel(ServerAddress, ETravelType::TRAVEL_Absolute);
+	UE_LOG(LogTemp, Log, TEXT("# [SpyLoadingSubsystem] 접속 재시도: %s"), *TravelAddress);
+	PC->ClientTravel(TravelAddress, ETravelType::TRAVEL_Absolute);
 }
 
 void USpyLoadingSubsystem::Deinitialize()
@@ -579,6 +710,8 @@ void USpyLoadingSubsystem::Deinitialize()
 	bConnecting = false;
 	bReadyToEnter = false;
 	bMapPhase = false;
+	bHostingListenServer = false;
+	PendingOverrideAddress.Reset();
 	OnProgressChanged.Clear();
 	OnConnectionFailed.Clear();
 	OnReadyToEnter.Clear();

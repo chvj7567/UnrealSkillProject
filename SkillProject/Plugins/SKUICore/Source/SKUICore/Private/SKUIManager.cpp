@@ -62,7 +62,7 @@ USKUIManager* USKUIManager::Get(const UObject* WorldContextObject)
 	return nullptr;
 }
 
-void USKUIManager::OpenUI(FName InUIName)
+void USKUIManager::OpenUI(FName InUIName, int32 ZOrder)
 {
 	//# 패키지 빌드에서 BP 오브젝트(BP_X.BP_X)는 cook 시 stripped되므로 generated class(BP_X.BP_X_C) 경로로 로드
 	const USKAssetData& AssetData = USKAssetManager::Get().GetAssetData();
@@ -75,56 +75,53 @@ void USKUIManager::OpenUI(FName InUIName)
 	FSoftObjectPath ClassPath(ClassPathString);
 
 	FSKAssetAndDelegate LoadDelegate;
-	LoadDelegate.BindLambda([this, InUIName](UObject* LoadedAsset)
+	LoadDelegate.BindLambda([this, InUIName, ZOrder](UObject* LoadedAsset) {
+		if (LoadedAsset == nullptr)
+			return;
+
+		if (TSubclassOf<USKUserWidget> UI = USKAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
 		{
-			if (LoadedAsset == nullptr)
-				return;
+			//# 이미 열려있는 UI 확인
+			const TObjectPtr<USKUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
+				[InUIName](TObjectPtr<USKUserWidget>& UserWidget) {
+					return UserWidget->GetUIName() == InUIName;
+				});
 
-			if (TSubclassOf<USKUserWidget> UI = USKAssetManager::GetSubclassByName<USKUserWidget>(InUIName))
+			if (FindOpenningUI)
 			{
-				//# 이미 열려있는 UI 확인
-				const TObjectPtr<USKUserWidget>* FindOpenningUI = OpenUIList.FindByPredicate(
-					[InUIName](TObjectPtr<USKUserWidget>& UserWidget)
-					{
-						return UserWidget->GetUIName() == InUIName;
-					});
-
-				if (FindOpenningUI)
-				{
-					//# 동일한 UI는 중복해서 띄우지 않음
-					UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *InUIName.ToString());
-					return;
-				}
-
-				//# 캐싱 중인 UI 확인
-				const TObjectPtr<USKUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
-					[InUIName](TObjectPtr<USKUserWidget>& UserWidget)
-					{
-						return UserWidget->GetUIName() == InUIName;
-					});
-
-				if (FindCashingUI)
-				{
-					//# 캐싱 중인 UI이면 Open
-					OpenUIList.Add(FindCashingUI->Get());
-					FindCashingUI->Get()->AddToViewport();
-
-					UE_LOG(LogTemp, Warning, TEXT("Cashing Opening UI: %s"), *InUIName.ToString());
-					return;
-				}
-
-				//# UI 생성
-				if (USKUserWidget* UserWidget = CreateWidget<USKUserWidget>(GetWorld(), UI))
-				{
-					UserWidget->SetUIName(InUIName);
-					OpenUIList.Add(UserWidget);
-
-					UserWidget->AddToViewport();
-
-					UE_LOG(LogTemp, Warning, TEXT("New Opening UI: %s"), *InUIName.ToString());
-				}
+				//# 동일한 UI는 중복해서 띄우지 않음
+				UE_LOG(LogTemp, Warning, TEXT("Already Opening UI: %s"), *InUIName.ToString());
+				return;
 			}
-		});
+
+			//# 캐싱 중인 UI 확인
+			const TObjectPtr<USKUserWidget>* FindCashingUI = CashingUIList.FindByPredicate(
+				[InUIName](TObjectPtr<USKUserWidget>& UserWidget) {
+					return UserWidget->GetUIName() == InUIName;
+				});
+
+			if (FindCashingUI)
+			{
+				//# 캐싱 중인 UI이면 Open
+				OpenUIList.Add(FindCashingUI->Get());
+				FindCashingUI->Get()->AddToViewport(ZOrder);
+
+				UE_LOG(LogTemp, Warning, TEXT("Cashing Opening UI: %s"), *InUIName.ToString());
+				return;
+			}
+
+			//# UI 생성
+			if (USKUserWidget* UserWidget = CreateWidget<USKUserWidget>(GetWorld(), UI))
+			{
+				UserWidget->SetUIName(InUIName);
+				OpenUIList.Add(UserWidget);
+
+				UserWidget->AddToViewport(ZOrder);
+
+				UE_LOG(LogTemp, Warning, TEXT("New Opening UI: %s"), *InUIName.ToString());
+			}
+		}
+	});
 
 	USKAssetManager::LoadAssetAsync(ClassPath, LoadDelegate);
 }
@@ -145,9 +142,14 @@ void USKUIManager::CloseUI(FName InUIName)
 
 	if (FindOpenningUI)
 	{
-		OpenUIList.Remove(FindOpenningUI->Get());
-		AddCashingUI(FindOpenningUI->Get());
-		FindOpenningUI->Get()->RemoveFromParent();
+		//# FindByPredicate 는 배열 내부를 가리킨다 — Remove 가 압축하므로 먼저 잡아둔다
+		USKUserWidget* Target = FindOpenningUI->Get();
+		if (IsValid(Target) == false)
+			return;
+
+		OpenUIList.Remove(Target);
+		AddCashingUI(Target);
+		Target->RemoveFromParent();
 	}
 }
 

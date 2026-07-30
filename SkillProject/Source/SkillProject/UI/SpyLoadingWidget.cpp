@@ -7,7 +7,10 @@
 #include "Components/TextBlock.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/PlayerController.h"
+#include "SKOnlineSessionSubsystem.h"
 #include "Manager/SpyLoadingSubsystem.h"
+#include "Manager/SpyUIManager.h"
+#include "Util/DefineEnum.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyLoadingWidget)
 
@@ -83,6 +86,16 @@ void USpyLoadingWidget::HandleProgressChanged(float InDisplayed)
 {
 	const float Clamped = FMath::Clamp(InDisplayed, 0.f, 1.f);
 
+	//# 방 목록 경로는 OnEnterClicked 를 거치지 않으므로, 진행률이 다시 흐르면 여기서 바·퍼센트를 되살린다
+	if (IsValid(LoadingBar) && LoadingBar->GetVisibility() == ESlateVisibility::Collapsed)
+	{
+		LoadingBar->SetVisibility(ESlateVisibility::Visible);
+	}
+	if (IsValid(PercentText) && PercentText->GetVisibility() == ESlateVisibility::Collapsed)
+	{
+		PercentText->SetVisibility(ESlateVisibility::Visible);
+	}
+
 	if (IsValid(LoadingBar))
 	{
 		LoadingBar->SetPercent(Clamped);
@@ -110,7 +123,39 @@ void USpyLoadingWidget::HandleConnectionFailed(const FString& Reason)
 		PercentText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
-	//# 에러 메시지 + 재시도 버튼 노출. 문구는 기획서 §9-3 확정값.
+	UGameInstance* GameInstance = GetGameInstance();
+	USpyLoadingSubsystem* LoadingSubsystem = (GameInstance != nullptr)
+		? GameInstance->GetSubsystem<USpyLoadingSubsystem>()
+		: nullptr;
+
+	//# 방 목록 경로(config 주소 없음) — 재시도 대신 세션을 정리하고 목록으로 되돌린다.
+	//# 같은 주소로 재시도해 봐야 호스트가 사라진 경우 회복되지 않는다.
+	if (LoadingSubsystem != nullptr && LoadingSubsystem->HasConfiguredServerAddress() == false)
+	{
+		if (USKOnlineSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<USKOnlineSessionSubsystem>())
+		{
+			SessionSubsystem->DestroyCurrentSession();
+		}
+
+		if (USpyUIManager* UIManager = USpyUIManager::Get(GameInstance))
+		{
+			UIManager->OpenSpyUI(ESpyUIType::SessionBrowser, 200);
+		}
+
+		//# 브라우저가 입력을 받아야 하므로 커서·UI 입력 모드를 되살린다
+		if (APlayerController* PC = GameInstance->GetFirstLocalPlayerController())
+		{
+			PC->bShowMouseCursor = true;
+			FInputModeGameAndUI InputMode;
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			InputMode.SetHideCursorDuringCapture(false);
+			PC->SetInputMode(InputMode);
+		}
+
+		return;
+	}
+
+	//# 기존 config 주소 경로 — 에러 메시지 + 재시도 버튼. 문구는 기획서 §9-3 확정값.
 	if (IsValid(ErrorText))
 	{
 		ErrorText->SetText(FText::FromString(TEXT("서버에 연결하지 못했습니다")));
@@ -153,7 +198,7 @@ void USpyLoadingWidget::OnRetryClicked()
 
 void USpyLoadingWidget::HandleReadyToEnter()
 {
-	//# 로딩 완료 — 바·퍼센트를 숨기고 "접속" 버튼만 보인다
+	//# 로딩 완료 — 바·퍼센트를 숨긴다(접속 개시 시 다시 보인다)
 	if (IsValid(LoadingBar))
 	{
 		LoadingBar->SetVisibility(ESlateVisibility::Collapsed);
@@ -162,13 +207,11 @@ void USpyLoadingWidget::HandleReadyToEnter()
 	{
 		PercentText->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	if (IsValid(EnterButton))
-	{
-		EnterButton->SetVisibility(ESlateVisibility::Visible);
-	}
 
-	//# 버튼을 누를 수 있도록 커서 표시 + UI 입력 모드 (패키지 standalone 은 기본이 GameOnly·커서숨김이라 클릭이 UI 로 안 감)
-	if (UGameInstance* GameInstance = GetGameInstance())
+	//# 버튼·목록을 누를 수 있도록 커서 표시 + UI 입력 모드
+	//# (패키지 standalone 은 기본이 GameOnly·커서숨김이라 클릭이 UI 로 안 간다)
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance != nullptr)
 	{
 		if (APlayerController* PC = GameInstance->GetFirstLocalPlayerController())
 		{
@@ -178,6 +221,31 @@ void USpyLoadingWidget::HandleReadyToEnter()
 			InputMode.SetHideCursorDuringCapture(false);
 			PC->SetInputMode(InputMode);
 		}
+	}
+
+	USpyLoadingSubsystem* LoadingSubsystem = (GameInstance != nullptr)
+		? GameInstance->GetSubsystem<USpyLoadingSubsystem>()
+		: nullptr;
+
+	//# config 에 서버 주소가 있으면 기존 "접속" 버튼 경로를 그대로 탄다
+	if (LoadingSubsystem != nullptr && LoadingSubsystem->HasConfiguredServerAddress())
+	{
+		if (IsValid(EnterButton))
+		{
+			EnterButton->SetVisibility(ESlateVisibility::Visible);
+		}
+		return;
+	}
+
+	//# 주소가 없으면 방 목록을 띄운다. 접속 버튼은 쓰지 않는다.
+	if (IsValid(EnterButton))
+	{
+		EnterButton->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (USpyUIManager* UIManager = USpyUIManager::Get(GameInstance))
+	{
+		UIManager->OpenSpyUI(ESpyUIType::SessionBrowser, 200);
 	}
 }
 

@@ -33,6 +33,7 @@ public class SkillProject : ModuleRules
             "SKGAS",
             "SKAssetCore",
             "SKUICore",
+            "SKOnline",
             "AIModule",
             "NavigationSystem",
             "CableComponent",

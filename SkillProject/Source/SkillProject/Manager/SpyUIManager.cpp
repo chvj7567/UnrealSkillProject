@@ -21,10 +21,10 @@ USpyUIManager* USpyUIManager::Get(const UObject* WorldContextObject)
 	return nullptr;
 }
 
-void USpyUIManager::OpenSpyUI(ESpyUIType UIType)
+void USpyUIManager::OpenSpyUI(ESpyUIType UIType, int32 ZOrder)
 {
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
-	OpenUI(FName(*EnumName));
+	OpenUI(FName(*EnumName), ZOrder);
 }
 
 void USpyUIManager::CloseSpyUI(ESpyUIType UIType)
