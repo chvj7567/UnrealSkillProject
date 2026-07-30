@@ -2730,6 +2730,7 @@ git add SkillProject/Content/Spy/UI/WBP_SessionBrowser.uasset SkillProject/Conte
    PIE 에서 **호스트가 에디터 프로세스 안에서 돌면** `CreateSession` 이 에디터의 OSS 인스턴스에 세션을 만들고, **PIE 를 끝내도 그 세션이 남아** LAN 비콘(포트 14001)으로 계속 광고된다(실측: 포트 14001 소유자 = 에디터 PID). 그 결과 **아무도 호스팅하지 않았는데 검색이 1건을 반환**하고, 게다가 그 방의 **포트는 0** 이다 — 에디터는 `GetWorldForOnline` 의 `Cast<UGameEngine>(GEngine)` 이 실패해 월드를 못 찾기 때문(`OnlineSubsystemUtils.cpp:225·245`). 조인하면 20초 타임아웃.
    → **조치: `USKOnlineSessionSubsystem` 의 `Deinitialize`(종료 시 파괴) + `Initialize`(같은 프로세스의 잔존 세션 청소) 배선 추가.** "방 나가기" UI·인게임 이탈 시 파괴는 여전히 범위 밖(아래 #5-b).
    → **검증 시 주의: 에디터를 호스트로 쓰지 마라.** `Standalone Game` 두 개로 테스트한다.
+   → **정리 배선의 알려진 한계**: `Initialize` 청소는 GameInstance 단위로 돈다. **단일 프로세스 PIE 로 플레이어 2명**을 띄우면 두 번째 GameInstance 의 `Initialize` 가 **첫 번째의 세션을 지운다.** 이 플랜의 검증은 `Play Standalone`(별도 프로세스)으로 못박혀 있고 단일 프로세스 모드는 애초에 LAN 검색이 성립하지 않으므로 실사용 경로에는 영향이 없다 — 다만 그 조합으로 테스트하면 방이 사라지는 것처럼 보이니 혼동하지 말 것.
 5-b. **`HostSession()` 의 destroy→create 동일 프레임 — Null 은 안전, Steam 은 실제 위험** (구현 중 엔진 소스로 좁혀진 결론).
    `HostSession` 은 남은 세션이 있으면 `DestroySession` 후 곧바로 `CreateSession` 을 호출한다. **Null 은 `RemoveNamedSession` 을 동기 실행하고 그 자리에서 완료 델리게이트를 트리거**하므로(`OnlineSessionInterfaceNull.cpp`, `Result != ONLINE_IO_PENDING` 분기) 같은 프레임의 `CreateSession` 시점엔 이미 제거돼 있다. **Steam 은 async task 를 큐잉하고 `ONLINE_IO_PENDING` 을 돌려주므로** 세션이 남은 채 생성이 실행된다.
    → **Task 10(Null/LAN)에서는 재현되지 않을 가능성이 높고, Steam 전환 시 드러난다.** 지금 고치지 않는다. 고칠 경우의 형태는 "destroy 완료 델리게이트를 걸고 그 콜백에서 create 를 잇는 pending-host 상태"이며, `CurrentOp` 상태 기계를 건드리므로 별도 결정이 필요하다.
