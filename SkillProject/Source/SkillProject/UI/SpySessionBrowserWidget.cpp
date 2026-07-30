@@ -101,6 +101,10 @@ void USpySessionBrowserWidget::NativeConstruct()
 		return;
 	}
 
+	//# 방 목록이 열렸다는 것은 방에 있지 않다는 뜻이다 — 남은 세션은 무효이고 다음 조인을 막는다.
+	//# op 상태를 점유하지 않는 정리라 바로 아래 자동 검색과 경쟁하지 않는다.
+	SessionSubsystem->DestroyLingeringSession(TEXT("방 목록 진입"));
+
 	//# OSS Null 은 완료 콜백을 명령 호출 안에서 동기 발화한다 — 반드시 구독이 먼저다
 	SessionsFoundHandle = SessionSubsystem->OnSessionsFound.AddUObject(this, &USpySessionBrowserWidget::HandleSessionsFound);
 	HostReadyHandle = SessionSubsystem->OnHostReady.AddUObject(this, &USpySessionBrowserWidget::HandleHostReady);

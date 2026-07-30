@@ -55,6 +55,9 @@ public:
 	//# 진행 중인 검색을 취소한다. 끝나면 OnFindCancelled 로 통지해 소비자가 호스팅을 잇게 한다.
 	void CancelFindForHost();
 
+	//# 남아 있는 세션을 완료 대기 없이 파괴한다(시작·종료·방 목록 진입 청소용). op 상태를 점유하지 않는다.
+	void DestroyLingeringSession(const TCHAR* Reason);
+
 	ESKSessionOp GetCurrentOp() const
 	{
 		return CurrentOp;
@@ -94,14 +97,17 @@ protected:
 	void HandleDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void HandleCancelFindSessionsComplete(bool bWasSuccessful);
 
+	//# 조인 직전 잔존 세션 파괴 완료 — 여기서 실제 조인을 잇는다(Steam 의 비동기 파괴 대응)
+	void HandleDestroyBeforeJoinComplete(FName SessionName, bool bWasSuccessful);
+
 	//# 등록한 델리게이트 핸들 해제
 	void ClearDelegateHandles(IOnlineSessionPtr Sessions);
 
-	//# 남아 있는 세션을 완료 대기 없이 파괴한다(시작·종료 청소용). Reason 은 로그 문구
-	void DestroyLingeringSession(const TCHAR* Reason);
-
 	//# 호스트 로컬 플레이어를 세션 인원에 등록한다 — 등록 없이는 남은 자리가 최대치로 광고된다
 	void RegisterLocalPlayerInSession();
+
+	//# 실제 조인 실행 — 잔존 세션 정리가 끝난 뒤에만 호출한다
+	void JoinSessionInternal(int32 Index);
 
 protected:
 	//# 동시에 하나만 — USKSessionOpRules 가 판정한다
@@ -113,9 +119,13 @@ protected:
 	//# 취소 완료 후 OnFindCancelled 를 통지할지 — 취소 중 도착하는 검색 실패를 삼키는 판정도 겸한다
 	bool bNotifyHostAfterCancelFind = false;
 
+	//# 잔존 세션 파괴 완료 후 조인할 검색 결과 인덱스. INDEX_NONE 이면 대기 중인 조인이 없다
+	int32 PendingJoinIndex = INDEX_NONE;
+
 	FDelegateHandle CreateSessionCompleteHandle;
 	FDelegateHandle FindSessionsCompleteHandle;
 	FDelegateHandle JoinSessionCompleteHandle;
 	FDelegateHandle DestroySessionCompleteHandle;
 	FDelegateHandle CancelFindSessionsCompleteHandle;
+	FDelegateHandle DestroyBeforeJoinCompleteHandle;
 };

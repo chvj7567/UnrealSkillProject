@@ -396,6 +396,78 @@ void USKOnlineSessionSubsystem::JoinSessionByIndex(int32 Index)
 	if (Sessions.IsValid() == false)
 		return;
 
+	//# 세션이 남아 있으면 엔진이 조인을 거부한다("Don't join a session if already in one or hosting one").
+	//# 호스트가 방을 없애 튕겨 나온 경우 로컬 세션이 남으므로, 지운 뒤 조인을 이어야 한다.
+	if (Sessions->GetNamedSession(NAME_GameSession) != nullptr)
+	{
+		PendingJoinIndex = Index;
+
+		DestroyBeforeJoinCompleteHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(
+			FOnDestroySessionCompleteDelegate::CreateUObject(this, &USKOnlineSessionSubsystem::HandleDestroyBeforeJoinComplete));
+
+		UE_LOG(LogTemp, Log, TEXT("# [SKOnlineSessionSubsystem] 잔존 세션을 지운 뒤 조인합니다"));
+
+		if (Sessions->DestroySession(NAME_GameSession) == false)
+		{
+			//# 콜백이 이미 동기 실행됐으면 대기 인덱스가 비워져 있다. 아직 남아 있으면 정리하고 그대로 조인을 시도한다
+			//# (기존 동작과 같아지므로 새로운 실패 모드를 만들지 않는다).
+			if (PendingJoinIndex != INDEX_NONE)
+			{
+				Sessions->ClearOnDestroySessionCompleteDelegate_Handle(DestroyBeforeJoinCompleteHandle);
+				DestroyBeforeJoinCompleteHandle.Reset();
+				PendingJoinIndex = INDEX_NONE;
+
+				UE_LOG(LogTemp, Warning, TEXT("# [SKOnlineSessionSubsystem] 조인 전 세션 파괴 요청이 거부됐습니다 — 그대로 조인을 시도합니다"));
+				JoinSessionInternal(Index);
+			}
+		}
+		return;
+	}
+
+	//# 잔존 세션이 없으면 곧바로 조인한다 — 정상 흐름에 추가 단계가 붙지 않는다
+	JoinSessionInternal(Index);
+}
+
+void USKOnlineSessionSubsystem::HandleDestroyBeforeJoinComplete(FName SessionName, bool bWasSuccessful)
+{
+	//# 대기 중인 조인이 없거나 다른 op 문맥이면 이 콜백은 우리 것이 아니다
+	if (PendingJoinIndex == INDEX_NONE || CurrentOp != ESKSessionOp::Joining || SessionName != NAME_GameSession)
+		return;
+
+	if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+	{
+		if (IOnlineSessionPtr Sessions = Subsystem->GetSessionInterface())
+		{
+			Sessions->ClearOnDestroySessionCompleteDelegate_Handle(DestroyBeforeJoinCompleteHandle);
+		}
+	}
+	DestroyBeforeJoinCompleteHandle.Reset();
+
+	const int32 Index = PendingJoinIndex;
+	PendingJoinIndex = INDEX_NONE;
+
+	if (bWasSuccessful == false)
+	{
+		//# 세션이 남은 채로는 엔진이 조인을 거부하므로 시도하지 않는다
+		FailOp(ESKSessionOp::Joining, ESKSessionError::JoinFailed, TEXT("DestroySession before join completed unsuccessfully"));
+		return;
+	}
+
+	JoinSessionInternal(Index);
+}
+
+void USKOnlineSessionSubsystem::JoinSessionInternal(int32 Index)
+{
+	if (SessionSearch.IsValid() == false || SessionSearch->SearchResults.IsValidIndex(Index) == false)
+	{
+		FailOp(ESKSessionOp::Joining, ESKSessionError::InvalidIndex, TEXT("Search result index is out of range"));
+		return;
+	}
+
+	IOnlineSessionPtr Sessions = GetSessionInterfaceChecked(ESKSessionOp::Joining);
+	if (Sessions.IsValid() == false)
+		return;
+
 	JoinSessionCompleteHandle = Sessions->AddOnJoinSessionCompleteDelegate_Handle(
 		FOnJoinSessionCompleteDelegate::CreateUObject(this, &USKOnlineSessionSubsystem::HandleJoinSessionComplete));
 
@@ -546,6 +618,11 @@ void USKOnlineSessionSubsystem::ClearDelegateHandles(IOnlineSessionPtr Sessions)
 		Sessions->ClearOnCancelFindSessionsCompleteDelegate_Handle(CancelFindSessionsCompleteHandle);
 		CancelFindSessionsCompleteHandle.Reset();
 	}
+	if (DestroyBeforeJoinCompleteHandle.IsValid())
+	{
+		Sessions->ClearOnDestroySessionCompleteDelegate_Handle(DestroyBeforeJoinCompleteHandle);
+		DestroyBeforeJoinCompleteHandle.Reset();
+	}
 }
 
 void USKOnlineSessionSubsystem::DestroyLingeringSession(const TCHAR* Reason)
@@ -589,6 +666,7 @@ void USKOnlineSessionSubsystem::Deinitialize()
 	SessionSearch.Reset();
 	CurrentOp = ESKSessionOp::None;
 	bNotifyHostAfterCancelFind = false;
+	PendingJoinIndex = INDEX_NONE;
 
 	OnSessionsFound.Clear();
 	OnHostReady.Clear();
