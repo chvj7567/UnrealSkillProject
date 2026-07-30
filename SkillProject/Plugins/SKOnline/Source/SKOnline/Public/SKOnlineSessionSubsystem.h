@@ -100,6 +100,9 @@ protected:
 	//# 남아 있는 세션을 완료 대기 없이 파괴한다(시작·종료 청소용). Reason 은 로그 문구
 	void DestroyLingeringSession(const TCHAR* Reason);
 
+	//# 호스트 로컬 플레이어를 세션 인원에 등록한다 — 등록 없이는 남은 자리가 최대치로 광고된다
+	void RegisterLocalPlayerInSession();
+
 protected:
 	//# 동시에 하나만 — USKSessionOpRules 가 판정한다
 	ESKSessionOp CurrentOp = ESKSessionOp::None;

@@ -56,9 +56,16 @@ public:
 	bool IsPersistentUIOpen(FName InUIName) const;
 
 protected:
+	//# 월드 교체 직전 정리 — 월드 소속 UI(OpenUIList·CashingUIList)만 비운다. persistent 는 대상이 아니다.
+	void HandlePreLoadMap(const FString& MapName);
+
+protected:
 	//# persistent UI 는 OpenUIList 와 분리해 관리한다 (CloseLastUI 등 스택 동작에 섞이면 안 됨)
 	UPROPERTY()
 	TArray<TObjectPtr<USKUserWidget>> PersistentUIList;
+
+	//# PreLoadMap 구독 핸들
+	FDelegateHandle PreLoadMapHandle;
 
 protected:
 	const int MaxCashingUICount = 5;

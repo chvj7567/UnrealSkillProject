@@ -7,6 +7,7 @@
 #include "Online/OnlineSessionNames.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/OnlineReplStructs.h"
 #include "SKOnlineSettings.h"
 #include "SKSessionOpRules.h"
 
@@ -166,6 +167,38 @@ void USKOnlineSessionSubsystem::HandleCancelFindSessionsComplete(bool bWasSucces
 	OnFindCancelled.Broadcast();
 }
 
+void USKOnlineSessionSubsystem::RegisterLocalPlayerInSession()
+{
+	const UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance == nullptr)
+		return;
+
+	//# 데디 서버는 로컬 플레이어가 없다 — 등록할 대상이 없으므로 조용히 건너뛴다
+	const ULocalPlayer* LocalPlayer = GameInstance->GetFirstGamePlayer();
+	if (LocalPlayer == nullptr)
+		return;
+
+	const FUniqueNetIdRepl LocalUniqueId = LocalPlayer->GetPreferredUniqueNetId();
+	if (LocalUniqueId.IsValid() == false)
+	{
+		//# 등록만 건너뛰고 호스팅은 계속한다 — 방이 안 뜨는 것보다 인원 표시가 틀린 편이 낫다
+		UE_LOG(LogTemp, Error, TEXT("# [SKOnlineSessionSubsystem] 로컬 플레이어 고유 ID 가 없어 인원 등록을 건너뜁니다"));
+		return;
+	}
+
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (Subsystem == nullptr)
+		return;
+
+	IOnlineSessionPtr Sessions = Subsystem->GetSessionInterface();
+	if (Sessions.IsValid() == false)
+		return;
+
+	//# 완료 델리게이트는 구독하지 않는다 — Null 은 동기 처리이고 실패해도 취할 조치가 없다
+	const bool bRegistered = Sessions->RegisterPlayer(NAME_GameSession, *LocalUniqueId, false);
+	UE_LOG(LogTemp, Log, TEXT("# [SKOnlineSessionSubsystem] 호스트 인원 등록 결과: %d"), bRegistered ? 1 : 0);
+}
+
 void USKOnlineSessionSubsystem::HostSession()
 {
 	if (BeginOp(ESKSessionOp::Hosting) == false)
@@ -243,6 +276,10 @@ void USKOnlineSessionSubsystem::HandleCreateSessionComplete(FName SessionName, b
 	}
 
 	EndOp();
+
+	//# Null 은 빈 자리를 최대치로 시작하고 RegisterPlayer 로 깎는다(엔진 주석 명시).
+	//# 호스트의 PostLogin 은 세션 생성 전에 끝나 등록을 놓치므로 여기서 직접 등록한다.
+	RegisterLocalPlayerInSession();
 
 	UE_LOG(LogTemp, Log, TEXT("# [SKOnlineSessionSubsystem] 방 생성 완료 — 리슨 서버 전환 대기"));
 	OnHostReady.Broadcast();

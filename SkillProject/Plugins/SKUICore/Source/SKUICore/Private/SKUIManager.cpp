@@ -4,6 +4,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/GameViewportClient.h"
 #include "Blueprint/UserWidget.h"
+#include "UObject/UObjectGlobals.h"
 #include "SKUserWidget.h"
 #include "SKAssetManager.h"
 #include "SKAssetData.h"
@@ -21,10 +22,41 @@ bool USKUIManager::ShouldCreateSubsystem(UObject* Outer) const
 void USKUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	//# 이 서브시스템은 트래블을 넘어 살아남는다 — 월드 소속 UI 목록을 월드 교체 시 비워야 한다
+	if (PreLoadMapHandle.IsValid() == false)
+	{
+		PreLoadMapHandle = FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &USKUIManager::HandlePreLoadMap);
+	}
+}
+
+void USKUIManager::HandlePreLoadMap(const FString& MapName)
+{
+	//# OpenUIList·CashingUIList 는 CreateWidget(GetWorld(), ...) 로 만든 월드 소속 위젯이다.
+	//# 남겨 두면 OpenUI 의 중복 가드가 새 월드에서 같은 이름의 UI 를 열지 못하게 막는다.
+	for (const TObjectPtr<USKUserWidget>& UserWidget : OpenUIList)
+	{
+		if (IsValid(UserWidget))
+		{
+			UserWidget->RemoveFromParent();
+		}
+	}
+
+	OpenUIList.Empty();
+	CashingUIList.Empty();
+
+	//# PersistentUIList 는 비우지 않는다 — 트래블을 넘어 유지되는 것이 목적이다(로딩 화면).
+	UE_LOG(LogTemp, Log, TEXT("# [SKUIManager] 월드 전환 — 월드 소속 UI 목록 정리 (맵: %s)"), *MapName);
 }
 
 void USKUIManager::Deinitialize()
 {
+	if (PreLoadMapHandle.IsValid())
+	{
+		FCoreUObjectDelegates::PreLoadMap.Remove(PreLoadMapHandle);
+		PreLoadMapHandle.Reset();
+	}
+
 	//# 뷰포트에 얹어 둔 persistent UI 를 모두 걷어낸다
 	if (GEngine != nullptr && GEngine->GameViewport != nullptr)
 	{
