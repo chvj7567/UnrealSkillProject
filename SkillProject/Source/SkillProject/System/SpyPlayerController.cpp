@@ -34,9 +34,13 @@ void ASpyPlayerController::BeginPlay()
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 
-	if (USpyUIManager* UIMgr = USpyUIManager::Get(this))
+	//# 데디 서버의 원격 PC 는 뷰포트가 없다 — HUD 는 로컬 컨트롤러에서만 연다
+	if (IsLocalPlayerController())
 	{
-		UIMgr->OpenSpyUI(ESpyUIType::MainHUD);
+		if (USpyUIManager* UIMgr = USpyUIManager::Get(this))
+		{
+			UIMgr->OpenSpyUI(ESpyUIType::MainHUD);
+		}
 	}
 }
 

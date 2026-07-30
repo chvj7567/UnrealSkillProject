@@ -5,6 +5,7 @@
 #include "Engine/GameViewportClient.h"
 #include "Blueprint/UserWidget.h"
 #include "UObject/UObjectGlobals.h"
+#include "Misc/CoreMisc.h"
 #include "SKUserWidget.h"
 #include "SKAssetManager.h"
 #include "SKAssetData.h"
@@ -13,6 +14,11 @@
 
 bool USKUIManager::ShouldCreateSubsystem(UObject* Outer) const
 {
+	//# 데디 서버는 뷰포트가 없어 UI 를 띄울 수 없다
+	//# 단일 프로세스 PIE 는 false — Run Under One Process 를 끄면 -server 자식이라 true
+	if (IsRunningDedicatedServer())
+		return false;
+
 	//# 파생 클래스가 있으면 base 는 생성 안 함 (leaf 만 생성 → 인스턴스 분리 방지)
 	TArray<UClass*> DerivedClasses;
 	GetDerivedClasses(GetClass(), DerivedClasses, false);

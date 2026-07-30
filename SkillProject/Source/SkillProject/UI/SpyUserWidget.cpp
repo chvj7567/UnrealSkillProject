@@ -27,5 +27,10 @@ void USpyUserWidget::Close()
 	FString FullNameStr = FString::Printf(TEXT("ESpyUIType::%s"), *UIName.ToString());
 	int EnumValue = StaticEnum<ESpyUIType>()->GetValueByName(FName(*FullNameStr));
 
-	USpyUIManager::Get(this)->CloseSpyUI(static_cast<ESpyUIType>(EnumValue));
+	//# 데디 서버·정리 시점에는 UI 매니저가 없다
+	USpyUIManager* UIManager = USpyUIManager::Get(this);
+	if (UIManager == nullptr)
+		return;
+
+	UIManager->CloseSpyUI(static_cast<ESpyUIType>(EnumValue));
 }

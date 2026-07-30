@@ -114,6 +114,10 @@ AActor* USpyGrappleTargetingComponent::FindBestTarget() const
     APlayerController* PC = OwnerPawn ? Cast<APlayerController>(OwnerPawn->GetController()) : nullptr;
     if (PC == nullptr) return nullptr;
 
+    //# 로컬 컨트롤러가 있어도 뷰포트가 없을 수 있다(-nullrhi·커밋릿) — 화면 좌표 기준 탐색 불가
+    if (GEngine->GameViewport == nullptr)
+        return nullptr;
+
     FVector2D ViewportSize;
     GEngine->GameViewport->GetViewportSize(ViewportSize);
     const FVector2D ViewportCenter = ViewportSize * 0.5f;
