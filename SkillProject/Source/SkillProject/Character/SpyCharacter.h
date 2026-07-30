@@ -34,6 +34,10 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
+
+	//# 부착 액터는 소유자가 파괴돼도 함께 파괴되지 않는다 — 스폰한 무기를 여기서 정리한다
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void UnPossessed() override;
 

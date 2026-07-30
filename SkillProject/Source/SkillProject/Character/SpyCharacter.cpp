@@ -102,6 +102,20 @@ void ASpyCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ASpyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	//# 부착만으로는 소유자와 수명이 묶이지 않는다 — 정리하지 않으면 무기 메시가 그 자리에 남는다.
+	//# 서버에서 파괴해야 클라이언트로 전파된다(SpyWeapon 은 Replicated 프로퍼티다).
+	if (HasAuthority() && IsValid(SpyWeapon))
+	{
+		SpyWeapon->Destroy();
+	}
+
+	SpyWeapon = nullptr;
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void ASpyCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
