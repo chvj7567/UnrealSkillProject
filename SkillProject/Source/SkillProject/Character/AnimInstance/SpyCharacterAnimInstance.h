@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Character/CommonInterface.Character.h"
 
 #include "SpyCharacterAnimInstance.generated.h"
 
@@ -29,6 +30,10 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<USpyCharacterMovementComponent> PlayerMovementComponent;
+
+	//# NativeBeginPlay 에서 캐싱 시도 + 널이면 Tick 에서 재해결 (루트 조립 이전 타이밍 대비, cpp-style §8·§13)
+	UPROPERTY(Transient)
+	TScriptInterface<ISpyTargetProvider> CachedTargetProvider;
 
 protected:
 	UPROPERTY(BlueprintReadOnly)

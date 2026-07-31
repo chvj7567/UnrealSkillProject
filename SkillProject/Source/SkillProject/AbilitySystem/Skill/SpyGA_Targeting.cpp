@@ -3,7 +3,7 @@
 
 #include "SpyGA_Targeting.h"
 #include "Character/SpyCharacter.h"
-#include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "Character/CommonInterface.Character.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_Targeting)
@@ -24,7 +24,8 @@ void USpyGA_Targeting::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 		if (OwnerCharacter == nullptr)
 			break;
 
-		USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
+		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter);
+		ISpyTargetProvider* TargetingComp = RootPtr ? RootPtr->GetTargetProvider().GetInterface() : nullptr;
 		if (TargetingComp == nullptr)
 			break;
 

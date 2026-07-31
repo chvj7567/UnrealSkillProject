@@ -5,6 +5,7 @@
 #include "Camera/CameraShakeBase.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Character/SpyCharacter.h"
+#include "Character/CommonInterface.Character.h"
 #include "Data/SpyCharacterConfig.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"
@@ -17,7 +18,6 @@
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
-#include "ManagerComponent/SpyTargetingManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyPlayerController)
 
@@ -67,14 +67,16 @@ void ASpyPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
+	ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetPawn());
+	TargetingComp = RootPtr ? RootPtr->GetTargetProvider() : TScriptInterface<ISpyTargetProvider>(nullptr);
 }
 
 void ASpyPlayerController::AcknowledgePossession(APawn* InPawn)
 {
 	Super::AcknowledgePossession(InPawn);
 
-	TargetingComp = GetPawn()->FindComponentByClass<USpyTargetingManagerComponent>();
+	ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetPawn());
+	TargetingComp = RootPtr ? RootPtr->GetTargetProvider() : TScriptInterface<ISpyTargetProvider>(nullptr);
 
 	if (PlayerCameraManager)
 	{
@@ -103,7 +105,16 @@ void ASpyPlayerController::UpdateRotation(float DeltaTime)
 	}
 
 	APawn* ControlledPawn = GetPawn();
-	AActor* TargetActor = (ControlledPawn != nullptr && TargetingComp != nullptr) ? TargetingComp->GetTarget().Get() : nullptr;
+
+	//# OnPossess/AcknowledgePossession 캐싱 시점엔 아직 루트 조립(AssembleComponents) 전일 수 있다 —
+	//# 널이면 여기서 재해결해 기존 FindComponentByClass 의 "매 프레임 자연 치유" 특성을 보존한다.
+	if (TargetingComp.GetInterface() == nullptr)
+	{
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(ControlledPawn))
+			TargetingComp = RootPtr->GetTargetProvider();
+	}
+
+	AActor* TargetActor = (ControlledPawn != nullptr && TargetingComp.GetInterface() != nullptr) ? TargetingComp->GetTarget().Get() : nullptr;
 
 	//# 타겟팅 중에는 Yaw(좌우) 만 타겟이 소유하고, Pitch(상하) 는 플레이어 입력에 맡긴다
 	const bool bTargetLocked = (TargetActor != nullptr);

@@ -4,7 +4,7 @@
 #include "SpyGA_Death.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
-#include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "Character/CommonInterface.Character.h"
 
 void USpyGA_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -17,7 +17,8 @@ void USpyGA_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
             CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
         }
 
-		if (USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>())
+		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter);
+		if (ISpyTargetProvider* TargetingComp = RootPtr ? RootPtr->GetTargetProvider().GetInterface() : nullptr)
 		{
 			TargetingComp->FindTarget(0.f);
 		}

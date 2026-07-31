@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Util/DefineEnum.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "ModularPlayerController.h"
 #include "SpyPlayerController.generated.h"
 
 class USpyAbilitySystemComponent;
-class USpyTargetingManagerComponent;
 class UCameraShakeBase;
 
 UCLASS()
@@ -42,8 +42,9 @@ public:
 	void TriggerShakeLocal(bool bCritical, bool bFromReceivedHit);
 
 protected:
-	UPROPERTY()
-	TObjectPtr<USpyTargetingManagerComponent> TargetingComp;
+	//# OnPossess/AcknowledgePossession 에서 캐싱 시도 + 널이면 UpdateRotation 에서 재해결 (cpp-style §8·§13)
+	UPROPERTY(Transient)
+	TScriptInterface<ISpyTargetProvider> TargetingComp;
 
 	bool bCursorMode = false;
 
