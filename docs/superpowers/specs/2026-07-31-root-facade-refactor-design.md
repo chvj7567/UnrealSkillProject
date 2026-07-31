@@ -209,4 +209,18 @@ DataInitialized
 - `SkillProject/Source/SkillProject` 에서 GA·컨트롤러·AnimInstance·형제 컴포넌트의 `FindComponentByClass<USpy*>` 호출 0건
   - 예외: 루트 자신이 자기 컴포넌트를 찾는 `SpyCharacter.cpp:241`, 정적 헬퍼(`FindHealthComponent` 등)는 대상 아님
 - 기존 자동화 테스트 전부 통과, 특히 `SpyCharacterAIRotationTests`
-- 파쿠르(Vault/HangUp/WallClimb)·그래플·타깃팅 동작 변화 없음
+- 파쿠르(Vault/HangUp/WallClimb)·그래플 동작 변화 없음
+
+### 예외 — 타깃 락 카메라 제약 제거 (2026-08-01, 사용자 결정)
+
+"타깃팅 동작 변화 없음" 은 **의도적으로 포기했다.**
+
+리팩터링 중 `ASpyPlayerController` 가 **원격 클라이언트에서 원래 고장나 있었음**이 드러났다 — `AcknowledgePossession` 시점엔 `CharacterAssetData` 레플리케이트가 끝나지 않아 타깃팅 컴포넌트가 아직 등록되지 않았고(`HandleChangeInitState` 의 `Spawned → DataAvailable` 전이 조건이 `GetController() != nullptr`), 재탐색이 없어 핸들이 영구 널이었다. 서버·스탠드얼론은 `GameMode` 가 `FinishSpawning` 전에 `SetCharacterAssetData` 를 호출해 `PossessedBy` 안에서 컴포넌트가 동기 생성되므로 정상이었다.
+
+리팩터링이 이를 고치자 원격 클라 플레이어에게 **없던 카메라 제약이 새로 생기게 됐고**, 사용자가 기능 자체를 제거하는 쪽을 택했다.
+
+- **제거**: `UpdateRotation` 의 타깃 락 Yaw 강제(`RotationInput.Yaw = 0`)와 타깃 방향 `RInterpTo` 보간. `TargetingComp` 멤버·캐싱도 함께 소멸.
+- **유지**: 상하 시야각 제한(`PlayerCameraManager->ViewPitchMin/Max` ← `CharacterConfig`, `Super::UpdateRotation` 의 `LimitViewPitch` 가 적용).
+- **무관**: 캐릭터 몸통이 타깃을 향하는 것은 `USpyCharacterMovementComponent::PhysicsRotation` 의 `SetActorRotation` 이며 그대로 유지된다.
+
+부수 효과로 `ASpyPlayerController` 는 §13 소비자 목록에서 완전히 빠진다 — 하위 컴포넌트를 아예 참조하지 않는다.
