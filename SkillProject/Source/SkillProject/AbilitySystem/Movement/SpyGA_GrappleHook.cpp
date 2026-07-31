@@ -7,7 +7,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Data/SpyMovementConfig.h"
 #include "Util/SpyGameplayTags.h"
-#include "ManagerComponent/SpyGrappleTargetingComponent.h"
+#include "Character/CommonInterface.Character.h"
 #include "System/SpyMissionComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerState.h"
@@ -29,11 +29,11 @@ bool USpyGA_GrappleHook::CanActivateAbility(
     APawn* Pawn = Cast<APawn>(ActorInfo->AvatarActor.Get());
     if (Pawn && Pawn->IsLocallyControlled())
     {
-        USpyGrappleTargetingComponent* TargetComp =
-            Pawn->FindComponentByClass<USpyGrappleTargetingComponent>();
-        return TargetComp && TargetComp->GetLocalCachedTarget() != nullptr;
-    }
-    return true;
+		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Pawn);
+		ISpyGrappleHost* Host = RootPtr ? RootPtr->GetGrappleHost().GetInterface() : nullptr;
+		return Host != nullptr && Host->GetLocalCachedTarget() != nullptr;
+	}
+	return true;
 }
 
 USpyGA_GrappleHook::USpyGA_GrappleHook()
@@ -80,24 +80,24 @@ void USpyGA_GrappleHook::ActivateAbility(
 
     if (bAuthority)
     {
-        USpyGrappleTargetingComponent* TargetComp =
-            AvatarActor->FindComponentByClass<USpyGrappleTargetingComponent>();
+		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(AvatarActor);
+		ISpyGrappleHost* Host = RootPtr ? RootPtr->GetGrappleHost().GetInterface() : nullptr;
 
-        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] TargetComp class=%s"),
-            TargetComp ? *TargetComp->GetClass()->GetName() : TEXT("NULL"));
+		UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] TargetComp class=%s"),
+			   Host ? *Host->_getUObject()->GetClass()->GetName() : TEXT("NULL"));
 
-        if (TargetComp == nullptr)
-        {
-            UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] TargetComp NOT FOUND → EndAbility"));
+		if (Host == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] TargetComp NOT FOUND → EndAbility"));
             EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
             return;
-        }
+		}
 
-        AActor* Target = TargetComp->GetCurrentGrappleTarget();
-        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] CurrentGrappleTarget=%s"),
-            Target ? *Target->GetName() : TEXT("NULL"));
+		AActor* Target = Host->GetCurrentGrappleTarget();
+		UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] CurrentGrappleTarget=%s"),
+			   Target ? *Target->GetName() : TEXT("NULL"));
 
-        if (Target == nullptr)
+		if (Target == nullptr)
         {
             UE_LOG(LogTemp, Error, TEXT("[GrappleGA][SRV] Target is NULL → EndAbility"));
             EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -132,15 +132,15 @@ void USpyGA_GrappleHook::ActivateAbility(
     else
     {
         APawn* Pawn = Cast<APawn>(AvatarActor);
-        USpyGrappleTargetingComponent* TargetComp =
-            Pawn ? Pawn->FindComponentByClass<USpyGrappleTargetingComponent>() : nullptr;
+		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Pawn);
+		ISpyGrappleHost* Host = RootPtr ? RootPtr->GetGrappleHost().GetInterface() : nullptr;
 
-        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] TargetComp class=%s"),
-            TargetComp ? *TargetComp->GetClass()->GetName() : TEXT("NULL"));
+		UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] TargetComp class=%s"),
+			   Host ? *Host->_getUObject()->GetClass()->GetName() : TEXT("NULL"));
 
-        AActor* LocalTarget = TargetComp ? TargetComp->GetLocalCachedTarget() : nullptr;
+		AActor* LocalTarget = Host ? Host->GetLocalCachedTarget() : nullptr;
 
-        UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] LocalCachedTarget=%s"),
+		UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] LocalCachedTarget=%s"),
             LocalTarget ? *LocalTarget->GetName() : TEXT("NULL"));
 
         if (LocalTarget == nullptr)
