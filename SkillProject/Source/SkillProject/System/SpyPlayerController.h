@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Util/DefineEnum.h"
-#include "ManagerComponent/CommonInterface.Manager.h"
 #include "ModularPlayerController.h"
 #include "SpyPlayerController.generated.h"
 
@@ -42,10 +41,6 @@ public:
 	void TriggerShakeLocal(bool bCritical, bool bFromReceivedHit);
 
 protected:
-	//# OnPossess/AcknowledgePossession 에서 캐싱 시도 + IsValid 로 널/파괴 판정 후 UpdateRotation 에서 재해결
-	UPROPERTY(Transient)
-	TScriptInterface<ISpyTargetProvider> TargetingComp;
-
 	bool bCursorMode = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera|Shake")
