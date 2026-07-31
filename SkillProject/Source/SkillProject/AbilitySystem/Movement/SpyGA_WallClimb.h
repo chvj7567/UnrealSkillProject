@@ -15,38 +15,38 @@ UCLASS()
 class SKILLPROJECT_API USpyGA_WallClimb : public USKGameplayAbility
 {
 	GENERATED_BODY()
-	
+
 public:
-    USpyGA_WallClimb();
+	USpyGA_WallClimb();
 
 protected:
-    virtual void ActivateAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        const FGameplayEventData* TriggerEventData) override;
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
 
-    virtual void EndAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        bool bReplicateEndAbility,
-        bool bWasCancelled) override;
+	virtual void EndAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		bool bReplicateEndAbility,
+		bool bWasCancelled) override;
 
-    virtual void InputPressed(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo) override;
+	virtual void InputPressed(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 protected:
-    UFUNCTION()
-    bool TryToggleClimbAction();
+	UFUNCTION()
+	bool TryToggleClimbAction();
 
-    UFUNCTION()
-    void StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData);
+	UFUNCTION()
+	void StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData);
 
-    UFUNCTION()
-    void EndWallClimb();
+	UFUNCTION()
+	void EndWallClimb();
 
 protected:
 	//# 이 GA 가 카메라 콜리전 억제를 건 캐릭터. 건 주체만 해제한다.

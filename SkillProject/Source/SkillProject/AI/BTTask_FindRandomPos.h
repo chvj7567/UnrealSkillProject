@@ -13,16 +13,16 @@ class SKILLPROJECT_API UBTTask_FindRandomPos : public UBTTaskNode
 	GENERATED_BODY()
 
 public:
-    UBTTask_FindRandomPos();
+	UBTTask_FindRandomPos();
 
 protected:
-    virtual EBTNodeResult::Type ExecuteTask(
-        UBehaviorTreeComponent& OwnerComp,
-        uint8* NodeMemory) override;
+	virtual EBTNodeResult::Type ExecuteTask(
+		UBehaviorTreeComponent& OwnerComp,
+		uint8* NodeMemory) override;
 
-    UPROPERTY(EditAnywhere, Category = "AI")
-    float SearchRadius = 30.f;
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float SearchRadius = 30.f;
 
-    UPROPERTY(EditAnywhere, Category = "AI")
-    FBlackboardKeySelector TargetLocationKey;
+	UPROPERTY(EditAnywhere, Category = "AI")
+	FBlackboardKeySelector TargetLocationKey;
 };

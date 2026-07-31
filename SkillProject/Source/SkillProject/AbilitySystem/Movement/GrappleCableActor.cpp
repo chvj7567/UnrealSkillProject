@@ -10,68 +10,70 @@
 
 AGrappleCableActor::AGrappleCableActor()
 {
-    PrimaryActorTick.bCanEverTick = true;
-    bReplicates = true;
+	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
-    CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("CableComponent"));
-    SetRootComponent(CableComponent);
+	CableComponent = CreateDefaultSubobject<UCableComponent>(TEXT("CableComponent"));
+	SetRootComponent(CableComponent);
 
-    CableComponent->bAttachStart = true;
-    CableComponent->bAttachEnd   = false;
-    CableComponent->CableLength  = 0.f;
-    CableComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    CableComponent->SetAbsolute(false, true, false);
+	CableComponent->bAttachStart = true;
+	CableComponent->bAttachEnd = false;
+	CableComponent->CableLength = 0.f;
+	CableComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CableComponent->SetAbsolute(false, true, false);
 
-    SetReplicatingMovement(false);
+	SetReplicatingMovement(false);
 }
 
 void AGrappleCableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(AGrappleCableActor, TargetLocation);
-    DOREPLIFETIME(AGrappleCableActor, HandBoneName);
-    DOREPLIFETIME(AGrappleCableActor, OwnerCharacter);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGrappleCableActor, TargetLocation);
+	DOREPLIFETIME(AGrappleCableActor, HandBoneName);
+	DOREPLIFETIME(AGrappleCableActor, OwnerCharacter);
 }
 
 void AGrappleCableActor::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    if (CableComponent)
-    {
-        CableComponent->CableWidth  = CableWidth;
-        CableComponent->NumSegments = NumSegments;
-        if (CableMaterial)
-        {
-            CableComponent->SetMaterial(0, CableMaterial);
-        }
-    }
+	if (CableComponent)
+	{
+		CableComponent->CableWidth = CableWidth;
+		CableComponent->NumSegments = NumSegments;
+		if (CableMaterial)
+		{
+			CableComponent->SetMaterial(0, CableMaterial);
+		}
+	}
 
-    UpdateCableTransform();
+	UpdateCableTransform();
 }
 
 void AGrappleCableActor::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
-    UpdateCableTransform();
+	Super::Tick(DeltaTime);
+	UpdateCableTransform();
 }
 
 void AGrappleCableActor::InitCable(ACharacter* InOwnerCharacter, const FVector& InTargetLocation, const FName& InHandBoneName)
 {
-    OwnerCharacter = InOwnerCharacter;
-    TargetLocation = InTargetLocation;
-    HandBoneName   = InHandBoneName;
-    UpdateCableTransform();
+	OwnerCharacter = InOwnerCharacter;
+	TargetLocation = InTargetLocation;
+	HandBoneName = InHandBoneName;
+	UpdateCableTransform();
 }
 
 void AGrappleCableActor::UpdateCableTransform()
 {
-    if (OwnerCharacter == nullptr || CableComponent == nullptr) return;
+	if (OwnerCharacter == nullptr || CableComponent == nullptr)
+		return;
 
-    USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
-    if (Mesh == nullptr) return;
+	USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
+	if (Mesh == nullptr)
+		return;
 
-    FVector HandBoneWorld        = Mesh->GetBoneLocation(HandBoneName);
-    SetActorLocation(HandBoneWorld);
-    CableComponent->EndLocation  = TargetLocation - HandBoneWorld;
+	FVector HandBoneWorld = Mesh->GetBoneLocation(HandBoneName);
+	SetActorLocation(HandBoneWorld);
+	CableComponent->EndLocation = TargetLocation - HandBoneWorld;
 }

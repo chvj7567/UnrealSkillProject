@@ -9,31 +9,31 @@
 
 class UUserWidget;
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SKILLPROJECT_API USpyGrappleUIComponent : public UActorComponent
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    USpyGrappleUIComponent();
+	USpyGrappleUIComponent();
 
-    virtual void BeginPlay() override;
-    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	//# 루트가 조립 시점에 주입한다 (cpp-style §13)
 	void InjectGrappleHost(TScriptInterface<ISpyGrappleHost> InHost);
 
 private:
-    UFUNCTION()
-    void OnTargetChanged(AActor* NewTarget);
+	UFUNCTION()
+	void OnTargetChanged(AActor* NewTarget);
 
-    void SetMeshCustomDepth(AActor* Actor, bool bEnable) const;
+	void SetMeshCustomDepth(AActor* Actor, bool bEnable) const;
 
 private:
-    UPROPERTY()
-    TObjectPtr<UUserWidget> PromptWidget;
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PromptWidget;
 
-    TWeakObjectPtr<AActor> OldTarget;
+	TWeakObjectPtr<AActor> OldTarget;
 
 	UPROPERTY(Transient)
 	TScriptInterface<ISpyGrappleHost> GrappleHost;

@@ -12,41 +12,44 @@ class UMaterialInterface;
 UCLASS()
 class SKILLPROJECT_API AGrappleCableActor : public AActor
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    AGrappleCableActor();
+	AGrappleCableActor();
 
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaTime) override;
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    void InitCable(ACharacter* InOwnerCharacter, const FVector& InTargetLocation, const FName& InHandBoneName);
+	void InitCable(ACharacter* InOwnerCharacter, const FVector& InTargetLocation, const FName& InHandBoneName);
 
-    FORCEINLINE FVector GetGrappleTargetLocation() const { return TargetLocation; }
+	FORCEINLINE FVector GetGrappleTargetLocation() const
+	{
+		return TargetLocation;
+	}
 
 private:
-    void UpdateCableTransform();
+	void UpdateCableTransform();
 
 private:
-    UPROPERTY(VisibleAnywhere)
-    TObjectPtr<UCableComponent> CableComponent;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCableComponent> CableComponent;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable")
-    TObjectPtr<UMaterialInterface> CableMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable")
+	TObjectPtr<UMaterialInterface> CableMaterial;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable", meta = (ClampMin = "0.1"))
-    float CableWidth = 5.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable", meta = (ClampMin = "0.1"))
+	float CableWidth = 5.f;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable", meta = (ClampMin = "1"))
-    int32 NumSegments = 10;
+	UPROPERTY(EditDefaultsOnly, Category = "Grapple|Cable", meta = (ClampMin = "1"))
+	int32 NumSegments = 10;
 
-    UPROPERTY(Replicated)
-    FVector TargetLocation = FVector::ZeroVector;
+	UPROPERTY(Replicated)
+	FVector TargetLocation = FVector::ZeroVector;
 
-    UPROPERTY(Replicated)
-    FName HandBoneName;
+	UPROPERTY(Replicated)
+	FName HandBoneName;
 
-    UPROPERTY(Replicated)
-    TObjectPtr<ACharacter> OwnerCharacter;
+	UPROPERTY(Replicated)
+	TObjectPtr<ACharacter> OwnerCharacter;
 };

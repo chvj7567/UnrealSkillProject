@@ -13,13 +13,13 @@ class SKILLPROJECT_API USpyGA_Targeting : public USKGameplayAbility
 	GENERATED_BODY()
 
 protected:
-    virtual void ActivateAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        const FGameplayEventData* TriggerEventData) override;
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TSubclassOf<UGameplayEffect> TargetingEffectClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UGameplayEffect> TargetingEffectClass;
 };

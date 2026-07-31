@@ -12,14 +12,14 @@
 
 USpyGrappleUIComponent::USpyGrappleUIComponent()
 {
-    PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void USpyGrappleUIComponent::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    AActor* Owner = GetOwner();
+	AActor* Owner = GetOwner();
 	if (Owner == nullptr)
 		return;
 
@@ -29,15 +29,16 @@ void USpyGrappleUIComponent::BeginPlay()
 		return;
 
 	TSubclassOf<UUserWidget> WidgetClass =
-        USpyAssetManager::GetSubclassByName<UUserWidget>(SpyAssetNames::GrapplePromptWidget);
-    if (WidgetClass == nullptr) return;
+		USpyAssetManager::GetSubclassByName<UUserWidget>(SpyAssetNames::GrapplePromptWidget);
+	if (WidgetClass == nullptr)
+		return;
 
-    PromptWidget = CreateWidget<UUserWidget>(PC, WidgetClass);
-    if (PromptWidget)
-    {
-        PromptWidget->AddToViewport();
-        PromptWidget->SetVisibility(ESlateVisibility::Hidden);
-    }
+	PromptWidget = CreateWidget<UUserWidget>(PC, WidgetClass);
+	if (PromptWidget)
+	{
+		PromptWidget->AddToViewport();
+		PromptWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void USpyGrappleUIComponent::InjectGrappleHost(TScriptInterface<ISpyGrappleHost> InHost)
@@ -63,46 +64,47 @@ void USpyGrappleUIComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	if (PromptWidget)
 	{
-        PromptWidget->RemoveFromParent();
-        PromptWidget = nullptr;
-    }
-    Super::EndPlay(EndPlayReason);
+		PromptWidget->RemoveFromParent();
+		PromptWidget = nullptr;
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void USpyGrappleUIComponent::OnTargetChanged(AActor* NewTarget)
 {
-    if (NewTarget)
-    {
-        SetMeshCustomDepth(OldTarget.Get(), false);
-        SetMeshCustomDepth(NewTarget, true);
+	if (NewTarget)
+	{
+		SetMeshCustomDepth(OldTarget.Get(), false);
+		SetMeshCustomDepth(NewTarget, true);
 
-        if (PromptWidget)
-        {
-            PromptWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-        }
-        OldTarget = NewTarget;
-    }
-    else
-    {
-        SetMeshCustomDepth(OldTarget.Get(), false);
+		if (PromptWidget)
+		{
+			PromptWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+		OldTarget = NewTarget;
+	}
+	else
+	{
+		SetMeshCustomDepth(OldTarget.Get(), false);
 
-        if (PromptWidget)
-        {
-            PromptWidget->SetVisibility(ESlateVisibility::Hidden);
-        }
-        OldTarget = nullptr;
-    }
+		if (PromptWidget)
+		{
+			PromptWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+		OldTarget = nullptr;
+	}
 }
 
 void USpyGrappleUIComponent::SetMeshCustomDepth(AActor* Actor, bool bEnable) const
 {
-    if (Actor == nullptr) return;
-    if (UMeshComponent* Mesh = Actor->FindComponentByClass<UMeshComponent>())
-    {
-        Mesh->SetRenderCustomDepth(bEnable);
-        if (bEnable)
-        {
-            Mesh->SetCustomDepthStencilValue(1);
-        }
-    }
+	if (Actor == nullptr)
+		return;
+	if (UMeshComponent* Mesh = Actor->FindComponentByClass<UMeshComponent>())
+	{
+		Mesh->SetRenderCustomDepth(bEnable);
+		if (bEnable)
+		{
+			Mesh->SetCustomDepthStencilValue(1);
+		}
+	}
 }

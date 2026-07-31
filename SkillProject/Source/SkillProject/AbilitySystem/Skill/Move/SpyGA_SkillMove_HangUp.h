@@ -16,27 +16,27 @@ class SKILLPROJECT_API USpyGA_SkillMove_HangUp : public USKGameplayAbility_Skill
 	GENERATED_BODY()
 
 public:
-    virtual void ActivateAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        const FGameplayEventData* TriggerEventData) override;
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
 
-    virtual void EndAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        bool bReplicateEndAbility,
-        bool bWasCancelled) override;
-
-protected:
-    UFUNCTION()
-    void OnSyncMotionWarpingData(FMotionWarpingData InHangUpData);
+	virtual void EndAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		bool bReplicateEndAbility,
+		bool bWasCancelled) override;
 
 protected:
-    //# FreeMoveMode 를 이 GA 가 실제로 켰는지 여부. 켠 주체만 되돌린다.
-    //# SetFreeMoveMode 호출은 전부 HasAuthority 안이라 이 플래그도 서버 인스턴스에서만 의미가 있다.
-    bool bFreeMoveEngaged = false;
+	UFUNCTION()
+	void OnSyncMotionWarpingData(FMotionWarpingData InHangUpData);
+
+protected:
+	//# FreeMoveMode 를 이 GA 가 실제로 켰는지 여부. 켠 주체만 되돌린다.
+	//# SetFreeMoveMode 호출은 전부 HasAuthority 안이라 이 플래그도 서버 인스턴스에서만 의미가 있다.
+	bool bFreeMoveEngaged = false;
 
 	//# 이 GA 가 카메라 콜리전 억제를 건 캐릭터. 건 주체만 해제한다.
 	//# 약참조로 들고 있는 이유 — 사망·파괴 경로의 EndAbility 에서는 ActorInfo 의 Avatar 가

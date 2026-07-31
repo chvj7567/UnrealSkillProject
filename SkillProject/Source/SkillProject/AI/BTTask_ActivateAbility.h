@@ -14,11 +14,11 @@ class SKILLPROJECT_API UBTTask_ActivateAbility : public UBTTaskNode
 	GENERATED_BODY()
 
 public:
-    UBTTask_ActivateAbility();
+	UBTTask_ActivateAbility();
 
 protected:
-    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-    UPROPERTY(EditAnywhere, Category = "Ability")
-    TArray<FGameplayTag> AbilityTags;
+	UPROPERTY(EditAnywhere, Category = "Ability")
+	TArray<FGameplayTag> AbilityTags;
 };

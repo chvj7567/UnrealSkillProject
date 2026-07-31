@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SpyTargetingManagerComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -21,47 +20,47 @@ USpyTargetingManagerComponent::USpyTargetingManagerComponent()
 
 void USpyTargetingManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(USpyTargetingManagerComponent, CurrentTarget);
+	DOREPLIFETIME(USpyTargetingManagerComponent, CurrentTarget);
 }
 
 void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
 {
-    AActor* MyActor = GetOwner();
-    if (MyActor == nullptr)
-        return;
+	AActor* MyActor = GetOwner();
+	if (MyActor == nullptr)
+		return;
 
-    ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(MyActor);
-    if (SpyCharacter == nullptr)
-        return;
+	ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(MyActor);
+	if (SpyCharacter == nullptr)
+		return;
 
-    if (CurrentTarget != nullptr)
-    {
-        if (CurrentTarget == NewTarget)
-            return;
+	if (CurrentTarget != nullptr)
+	{
+		if (CurrentTarget == NewTarget)
+			return;
 
-        if (ASpyCharacter* SpyTarget = Cast<ASpyCharacter>(CurrentTarget))
-        {
-            SpyTarget->GetSpyHealthComponent()->OnDeath.RemoveDynamic(this, &ThisClass::OnTargetDeath);
-        }
+		if (ASpyCharacter* SpyTarget = Cast<ASpyCharacter>(CurrentTarget))
+		{
+			SpyTarget->GetSpyHealthComponent()->OnDeath.RemoveDynamic(this, &ThisClass::OnTargetDeath);
+		}
 
-        //# 이전 타겟 GE 제거
-        if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget)->GetSpyAbilitySystemComponent())
-        {
-            FGameplayTagContainer TagContainer;
-            TagContainer.AddTag(SpyGameplayTags::Character_State_Targeting);
+		//# 이전 타겟 GE 제거
+		if (USpyAbilitySystemComponent* ASC = Cast<ASpyCharacter>(CurrentTarget)->GetSpyAbilitySystemComponent())
+		{
+			FGameplayTagContainer TagContainer;
+			TagContainer.AddTag(SpyGameplayTags::Character_State_Targeting);
 
-            ASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
-        }
-    }
+			ASC->RemoveActiveEffectsWithGrantedTags(TagContainer);
+		}
+	}
 
 	if (NewTarget)
 	{
-        if (ASpyCharacter* SpyTarget = Cast<ASpyCharacter>(NewTarget))
-        {
-            SpyTarget->GetSpyHealthComponent()->OnDeath.AddDynamic(this, &ThisClass::OnTargetDeath);
-        }
+		if (ASpyCharacter* SpyTarget = Cast<ASpyCharacter>(NewTarget))
+		{
+			SpyTarget->GetSpyHealthComponent()->OnDeath.AddDynamic(this, &ThisClass::OnTargetDeath);
+		}
 
 		CurrentTarget = NewTarget;
 
@@ -75,91 +74,90 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
 
 bool USpyTargetingManagerComponent::IsTargetValid() const
 {
-    return IsPotentialTargetValid(CurrentTarget);
+	return IsPotentialTargetValid(CurrentTarget);
 }
 
 bool USpyTargetingManagerComponent::FindTarget(float Radius)
 {
-    AActor* Owner = GetOwner();
-    if (Owner == nullptr)
-        return false;
+	AActor* Owner = GetOwner();
+	if (Owner == nullptr)
+		return false;
 
-    //# 감지할 오브젝트 타입을 Pawn으로 설정
-    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+	//# 감지할 오브젝트 타입을 Pawn으로 설정
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
 
-    //# 자기 자신 제외
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(Owner);
+	//# 자기 자신 제외
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(Owner);
 
-    TArray<AActor*> OutActors;
+	TArray<AActor*> OutActors;
 
-    bool bFound = UKismetSystemLibrary::SphereOverlapActors(
-        GetWorld(),
-        Owner->GetActorLocation(),
-        Radius,
-        ObjectTypes,
-        nullptr,
-        ActorsToIgnore,
-        OutActors
-    );
+	bool bFound = UKismetSystemLibrary::SphereOverlapActors(
+		GetWorld(),
+		Owner->GetActorLocation(),
+		Radius,
+		ObjectTypes,
+		nullptr,
+		ActorsToIgnore,
+		OutActors);
 
-    if (SKDebugDrawEnabled())
-    {
-        DrawDebugSphere(
-            GetWorld(),
-            Owner->GetActorLocation(),
-            Radius,
-            24,                //# 세그먼트 수 (구의 디테일)
-            FColor::Blue,       //# 선 색상
-            false,             //# 영구 지속 여부
-            0.5f,              //# 지속 시간 (초)
-            0,                 //# Depth Priority
-            1.0f               //# 선 두께
-        );
-    }
+	if (SKDebugDrawEnabled())
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			Owner->GetActorLocation(),
+			Radius,
+			24,           //# 세그먼트 수 (구의 디테일)
+			FColor::Blue, //# 선 색상
+			false,        //# 영구 지속 여부
+			0.5f,         //# 지속 시간 (초)
+			0,            //# Depth Priority
+			1.0f          //# 선 두께
+		);
+	}
 
-    AActor* Target = nullptr;
-    float ClosestDistanceSq = FMath::Square(Radius);
+	AActor* Target = nullptr;
+	float ClosestDistanceSq = FMath::Square(Radius);
 
-    if (bFound)
-    {
-        for (AActor* FoundActor : OutActors)
-        {
-            if (IsPotentialTargetValid(FoundActor))
-            {
-                //# DistSquared는 루트 계산이 없어 일반 Dist보다 빠름
-                float DistSq = FVector::DistSquared(Owner->GetActorLocation(), FoundActor->GetActorLocation());
-                if (DistSq < ClosestDistanceSq)
-                {
-                    ClosestDistanceSq = DistSq;
-                    Target = FoundActor;
-                }
-            }
-        }
-    }
+	if (bFound)
+	{
+		for (AActor* FoundActor : OutActors)
+		{
+			if (IsPotentialTargetValid(FoundActor))
+			{
+				//# DistSquared는 루트 계산이 없어 일반 Dist보다 빠름
+				float DistSq = FVector::DistSquared(Owner->GetActorLocation(), FoundActor->GetActorLocation());
+				if (DistSq < ClosestDistanceSq)
+				{
+					ClosestDistanceSq = DistSq;
+					Target = FoundActor;
+				}
+			}
+		}
+	}
 
-    SetCurrentTarget(Target);
+	SetCurrentTarget(Target);
 
-    return Target != nullptr;
+	return Target != nullptr;
 }
 
 void USpyTargetingManagerComponent::OnTargetDeath(AActor* InOwningActor, AActor* InCauserActor)
 {
-    SetCurrentTarget(nullptr);
+	SetCurrentTarget(nullptr);
 }
 
 bool USpyTargetingManagerComponent::IsPotentialTargetValid(AActor* PotentialTarget) const
 {
-    if (PotentialTarget == nullptr)
-        return false;
+	if (PotentialTarget == nullptr)
+		return false;
 
-    if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(PotentialTarget))
-    {
-        bool bIsDeath = SpyCharacter->GetSpyAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
-        bool bIsAI = SpyCharacter->IsPlayerControlled() == false;
-        return bIsDeath == false && bIsAI;
-    }
+	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(PotentialTarget))
+	{
+		bool bIsDeath = SpyCharacter->GetSpyAbilitySystemComponent()->HasMatchingGameplayTag(SKGameplayTags::Character_State_Death);
+		bool bIsAI = SpyCharacter->IsPlayerControlled() == false;
+		return bIsDeath == false && bIsAI;
+	}
 
-    return false;
+	return false;
 }

@@ -20,73 +20,85 @@ struct FGameplayTag;
 UENUM()
 enum class EPlayerConnectionType : uint8
 {
-    ActivePlayer = 0,
-    DeactivePlayer = 1,
+	ActivePlayer = 0,
+	DeactivePlayer = 1,
 };
 
 UCLASS()
 class SKILLPROJECT_API ASpyPlayerState : public AModularPlayerState, public IAbilitySystemInterface, public ISpyTeamAgentInterface
 {
 	GENERATED_BODY()
-	
-public:
-    ASpyPlayerState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
-    void SetPlayerConnectionType(EPlayerConnectionType NewType);
-    EPlayerConnectionType GetPlayerConnectionType() { return PlayerConnectionType; }
+	ASpyPlayerState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 public:
-    //# AActor interface
-    virtual void PreInitializeComponents() override;
-    virtual void PostInitializeComponents() override;
-    //# End of AActor interface
-
-    //# APlayerState interface
-    virtual void Reset() override;
-    virtual void ClientInitialize(AController* C) override;
-    virtual void CopyProperties(APlayerState* PlayerState) override;
-    virtual void OnDeactivated() override;
-    virtual void OnReactivated() override;
-    //# End of APlayerState interface
+	void SetPlayerConnectionType(EPlayerConnectionType NewType);
+	EPlayerConnectionType GetPlayerConnectionType()
+	{
+		return PlayerConnectionType;
+	}
 
 public:
-    USpyCharacterAssetData* GetCharacterAssetData() const { return CharacterAssetData; }
-    void SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsPlayer);
+	//# AActor interface
+	virtual void PreInitializeComponents() override;
+	virtual void PostInitializeComponents() override;
+	//# End of AActor interface
 
-    UFUNCTION(BlueprintPure)
-    USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const { return AbilitySystemComponent; }
+	//# APlayerState interface
+	virtual void Reset() override;
+	virtual void ClientInitialize(AController* C) override;
+	virtual void CopyProperties(APlayerState* PlayerState) override;
+	virtual void OnDeactivated() override;
+	virtual void OnReactivated() override;
+	//# End of APlayerState interface
 
-    static const FName NAME_AbilityReady;
+public:
+	USpyCharacterAssetData* GetCharacterAssetData() const
+	{
+		return CharacterAssetData;
+	}
+	void SetCharacterAssetData(USpyCharacterAssetData* InCharacterAssetData, bool bInIsPlayer);
 
-    //#~IGenericTeamAgentInterface interface
-    virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
-    virtual FGenericTeamId GetGenericTeamId() const override { return TeamID; }
-    //#~End of IGenericTeamAgentInterface interface
+	UFUNCTION(BlueprintPure)
+	USpyAbilitySystemComponent* GetSpyAbilitySystemComponent() const
+	{
+		return AbilitySystemComponent;
+	}
+
+	static const FName NAME_AbilityReady;
+
+	//#~IGenericTeamAgentInterface interface
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	virtual FGenericTeamId GetGenericTeamId() const override
+	{
+		return TeamID;
+	}
+	//#~End of IGenericTeamAgentInterface interface
 
 protected:
-    UFUNCTION()
-    void OnRep_CharacterAssetData();
+	UFUNCTION()
+	void OnRep_CharacterAssetData();
 
-    UPROPERTY(ReplicatedUsing = OnRep_CharacterAssetData)
-    TObjectPtr<USpyCharacterAssetData> CharacterAssetData;
+	UPROPERTY(ReplicatedUsing = OnRep_CharacterAssetData)
+	TObjectPtr<USpyCharacterAssetData> CharacterAssetData;
 
 protected:
-    UPROPERTY(VisibleAnywhere)
-    TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USpyAbilitySystemComponent> AbilitySystemComponent;
 
-    UPROPERTY()
-    TObjectPtr<const class USpyCharacterAttributeSet> CharacterAttributeSet;
+	UPROPERTY()
+	TObjectPtr<const class USpyCharacterAttributeSet> CharacterAttributeSet;
 
-    //# 미션 진행도 — PlayerState 에 두어 폰 수명과 무관하게 유지한다
-    UPROPERTY(VisibleAnywhere)
-    TObjectPtr<class USpyMissionComponent> MissionComponent;
+	//# 미션 진행도 — PlayerState 에 두어 폰 수명과 무관하게 유지한다
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class USpyMissionComponent> MissionComponent;
 
-    UPROPERTY(Replicated)
-    EPlayerConnectionType PlayerConnectionType;
+	UPROPERTY(Replicated)
+	EPlayerConnectionType PlayerConnectionType;
 
-    UPROPERTY(Replicated)
-    FGenericTeamId TeamID;
+	UPROPERTY(Replicated)
+	FGenericTeamId TeamID;
 };
