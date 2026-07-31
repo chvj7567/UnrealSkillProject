@@ -1,7 +1,10 @@
 # C++ 코딩 스타일
 
-> §1~7 은 문법 스타일, §8~12 는 설계 원칙이다.
+> §1~7 은 문법 스타일, §8~13 은 설계 원칙이다.
 > 모듈 의존 방향·서버 권한은 [unreal-infra.md](unreal-infra.md), UI 매니저/위젯 베이스 규칙은 [plugin-skuicore.md](plugin-skuicore.md) 가 SoT다.
+>
+> **이 문서는 프로젝트 비의존이다 — 그대로 복사해 쓴다.** 예제의 플레이스홀더는 각 프로젝트 값으로 읽는다:
+> `My*` = 프로젝트 클래스 접두사(`AMyCharacter` → `AFooCharacter`) · `<GameModule>` = 게임 모듈 경로 · `MYGAME_API` = 모듈 API 매크로 · `SK*` = 재사용 플러그인 베이스(그대로).
 
 ---
 
@@ -37,7 +40,7 @@
 #include "MyClass.generated.h" // generated는 항상 마지막
 ```
 
-**포매터는 이 순서를 강제하지 않는다.** 위 순서는 알파벳순이 아니라 의미 기반이라 clang-format 이 자동 판정할 수 없다 — UE 헤더(`GameFramework/Character.h`)와 프로젝트 헤더(`Character/SpyCharacter.h`)를 정규식으로 안정적으로 구분할 수 없기 때문이다. 그래서 `SkillProject/.clang-format` 에 `SortIncludes: Never` 를 지정해 포매터가 include 를 재정렬하지 못하게 막아 뒀다(그전에는 저장할 때마다 알파벳순으로 되돌려 이 룰을 깨뜨렸다). **순서 준수는 작성자와 code-reviewer 의 몫이다.**
+**포매터는 이 순서를 강제하지 않는다.** 위 순서는 알파벳순이 아니라 의미 기반이라 clang-format 이 자동 판정할 수 없다 — UE 헤더(`GameFramework/Character.h`)와 프로젝트 헤더(`Character/MyCharacter.h`)를 정규식으로 안정적으로 구분할 수 없기 때문이다. **프로젝트 루트 `.clang-format` 에 `SortIncludes: Never` 를 반드시 넣는다** — 없으면 저장할 때마다 알파벳순으로 되돌려 이 룰이 깨진다. **순서 준수는 작성자와 code-reviewer 의 몫이다.**
 
 ---
 
@@ -63,7 +66,7 @@ if (HasAuthority(&ActivationInfo))
 
 ```cpp
 //# (X) 4줄짜리 사유 설명
-//# SpyPawnExtensionComponent 는 CharacterAssetData 레플리케이트 완료 + Controller 연동
+//# Pawn 확장 컴포넌트는 CharacterAssetData 레플리케이트 완료 + Controller 연동
 //# 이후에야 InitState_DataInitialized 로 넘어간다. 그 전에 GA 를 부여하면 ActorInfo 가
 //# 아직 세팅되지 않아 ActivateAbility 시점에 ActorInfo->AbilitySystemComponent 가 널이고,
 //# 그 결과 ...
@@ -114,7 +117,7 @@ auto Handles = AbilityData->GiveToAbilitySystem(ASC);
 
 //# (O)
 USKAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-FSpyAbilitySet_GrantedHandles Handles = AbilityData->GiveToAbilitySystem(ASC);
+FMyAbilitySet_GrantedHandles Handles = AbilityData->GiveToAbilitySystem(ASC);
 ```
 
 **예외** — 타입을 적을 수 없거나 적으면 오히려 해로운 경우만:
@@ -166,13 +169,13 @@ if (!IsValid(Comp)) { return; }
 - **런타임 액터 탐색 금지**: `TActorIterator`, `UGameplayStatics::GetAllActorsOfClass` / `GetAllActorsWithTag` 로 매 프레임 월드를 훑지 않는다. 참조는 스폰/등록 시점에 넘겨받는다.
 - **컴포넌트 탐색 지양**: `FindComponentByClass` / `GetComponentByClass` / `GetComponents` 를 `Tick`·이벤트 핸들러·매 프레임 반복 경로에서 직접 호출 금지. 의존은 `UPROPERTY(EditDefaultsOnly)` 데이터 참조로 미리 와이어링하거나, 불가피하면 `BeginPlay`/InitState 초기화 시점에 **1회만** 캐싱한다.
 
-> 이 프로젝트의 컴포넌트는 `CharacterAssetData` 목록을 읽어 런타임에 `NewObject & RegisterComponent` 로 주입된다. 따라서 컴포넌트 참조의 정석은 **"에디터에서 미리 꽂는다"가 아니라 "InitState 초기화 직후 1회 캐싱한다"** 이다.
+> 컴포넌트를 데이터(Character 에셋 등) 목록 기반으로 런타임에 `NewObject & RegisterComponent` 주입하는 구성이라면([unreal-infra.md](unreal-infra.md) §2), 컴포넌트 참조의 정석은 **"에디터에서 미리 꽂는다"가 아니라 "InitState 초기화 직후 1회 캐싱한다"** 이다.
 
 ```cpp
 //# (X) 구체 매니저 직접 참조
-void ASpyCharacter::OnHit()
+void AMyCharacter::OnHit()
 {
-    USpyUIManager::Get(this)->OpenUI(TEXT("HitFeedback"));
+    UMyUIManager::Get(this)->OpenUI(TEXT("HitFeedback"));
 }
 
 //# (O) 인터페이스/델리게이트로 역전
@@ -182,21 +185,21 @@ FOnCharacterHit OnCharacterHit;   //# UI 계층이 구독한다
 
 ```cpp
 //# (X) 매 프레임 컴포넌트 탐색 — 탐색 비용 + 결합
-void ASpyCharacter::Tick(float DeltaTime)
+void AMyCharacter::Tick(float DeltaTime)
 {
-    FindComponentByClass<USpyTargetingComponent>()->UpdateTarget();
+    FindComponentByClass<UMyTargetingComponent>()->UpdateTarget();
 }
 
 //# (O) 초기화 시점 1회 캐싱
 UPROPERTY(Transient)
-TObjectPtr<USpyTargetingComponent> CachedTargeting;
+TObjectPtr<UMyTargetingComponent> CachedTargeting;
 
-void ASpyCharacter::OnDataInitialized()
+void AMyCharacter::OnDataInitialized()
 {
-    CachedTargeting = FindComponentByClass<USpyTargetingComponent>();
+    CachedTargeting = FindComponentByClass<UMyTargetingComponent>();
 }
 
-void ASpyCharacter::Tick(float DeltaTime)
+void AMyCharacter::Tick(float DeltaTime)
 {
     if (IsValid(CachedTargeting) == false)
         return;
@@ -217,7 +220,7 @@ void ASpyCharacter::Tick(float DeltaTime)
 
 ### 9-1. 계층 분리
 
-**이 프로젝트에는 `ModelViewViewModel` 플러그인이 활성화돼 있지 않고**, UI 생성/캐시/수명은 [plugin-skuicore.md](plugin-skuicore.md) 의 `USKUIManager` 가 이미 규정한다. 따라서 계층 분리는 아래 형태로만 적용한다.
+**`ModelViewViewModel` 플러그인을 켜지 않은 프로젝트에서는**, UI 생성/캐시/수명은 [plugin-skuicore.md](plugin-skuicore.md) 의 `USKUIManager` 가 이미 규정한다. 따라서 계층 분리는 아래 형태로만 적용한다.
 
 | 계층 | 역할 | UE 매핑 |
 |---|---|---|
@@ -247,9 +250,9 @@ TObjectPtr<UProgressBar> PB_HPBar;
 //  호출부:
 HPBar->PB_HPBar->SetPercent(Cur / Max);
 
-//# (O) 위젯이 내부 위젯을 protected 소유 + 의도 API 만 노출 (정석: USpyHPBar)
+//# (O) 위젯이 내부 위젯을 protected 소유 + 의도 API 만 노출
 UCLASS()
-class SKILLPROJECT_API USpyHPBar : public USKUserWidget
+class MYGAME_API UMyHPBar : public USKUserWidget
 {
     GENERATED_BODY()
 
@@ -277,14 +280,14 @@ HPBar->UpdateHP(Cur, Max);
 
 ```cpp
 //# (X) 소유 구체 클래스 직접 캐스팅
-ASpyCharacter* Owner = Cast<ASpyCharacter>(GetOwner());
+AMyCharacter* Owner = Cast<AMyCharacter>(GetOwner());
 Owner->NotifyParkourFinished();
 
 //# (O) 인터페이스로 참조
 UINTERFACE(MinimalAPI, BlueprintType)
-class USpyParkourHost : public UInterface { GENERATED_BODY() };
+class UMyParkourHost : public UInterface { GENERATED_BODY() };
 
-class ISpyParkourHost
+class IMyParkourHost
 {
     GENERATED_BODY()
 public:
@@ -292,24 +295,24 @@ public:
 };
 
 //# 소비 측 — 초기화 시점 1회 캐싱 (§8)
-void USpyParkourManagerComponent::BeginPlay()
+void UMyParkourManagerComponent::BeginPlay()
 {
     Super::BeginPlay();
-    CachedHost = TScriptInterface<ISpyParkourHost>(GetOwner());
+    CachedHost = TScriptInterface<IMyParkourHost>(GetOwner());
 }
 ```
 
-- ASC 접근은 이 규칙의 대표 사례다 — `Cast<ASpyCharacter>` 대신 `IAbilitySystemInterface::GetAbilitySystemComponent()` 를 쓴다.
+- ASC 접근은 이 규칙의 대표 사례다 — `Cast<AMyCharacter>` 대신 `IAbilitySystemInterface::GetAbilitySystemComponent()` 를 쓴다.
 - 플러그인(SKGAS/SKUICore 등) 코드가 게임 타입을 알아야 하면 **반드시** 인터페이스로 뚫는다 (역방향 include 금지, [unreal-infra.md](unreal-infra.md) §1).
 
 ---
 
 ## 11. 공용 Enum — `Util/DefineEnum.h` 단일 파일
 
-여러 시스템에서 참조되는 공용 `UENUM` 은 `SkillProject/Source/SkillProject/Util/DefineEnum.h` 에 모아 정의한다.
+여러 시스템에서 참조되는 공용 `UENUM` 은 게임 모듈의 `<GameModule>/Util/DefineEnum.h` 한 파일에 모아 정의한다.
 
 **공용 Enum 기준** (하나라도 해당하면 `DefineEnum.h`):
-1. 에셋/UI 키 역할 — `ESpyUIType` 등
+1. 에셋/UI 키 역할 — `EMyUIType` 등
 2. 2개 이상 시스템/모듈에서 참조
 3. 시스템 간 통신 계약 (레플리케이트되는 상태값 포함)
 
@@ -317,11 +320,11 @@ void USpyParkourManagerComponent::BeginPlay()
 
 ```cpp
 //# (X) 카테고리별 한 파일씩
-//  Util/ESpyUIType.h, Util/ECustomMovementMode.h ...
+//  Util/EMyUIType.h, Util/ECustomMovementMode.h ...
 
 //# (O) 한 파일에 카테고리별 UENUM 정의 — Util/DefineEnum.h
 UENUM(BlueprintType)
-enum ESpyUIType : uint8
+enum EMyUIType : uint8
 {
     None    UMETA(DisplayName = "None"),
     MainHUD UMETA(DisplayName = "MainHUD"),
@@ -337,7 +340,7 @@ enum ECustomMovementMode : uint8
 
 - 파일이 200줄 초과 or enum 카테고리 6개 이상이면 `DefineEnum.Asset.h`, `DefineEnum.Battle.h` 등 prefix 통일로 분할한다.
 - **플러그인(SKGAS/SKUICore/SKAssetCore)의 enum 은 여기에 넣지 않는다** — 게임 모듈 헤더이므로 역방향 의존이 된다. 각 플러그인 자체 헤더에 둔다.
-- 게임플레이 태그는 enum 이 아니다 — `SpyGameplayTags.h` 규약을 따른다 ([plugin-skgas.md](plugin-skgas.md) §2).
+- 게임플레이 태그는 enum 이 아니다 — 프로젝트 태그 헤더(`MyGameplayTags.h`) 규약을 따른다 ([plugin-skgas.md](plugin-skgas.md) §2).
 
 ---
 
@@ -354,12 +357,12 @@ enum ECustomMovementMode : uint8
 
 ```cpp
 //# (X) 인터페이스마다 한 파일씩
-//  Character/ISpyMover.h, Character/ISpyHealth.h ...
+//  Character/IMyMover.h, Character/IMyHealth.h ...
 
 //# (O) 도메인 단일 파일 — Character/CommonInterface.h
 UINTERFACE(MinimalAPI, BlueprintType)
-class USpyMover : public UInterface { GENERATED_BODY() };
-class ISpyMover
+class UMyMover : public UInterface { GENERATED_BODY() };
+class IMyMover
 {
     GENERATED_BODY()
 public:
@@ -367,8 +370,8 @@ public:
 };
 
 UINTERFACE(MinimalAPI, BlueprintType)
-class USpyHealth : public UInterface { GENERATED_BODY() };
-class ISpyHealth
+class UMyHealth : public UInterface { GENERATED_BODY() };
+class IMyHealth
 {
     GENERATED_BODY()
 public:
@@ -378,11 +381,123 @@ public:
 
 - 파일이 200줄 초과 or 카테고리 6개 이상이면 `CommonInterface.Movement.h` 등 prefix 통일로 분할한다.
 - **적용 범위 — 신규 게임 모듈 인터페이스만.** 이 규칙은 모듈 경계를 넘지 않는다: 도메인 폴더(`Character/`, `System/`, `AI/` …) 단위이며, 게임 모듈과 플러그인이 한 파일을 공유하지 않는다.
-- **기존 1파일=1인터페이스는 grandfathered** — `System/SpyTeamAgentInterface.h`, 플러그인의 `SKAbilitySourceInterface.h` 등은 그대로 둔다. 같은 도메인에 인터페이스를 **새로 추가**할 때 `CommonInterface.h` 로 모으기 시작한다.
+- **기존 1파일=1인터페이스는 grandfathered** — 이미 있는 단일 인터페이스 헤더(게임 모듈·플러그인 양쪽)는 그대로 둔다. 같은 도메인에 인터페이스를 **새로 추가**할 때 `CommonInterface.h` 로 모으기 시작한다.
 
 ---
 
-## 13. 기타
+## 13. 루트 파사드 — 도메인 하나에 진입 클래스 하나
+
+여러 컴포넌트로 쪼개지는 도메인 액터(캐릭터·차량·적·건물 등)는 **루트 액터 하나가 그 도메인의 유일한 외부 진입점**이 된다. 상세 기능은 하위 컴포넌트로 나누되, 전부 루트가 `private`/`protected` `TObjectPtr` 로 소유하고 외부에 노출하지 않는다.
+
+§9-2(위젯 캡슐화)의 게임플레이 판이다. UI 든 캐릭터든 원칙은 같다 — **내부 구성은 숨기고 의도 API 만 연다.**
+
+### 루트의 책임 3가지
+
+1. **조립점** — 하위 컴포넌트끼리 서로 주입하는 자리는 루트다. 컴포넌트를 데이터 목록 기반으로 런타임 주입하는 구성이라면, 조립은 InitState 를 관장하는 Pawn 확장 컴포넌트([plugin-modulargameplayactors.md](plugin-modulargameplayactors.md) §3)의 `DataInitialized` 콜백에서 **1회** 수행한다 (§8 캐싱과 같은 시점). 하위가 소유자·형제를 `FindComponentByClass` 로 거슬러 찾지 않는다 (§8).
+   - 그 콜백은 조립 **시점**일 뿐 두 번째 진입점이 아니다 — 외부 API 는 여전히 루트에만 있다.
+2. **프레임 순서 소유** — 하위 갱신 순서에 의존이 있으면 하위는 `PrimaryComponentTick.bCanEverTick = false` 로 두고 루트의 `Tick` 이 순서를 쥔다. TickGroup·컴포넌트 등록 순서에 의존하지 않는다. (`AddTickPrerequisiteComponent` 는 루트 소유 순서의 대체재가 아니다.)
+3. **의도 API 노출** — 외부는 하위 컴포넌트가 아니라 루트에게 묻는다.
+
+### 인터페이스는 미리 뺀다
+
+루트 액터는 **대응 인터페이스를 함께 정의한다 — 외부 소비자가 아직 없어도 미리 뺀다.** 인터페이스는 도메인 `CommonInterface.h` (§12) 에 둔다.
+
+- **이름은 액터와 겹치지 않게** 접미사를 붙인다(`AMyBot` + `IMyBotRoot`). UHT 는 접두사를 떼고 등록하므로 `AMyBot` 과 `UMyBot` 은 둘 다 `MyBot` 이 되어 중복 이름 에러가 난다.
+
+소비자가 생긴 뒤에 승격하면 이미 구체 클래스로 물린 호출부를 전부 고쳐야 한다. 처음부터 인터페이스로 열어두면 그 비용이 0 이고, test-engineer 가 테스트 더블을 붙일 자리도 함께 생긴다.
+
+§10 과 짝이다 — §10 은 **하위가 소유자를** 인터페이스로 참조하는 쪽, §13 은 **루트가 하위를** 인터페이스로 주입하는 쪽이다.
+
+```cpp
+//# (X) 하위 컴포넌트를 외부에 공개 — 결합도↑, 내부 구조 변경이 호출부로 샘
+UCLASS()
+class AMyBot : public AModularCharacter
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintReadWrite)
+    TObjectPtr<UMyBotMoverComponent> Mover;
+};
+//  호출부:
+Bot->Mover->MoveTo(Target);
+
+//# (O) 루트가 private 소유 + 인터페이스로 의도 API 만 노출
+UINTERFACE(MinimalAPI, BlueprintType)
+class UMyBotRoot : public UInterface { GENERATED_BODY() };
+class IMyBotRoot
+{
+    GENERATED_BODY()
+public:
+    virtual FVector GetBotLocation() const = 0;
+    virtual void SetControlEnabled(bool bEnabled) = 0;
+};
+
+UCLASS()
+class AMyBot : public AModularCharacter, public IMyBotRoot
+{
+    GENERATED_BODY()
+
+public:
+    virtual void Tick(float DeltaTime) override;
+
+    //# IMyBotRoot
+    virtual FVector GetBotLocation() const override { return GetActorLocation(); }
+    virtual void SetControlEnabled(bool bEnabled) override;
+
+private:
+    //# InitState DataInitialized 에서 1회 캐싱 (§8)
+    UPROPERTY(Transient)
+    TObjectPtr<UMyBotSensorComponent> CachedSensor;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UMyBotMoverComponent> CachedMover;
+};
+
+void AMyBot::OnDataInitialized()
+{
+    CachedSensor = FindComponentByClass<UMyBotSensorComponent>();
+    CachedMover = FindComponentByClass<UMyBotMoverComponent>();
+
+    if (IsValid(CachedMover) == false)
+        return;
+
+    //# 조립점 — 하위끼리 직접 찾아가지 않게 루트가 인터페이스로 주입
+    CachedMover->InjectSensor(TScriptInterface<IMySensor>(CachedSensor));
+}
+
+//# 프레임 순서 소유 — 감지 결과가 이동의 입력이라 순서 의존이 있다
+void AMyBot::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (IsValid(CachedSensor) == false || IsValid(CachedMover) == false)
+        return;
+
+    CachedSensor->TickSensor(DeltaTime);
+    CachedMover->TickMove(DeltaTime);
+}
+//  호출부 — 루트(또는 IMyBotRoot)만 참조:
+Bot->SetControlEnabled(false);
+```
+
+### 금지
+
+- 하위 컴포넌트를 `public` 필드 / `BlueprintReadWrite` 로 노출
+- 외부가 하위 컴포넌트를 직접 참조·조작 (`FindComponentByClass` 로 꺼내 만지는 것 포함, §8)
+- 하위끼리 서로를 구체 클래스로 직접 찾아가기 — 루트가 인터페이스로 주입한다
+
+### 체크리스트
+
+- [ ] 이 도메인의 외부 진입 클래스가 **하나**인가?
+- [ ] 캐싱된 하위 컴포넌트 핸들이 모두 `private`/`protected` + `UPROPERTY(Transient)` 인가?
+- [ ] 루트에 대응 인터페이스가 정의돼 있는가? (소비자 유무와 무관)
+- [ ] 하위가 소유자/형제를 `FindComponentByClass` 로 찾지 않고 루트에게 주입받는가?
+- [ ] (순서 의존이 있다면) 하위 Tick 이 꺼져 있고 루트가 갱신 순서를 쥐는가?
+
+---
+
+## 14. 기타
 
 - `UFUNCTION(BlueprintCallable)` 없이 BP 노출 금지
 - `Super::` 호출 누락 주의 (`BeginPlay`, `EndPlay`, `GetLifetimeReplicatedProps`, `ActivateAbility`)
@@ -393,13 +508,14 @@ public:
 ## 적용 범위
 
 - 신규 작성 코드 전체
-- 기존 코드는 **해당 줄을 수정할 때 함께** 변환한다. §6(`auto`)·§8(컴포넌트 탐색)에 걸리는 기존 코드가 다수 남아 있으나, 일괄 개조를 목적으로 별도 커밋을 만들지 않는다.
+- 기존 코드는 **해당 줄을 수정할 때 함께** 변환한다. 도입 이전 코드에 §6(`auto`)·§8(컴포넌트 탐색) 위반이 남아 있어도, 일괄 개조를 목적으로 별도 커밋을 만들지 않는다.
 - code-reviewer 는 변경된 hunk 기준으로만 지적한다 — 손대지 않은 주변 코드의 위반은 리뷰 대상이 아니다.
 
 ## 예외
 
 - **§1~7 (문법 스타일): 예외 없음.** 단 §6 은 위에 명시한 "타입을 적을 수 없는 경우"만 허용.
-- **§8~12 (설계 원칙)**: 아래는 허용된 이탈이다.
+- **§8~13 (설계 원칙)**: 아래는 허용된 이탈이다.
   - §9 — 정식 ViewModel 계층은 `ModelViewViewModel` 플러그인을 켜기 전까지 도입하지 않는다.
   - §12 — 기존 1파일=1인터페이스 유지, 단일 구현체 internal 추상화 분리 유지.
+  - §13 — 하위 컴포넌트가 1개뿐이면 루트 파사드 생략 가능.
   - 엔진/플러그인 오버라이드 시그니처가 강제하는 형태(예: 엔진이 요구하는 `virtual` 시그니처)는 스타일보다 우선한다.

@@ -16,7 +16,7 @@
 
 ## 2. unreal-mcp 편집 — 방법과 함정 (실측 확정)
 
-`execute_python` 은 언리얼 Remote Control(`ExecutePythonScript`)로 실행된다. **상세 레시피·데드락 함정은 메모리 `project-mcp-umg-editing` 가 SoT다** — 승인 후 MCP 편집에 착수하기 전 그 메모리를 반드시 읽는다. 아래는 요약이다.
+`execute_python` 은 언리얼 Remote Control(`ExecutePythonScript`)로 실행된다. 아래는 실측 요약이며, **프로젝트 메모리에 MCP UMG 편집 레시피(`project-mcp-umg-editing` 등)가 있으면 그쪽이 우선 SoT다** — 승인 후 MCP 편집에 착수하기 전 확인한다.
 
 ### 2-1. 직접 되는 것
 - 에셋 복제(`EditorAssetLibrary.duplicate_asset`), reparent(`BlueprintEditorLibrary.reparent_blueprint` — timeout 을 반환해도 실제 성공), save(`save_asset(only_if_is_dirty=False)`).
@@ -33,6 +33,6 @@
 - `save_asset` 은 `only_if_is_dirty=False` 필수. 신뢰 못 하는 도구(`add_asset_entry` 등)는 되읽어(`.uasset` 타임스탬프·재조회) 검증한다.
 
 체크리스트:
-- [ ] 착수 전 메모리 `project-mcp-umg-editing` 의 레시피·함정을 확인했는가? (특히 WidgetBlueprint 컴파일 금지)
+- [ ] 착수 전 프로젝트 메모리의 MCP UMG 레시피·함정을 확인했는가? (특히 WidgetBlueprint 컴파일 금지)
 - [ ] 위젯 생성은 `new_object`+`add_child_to_canvas`, 중첩 struct 배열은 `import_text` 로 처리했는가?
 - [ ] 리드백을 파일 덤프→Read 로 검증했는가?

@@ -16,7 +16,7 @@ Unreal Engine **5.7** 기반 스파이 테마 3인칭 액션 게임. 데디케�
 
 | 룰 파일 | 적용 시점 |
 |---|---|
-| [cpp-style.md](.claude/rules/cpp-style.md) | 모든 `.h`/`.cpp` 작성·수정 시 (주석 `//#`, `!`·`auto` 금지, 가드 절, `TObjectPtr`, UPROPERTY 지정자, 종속성 최소화, 위젯 캡슐화, 공용 Enum/Interface 파일) |
+| [cpp-style.md](.claude/rules/cpp-style.md) | 모든 `.h`/`.cpp` 작성·수정 시 (주석 `//#`, `!`·`auto` 금지, 가드 절, `TObjectPtr`, UPROPERTY 지정자, 종속성 최소화, 위젯 캡슐화, 공용 Enum/Interface 파일, 루트 파사드) |
 | [git-conventions.md](.claude/rules/git-conventions.md) | 스테이징·커밋 메시지 작성 시 (`[Tag] ClassName — 요약`) |
 | [unreal-infra.md](.claude/rules/unreal-infra.md) | 모듈 의존 방향·서버 권한·플러그인 소비 패턴 결정 시 |
 | [plugin-skgas.md](.claude/rules/plugin-skgas.md) | GA/AttributeSet/Cue/태그 추가 시 (§6 새 어빌리티 체크리스트) |
