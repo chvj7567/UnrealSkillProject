@@ -83,7 +83,7 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 				break;
 			}
 
-			//# 주입 전이면 "타깃 없음" 경로로 흘린다 — 스폰 직후 프레임의 기존 동작과 동치.
+			//# 주입 전이면 "타깃 없음" 경로로 흘린다 — 컴포넌트 등록 이후의 기존 동작과 동치.
 			if (bTargetProviderResolved == false)
 			{
 				OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
