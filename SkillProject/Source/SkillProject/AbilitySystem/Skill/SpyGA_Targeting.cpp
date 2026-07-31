@@ -25,7 +25,8 @@ void USpyGA_Targeting::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 			break;
 
 		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter);
-		ISpyTargetProvider* TargetingComp = RootPtr ? RootPtr->GetTargetProvider().GetInterface() : nullptr;
+		TScriptInterface<ISpyTargetProvider> TargetProviderHandle = RootPtr ? RootPtr->GetTargetProvider() : TScriptInterface<ISpyTargetProvider>();
+		ISpyTargetProvider* TargetingComp = IsValid(TargetProviderHandle.GetObject()) ? TargetProviderHandle.GetInterface() : nullptr;
 		if (TargetingComp == nullptr)
 			break;
 

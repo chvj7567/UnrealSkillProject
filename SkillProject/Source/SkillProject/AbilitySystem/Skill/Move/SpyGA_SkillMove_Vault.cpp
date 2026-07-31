@@ -37,7 +37,8 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 	{
-		if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+		TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+		if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 		{
 			if (Parkour->CanVaultAction())
 			{
@@ -70,7 +71,8 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 		{
-			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+			if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 			{
 				//# 이 GA 가 FreeMoveMode 를 켠 적이 있을 때만 되돌린다.
 				//# (넘기가 성립하지 않아 워핑 데이터가 나오지 않은 경우 — 공중 입력 등 — 에는
@@ -104,7 +106,8 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultD
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+			if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 			{
 				Parkour->OnVaultMotionWarping().RemoveDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
 

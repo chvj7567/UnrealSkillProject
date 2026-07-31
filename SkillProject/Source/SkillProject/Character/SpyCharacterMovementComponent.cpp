@@ -92,7 +92,8 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 			}
 
 			//# 주입됐는데 널이면 타깃팅 컴포넌트가 없는 캐릭터다 — 기존 nullptr 경로와 동일하게 빠진다.
-			ISpyTargetProvider* Provider = TargetProvider.GetInterface();
+			//# GetObject() 를 먼저 IsValid 로 걸러 Garbage 마킹된(파괴됐지만 GC 전인) 핸들도 함께 배제한다.
+			ISpyTargetProvider* Provider = IsValid(TargetProvider.GetObject()) ? TargetProvider.GetInterface() : nullptr;
 			if (Provider == nullptr)
 				break;
 

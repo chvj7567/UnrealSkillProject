@@ -89,7 +89,8 @@ bool USpyGA_WallClimb::TryToggleClimbAction()
 {
 	if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 	{
-		if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+		TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+		if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 		{
 			Parkour->OnClimb().AddUniqueDynamic(this, &USpyGA_WallClimb::StartWallClimb);
 			return Parkour->TryToggleClimbAction();
@@ -150,7 +151,8 @@ void USpyGA_WallClimb::EndWallClimb()
 
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+			if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 			{
 				Parkour->OnClimb().RemoveDynamic(this, &USpyGA_WallClimb::StartWallClimb);
 			}

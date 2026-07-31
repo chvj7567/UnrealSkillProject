@@ -30,7 +30,8 @@ bool USpyGA_GrappleHook::CanActivateAbility(
     if (Pawn && Pawn->IsLocallyControlled())
     {
 		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Pawn);
-		ISpyGrappleHost* Host = RootPtr ? RootPtr->GetGrappleHost().GetInterface() : nullptr;
+		TScriptInterface<ISpyGrappleHost> GrappleHandle = RootPtr ? RootPtr->GetGrappleHost() : TScriptInterface<ISpyGrappleHost>();
+		ISpyGrappleHost* Host = IsValid(GrappleHandle.GetObject()) ? GrappleHandle.GetInterface() : nullptr;
 		return Host != nullptr && Host->GetLocalCachedTarget() != nullptr;
 	}
 	return true;
@@ -81,7 +82,8 @@ void USpyGA_GrappleHook::ActivateAbility(
     if (bAuthority)
     {
 		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(AvatarActor);
-		ISpyGrappleHost* Host = RootPtr ? RootPtr->GetGrappleHost().GetInterface() : nullptr;
+		TScriptInterface<ISpyGrappleHost> GrappleHandle = RootPtr ? RootPtr->GetGrappleHost() : TScriptInterface<ISpyGrappleHost>();
+		ISpyGrappleHost* Host = IsValid(GrappleHandle.GetObject()) ? GrappleHandle.GetInterface() : nullptr;
 
 		UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][SRV] TargetComp class=%s"),
 			   Host ? *Host->_getUObject()->GetClass()->GetName() : TEXT("NULL"));
@@ -133,7 +135,8 @@ void USpyGA_GrappleHook::ActivateAbility(
     {
         APawn* Pawn = Cast<APawn>(AvatarActor);
 		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Pawn);
-		ISpyGrappleHost* Host = RootPtr ? RootPtr->GetGrappleHost().GetInterface() : nullptr;
+		TScriptInterface<ISpyGrappleHost> GrappleHandle = RootPtr ? RootPtr->GetGrappleHost() : TScriptInterface<ISpyGrappleHost>();
+		ISpyGrappleHost* Host = IsValid(GrappleHandle.GetObject()) ? GrappleHandle.GetInterface() : nullptr;
 
 		UE_LOG(LogTemp, Warning, TEXT("[GrappleGA][CLI] TargetComp class=%s"),
 			   Host ? *Host->_getUObject()->GetClass()->GetName() : TEXT("NULL"));

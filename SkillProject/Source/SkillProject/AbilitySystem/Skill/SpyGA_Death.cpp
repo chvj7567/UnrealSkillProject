@@ -18,7 +18,8 @@ void USpyGA_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
         }
 
 		ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter);
-		if (ISpyTargetProvider* TargetingComp = RootPtr ? RootPtr->GetTargetProvider().GetInterface() : nullptr)
+		TScriptInterface<ISpyTargetProvider> TargetProviderHandle = RootPtr ? RootPtr->GetTargetProvider() : TScriptInterface<ISpyTargetProvider>();
+		if (ISpyTargetProvider* TargetingComp = IsValid(TargetProviderHandle.GetObject()) ? TargetProviderHandle.GetInterface() : nullptr)
 		{
 			TargetingComp->FindTarget(0.f);
 		}

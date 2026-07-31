@@ -36,7 +36,8 @@ void USpyGA_SkillMove_HangUp::ActivateAbility(const FGameplayAbilitySpecHandle H
 
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 		{
-			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+			if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 			{
 				Parkour->OnHangUpMotionWarping().AddDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
 				Parkour->SetHangUpMotionWarpingData(LedgeLocation);
@@ -55,7 +56,8 @@ void USpyGA_SkillMove_HangUp::EndAbility(const FGameplayAbilitySpecHandle Handle
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 		{
-			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+			if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 			{
 				//# 이 GA 가 FreeMoveMode 를 켠 적이 있을 때만 되돌린다.
 				//# (매달리기가 성립하지 않아 워핑 데이터가 산출되지 않은 경우에는
@@ -88,7 +90,8 @@ void USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData(FMotionWarpingData InHangU
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			TScriptInterface<ISpyParkourHost> ParkourHandle = RootPtr->GetParkourHost();
+			if (ISpyParkourHost* Parkour = IsValid(ParkourHandle.GetObject()) ? ParkourHandle.GetInterface() : nullptr)
 			{
 				Parkour->OnHangUpMotionWarping().RemoveDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
 
