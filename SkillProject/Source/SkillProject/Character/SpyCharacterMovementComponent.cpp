@@ -8,7 +8,6 @@
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Util/SpyGameplayTags.h"
-#include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Data/SpyMovementConfig.h"
 #include "DrawDebugHelpers.h"
@@ -46,6 +45,13 @@ void USpyCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iteration
 	}
 }
 
+void USpyCharacterMovementComponent::InjectTargetProvider(TScriptInterface<ISpyTargetProvider> InProvider)
+{
+	//# 핸들 유효성과 무관하게 해결됨으로 표시한다 — 널도 "컴포넌트 없음" 이라는 확정 정보다.
+	TargetProvider = InProvider;
+	bTargetProviderResolved = true;
+}
+
 void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 {
 	switch (CustomMovementMode)
@@ -77,8 +83,17 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 				break;
 			}
 
-			USpyTargetingManagerComponent* TargetingComp = OwnerCharacter->FindComponentByClass<USpyTargetingManagerComponent>();
-			if (TargetingComp == nullptr)
+			//# 주입 전이면 "타깃 없음" 경로로 흘린다 — 스폰 직후 프레임의 기존 동작과 동치.
+			if (bTargetProviderResolved == false)
+			{
+				OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement = true;
+				Super::PhysicsRotation(DeltaTime);
+				break;
+			}
+
+			//# 주입됐는데 널이면 타깃팅 컴포넌트가 없는 캐릭터다 — 기존 nullptr 경로와 동일하게 빠진다.
+			ISpyTargetProvider* Provider = TargetProvider.GetInterface();
+			if (Provider == nullptr)
 				break;
 
 			if (USpyAbilitySystemComponent* ASC = OwnerCharacter->GetSpyAbilitySystemComponent())
@@ -87,9 +102,9 @@ void USpyCharacterMovementComponent::PhysicsRotation(float DeltaTime)
 					break;
 			}
 
-			if (TargetingComp->GetTarget().IsValid())
+			if (Provider->GetTarget().IsValid())
 			{
-				FVector LookDir = TargetingComp->GetTarget()->GetActorLocation() - OwnerCharacter->GetActorLocation();
+				FVector LookDir = Provider->GetTarget()->GetActorLocation() - OwnerCharacter->GetActorLocation();
 				LookDir.Z = 0.f;
 				FRotator TargetRot = LookDir.Rotation();
 

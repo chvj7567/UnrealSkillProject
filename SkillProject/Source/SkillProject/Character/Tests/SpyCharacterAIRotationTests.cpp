@@ -7,6 +7,7 @@
 #include "Misc/AutomationTest.h"
 #include "Character/SpyCharacter.h"
 #include "Character/SpyCharacterMovementComponent.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "Util/DefineEnum.h"
 
@@ -71,7 +72,7 @@ namespace SpyAIRotationTests
 
 //# ---------------------------------------------------------------------------
 //# 회귀 핵심 — AI 가 PhysicsRotation 을 지나도 PossessedBy 설정이 살아 있어야 한다.
-//# 수정 전에는 타겟 없는 AI 가 else 분기(SpyCharacterMovementComponent.cpp:106)로 빠져
+//# 수정 전에는 타겟 없는 AI 가 else 분기(SpyCharacterMovementComponent.cpp:121)로 빠져
 //# bOrientRotationToMovement 가 true 로 뒤집혔다 — 그 경우 이 테스트는 실패한다.
 //# ---------------------------------------------------------------------------
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -122,7 +123,7 @@ bool FSpyRotationAIKeepsControllerYawTest::RunTest(const FString& Parameters)
 
 //# ---------------------------------------------------------------------------
 //# 엣지 — AI 에 대해서는 이 함수가 플래그를 "읽기만" 해야 한다. 어느 방향으로도 쓰지 않는다.
-//# 타겟이 있는 AI 도 마찬가지다 — 수정 전에는 타겟 분기(cpp:98)가 false 로 강제 대입했다.
+//# 타겟이 있는 AI 도 마찬가지다 — 수정 전에는 타겟 분기(cpp:113)가 false 로 강제 대입했다.
 //# ---------------------------------------------------------------------------
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyRotationAINeverWritesFlagTest,
@@ -206,7 +207,7 @@ bool FSpyRotationAINeverWritesFlagTest::RunTest(const FString& Parameters)
 
 //# ---------------------------------------------------------------------------
 //# 플레이어 무회귀 — 타겟이 없으면 기존대로 이동 방향 회전을 되살려야 한다.
-//# 이 대입이 사라지면 타겟 해제 후 플레이어가 회전하지 않는다 (cpp:104-107 주석).
+//# 이 대입이 사라지면 타겟 해제 후 플레이어가 회전하지 않는다 (cpp:119-121 주석).
 //# ---------------------------------------------------------------------------
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyRotationPlayerWithoutTargetTest,
@@ -222,6 +223,10 @@ bool FSpyRotationPlayerWithoutTargetTest::RunTest(const FString& Parameters)
 
 	USpyTargetingManagerComponent* TargetingComp = SpyAIRotationTests::AttachTargeting(Character);
 	TestFalse(TEXT("Player starts without a target"), TargetingComp->GetTarget().IsValid());
+
+	//# 루트 조립까지 진행한 상태가 이 테스트의 대상이다 — 조립 전이면 주입 전 경로로 빠져
+	//# 검증하려는 else 분기(cpp:119-121)를 지나가지 않는다.
+	Character->AssembleComponents();
 
 	APlayerController* PlayerController = NewObject<APlayerController>(GetTransientPackage());
 	TestTrue(TEXT("Fixture controller reports as a player controller"), PlayerController->IsPlayerController());
@@ -287,7 +292,7 @@ bool FSpyRotationNoControllerTest::RunTest(const FString& Parameters)
 
 //# ---------------------------------------------------------------------------
 //# 엣지 — 플레이어인데 타겟팅 컴포넌트가 없는 캐릭터(에셋 목록 미포함).
-//# 기존 가드(cpp:81-82)가 살아 있는지 고정한다.
+//# 조립이 널 핸들로 해결한 뒤에도 가드(cpp:95-97)가 살아 있는지 고정한다.
 //# ---------------------------------------------------------------------------
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyRotationPlayerWithoutTargetingComponentTest,
@@ -303,6 +308,9 @@ bool FSpyRotationPlayerWithoutTargetingComponentTest::RunTest(const FString& Par
 
 	TestTrue(TEXT("No targeting component attached"),
 			 Character->FindComponentByClass<USpyTargetingManagerComponent>() == nullptr);
+
+	//# 조립이 널 핸들을 주입한다 — 런타임에서 이 캐릭터가 도달하는 실제 상태다.
+	Character->AssembleComponents();
 
 	APlayerController* PlayerController = NewObject<APlayerController>(GetTransientPackage());
 	Character->Controller = PlayerController;
@@ -370,6 +378,78 @@ bool FSpyRotationWallClimbEarlyOutTest::RunTest(const FString& Parameters)
 		TestFalse(TEXT("Wall climbing AI keeps orient-to-movement off"), (MoveComp->bOrientRotationToMovement != 0));
 		TestTrue(TEXT("Wall climbing AI keeps controller yaw ownership"), (Character->bUseControllerRotationYaw != 0));
 	}
+
+	return true;
+}
+
+//# ---------------------------------------------------------------------------
+//# 주입 상태별 PhysicsRotation 동치 스위트 (§13 리팩터링 회귀 방어).
+//# 주입 전 구간이 "컴포넌트는 있으나 타깃이 없음" 과 같은 경로를 타야 한다 —
+//# 여기가 어긋나면 스폰 직후 몇 프레임 동안 플레이어 회전이 사라진다.
+//# ---------------------------------------------------------------------------
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMovementRotationBeforeInjectionTest,
+	"SkillProject.Character.Rotation.BeforeInjectionMatchesNoTarget",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMovementRotationBeforeInjectionTest::RunTest(const FString& Parameters)
+{
+	ASpyCharacter* Character = SpyAIRotationTests::MakeCharacter();
+	USpyCharacterMovementComponent* Movement = SpyAIRotationTests::GetSpyMovement(Character);
+	if (Movement == nullptr)
+	{
+		AddError(TEXT("USpyCharacterMovementComponent 를 얻지 못했다"));
+		return false;
+	}
+
+	//# 컴포넌트는 붙었지만 조립(DataInitialized)은 아직인 구간 — 회귀가 나는 자리다.
+	//# AssembleComponents 를 호출하지 않는 것이 이 테스트의 핵심이다.
+	SpyAIRotationTests::AttachTargeting(Character);
+
+	//# 플레이어 컨트롤러를 붙여 타깃팅 분기로 진입시킨다
+	//# (이 파일 기존 픽스처와 동일한 이유로 Possess 대신 직접 대입)
+	APlayerController* PC = NewObject<APlayerController>(GetTransientPackage());
+	Character->Controller = PC;
+	Movement->CustomMovementMode = static_cast<uint8>(ECustomMovementMode::MOVE_Default);
+
+	//# 주입 전 상태 — bOrientRotationToMovement 가 true 로 켜져야 한다 ("타깃 없음" 경로)
+	Movement->bOrientRotationToMovement = false;
+	Movement->PhysicsRotation(0.016f);
+
+	TestTrue(TEXT("주입 전에는 타깃 없음 경로를 타 bOrientRotationToMovement 가 true 가 된다"),
+		(Movement->bOrientRotationToMovement != 0));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMovementRotationInjectedNullTest,
+	"SkillProject.Character.Rotation.InjectedNullSkipsRotation",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMovementRotationInjectedNullTest::RunTest(const FString& Parameters)
+{
+	ASpyCharacter* Character = SpyAIRotationTests::MakeCharacter();
+	USpyCharacterMovementComponent* Movement = SpyAIRotationTests::GetSpyMovement(Character);
+	if (Movement == nullptr)
+	{
+		AddError(TEXT("USpyCharacterMovementComponent 를 얻지 못했다"));
+		return false;
+	}
+
+	APlayerController* PC = NewObject<APlayerController>(GetTransientPackage());
+	Character->Controller = PC;
+	Movement->CustomMovementMode = static_cast<uint8>(ECustomMovementMode::MOVE_Default);
+
+	//# 타깃팅 컴포넌트가 없는 캐릭터 — 조립이 널 핸들로 해결한 상태
+	Movement->InjectTargetProvider(TScriptInterface<ISpyTargetProvider>(nullptr));
+
+	Movement->bOrientRotationToMovement = false;
+	Movement->PhysicsRotation(0.016f);
+
+	TestFalse(TEXT("주입됐지만 핸들이 널이면 회전 분기를 건너뛴다 (기존 nullptr 경로와 동일)"),
+		(Movement->bOrientRotationToMovement != 0));
 
 	return true;
 }

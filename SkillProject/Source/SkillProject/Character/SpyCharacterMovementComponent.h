@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 
 #include "SpyCharacterMovementComponent.generated.h"
@@ -24,6 +25,9 @@ public:
 	virtual void PhysicsRotation(float DeltaTime) override;
 
 public:
+	//# 루트가 조립 시점에 주입한다 — 형제를 직접 탐색하지 않는다 (cpp-style §13)
+	void InjectTargetProvider(TScriptInterface<ISpyTargetProvider> InProvider);
+
 	void PhysWallClimb(float DeltaTime, int32 Iterations);
 	void StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData);
 	void EndWallClimb();
@@ -72,4 +76,11 @@ private:
 
 	//# 등반 전 GravityScale 백업. 캐시 전에 EndWallClimb 이 불려도 중력이 0 이 되지 않도록 기본값을 둔다
 	float CachedGravityScale = 1.0f;
+
+	//# 루트가 주입한 타깃 제공자. 매 프레임 형제 탐색을 대체한다 (cpp-style §8·§13)
+	UPROPERTY(Transient)
+	TScriptInterface<ISpyTargetProvider> TargetProvider;
+
+	//# 주입이 실행됐는지. 널 핸들("컴포넌트 없음")과 주입 전 상태를 구분하기 위해 필요하다.
+	bool bTargetProviderResolved = false;
 };
