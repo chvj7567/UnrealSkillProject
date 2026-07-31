@@ -65,7 +65,7 @@ void USpyTargetingManagerComponent::SetCurrentTarget(AActor* NewTarget)
 
 		CurrentTarget = NewTarget;
 
-        UE_LOG(LogTemp, Warning, TEXT("# [SpyTargeting] Target: %s"), *CurrentTarget->GetName());
+		UE_LOG(LogTemp, Verbose, TEXT("# [SpyTargeting] Target: %s"), *CurrentTarget->GetName());
 	}
 	else
 	{
