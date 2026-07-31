@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ManagerComponent/CommonInterface.h"
 
 #include "SpyParkourManagerComponent.generated.h"
 
@@ -134,100 +135,6 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FClimbWallData {
-
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(VisibleAnywhere)
-	FVector NormalVector;
-	UPROPERTY(VisibleAnywhere)
-	FVector HitVector;
-
-	FClimbWallData()
-		: NormalVector(FVector::ZeroVector)
-		, HitVector(FVector::ZeroVector)
-	{
-	}
-
-	void Clear() {
-		NormalVector = FVector::ZeroVector;
-		HitVector = FVector::ZeroVector;
-	}
-};
-
-USTRUCT(BlueprintType)
-struct FClimbData {
-
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DistanceOffset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HandOffset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float FootOffset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Speed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CheckHangUpHeight;
-
-	FClimbData()
-		: DistanceOffset(0.0f)
-		, HandOffset(0.0f)
-		, FootOffset(0.0f)
-		, Speed(0.0f)
-		, CheckHangUpHeight(0.0f)
-	{
-	}
-
-	void Clear()
-	{
-		DistanceOffset = 0.0f;
-		HandOffset = 0.0f;
-		FootOffset = 0.0f;
-		Speed = 0.0f;
-		CheckHangUpHeight = 0.0f;
-	}
-};
-
-USTRUCT(BlueprintType)
-struct FMotionWarpingData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector StartLoc;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FRotator StartRot;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector EndLoc;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FRotator EndRot;
-
-	FMotionWarpingData()
-		: StartLoc(FVector::ZeroVector)
-		, StartRot(FRotator::ZeroRotator)
-		, EndLoc(FVector::ZeroVector)
-		, EndRot(FRotator::ZeroRotator)
-	{
-	}
-
-	void Clear()
-	{
-		StartLoc = FVector::ZeroVector;
-		StartRot = FRotator::ZeroRotator;
-		EndLoc = FVector::ZeroVector;
-		EndRot = FRotator::ZeroRotator;
-	}
-};
-
-USTRUCT(BlueprintType)
 struct FHangUpData {
 
 	GENERATED_BODY()
@@ -252,11 +159,8 @@ public:
 	}
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FMotionWarpingData, InVaultData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSyncClilmbDataDelegate, const FClimbData&, InClimbData, const FClimbWallData&, InClimbWallData);
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent
+class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent, public ISpyParkourHost
 {
 	GENERATED_BODY()
 
@@ -277,16 +181,16 @@ public:
 
 	//# 서버에서 호출 시 OnRep_FreeMoveMode를 직접 한 번 더 실행하여
 	//# 서버 자신의 movement mode와 capsule collision도 즉시 반영한다.
-	void SetFreeMoveMode(bool bInFreeMoveMode);
+	virtual void SetFreeMoveMode(bool bInFreeMoveMode) override;
 
 	UFUNCTION(BlueprintCallable)
-	bool TryToggleClimbAction();
+	virtual bool TryToggleClimbAction() override;
 
 	UFUNCTION()
 	void OnRep_ClimbWallData();
 
 	UFUNCTION(BlueprintCallable)
-	bool CanVaultAction();
+	virtual bool CanVaultAction() override;
 
 	UFUNCTION()
 	void OnRep_VaultMotionWarpingData();
@@ -296,11 +200,25 @@ public:
 
 	void SetVaultWallData();
 
-	void SetVaultMotionWarpingData();
+	virtual void SetVaultMotionWarpingData() override;
 
 	bool SetValidWallData(float InValidDistance, float InValidHeight, float InValidDepth, int InRayInterval, int InRayIntervalReapeatCount);
 
-	void SetHangUpMotionWarpingData(const FVector& HitVector);
+	virtual void SetHangUpMotionWarpingData(const FVector& HitVector) override;
+
+	//# ISpyParkourHost
+	virtual FSyncMotionWarpingDataDelegate& OnVaultMotionWarping() override
+	{
+		return OnVaultMotionWarpingData;
+	}
+	virtual FSyncMotionWarpingDataDelegate& OnHangUpMotionWarping() override
+	{
+		return OnHangUpMotionWarpingData;
+	}
+	virtual FSyncClilmbDataDelegate& OnClimb() override
+	{
+		return OnClimbData;
+	}
 
 public: //# 공용 사용
 	UPROPERTY(ReplicatedUsing = OnRep_FreeMoveMode)

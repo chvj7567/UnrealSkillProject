@@ -4,28 +4,33 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ManagerComponent/CommonInterface.h"
 #include "SpyTargetingManagerComponent.generated.h"
 
 class ASpyCharacter;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SKILLPROJECT_API USpyTargetingManagerComponent : public UActorComponent
+class SKILLPROJECT_API USpyTargetingManagerComponent : public UActorComponent, public ISpyTargetProvider
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	USpyTargetingManagerComponent();
 
+	//# ISpyTargetProvider
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	void SetCurrentTarget(AActor* NewTarget);
+	virtual void SetCurrentTarget(AActor* NewTarget) override;
 
-	TWeakObjectPtr<AActor> GetTarget() const { return CurrentTarget.Get(); }
+	virtual TWeakObjectPtr<AActor> GetTarget() const override
+	{
+		return CurrentTarget.Get();
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	bool IsTargetValid() const;
+	virtual bool IsTargetValid() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
-	bool FindTarget(float Radius);
+	virtual bool FindTarget(float Radius) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Targeting")
 	void OnTargetDeath(AActor* InOwningActor, AActor* InCauserActor);

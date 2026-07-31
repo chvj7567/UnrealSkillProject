@@ -48,9 +48,9 @@ void USpyGrappleTargetingComponent::TickComponent(
             ApplyHighlight(NewTarget);
         }
 
-        OnGrappleTargetChanged.Broadcast(NewTarget);
+		OnGrappleTargetChangedDelegate.Broadcast(NewTarget);
 
-        //# null은 서버에 보내지 않음 — 마지막 유효 타겟을 유지
+		//# null은 서버에 보내지 않음 — 마지막 유효 타겟을 유지
         if (NewTarget != nullptr)
         {
             Server_SetGrappleTarget(NewTarget);

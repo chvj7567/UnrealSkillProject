@@ -4,15 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ManagerComponent/CommonInterface.h"
 #include "SpyGrappleTargetingComponent.generated.h"
 
 class USpyMovementConfig;
 class UMaterialInterface;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrappleTargetChanged, AActor*, NewTarget);
-
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class SKILLPROJECT_API USpyGrappleTargetingComponent : public UActorComponent
+class SKILLPROJECT_API USpyGrappleTargetingComponent : public UActorComponent, public ISpyGrappleHost
 {
     GENERATED_BODY()
 
@@ -23,15 +22,27 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    UFUNCTION(BlueprintCallable, Category = "Grapple")
-    AActor* GetCurrentGrappleTarget() const { return CurrentGrappleTarget; }
+	//# ISpyGrappleHost
+	UFUNCTION(BlueprintCallable, Category = "Grapple")
+	virtual AActor* GetCurrentGrappleTarget() const override
+	{
+		return CurrentGrappleTarget;
+	}
 
-    AActor* GetLocalCachedTarget() const { return LocalCachedTarget.Get(); }
+	virtual AActor* GetLocalCachedTarget() const override
+	{
+		return LocalCachedTarget.Get();
+	}
 
-    void ClearGrappleTarget() { CurrentGrappleTarget = nullptr; }
+	virtual FOnGrappleTargetChanged& OnGrappleTargetChanged() override
+	{
+		return OnGrappleTargetChangedDelegate;
+	}
+
+	void ClearGrappleTarget() { CurrentGrappleTarget = nullptr; }
 
     UPROPERTY(BlueprintAssignable, Category = "Grapple")
-    FOnGrappleTargetChanged OnGrappleTargetChanged;
+	FOnGrappleTargetChanged OnGrappleTargetChangedDelegate;
 
 protected:
     UPROPERTY(EditDefaultsOnly, Category = "Config")
