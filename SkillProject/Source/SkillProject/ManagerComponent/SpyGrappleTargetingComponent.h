@@ -22,27 +22,27 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	//# ISpyGrappleHost
-	UFUNCTION(BlueprintCallable, Category = "Grapple")
-	virtual AActor* GetCurrentGrappleTarget() const override
-	{
-		return CurrentGrappleTarget;
-	}
+    //# ISpyGrappleHost
+    UFUNCTION(BlueprintCallable, Category = "Grapple")
+    virtual AActor* GetCurrentGrappleTarget() const override
+    {
+        return CurrentGrappleTarget;
+    }
 
-	virtual AActor* GetLocalCachedTarget() const override
-	{
-		return LocalCachedTarget.Get();
-	}
+    virtual AActor* GetLocalCachedTarget() const override
+    {
+        return LocalCachedTarget.Get();
+    }
 
-	virtual FOnGrappleTargetChanged& OnGrappleTargetChanged() override
-	{
-		return OnGrappleTargetChangedDelegate;
-	}
+    virtual FOnGrappleTargetChanged& OnGrappleTargetChanged() override
+    {
+        return OnGrappleTargetChangedDelegate;
+    }
 
-	void ClearGrappleTarget() { CurrentGrappleTarget = nullptr; }
+    void ClearGrappleTarget() { CurrentGrappleTarget = nullptr; }
 
     UPROPERTY(BlueprintAssignable, Category = "Grapple")
-	FOnGrappleTargetChanged OnGrappleTargetChangedDelegate;
+    FOnGrappleTargetChanged OnGrappleTargetChangedDelegate;
 
 protected:
     UPROPERTY(EditDefaultsOnly, Category = "Config")

@@ -26,8 +26,8 @@ void USpyGrappleUIComponent::BeginPlay()
     if (USpyGrappleTargetingComponent* TargetComp =
         Owner->FindComponentByClass<USpyGrappleTargetingComponent>())
     {
-		TargetComp->OnGrappleTargetChangedDelegate.AddDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
-	}
+        TargetComp->OnGrappleTargetChangedDelegate.AddDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
+    }
 
     APawn* Pawn = Cast<APawn>(Owner);
     APlayerController* PC = Pawn ? Cast<APlayerController>(Pawn->GetController()) : nullptr;

@@ -16,7 +16,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyRootFacadeComponentsImplementInterfacesTest,
 	"SkillProject.Character.RootFacade.ComponentsImplementInterfaces",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSpyRootFacadeComponentsImplementInterfacesTest::RunTest(const FString& Parameters)
 {
@@ -35,6 +35,28 @@ bool FSpyRootFacadeComponentsImplementInterfacesTest::RunTest(const FString& Par
 	TScriptInterface<ISpyTargetProvider> Provider(Targeting);
 	TestNotNull(TEXT("TScriptInterface 가 인터페이스 포인터를 잡는다"), Provider.GetInterface());
 	TestFalse(TEXT("타깃 미설정 시 IsTargetValid 는 false"), Provider->IsTargetValid());
+
+	//# 델리게이트 접근자가 사본이 아니라 실제 멤버의 참조를 돌려주는지 박제 —
+	//# 어긋나면 구독이 조용히 유실되고 컴파일은 통과한다.
+	TScriptInterface<ISpyParkourHost> ParkourHost(Parkour);
+	TestNotNull(TEXT("ParkourHost TScriptInterface 가 인터페이스 포인터를 잡는다"), ParkourHost.GetInterface());
+	if (ParkourHost.GetInterface() == nullptr)
+		return false;
+
+	TestTrue(TEXT("OnVaultMotionWarping 접근자가 실제 멤버 참조를 반환한다"),
+		static_cast<void*>(&ParkourHost->OnVaultMotionWarping()) == static_cast<void*>(&Parkour->OnVaultMotionWarpingData));
+	TestTrue(TEXT("OnHangUpMotionWarping 접근자가 실제 멤버 참조를 반환한다"),
+		static_cast<void*>(&ParkourHost->OnHangUpMotionWarping()) == static_cast<void*>(&Parkour->OnHangUpMotionWarpingData));
+	TestTrue(TEXT("OnClimb 접근자가 실제 멤버 참조를 반환한다"),
+		static_cast<void*>(&ParkourHost->OnClimb()) == static_cast<void*>(&Parkour->OnClimbData));
+
+	TScriptInterface<ISpyGrappleHost> GrappleHost(Grapple);
+	TestNotNull(TEXT("GrappleHost TScriptInterface 가 인터페이스 포인터를 잡는다"), GrappleHost.GetInterface());
+	if (GrappleHost.GetInterface() == nullptr)
+		return false;
+
+	TestTrue(TEXT("OnGrappleTargetChanged 접근자가 실제 멤버 참조를 반환한다"),
+		static_cast<void*>(&GrappleHost->OnGrappleTargetChanged()) == static_cast<void*>(&Grapple->OnGrappleTargetChangedDelegate));
 
 	return true;
 }
