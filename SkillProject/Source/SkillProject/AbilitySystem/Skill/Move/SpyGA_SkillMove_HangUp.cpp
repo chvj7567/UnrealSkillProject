@@ -17,7 +17,10 @@ void USpyGA_SkillMove_HangUp::ActivateAbility(const FGameplayAbilitySpecHandle H
 	//# 어떤 조기 종료 경로로 빠져도 EndAbility 가 짝을 맞추도록 커밋 판정보다 먼저 건다.
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 	{
-		SpyCharacter->PushCameraCollisionSuppress();
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(SpyCharacter))
+		{
+			RootPtr->PushCameraCollisionSuppress();
+		}
 		CameraSuppressedCharacter = SpyCharacter;
 	}
 
@@ -70,7 +73,10 @@ void USpyGA_SkillMove_HangUp::EndAbility(const FGameplayAbilitySpecHandle Handle
 	//# 취소·중단·사망 경로도 전부 EndAbility 로 흘러오므로 여기서만 해제하면 카운트가 새지 않는다.
 	if (ASpyCharacter* SuppressedCharacter = CameraSuppressedCharacter.Get())
 	{
-		SuppressedCharacter->PopCameraCollisionSuppress();
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(SuppressedCharacter))
+		{
+			RootPtr->PopCameraCollisionSuppress();
+		}
 	}
 	CameraSuppressedCharacter = nullptr;
 
