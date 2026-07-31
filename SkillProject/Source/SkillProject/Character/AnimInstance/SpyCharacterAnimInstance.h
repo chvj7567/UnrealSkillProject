@@ -18,6 +18,7 @@ class SKILLPROJECT_API USpyCharacterAnimInstance : public UAnimInstance
 
 public:
 	virtual void NativeBeginPlay() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
 public:
@@ -31,7 +32,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<USpyCharacterMovementComponent> PlayerMovementComponent;
 
-	//# NativeBeginPlay 에서 캐싱 시도 + 널이면 Tick 에서 재해결 (루트 조립 이전 타이밍 대비, cpp-style §8·§13)
+	//# NativeBeginPlay 에서 캐싱 시도 + 널/파괴 시 NativeUpdateAnimation(게임 스레드) 에서 재해결.
+	//# 오브젝트 참조 쓰기는 게임 스레드 전용 — NativeThreadSafeUpdateAnimation(워커 스레드) 은 읽기만 한다.
 	UPROPERTY(Transient)
 	TScriptInterface<ISpyTargetProvider> CachedTargetProvider;
 

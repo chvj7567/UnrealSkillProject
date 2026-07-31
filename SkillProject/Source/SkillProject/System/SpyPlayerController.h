@@ -42,7 +42,7 @@ public:
 	void TriggerShakeLocal(bool bCritical, bool bFromReceivedHit);
 
 protected:
-	//# OnPossess/AcknowledgePossession 에서 캐싱 시도 + 널이면 UpdateRotation 에서 재해결 (cpp-style §8·§13)
+	//# OnPossess/AcknowledgePossession 에서 캐싱 시도 + IsValid 로 널/파괴 판정 후 UpdateRotation 에서 재해결
 	UPROPERTY(Transient)
 	TScriptInterface<ISpyTargetProvider> TargetingComp;
 

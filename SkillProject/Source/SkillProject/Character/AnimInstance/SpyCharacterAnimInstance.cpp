@@ -51,6 +51,19 @@ void USpyCharacterAnimInstance::NativeBeginPlay()
 	CachedTargetProvider = RootPtr ? RootPtr->GetTargetProvider() : TScriptInterface<ISpyTargetProvider>(nullptr);
 }
 
+void USpyCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	//# 게임 스레드 전용 재해결 — NativeThreadSafeUpdateAnimation(워커 스레드) 은 읽기만 한다.
+	//# 널(초기화 전) 뿐 아니라 파괴된 핸들(Garbage 마킹)도 IsValid 로 함께 걸러 재해결 대상에 포함한다.
+	if (IsValid(CachedTargetProvider.GetObject()) == false)
+	{
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Player))
+			CachedTargetProvider = RootPtr->GetTargetProvider();
+	}
+}
+
 void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
@@ -119,16 +132,8 @@ void USpyCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 			Velocity, Player->GetActorRotation());
 	}
 
-	//# Set IsTargeting
+	//# Set IsTargeting — 재해결은 NativeUpdateAnimation(게임 스레드) 이 담당, 여기서는 읽기만 한다.
 	{
-		//# NativeBeginPlay 캐싱 시점엔 아직 루트 조립(AssembleComponents) 전일 수 있다 —
-		//# 널이면 여기서 재해결해 기존 FindComponentByClass 의 "매 프레임 자연 치유" 특성을 보존한다.
-		if (CachedTargetProvider.GetInterface() == nullptr)
-		{
-			if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Player))
-				CachedTargetProvider = RootPtr->GetTargetProvider();
-		}
-
 		if (ISpyTargetProvider* TargetingComp = CachedTargetProvider.GetInterface())
 		{
 			TWeakObjectPtr<AActor> Target = TargetingComp->GetTarget();

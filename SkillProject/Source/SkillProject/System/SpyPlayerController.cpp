@@ -106,15 +106,16 @@ void ASpyPlayerController::UpdateRotation(float DeltaTime)
 
 	APawn* ControlledPawn = GetPawn();
 
-	//# OnPossess/AcknowledgePossession 캐싱 시점엔 아직 루트 조립(AssembleComponents) 전일 수 있다 —
-	//# 널이면 여기서 재해결해 기존 FindComponentByClass 의 "매 프레임 자연 치유" 특성을 보존한다.
-	if (TargetingComp.GetInterface() == nullptr)
+	//# OnPossess/AcknowledgePossession 캐싱 시점엔 아직 루트 조립(AssembleComponents) 전이거나 컴포넌트가
+	//# 아직 존재하지 않을 수 있다 — IsValid 로 파괴된 핸들까지 걸러 재해결해야 기존 FindComponentByClass 의
+	//# "매 프레임 자연 치유" 특성이 완성된다 (GetInterface() != nullptr 만으로는 파괴된 오브젝트를 걸러내지 못함).
+	if (IsValid(TargetingComp.GetObject()) == false)
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(ControlledPawn))
 			TargetingComp = RootPtr->GetTargetProvider();
 	}
 
-	AActor* TargetActor = (ControlledPawn != nullptr && TargetingComp.GetInterface() != nullptr) ? TargetingComp->GetTarget().Get() : nullptr;
+	AActor* TargetActor = (ControlledPawn != nullptr && IsValid(TargetingComp.GetObject())) ? TargetingComp->GetTarget().Get() : nullptr;
 
 	//# 타겟팅 중에는 Yaw(좌우) 만 타겟이 소유하고, Pitch(상하) 는 플레이어 입력에 맡긴다
 	const bool bTargetLocked = (TargetActor != nullptr);
