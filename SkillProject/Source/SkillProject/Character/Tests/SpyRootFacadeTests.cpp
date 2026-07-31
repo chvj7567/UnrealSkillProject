@@ -3,9 +3,9 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
-#include "Character/CommonInterface.h"
+#include "Character/CommonInterface.Character.h"
 #include "Character/SpyCharacter.h"
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"

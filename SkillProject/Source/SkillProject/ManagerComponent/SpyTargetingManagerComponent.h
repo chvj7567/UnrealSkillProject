@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "SpyTargetingManagerComponent.generated.h"
 
 class ASpyCharacter;

@@ -7,7 +7,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "ModularCharacter.h"
-#include "Character/CommonInterface.h"
+#include "Character/CommonInterface.Character.h"
 
 #include "SpyCharacter.generated.h"
 

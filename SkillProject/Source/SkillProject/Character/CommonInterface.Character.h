@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
-#include "CommonInterface.generated.h"
+#include "CommonInterface.Character.generated.h"
 
 //# 캐릭터 도메인의 유일한 외부 진입점 (cpp-style §13).
 //# 소비자는 하위 컴포넌트를 탐색하지 않고 루트에서 핸들을 받는다.

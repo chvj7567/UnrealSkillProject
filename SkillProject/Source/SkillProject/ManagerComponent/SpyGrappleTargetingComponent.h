@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "SpyGrappleTargetingComponent.generated.h"
 
 class USpyMovementConfig;

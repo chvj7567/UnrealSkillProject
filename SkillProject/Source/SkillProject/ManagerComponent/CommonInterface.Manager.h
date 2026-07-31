@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 
-#include "CommonInterface.generated.h"
+#include "CommonInterface.Manager.generated.h"
 
 //# 아래 3개 USTRUCT 과 3개 델리게이트는 SpyParkourManagerComponent.h /
 //# SpyGrappleTargetingComponent.h 에서 이동해 왔다 — 인터페이스가 참조하므로 순환을 피한다.
