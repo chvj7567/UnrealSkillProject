@@ -15,7 +15,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
+#include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
+#include "ManagerComponent/SpyGrappleTargetingComponent.h"
+#include "MotionWarpingComponent.h"
 #include "Util/SpyGameplayTags.h"
 
 #include "Net/UnrealNetwork.h"
@@ -271,12 +274,35 @@ void ASpyCharacter::OnAbilitySystemInitialized()
 	{
 		SpawnAndAttachWeapon();
 	}
+
+	//# 하위 컴포넌트 캐싱 + 형제 간 주입 — 루트가 조립점이다 (cpp-style §13)
+	AssembleComponents();
 }
 
 void ASpyCharacter::OnAbilitySystemUninitialized()
 {
 	SpyHealthComponent->UnInitializeByAbilitySystem();
 	SpyLevelComponent->UnInitializeByAbilitySystem();
+}
+
+void ASpyCharacter::AssembleComponents()
+{
+	//# 컴포넌트가 없는 캐릭터도 있다 — 널 핸들은 정상 상태다.
+	CachedParkourHost = TScriptInterface<ISpyParkourHost>(FindComponentByClass<USpyParkourManagerComponent>());
+	CachedTargetProvider = TScriptInterface<ISpyTargetProvider>(FindComponentByClass<USpyTargetingManagerComponent>());
+	CachedGrappleHost = TScriptInterface<ISpyGrappleHost>(FindComponentByClass<USpyGrappleTargetingComponent>());
+	CachedMotionWarping = FindComponentByClass<UMotionWarpingComponent>();
+
+	//# 형제끼리 서로 찾아가지 않게 루트가 주입한다 — InjectTargetProvider(Task 3) /
+	//# InjectGrappleHost(Task 4) 는 각 Task 에서 추가한다.
+}
+
+void ASpyCharacter::AddMotionWarpTarget(FName WarpName, const FVector& Loc, const FRotator& Rot)
+{
+	if (IsValid(CachedMotionWarping) == false)
+		return;
+
+	CachedMotionWarping->AddOrUpdateWarpTargetFromLocationAndRotation(WarpName, Loc, Rot);
 }
 
 void ASpyCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)

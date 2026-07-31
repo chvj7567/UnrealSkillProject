@@ -3,6 +3,8 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Character/CommonInterface.h"
+#include "Character/SpyCharacter.h"
 #include "ManagerComponent/CommonInterface.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
@@ -57,6 +59,43 @@ bool FSpyRootFacadeComponentsImplementInterfacesTest::RunTest(const FString& Par
 
 	TestTrue(TEXT("OnGrappleTargetChanged 접근자가 실제 멤버 참조를 반환한다"),
 		static_cast<void*>(&GrappleHost->OnGrappleTargetChanged()) == static_cast<void*>(&Grapple->OnGrappleTargetChangedDelegate));
+
+	return true;
+}
+
+//# ---------------------------------------------------------------------------
+//# 루트 조립 — AssembleComponents 가 하위 컴포넌트 핸들을 채우는지 박제한다.
+//# 실제 InitState 흐름은 월드가 필요하므로 조립 함수의 계약만 검증한다.
+//# ---------------------------------------------------------------------------
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyRootFacadeAssemblyFillsHandlesTest,
+	"SkillProject.Character.RootFacade.AssemblyFillsHandles",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyRootFacadeAssemblyFillsHandlesTest::RunTest(const FString& Parameters)
+{
+	ASpyCharacter* Character = NewObject<ASpyCharacter>();
+
+	//# NewObject 로 만든 컴포넌트는 Outer 의 OwnedComponents 에 등록되므로
+	//# FindComponentByClass 로 잡힌다 (SpyCharacterAIRotationTests.cpp:58 과 동일한 근거).
+	USpyTargetingManagerComponent* Targeting = NewObject<USpyTargetingManagerComponent>(Character);
+	USpyParkourManagerComponent* Parkour = NewObject<USpyParkourManagerComponent>(Character);
+
+	TScriptInterface<ISpyCharacterRoot> Root(Character);
+	TestNotNull(TEXT("ASpyCharacter 가 ISpyCharacterRoot 를 구현한다"), Root.GetInterface());
+
+	//# 조립 전 — 핸들이 비어 있다
+	TestNull(TEXT("조립 전 TargetProvider 핸들은 비어 있다"), Root->GetTargetProvider().GetInterface());
+
+	Character->AssembleComponents();
+
+	//# 포인터 비교는 TestTrue 로 — TestEqual 은 값 타입에 문자열 변환을 요구하며
+	//# UObject* 에는 없다 (SpyCharacterAIRotationTests.cpp:96-97, Task 1 static_cast 비교와 동일 패턴).
+	TestTrue(TEXT("조립 후 TargetProvider 핸들이 실제 컴포넌트를 가리킨다"),
+		Root->GetTargetProvider().GetObject() == Cast<UObject>(Targeting));
+	TestTrue(TEXT("조립 후 ParkourHost 핸들이 실제 컴포넌트를 가리킨다"),
+		Root->GetParkourHost().GetObject() == Cast<UObject>(Parkour));
 
 	return true;
 }

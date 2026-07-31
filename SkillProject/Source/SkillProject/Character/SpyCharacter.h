@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "ModularCharacter.h"
+#include "Character/CommonInterface.h"
 
 #include "SpyCharacter.generated.h"
 
@@ -19,11 +20,12 @@ class USpyPawnExtensionComponent;
 class USpyHealthComponent;
 class USpyLevelComponent;
 class USpyAbilitySystemComponent;
+class UMotionWarpingComponent;
 
 struct FOnAttributeChangeData;
 
 UCLASS(config = Game)
-class ASpyCharacter : public AModularCharacter, public IAbilitySystemInterface
+class ASpyCharacter : public AModularCharacter, public IAbilitySystemInterface, public ISpyCharacterRoot
 {
 	GENERATED_BODY()
 
@@ -83,13 +85,29 @@ public:
 	//# 액션이 체이닝될 수 있으므로 bool 이 아니라 참조 카운트로 관리한다 —
 	//# 먼저 끝난 액션이 아직 진행 중인 다른 액션의 억제를 풀어 버리면 안 된다.
 	//# 레플리케이트되지 않는 순수 로컬 카메라 연출이라 서버/클라 어디서 불러도 무방하다.
-	void PushCameraCollisionSuppress();
-	void PopCameraCollisionSuppress();
+	virtual void PushCameraCollisionSuppress() override;
+	virtual void PopCameraCollisionSuppress() override;
 
 	FORCEINLINE int32 GetCameraCollisionSuppressCount() const
 	{
 		return CameraCollisionSuppressCount;
 	}
+
+	//# ISpyCharacterRoot
+	virtual TScriptInterface<ISpyParkourHost> GetParkourHost() const override
+	{
+		return CachedParkourHost;
+	}
+	virtual TScriptInterface<ISpyTargetProvider> GetTargetProvider() const override
+	{
+		return CachedTargetProvider;
+	}
+	virtual TScriptInterface<ISpyGrappleHost> GetGrappleHost() const override
+	{
+		return CachedGrappleHost;
+	}
+	virtual void AddMotionWarpTarget(FName WarpName, const FVector& Loc, const FRotator& Rot) override;
+	//# ~ISpyCharacterRoot
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -138,6 +156,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	TObjectPtr<USpyCharacterConfig> CharacterConfig;
 
+public:
+	//# 조립점 — 외부 호출 금지, 테스트에서만 직접 호출 (cpp-style §13).
+	//# OnAbilitySystemInitialized() 가 InitState DataInitialized 단계에서 1회 호출한다.
+	void AssembleComponents();
+
 private:
 	FTimerHandle WeaponSpawnTimerHandle;
 
@@ -147,4 +170,17 @@ private:
 	//# 억제 진입 시점의 bDoCollisionTest 원래 값. 하드코딩 true 로 되돌리면
 	//# BP 에서 false 로 세팅한 캐릭터의 설정을 덮어쓰게 된다.
 	bool bCachedDoCollisionTest = true;
+
+	//# InitState DataInitialized 에서 1회 캐싱 (cpp-style §8·§13)
+	UPROPERTY(Transient)
+	TScriptInterface<ISpyParkourHost> CachedParkourHost;
+
+	UPROPERTY(Transient)
+	TScriptInterface<ISpyTargetProvider> CachedTargetProvider;
+
+	UPROPERTY(Transient)
+	TScriptInterface<ISpyGrappleHost> CachedGrappleHost;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMotionWarpingComponent> CachedMotionWarping;
 };
