@@ -16,6 +16,7 @@
 #include "Item/SpyWeapon.h"
 #include "Manager/SpyAssetManager.h"
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"
+#include "ManagerComponent/SpyGrappleUIComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "MotionWarpingComponent.h"
@@ -293,10 +294,15 @@ void ASpyCharacter::AssembleComponents()
 	CachedGrappleHost = TScriptInterface<ISpyGrappleHost>(FindComponentByClass<USpyGrappleTargetingComponent>());
 	CachedMotionWarping = FindComponentByClass<UMotionWarpingComponent>();
 
-	//# 형제끼리 서로 찾아가지 않게 루트가 주입한다 — InjectGrappleHost(Task 4) 는 다음 Task 에서 추가한다.
+	//# 형제끼리 서로 찾아가지 않게 루트가 주입한다.
 	if (USpyCharacterMovementComponent* SpyMovement = GetSpyCharacterMovementComponent())
 	{
 		SpyMovement->InjectTargetProvider(CachedTargetProvider);
+	}
+
+	if (USpyGrappleUIComponent* GrappleUI = FindComponentByClass<USpyGrappleUIComponent>())
+	{
+		GrappleUI->InjectGrappleHost(CachedGrappleHost);
 	}
 }
 

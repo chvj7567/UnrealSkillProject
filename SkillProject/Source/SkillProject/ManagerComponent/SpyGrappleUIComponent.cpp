@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SpyGrappleUIComponent.h"
-#include "SpyGrappleTargetingComponent.h"
 #include "Data/SpyAssetNames.h"
 #include "Manager/SpyAssetManager.h"
 #include "Blueprint/UserWidget.h"
@@ -21,19 +20,15 @@ void USpyGrappleUIComponent::BeginPlay()
     Super::BeginPlay();
 
     AActor* Owner = GetOwner();
-    if (Owner == nullptr) return;
+	if (Owner == nullptr)
+		return;
 
-    if (USpyGrappleTargetingComponent* TargetComp =
-        Owner->FindComponentByClass<USpyGrappleTargetingComponent>())
-    {
-        TargetComp->OnGrappleTargetChangedDelegate.AddDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
-    }
+	APawn* Pawn = Cast<APawn>(Owner);
+	APlayerController* PC = Pawn ? Cast<APlayerController>(Pawn->GetController()) : nullptr;
+	if (PC == nullptr || PC->IsLocalController() == false)
+		return;
 
-    APawn* Pawn = Cast<APawn>(Owner);
-    APlayerController* PC = Pawn ? Cast<APlayerController>(Pawn->GetController()) : nullptr;
-    if (PC == nullptr || PC->IsLocalController() == false) return;
-
-    TSubclassOf<UUserWidget> WidgetClass =
+	TSubclassOf<UUserWidget> WidgetClass =
         USpyAssetManager::GetSubclassByName<UUserWidget>(SpyAssetNames::GrapplePromptWidget);
     if (WidgetClass == nullptr) return;
 
@@ -45,10 +40,29 @@ void USpyGrappleUIComponent::BeginPlay()
     }
 }
 
+void USpyGrappleUIComponent::InjectGrappleHost(TScriptInterface<ISpyGrappleHost> InHost)
+{
+	GrappleHost = InHost;
+
+	ISpyGrappleHost* Host = GrappleHost.GetInterface();
+	if (Host == nullptr)
+		return;
+
+	//# 구독이 BeginPlay 보다 늦어지므로 로컬 인지 타깃으로 1회 동기화한다.
+	//# CurrentGrappleTarget 은 레플리케이트값이라 시뮬레이티드 프록시에서 쓰면 하이라이트가 영구 유출된다.
+	Host->OnGrappleTargetChanged().AddUniqueDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
+	OnTargetChanged(Host->GetLocalCachedTarget());
+}
+
 void USpyGrappleUIComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    if (PromptWidget)
-    {
+	if (ISpyGrappleHost* Host = GrappleHost.GetInterface())
+	{
+		Host->OnGrappleTargetChanged().RemoveDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
+	}
+
+	if (PromptWidget)
+	{
         PromptWidget->RemoveFromParent();
         PromptWidget = nullptr;
     }
