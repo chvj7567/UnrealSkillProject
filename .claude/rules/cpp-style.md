@@ -380,6 +380,9 @@ public:
 ```
 
 - 파일이 200줄 초과 or 카테고리 6개 이상이면 `CommonInterface.Movement.h` 등 prefix 통일로 분할한다.
+- **⚠ 한 모듈에 `CommonInterface.h` 를 두 개 둘 수 없다.** UHT 는 생성 헤더를 `Intermediate/Build/<Platform>/<Target>/Inc/<Module>/UHT/<파일명>.generated.h` 라는 **모듈당 플랫 경로**에 만든다 — 소스 폴더 구조를 미러링하지 않는다. 도메인 폴더가 달라도 basename 이 같으면 두 헤더가 같은 `CommonInterface.generated.h` 를 가리켜 빌드가 깨진다.
+  - 따라서 한 모듈에서 도메인이 둘 이상이면 **처음부터 위 분할 규칙을 적용해** basename 을 유일하게 만든다: `Character/CommonInterface.Character.h`, `ManagerComponent/CommonInterface.Manager.h`.
+  - 모듈이 다르면 basename 이 같아도 무방하다 (플러그인과 게임 모듈은 서로 다른 UHT 출력 폴더를 쓴다).
 - **적용 범위 — 신규 게임 모듈 인터페이스만.** 이 규칙은 모듈 경계를 넘지 않는다: 도메인 폴더(`Character/`, `System/`, `AI/` …) 단위이며, 게임 모듈과 플러그인이 한 파일을 공유하지 않는다.
 - **기존 1파일=1인터페이스는 grandfathered** — 이미 있는 단일 인터페이스 헤더(게임 모듈·플러그인 양쪽)는 그대로 둔다. 같은 도메인에 인터페이스를 **새로 추가**할 때 `CommonInterface.h` 로 모으기 시작한다.
 

@@ -17,7 +17,7 @@
 |---|---|
 | ① 외부 진입 클래스가 하나인가 | ❌ 루트를 건너뛴 하위 컴포넌트 직접 접근 12곳 |
 | ② 캐싱 핸들이 private/protected 인가 | △ (이번 범위 밖 — public getter 6개) |
-| ③ 루트에 대응 인터페이스가 있는가 | ❌ 없음 (`Character/CommonInterface.h` 부재) |
+| ③ 루트에 대응 인터페이스가 있는가 | ❌ 없음 (`Character/CommonInterface.Character.h` 부재) |
 | ④ 하위가 소유자/형제를 탐색하지 않는가 | ❌ 형제→형제 2곳 |
 | ⑤ 루트가 Tick 순서를 쥐는가 | ✅ 현재 순서 의존 없음 |
 
@@ -76,12 +76,12 @@ GA 쪽에 `bFreeMoveEngaged` 상태까지 남는다. 이걸 루트 메서드로 
 
 ### 3-1. 인터페이스 신설 — 도메인 폴더별 2파일
 
-§12 는 "도메인 폴더별 `CommonInterface.h`" 다. 루트는 `Character/`, 매니저 컴포넌트는 `ManagerComponent/` 에 살므로 두 파일로 나눈다. 같은 모듈 내이므로 `Character/CommonInterface.h` 가 `ManagerComponent/CommonInterface.h` 를 include 한다 (역방향 없음).
+§12 는 "도메인 폴더별 `CommonInterface.h`" 다. 루트는 `Character/`, 매니저 컴포넌트는 `ManagerComponent/` 에 살므로 두 파일로 나눈다. 같은 모듈 내이므로 `Character/CommonInterface.Character.h` 가 `ManagerComponent/CommonInterface.Manager.h` 를 include 한다 (역방향 없음).
 
 | 파일 | 정의 | implement |
 |---|---|---|
-| `ManagerComponent/CommonInterface.h` | `ISpyParkourHost` · `ISpyTargetProvider` · `ISpyGrappleHost` | 각 매니저 컴포넌트 |
-| `Character/CommonInterface.h` | `ISpyCharacterRoot` | `ASpyCharacter` |
+| `ManagerComponent/CommonInterface.Manager.h` | `ISpyParkourHost` · `ISpyTargetProvider` · `ISpyGrappleHost` | 각 매니저 컴포넌트 |
+| `Character/CommonInterface.Character.h` | `ISpyCharacterRoot` | `ASpyCharacter` |
 
 **순수 가상으로 정의한다** — `UFUNCTION(BlueprintNativeEvent)` + `Execute_` 패턴을 쓰지 않는다. cpp-style §12/§13 예제가 순수 가상 형태이고, 델리게이트 참조 반환(`FSyncMotionWarpingDataDelegate&`)은 BP 노출로 표현할 수 없다.
 
@@ -190,7 +190,7 @@ DataInitialized
 
 ### 포함
 
-1. `Character/CommonInterface.h` + `ManagerComponent/CommonInterface.h` 신설, 4개 인터페이스 정의 및 implement
+1. `Character/CommonInterface.Character.h` + `ManagerComponent/CommonInterface.Manager.h` 신설, 4개 인터페이스 정의 및 implement
 2. `SpyCharacterMovementComponent.cpp:80` 매 프레임 탐색 제거 (주입)
 3. GA 11곳 + PlayerController 2곳 + AnimInstance 1곳을 루트 인터페이스 경유로
 4. `SpyGrappleUIComponent` 주입

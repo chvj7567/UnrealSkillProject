@@ -35,10 +35,10 @@
 
 | 파일 | 책임 |
 |---|---|
-| `SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.h` | 매니저 컴포넌트 도메인 공용 인터페이스 3종 — `ISpyParkourHost` · `ISpyTargetProvider` · `ISpyGrappleHost` |
-| `SkillProject/Source/SkillProject/Character/CommonInterface.h` | 캐릭터 도메인 루트 인터페이스 — `ISpyCharacterRoot` |
+| `SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.Manager.h` | 매니저 컴포넌트 도메인 공용 인터페이스 3종 — `ISpyParkourHost` · `ISpyTargetProvider` · `ISpyGrappleHost` |
+| `SkillProject/Source/SkillProject/Character/CommonInterface.Character.h` | 캐릭터 도메인 루트 인터페이스 — `ISpyCharacterRoot` |
 
-`Character/CommonInterface.h` 가 `ManagerComponent/CommonInterface.h` 를 include 한다 (반환 타입 `TScriptInterface<ISpyParkourHost>` 등). 같은 모듈 내이며 역방향 의존은 없다.
+`Character/CommonInterface.Character.h` 가 `ManagerComponent/CommonInterface.Manager.h` 를 include 한다 (반환 타입 `TScriptInterface<ISpyParkourHost>` 등). 같은 모듈 내이며 역방향 의존은 없다.
 
 **수정 (13)**
 
@@ -70,7 +70,7 @@
 ## Task 1: 매니저 컴포넌트 인터페이스 3종
 
 **Files:**
-- Create: `SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.h`
+- Create: `SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.Manager.h`
 - Modify: `SkillProject/Source/SkillProject/ManagerComponent/SpyParkourManagerComponent.h`
 - Modify: `SkillProject/Source/SkillProject/ManagerComponent/SpyTargetingManagerComponent.h`
 - Modify: `SkillProject/Source/SkillProject/ManagerComponent/SpyGrappleTargetingComponent.h`
@@ -80,7 +80,7 @@
 - Consumes: 없음 (첫 Task)
 - Produces: `ISpyParkourHost` · `ISpyTargetProvider` · `ISpyGrappleHost` — 시그니처는 Step 1 코드 블록이 SoT. Task 2~7 이 이 타입들을 `TScriptInterface<>` 로 받는다.
 
-- [ ] **Step 1: `ManagerComponent/CommonInterface.h` 작성 — 델리게이트·구조체 이동 포함**
+- [ ] **Step 1: `ManagerComponent/CommonInterface.Manager.h` 작성 — 델리게이트·구조체 이동 포함**
 
 **순환 include 를 반드시 먼저 끊는다.** 인터페이스는 `FSyncMotionWarpingDataDelegate` 등을 반환하고, 그 델리게이트는 지금 `SpyParkourManagerComponent.h` 에 있다. 컴포넌트 헤더가 인터페이스를 상속하려면 `CommonInterface.h` 를 include 해야 하므로 양방향이 된다.
 
@@ -202,7 +202,7 @@ public:
 
 ```cpp
 //# include 에 추가 (기존 include 아래, .generated.h 위)
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 //# 클래스 선언 변경
 class SKILLPROJECT_API USpyParkourManagerComponent : public UActorComponent, public ISpyParkourHost
@@ -221,12 +221,12 @@ public:
 	virtual FSyncClilmbDataDelegate& OnClimb() override { return OnClimbData; }
 ```
 
-> 기존 선언 `UFUNCTION(BlueprintCallable) bool TryToggleClimbAction();` 등에 `virtual`/`override` 를 붙인다. **`.cpp` 정의는 건드리지 않는다** — 시그니처가 동일하다. Step 1 에서 이 헤더의 델리게이트 3종·구조체 3종을 잘라냈으므로, 그 자리에 `#include "ManagerComponent/CommonInterface.h"` 만 남는다.
+> 기존 선언 `UFUNCTION(BlueprintCallable) bool TryToggleClimbAction();` 등에 `virtual`/`override` 를 붙인다. **`.cpp` 정의는 건드리지 않는다** — 시그니처가 동일하다. Step 1 에서 이 헤더의 델리게이트 3종·구조체 3종을 잘라냈으므로, 그 자리에 `#include "ManagerComponent/CommonInterface.Manager.h"` 만 남는다.
 
 - [ ] **Step 3: `USpyTargetingManagerComponent` 가 implement**
 
 ```cpp
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 class SKILLPROJECT_API USpyTargetingManagerComponent : public UActorComponent, public ISpyTargetProvider
 
@@ -243,7 +243,7 @@ public:
 - [ ] **Step 4: `USpyGrappleTargetingComponent` 가 implement**
 
 ```cpp
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 class SKILLPROJECT_API USpyGrappleTargetingComponent : public UActorComponent, public ISpyGrappleHost
 
@@ -264,7 +264,7 @@ public:
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"
@@ -277,7 +277,7 @@ public:
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyRootFacadeComponentsImplementInterfacesTest,
 	"SkillProject.Character.RootFacade.ComponentsImplementInterfaces",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSpyRootFacadeComponentsImplementInterfacesTest::RunTest(const FString& Parameters)
 {
@@ -321,7 +321,7 @@ Expected: `ComponentsImplementInterfaces` PASS.
 - [ ] **Step 8: 스테이징 (커밋하지 않음)**
 
 ```bash
-git add SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.h \
+git add SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.Manager.h \
         SkillProject/Source/SkillProject/ManagerComponent/SpyParkourManagerComponent.h \
         SkillProject/Source/SkillProject/ManagerComponent/SpyTargetingManagerComponent.h \
         SkillProject/Source/SkillProject/ManagerComponent/SpyGrappleTargetingComponent.h \
@@ -334,7 +334,7 @@ git add SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.h \
 ## Task 2: 루트 인터페이스 + 조립점
 
 **Files:**
-- Create: `SkillProject/Source/SkillProject/Character/CommonInterface.h`
+- Create: `SkillProject/Source/SkillProject/Character/CommonInterface.Character.h`
 - Modify: `SkillProject/Source/SkillProject/Character/SpyCharacter.h`
 - Modify: `SkillProject/Source/SkillProject/Character/SpyCharacter.cpp`
 - Test: `SkillProject/Source/SkillProject/Character/Tests/SpyRootFacadeTests.cpp`
@@ -343,7 +343,7 @@ git add SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.h \
 - Consumes: Task 1 의 `ISpyParkourHost` · `ISpyTargetProvider` · `ISpyGrappleHost`
 - Produces: `ISpyCharacterRoot` — `GetParkourHost()` / `GetTargetProvider()` / `GetGrappleHost()` / `PushCameraCollisionSuppress()` / `PopCameraCollisionSuppress()` / `AddMotionWarpTarget(FName, const FVector&, const FRotator&)`. Task 3~7 이 전부 이 인터페이스로 접근한다.
 
-- [ ] **Step 1: `Character/CommonInterface.h` 작성**
+- [ ] **Step 1: `Character/CommonInterface.Character.h` 작성**
 
 ```cpp
 // Fill out your copyright notice in the Description page of Project Settings.
@@ -352,7 +352,7 @@ git add SkillProject/Source/SkillProject/ManagerComponent/CommonInterface.h \
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 #include "CommonInterface.generated.h"
 
@@ -386,7 +386,7 @@ public:
 
 ```cpp
 //# include 추가
-#include "Character/CommonInterface.h"
+#include "Character/CommonInterface.Character.h"
 
 //# 전방 선언 추가
 class UMotionWarpingComponent;
@@ -491,7 +491,7 @@ void ASpyCharacter::AddMotionWarpTarget(FName WarpName, const FVector& Loc, cons
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyRootFacadeAssemblyFillsHandlesTest,
 	"SkillProject.Character.RootFacade.AssemblyFillsHandles",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSpyRootFacadeAssemblyFillsHandlesTest::RunTest(const FString& Parameters)
 {
@@ -531,7 +531,7 @@ Expected: `ComponentsImplementInterfaces` PASS, `AssemblyFillsHandles` PASS.
 - [ ] **Step 6: 스테이징 (커밋하지 않음)**
 
 ```bash
-git add SkillProject/Source/SkillProject/Character/CommonInterface.h \
+git add SkillProject/Source/SkillProject/Character/CommonInterface.Character.h \
         SkillProject/Source/SkillProject/Character/SpyCharacter.h \
         SkillProject/Source/SkillProject/Character/SpyCharacter.cpp \
         SkillProject/Source/SkillProject/Character/Tests/SpyRootFacadeTests.cpp
@@ -576,7 +576,7 @@ git add SkillProject/Source/SkillProject/Character/CommonInterface.h \
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyMovementRotationBeforeInjectionTest,
 	"SkillProject.Character.Rotation.BeforeInjectionMatchesNoTarget",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSpyMovementRotationBeforeInjectionTest::RunTest(const FString& Parameters)
 {
@@ -607,7 +607,7 @@ bool FSpyMovementRotationBeforeInjectionTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FSpyMovementRotationInjectedNullTest,
 	"SkillProject.Character.Rotation.InjectedNullSkipsRotation",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
 bool FSpyMovementRotationInjectedNullTest::RunTest(const FString& Parameters)
 {
@@ -647,7 +647,7 @@ Expected: 컴파일 실패 — `InjectTargetProvider` 미정의. 이것이 red �
 
 ```cpp
 //# include 추가
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 //# public: 구역에 추가
 public:
@@ -743,7 +743,7 @@ git add SkillProject/Source/SkillProject/Character/SpyCharacterMovementComponent
 
 ```cpp
 //# include 추가
-#include "ManagerComponent/CommonInterface.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 //# public: 구역에 추가
 public:
@@ -786,8 +786,8 @@ void USpyGrappleUIComponent::InjectGrappleHost(TScriptInterface<ISpyGrappleHost>
 		return;
 
 	//# 구독이 BeginPlay 보다 늦어지므로 현재 타깃으로 1회 동기화한다.
-	Host->OnGrappleTargetChanged().AddDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
-	OnTargetChanged(Host->GetCurrentGrappleTarget());
+	Host->OnGrappleTargetChanged().AddUniqueDynamic(this, &USpyGrappleUIComponent::OnTargetChanged);
+	OnTargetChanged(Host->GetLocalCachedTarget());
 }
 ```
 
