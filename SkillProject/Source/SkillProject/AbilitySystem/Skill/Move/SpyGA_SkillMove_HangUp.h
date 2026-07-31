@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Ability/SKGameplayAbility_SkillMove.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 #include "SpyGA_SkillMove_HangUp.generated.h"
 

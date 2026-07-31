@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Ability/SKGameplayAbility.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 #include "SpyGA_WallClimb.generated.h"
 

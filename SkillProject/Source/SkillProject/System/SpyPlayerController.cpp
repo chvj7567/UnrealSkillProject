@@ -112,7 +112,9 @@ void ASpyPlayerController::UpdateRotation(float DeltaTime)
 	if (IsValid(TargetingComp.GetObject()) == false)
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(ControlledPawn))
+		{
 			TargetingComp = RootPtr->GetTargetProvider();
+		}
 	}
 
 	AActor* TargetActor = (ControlledPawn != nullptr && IsValid(TargetingComp.GetObject())) ? TargetingComp->GetTarget().Get() : nullptr;

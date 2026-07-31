@@ -60,7 +60,9 @@ void USpyCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (IsValid(CachedTargetProvider.GetObject()) == false)
 	{
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(Player))
+		{
 			CachedTargetProvider = RootPtr->GetTargetProvider();
+		}
 	}
 }
 

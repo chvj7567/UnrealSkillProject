@@ -8,61 +8,60 @@
 
 class AGrappleCableActor;
 class USpyMovementConfig;
-class USpyGrappleTargetingComponent;
 class UAnimMontage;
 
 UCLASS()
 class SKILLPROJECT_API USpyGA_GrappleHook : public USKGameplayAbility
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    USpyGA_GrappleHook();
+	USpyGA_GrappleHook();
 
 protected:
-    virtual bool CanActivateAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayTagContainer* SourceTags,
-        const FGameplayTagContainer* TargetTags,
-        FGameplayTagContainer* OptionalRelevantTags) const override;
+	virtual bool CanActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayTagContainer* SourceTags,
+		const FGameplayTagContainer* TargetTags,
+		FGameplayTagContainer* OptionalRelevantTags) const override;
 
-    virtual void ActivateAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        const FGameplayEventData* TriggerEventData) override;
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
 
-    virtual void EndAbility(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo,
-        bool bReplicateEndAbility,
-        bool bWasCancelled) override;
+	virtual void EndAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		bool bReplicateEndAbility,
+		bool bWasCancelled) override;
 
-    virtual void InputPressed(
-        const FGameplayAbilitySpecHandle Handle,
-        const FGameplayAbilityActorInfo* ActorInfo,
-        const FGameplayAbilityActivationInfo ActivationInfo) override;
+	virtual void InputPressed(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 private:
-    UFUNCTION()
-    void OnGrappleArrived();
+	UFUNCTION()
+	void OnGrappleArrived();
 
 protected:
-    UPROPERTY(EditDefaultsOnly, Category = "Config")
-    TObjectPtr<USpyMovementConfig> MovementConfig;
+	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	TObjectPtr<USpyMovementConfig> MovementConfig;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Config")
-    FName HandBoneName = FName("hand_r");
+	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	FName HandBoneName = FName("hand_r");
 
-    UPROPERTY(EditDefaultsOnly, Category = "Animation")
-    TObjectPtr<UAnimMontage> AirLoopMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> AirLoopMontage;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Cable")
-    TSubclassOf<AGrappleCableActor> CableActorClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Cable")
+	TSubclassOf<AGrappleCableActor> CableActorClass;
 
 private:
-    UPROPERTY()
-    TObjectPtr<AGrappleCableActor> CableActor;
+	UPROPERTY()
+	TObjectPtr<AGrappleCableActor> CableActor;
 };
