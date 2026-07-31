@@ -2,12 +2,11 @@
 
 
 #include "SpyGA_SkillMove_Vault.h"
-#include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerState.h"
-#include "MotionWarpingComponent.h"
 #include "Perception/AISense_Hearing.h"
 #include "Character/SpyCharacter.h"
+#include "Character/CommonInterface.Character.h"
 #include "Data/SpyAssetNames.h"
 #include "System/SpyMissionComponent.h"
 #include "Util/SpyGameplayTags.h"
@@ -23,7 +22,10 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	//# 어떤 조기 종료 경로로 빠져도 EndAbility 가 짝을 맞추도록 커밋 판정보다 먼저 건다.
 	if (ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
 	{
-		SpyCharacter->PushCameraCollisionSuppress();
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(SpyCharacter))
+		{
+			RootPtr->PushCameraCollisionSuppress();
+		}
 		CameraSuppressedCharacter = SpyCharacter;
 	}
 
@@ -33,14 +35,14 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		return;
 	}
 
-	if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 	{
-		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+		if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
 		{
-			if (ParkourComponent->CanVaultAction())
+			if (Parkour->CanVaultAction())
 			{
-				ParkourComponent->OnVaultMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
-				ParkourComponent->SetVaultMotionWarpingData();
+				Parkour->OnVaultMotionWarping().AddDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
+				Parkour->SetVaultMotionWarpingData();
 			}
 			else
 			{
@@ -66,16 +68,16 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	if (HasAuthority(&CurrentActivationInfo))
 	{
-		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 		{
-			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
 			{
 				//# 이 GA 가 FreeMoveMode 를 켠 적이 있을 때만 되돌린다.
 				//# (넘기가 성립하지 않아 워핑 데이터가 나오지 않은 경우 — 공중 입력 등 — 에는
 				//#  켠 적이 없으므로 이동 모드·캡슐 충돌을 건드리지 않는다)
 				if (bFreeMoveEngaged)
 				{
-					ParkourComponent->SetFreeMoveMode(false);
+					Parkour->SetFreeMoveMode(false);
 				}
 			}
 		}
@@ -86,7 +88,10 @@ void USpyGA_SkillMove_Vault::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	//# 취소·중단·사망 경로도 전부 EndAbility 로 흘러오므로 여기서만 해제하면 카운트가 새지 않는다.
 	if (ASpyCharacter* SuppressedCharacter = CameraSuppressedCharacter.Get())
 	{
-		SuppressedCharacter->PopCameraCollisionSuppress();
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(SuppressedCharacter))
+		{
+			RootPtr->PopCameraCollisionSuppress();
+		}
 	}
 	CameraSuppressedCharacter = nullptr;
 
@@ -97,30 +102,33 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultD
 {
 	if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
-		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			ParkourComponent->OnVaultMotionWarpingData.RemoveDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
-
-			if (HasAuthority(&CurrentActivationInfo))
+			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
 			{
-				ParkourComponent->SetFreeMoveMode(true);
-				bFreeMoveEngaged = true;
+				Parkour->OnVaultMotionWarping().RemoveDynamic(this, &USpyGA_SkillMove_Vault::OnSyncMotionWarpingData);
 
-				//# 미션 진행 — 워핑 데이터가 실제로 산출된 시점이라 "넘기를 수행했다"가 성립한다.
-				//# 활성화 시점(ActivateAbility)은 벽이 없어도 진입하므로 쓰지 않는다.
-				//# 서버에서는 SetVaultMotionWarpingData 가 HasAuthority 분기에서 OnRep_VaultMotionWarpingData 를
-				//# 직접 호출하므로 이 콜백이 서버에서도 확실히 발화한다 (SpyParkourManagerComponent.cpp:233-244)
-				if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(OwnerCharacter->GetPlayerState()))
+				if (HasAuthority(&CurrentActivationInfo))
 				{
-					MissionComp->AddProgress(SpyGameplayTags::Skill_Move_Vault, 1);
+					Parkour->SetFreeMoveMode(true);
+					bFreeMoveEngaged = true;
+
+					//# 미션 진행 — 워핑 데이터가 실제로 산출된 시점이라 "넘기를 수행했다"가 성립한다.
+					//# 활성화 시점(ActivateAbility)은 벽이 없어도 진입하므로 쓰지 않는다.
+					//# 서버에서는 SetVaultMotionWarpingData 가 HasAuthority 분기에서 OnRep_VaultMotionWarpingData 를
+					//# 직접 호출하므로 이 콜백이 서버에서도 확실히 발화한다 (SpyParkourManagerComponent.cpp:233-244)
+					if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(OwnerCharacter->GetPlayerState()))
+					{
+						MissionComp->AddProgress(SpyGameplayTags::Skill_Move_Vault, 1);
+					}
 				}
 			}
 		}
 
-		if (UMotionWarpingComponent* MotionWarpingComponent = OwnerCharacter->FindComponentByClass<UMotionWarpingComponent>())
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingStartName, InVaultData.StartLoc, InVaultData.StartRot);
-			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);
+			RootPtr->AddMotionWarpTarget(MotionWarpingStartName, InVaultData.StartLoc, InVaultData.StartRot);
+			RootPtr->AddMotionWarpTarget(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);
 		}
 
 		SetMoveState(true);

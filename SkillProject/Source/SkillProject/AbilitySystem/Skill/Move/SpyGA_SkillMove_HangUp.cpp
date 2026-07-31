@@ -3,9 +3,8 @@
 
 #include "SpyGA_SkillMove_HangUp.h"
 #include "GameFramework/Character.h"
-#include "ManagerComponent/SpyParkourManagerComponent.h"
-#include "MotionWarpingComponent.h"
 #include "Character/SpyCharacter.h"
+#include "Character/CommonInterface.Character.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyGA_SkillMove_HangUp)
 
@@ -32,12 +31,12 @@ void USpyGA_SkillMove_HangUp::ActivateAbility(const FGameplayAbilitySpecHandle H
 	{
 		FVector LedgeLocation = TriggerEventData->TargetData.Get(0)->GetEndPoint();
 
-		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 		{
-			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
 			{
-				ParkourComponent->OnHangUpMotionWarpingData.AddDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
-				ParkourComponent->SetHangUpMotionWarpingData(LedgeLocation);
+				Parkour->OnHangUpMotionWarping().AddDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
+				Parkour->SetHangUpMotionWarpingData(LedgeLocation);
 			}
 		}
 	}
@@ -51,16 +50,16 @@ void USpyGA_SkillMove_HangUp::EndAbility(const FGameplayAbilitySpecHandle Handle
 {
 	if (HasAuthority(&CurrentActivationInfo))
 	{
-		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
 		{
-			if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
 			{
 				//# 이 GA 가 FreeMoveMode 를 켠 적이 있을 때만 되돌린다.
 				//# (매달리기가 성립하지 않아 워핑 데이터가 산출되지 않은 경우에는
 				//#  켠 적이 없으므로 이동 모드·캡슐 충돌을 건드리지 않는다)
 				if (bFreeMoveEngaged)
 				{
-					ParkourComponent->SetFreeMoveMode(false);
+					Parkour->SetFreeMoveMode(false);
 				}
 			}
 		}
@@ -81,21 +80,24 @@ void USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData(FMotionWarpingData InHangU
 {
 	if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
-		if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			ParkourComponent->OnHangUpMotionWarpingData.RemoveDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
-
-			if (HasAuthority(&CurrentActivationInfo))
+			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
 			{
-				ParkourComponent->SetFreeMoveMode(true);
-				bFreeMoveEngaged = true;
+				Parkour->OnHangUpMotionWarping().RemoveDynamic(this, &USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData);
+
+				if (HasAuthority(&CurrentActivationInfo))
+				{
+					Parkour->SetFreeMoveMode(true);
+					bFreeMoveEngaged = true;
+				}
 			}
 		}
 
-		if (UMotionWarpingComponent* MotionWarpingComponent = OwnerCharacter->FindComponentByClass<UMotionWarpingComponent>())
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
 		{
-			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingStartName, InHangUpData.StartLoc, InHangUpData.StartRot);
-			MotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(MotionWarpingEndName, InHangUpData.EndLoc, InHangUpData.EndRot);
+			RootPtr->AddMotionWarpTarget(MotionWarpingStartName, InHangUpData.StartLoc, InHangUpData.StartRot);
+			RootPtr->AddMotionWarpTarget(MotionWarpingEndName, InHangUpData.EndLoc, InHangUpData.EndRot);
 		}
 
 		SetMoveState(true);

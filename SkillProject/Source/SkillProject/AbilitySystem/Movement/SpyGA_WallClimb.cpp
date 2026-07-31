@@ -8,7 +8,7 @@
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "Character/SpyCharacter.h"
 #include "Character/SpyCharacterMovementComponent.h"
-#include "ManagerComponent/SpyParkourManagerComponent.h"
+#include "Character/CommonInterface.Character.h"
 #include "System/SpyPlayerController.h"
 #include "Input/SpyInputComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -81,16 +81,16 @@ void USpyGA_WallClimb::InputPressed(const FGameplayAbilitySpecHandle Handle, con
 
 bool USpyGA_WallClimb::TryToggleClimbAction()
 {
-    if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-    {
-        if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
-        {
-            ParkourComponent->OnClimbData.AddUniqueDynamic(this, &USpyGA_WallClimb::StartWallClimb);
-            return ParkourComponent->TryToggleClimbAction();
-        }
-    }
+	if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(GetAvatarActorFromActorInfo()))
+	{
+		if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+		{
+			Parkour->OnClimb().AddUniqueDynamic(this, &USpyGA_WallClimb::StartWallClimb);
+			return Parkour->TryToggleClimbAction();
+		}
+	}
 
-    return false;
+	return false;
 }
 
 void USpyGA_WallClimb::StartWallClimb(const FClimbData& InClimbData, const FClimbWallData& InClimbWallData)
@@ -142,9 +142,12 @@ void USpyGA_WallClimb::EndWallClimb()
             }
         }
 
-        if (USpyParkourManagerComponent* ParkourComponent = OwnerCharacter->FindComponentByClass<USpyParkourManagerComponent>())
-        {
-            ParkourComponent->OnClimbData.RemoveDynamic(this, &USpyGA_WallClimb::StartWallClimb);
-        }
+		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
+		{
+			if (ISpyParkourHost* Parkour = RootPtr->GetParkourHost().GetInterface())
+			{
+				Parkour->OnClimb().RemoveDynamic(this, &USpyGA_WallClimb::StartWallClimb);
+			}
+		}
     }
 }
