@@ -99,3 +99,6 @@ SkillProject/Build/**
 # 파이썬 캐시 (tools/unreal-mcp 등)
 **/__pycache__/
 *.py[cod]
+
+# superpowers SDD 런타임 스크래치
+.superpowers/
