@@ -101,10 +101,7 @@ void USpyGA_SkillMove_HangUp::OnSyncMotionWarpingData(FMotionWarpingData InHangU
 					bFreeMoveEngaged = true;
 				}
 			}
-		}
 
-		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
-		{
 			RootPtr->AddMotionWarpTarget(MotionWarpingStartName, InHangUpData.StartLoc, InHangUpData.StartRot);
 			RootPtr->AddMotionWarpTarget(MotionWarpingEndName, InHangUpData.EndLoc, InHangUpData.EndRot);
 		}

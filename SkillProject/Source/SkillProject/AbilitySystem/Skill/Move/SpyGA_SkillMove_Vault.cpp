@@ -25,8 +25,8 @@ void USpyGA_SkillMove_Vault::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(SpyCharacter))
 		{
 			RootPtr->PushCameraCollisionSuppress();
+			CameraSuppressedCharacter = SpyCharacter;
 		}
-		CameraSuppressedCharacter = SpyCharacter;
 	}
 
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
@@ -126,10 +126,7 @@ void USpyGA_SkillMove_Vault::OnSyncMotionWarpingData(FMotionWarpingData InVaultD
 					}
 				}
 			}
-		}
 
-		if (ISpyCharacterRoot* RootPtr = Cast<ISpyCharacterRoot>(OwnerCharacter))
-		{
 			RootPtr->AddMotionWarpTarget(MotionWarpingStartName, InVaultData.StartLoc, InVaultData.StartRot);
 			RootPtr->AddMotionWarpTarget(MotionWarpingEndName, InVaultData.EndLoc, InVaultData.EndRot);
 		}
