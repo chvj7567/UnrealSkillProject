@@ -4,6 +4,7 @@
 #include "ManagerComponent/SpyAnimManagerComponent.h"
 #include "System/SpyPlayerState.h"
 #include "Character/SpyCharacter.h"
+#include "Character/CommonInterface.Character.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "Util/SpyGameplayTags.h"

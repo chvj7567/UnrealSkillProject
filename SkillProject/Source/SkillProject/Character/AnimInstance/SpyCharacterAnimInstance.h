@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Character/CommonInterface.Character.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 #include "SpyCharacterAnimInstance.generated.h"
 

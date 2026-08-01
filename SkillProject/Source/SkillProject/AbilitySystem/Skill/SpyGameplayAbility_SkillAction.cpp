@@ -7,7 +7,6 @@
 #include "System/SpyMissionComponent.h"
 #include "GameFramework/Character.h"
 #include "Data/SpyCharacterAssetData.h"
-#include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Character/SpyCharacter.h"
 #include "Item/SpyWeapon.h"
