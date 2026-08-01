@@ -242,9 +242,9 @@ void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 		CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	}
 
-	if (USpyTargetingManagerComponent* TargetingComp = FindComponentByClass<USpyTargetingManagerComponent>())
+	if (ISpyTargetProvider* Provider = IsValid(CachedTargetProvider.GetObject()) ? CachedTargetProvider.GetInterface() : nullptr)
 	{
-		TargetingComp->SetCurrentTarget(nullptr);
+		Provider->SetCurrentTarget(nullptr);
 	}
 
 	//# AI 사망 시 BT 정지 + focus 해제 — 사후 회전 방지
