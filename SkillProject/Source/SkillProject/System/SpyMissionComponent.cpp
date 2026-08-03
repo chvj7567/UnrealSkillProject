@@ -188,6 +188,9 @@ bool USpyMissionComponent::AcceptCurrentMission()
 
 	MissionState.bAccepted = true;
 
+	//# 수락 사실 자체를 즉시 알린다 — HUD는 이 델리게이트로만 갱신되므로 진행값 불변이어도 필요
+	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
+
 	//# 이미 조건을 만족한 상태로 수락하는 경우를 위한 재평가.
 	//# 레벨(Threshold) 미션은 승급 이벤트가 이 시점 이전에 이미 지나갔을 수 있다(spec §2-6/§5-6).
 	//# 현재는 레벨 미션이 유일한 Threshold 사례이므로 여기서 직접 재주입한다.

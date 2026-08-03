@@ -210,17 +210,28 @@ void USpyMainHUD::RefreshMission()
 		return;
 
 	const bool bAllDone = BoundMissionComponent->IsAllCompleted();
+	const bool bAccepted = BoundMissionComponent->IsCurrentAccepted();
 
+	//# 수락 전에는 이름/진행도를 비운다 — 전체 완료가 최우선
 	if (Txt_MissionName)
 	{
-		Txt_MissionName->SetText(bAllDone
-			? NSLOCTEXT("SpyMainHUD", "MissionAllCompleted", "모든 미션 완료")
-			: BoundMissionComponent->GetDisplayName());
+		if (bAllDone)
+		{
+			Txt_MissionName->SetText(NSLOCTEXT("SpyMainHUD", "MissionAllCompleted", "모든 미션 완료"));
+		}
+		else if (bAccepted == false)
+		{
+			Txt_MissionName->SetText(FText::GetEmpty());
+		}
+		else
+		{
+			Txt_MissionName->SetText(BoundMissionComponent->GetDisplayName());
+		}
 	}
 
 	if (Txt_MissionProgress)
 	{
-		if (bAllDone)
+		if (bAllDone || bAccepted == false)
 		{
 			Txt_MissionProgress->SetText(FText::GetEmpty());
 		}
