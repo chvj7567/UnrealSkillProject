@@ -55,7 +55,7 @@ int32 USpyMissionComponent::GetTargetCount() const
 	if (MissionConfig == nullptr)
 		return 0;
 
-	const FSpyMissionEntry* Entry = MissionConfig->GetMission(MissionState.MissionIndex);
+	const FSpyMissionRow* Entry = MissionConfig->GetMission(MissionState.MissionIndex);
 
 	return (Entry ? Entry->TargetCount : 0);
 }
@@ -65,9 +65,19 @@ FText USpyMissionComponent::GetDisplayName() const
 	if (MissionConfig == nullptr)
 		return FText::GetEmpty();
 
-	const FSpyMissionEntry* Entry = MissionConfig->GetMission(MissionState.MissionIndex);
+	const FSpyMissionRow* Entry = MissionConfig->GetMission(MissionState.MissionIndex);
 
 	return (Entry ? Entry->DisplayName : FText::GetEmpty());
+}
+
+int32 USpyMissionComponent::GetCurrentNPCId() const
+{
+	if (MissionConfig == nullptr)
+		return FSpyMissionRow::NoNPCId;
+
+	const FSpyMissionRow* Entry = MissionConfig->GetMission(MissionState.MissionIndex);
+
+	return (Entry ? Entry->NPCId : FSpyMissionRow::NoNPCId);
 }
 
 bool USpyMissionComponent::IsAllCompleted() const
@@ -164,9 +174,10 @@ void USpyMissionComponent::ProcessProgress(FGameplayTag InEventTag, int32 InAmou
 	MissionState.MissionIndex = Result.MissionIndex;
 	MissionState.Count = Result.Count;
 
-	//# 새로 진입한 미션이 Dialogue 타입이면 자동 수락 — NPC Offer 절차가 없다
-	const FSpyMissionEntry* NewEntry = GetMissionEntry(MissionState.MissionIndex);
-	MissionState.bAccepted = (NewEntry != nullptr && NewEntry->MissionType == ESpyMissionType::Dialogue);
+	//# 새로 진입한 미션이 Dialogue/Interact 타입이면 자동 수락 — 카드를 보여줄 NPC가 없다
+	const FSpyMissionRow* NewEntry = GetMissionEntry(MissionState.MissionIndex);
+	MissionState.bAccepted = (NewEntry != nullptr &&
+		(NewEntry->MissionType == ESpyMissionType::Dialogue || NewEntry->MissionType == ESpyMissionType::Interact));
 
 	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
 
@@ -194,7 +205,7 @@ bool USpyMissionComponent::AcceptCurrentMission()
 	//# 이미 조건을 만족한 상태로 수락하는 경우를 위한 재평가.
 	//# 레벨(Threshold) 미션은 승급 이벤트가 이 시점 이전에 이미 지나갔을 수 있다(spec §2-6/§5-6).
 	//# 현재는 레벨 미션이 유일한 Threshold 사례이므로 여기서 직접 재주입한다.
-	const FSpyMissionEntry* CurrentEntry = GetMissionEntry(MissionState.MissionIndex);
+	const FSpyMissionRow* CurrentEntry = GetMissionEntry(MissionState.MissionIndex);
 	if (CurrentEntry != nullptr && CurrentEntry->MatchTag == SpyGameplayTags::Event_Mission_Level && AbilitySystemComponent != nullptr)
 	{
 		const float CurrentLevel = AbilitySystemComponent->GetNumericAttribute(USpyCharacterAttributeSet::GetLevelAttribute());
@@ -204,9 +215,9 @@ bool USpyMissionComponent::AcceptCurrentMission()
 	return true;
 }
 
-const FSpyMissionEntry* USpyMissionComponent::GetMissionEntry(int32 InIndex) const
+const FSpyMissionRow* USpyMissionComponent::GetMissionEntry(int32 InMissionId) const
 {
-	return (MissionConfig != nullptr ? MissionConfig->GetMission(InIndex) : nullptr);
+	return (MissionConfig != nullptr ? MissionConfig->GetMission(InMissionId) : nullptr);
 }
 
 void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
@@ -227,7 +238,7 @@ void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
 		return;
 	}
 
-	const FSpyMissionEntry* Entry = MissionConfig->GetMission(InCompletedIndex);
+	const FSpyMissionRow* Entry = MissionConfig->GetMission(InCompletedIndex);
 	if (Entry == nullptr)
 		return;
 
@@ -235,11 +246,11 @@ void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
 
 	if (Reward <= 0.f)
 	{
-		//# Gameplay 타입은 보상이 없는 게 정상이다. Dialogue 타입인데 0이면
+		//# Gameplay 타입은 보상이 없는 게 정상이다. Dialogue/Interact 타입인데 0이면
 		//# MissionReward 행을 빠뜨린 에디터 데이터 실수일 수밖에 없다 — 경고로 구분한다
-		if (Entry->MissionType == ESpyMissionType::Dialogue)
+		if (Entry->MissionType == ESpyMissionType::Dialogue || Entry->MissionType == ESpyMissionType::Interact)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("# [SpyMissionComponent] Dialogue 미션 %d 의 MissionReward 행이 없습니다 (데이터 누락 의심): %s"), InCompletedIndex, *GetNameSafe(GetOwner()));
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyMissionComponent] Dialogue/Interact 미션 %d 의 MissionReward 행이 없습니다 (데이터 누락 의심): %s"), InCompletedIndex, *GetNameSafe(GetOwner()));
 		}
 
 		return;

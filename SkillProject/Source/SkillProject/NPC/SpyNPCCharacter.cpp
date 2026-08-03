@@ -152,6 +152,9 @@ FSpyNPCDialogueResult ASpyNPCCharacter::RequestInteract(APlayerController* Reque
 	if (Requester == nullptr)
 		return Result;
 
+	//# 대화창 빈 값 재현 확인용 — 어느 NPC가 어떤 NPCId로 인식되는지 대조한다
+	UE_LOG(LogTemp, Warning, TEXT("# [ASpyNPCCharacter] RequestInteract NPCId=%d CachedNPCDisplayName=%s"), NPCId, *CachedNPCDisplayName.ToString());
+
 	Result.NPCName = CachedNPCDisplayName;
 
 	APawn* RequesterPawn = Requester->GetPawn();
@@ -176,7 +179,7 @@ FSpyNPCDialogueResult ASpyNPCCharacter::RequestInteract(APlayerController* Reque
 		Result.DialogueId = CachedOfferDialogueId;
 		Result.bShowMissionCard = true;
 
-		if (const FSpyMissionEntry* Entry = MissionComp->GetMissionEntry(CachedOfferMissionId))
+		if (const FSpyMissionRow* Entry = MissionComp->GetMissionEntry(CachedOfferMissionId))
 		{
 			Result.MissionTitle = Entry->DisplayName;
 			Result.MissionDescription = Entry->Description;

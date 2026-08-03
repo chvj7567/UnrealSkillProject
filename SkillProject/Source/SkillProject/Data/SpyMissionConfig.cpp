@@ -7,31 +7,43 @@
 
 int32 USpyMissionConfig::GetMissionCount() const
 {
-	return Missions.Num();
+	if (MissionTable == nullptr)
+		return 0;
+
+	return MissionTable->GetRowMap().Num();
 }
 
-bool USpyMissionConfig::IsValidMissionIndex(int32 InIndex) const
+bool USpyMissionConfig::IsValidMissionIndex(int32 InMissionId) const
 {
-	return Missions.IsValidIndex(InIndex);
+	return (GetMission(InMissionId) != nullptr);
 }
 
-const FSpyMissionEntry* USpyMissionConfig::GetMission(int32 InIndex) const
+const FSpyMissionRow* USpyMissionConfig::GetMission(int32 InMissionId) const
 {
-	if (Missions.IsValidIndex(InIndex) == false)
+	if (MissionTable == nullptr)
 		return nullptr;
 
-	return &Missions[InIndex];
+	TArray<FSpyMissionRow*> Rows;
+	MissionTable->GetAllRows<FSpyMissionRow>(TEXT("USpyMissionConfig::GetMission"), Rows);
+
+	for (const FSpyMissionRow* Row : Rows)
+	{
+		if (Row != nullptr && Row->MissionId == InMissionId)
+			return Row;
+	}
+
+	return nullptr;
 }
 
 FSpyMissionProgressResult USpyMissionConfig::ResolveMissionProgress(int32 InIndex, int32 InCount, FGameplayTag InEventTag, int32 InAmount) const
 {
 	FSpyMissionProgressResult Result;
-	Result.MissionIndex = FMath::Max(0, InIndex);
+	Result.MissionIndex = FMath::Max(1, InIndex);
 	Result.Count = FMath::Max(0, InCount);
 	Result.bCompletedNow = false;
 	Result.bAllCompleted = false;
 
-	const FSpyMissionEntry* Entry = GetMission(Result.MissionIndex);
+	const FSpyMissionRow* Entry = GetMission(Result.MissionIndex);
 
 	//# 인덱스가 범위 밖 = 전체 완료 상태. 추가 이벤트에 반응하지 않는다
 	if (Entry == nullptr)

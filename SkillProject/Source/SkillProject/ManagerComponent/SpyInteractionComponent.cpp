@@ -46,6 +46,15 @@ void USpyInteractionComponent::NotifyNPCRangeChanged(AActor* NPCActor, bool bInR
 
 	NearbyNPC = nullptr;
 
+	//# 오브젝트 범위가 여전히 살아있으면 프롬프트를 닫지 않는다 — 동사만 오브젝트 쪽으로 되돌린다
+	if (NearbyInteractable != nullptr)
+	{
+		if (const ISpyInteractableRoot* InteractableRoot = Cast<ISpyInteractableRoot>(NearbyInteractable))
+			CachedInteractVerb = InteractableRoot->GetInteractVerb();
+
+		return;
+	}
+
 	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
 	{
 		UIManager->CloseSpyUI(ESpyUIType::InteractPrompt);
@@ -66,13 +75,60 @@ void USpyInteractionComponent::NotifyNPCRangeChanged(AActor* NPCActor, bool bInR
 
 void USpyInteractionComponent::HandleInteractPromptCloseFailsafe()
 {
-	//# 재검증 시점에 다시 NPC 범위 안이면(재진입) 닫지 않는다
-	if (NearbyNPC != nullptr)
+	//# 재검증 시점에 다시 NPC/오브젝트 범위 안이면(재진입) 닫지 않는다
+	if (NearbyNPC != nullptr || NearbyInteractable != nullptr)
 		return;
 
 	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
 	{
 		UIManager->CloseSpyUI(ESpyUIType::InteractPrompt);
+	}
+}
+
+void USpyInteractionComponent::NotifyInteractableRangeChanged(AActor* InteractableActor, bool bInRange)
+{
+	if (bInRange)
+	{
+		NearbyInteractable = InteractableActor;
+
+		//# NPC 경로는 동사를 "대화하기"로 고정했지만, 오브젝트는 각자의 동사를 그대로 쓴다
+		if (const ISpyInteractableRoot* InteractableRoot = Cast<ISpyInteractableRoot>(InteractableActor))
+			CachedInteractVerb = InteractableRoot->GetInteractVerb();
+
+		if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
+		{
+			UIManager->OpenSpyUI(ESpyUIType::InteractPrompt);
+		}
+		return;
+	}
+
+	if (NearbyInteractable != InteractableActor)
+		return;
+
+	NearbyInteractable = nullptr;
+
+	//# NPC 범위가 여전히 살아있으면 프롬프트를 닫지 않는다 — 동사를 NPC 쪽으로 되돌린다
+	if (NearbyNPC != nullptr)
+	{
+		CachedInteractVerb = NSLOCTEXT("SpyInteraction", "TalkVerb", "대화하기");
+		return;
+	}
+
+	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
+	{
+		UIManager->CloseSpyUI(ESpyUIType::InteractPrompt);
+	}
+
+	//# OpenUI 로드가 이 시점에 아직 안 끝났으면 위 CloseSpyUI 는 no-op 이다 —
+	//# 지연 뒤 재검증해 한 번 더 닫아 프롬프트가 남는 걸 방지한다 (NPC 경로와 동일 이유)
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			InteractPromptCloseFailsafeTimerHandle,
+			this,
+			&USpyInteractionComponent::HandleInteractPromptCloseFailsafe,
+			UICloseFailsafeDelaySec,
+			false);
 	}
 }
 
@@ -84,10 +140,15 @@ void USpyInteractionComponent::TryInteract()
 		return;
 	}
 
-	if (NearbyNPC == nullptr)
+	//# NPC 가 오브젝트보다 우선한다 — 이번 범위에서 실제로 겹칠 일은 없지만 기본 순서를 명시한다
+	if (NearbyNPC != nullptr)
+	{
+		Server_RequestInteract(NearbyNPC);
 		return;
+	}
 
-	Server_RequestInteract(NearbyNPC);
+	if (NearbyInteractable != nullptr)
+		Server_RequestInteractObject(NearbyInteractable);
 }
 
 void USpyInteractionComponent::AdvanceOrCloseDialogue()
@@ -168,6 +229,35 @@ void USpyInteractionComponent::Server_RequestInteract_Implementation(AActor* Tar
 	const FSpyNPCDialogueResult Result = NPCRoot->RequestInteract(PC);
 
 	Client_ReceiveDialogueResult(Result, TargetNPC);
+}
+
+void USpyInteractionComponent::Server_RequestInteractObject_Implementation(AActor* TargetObject)
+{
+	if (TargetObject == nullptr)
+		return;
+
+	AActor* Owner = GetOwner();
+	if (Owner == nullptr || Owner->HasAuthority() == false)
+		return;
+
+	//# GetObject() 널체크는 인터페이스 미구현을 걸러내지 못한다(클라 RPC 파라미터라 임의 액터 가능) —
+	//# Cast<Interface> 로 먼저 판정해 서버 크래시를 막는다.
+	ISpyInteractableRoot* InteractableRoot = Cast<ISpyInteractableRoot>(TargetObject);
+	if (InteractableRoot == nullptr)
+		return;
+
+	//# point-distance 대신 오브젝트의 상호작용 SphereComponent 오버랩을 그대로 재확인한다
+	const bool bInRange = InteractableRoot->IsPawnInRange(Owner);
+	if (bInRange == false)
+		return;
+
+	APlayerController* PC = Cast<APlayerController>(Owner->GetInstigatorController());
+	if (PC == nullptr)
+		return;
+
+	//# NPC 경로와 달리 결과를 Client RPC 로 돌려보내지 않는다 — 대화 UI 가 없고,
+	//# 미션 HUD 는 USpyMissionComponent::OnMissionProgressChanged(레플리케이션 기반)가 자동 갱신한다
+	InteractableRoot->RequestInteract(PC);
 }
 
 void USpyInteractionComponent::Server_AcceptCurrentMission_Implementation()

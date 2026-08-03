@@ -7,6 +7,9 @@
 #include "Character/SpyLevelComponent.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Data/SpyMissionConfig.h"
+#include "Data/SpyNPCDialogueRow.h"
+#include "Engine/DataTable.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
@@ -221,7 +224,7 @@ void USpyMainHUD::RefreshMission()
 		}
 		else if (bAccepted == false)
 		{
-			Txt_MissionName->SetText(FText::GetEmpty());
+			Txt_MissionName->SetText(ResolveNPCNameHintText(BoundMissionComponent->GetCurrentNPCId()));
 		}
 		else
 		{
@@ -243,6 +246,30 @@ void USpyMainHUD::RefreshMission()
 				FText::AsNumber(BoundMissionComponent->GetTargetCount())));
 		}
 	}
+}
+
+FText USpyMainHUD::ResolveNPCNameHintText(int32 InNPCId) const
+{
+	//# 시스템 퀘스트(NPC 없음) — 안내 문구 자체가 없다
+	if (InNPCId == FSpyMissionRow::NoNPCId)
+		return FText::GetEmpty();
+
+	if (NPCConfig == nullptr || NPCConfig->NPCTable == nullptr)
+		return FText::GetEmpty();
+
+	//# ASpyNPCCharacter::CacheNPCData 와 동일한 전체 스캔 + NPCId 필드 비교 패턴
+	TArray<FSpyNPCRow*> Rows;
+	NPCConfig->NPCTable->GetAllRows<FSpyNPCRow>(TEXT("USpyMainHUD::ResolveNPCNameHintText"), Rows);
+
+	for (const FSpyNPCRow* Row : Rows)
+	{
+		if (Row == nullptr || Row->NPCId != InNPCId)
+			continue;
+
+		return FText::Format(NSLOCTEXT("SpyMainHUD", "MissionPreAcceptHintFormat", "{0} 찾아가세요"), Row->NPCDisplayName);
+	}
+
+	return FText::GetEmpty();
 }
 
 bool USpyMainHUD::TryBindManaAttribute()

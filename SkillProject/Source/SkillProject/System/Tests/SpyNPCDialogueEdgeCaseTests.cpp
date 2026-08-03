@@ -48,7 +48,7 @@ bool FSpyNPCDialogueUncachedDefaultTest::RunTest(const FString& Parameters)
 {
 	//# ASpyNPCCharacter::CacheNPCData()가 Offer/Report 행을 정확히 1개씩 찾지 못하면
 	//# CachedOfferMissionId/CachedReportMissionId는 INDEX_NONE(-1)에 머문다(spec §9).
-	//# 실제 진행 중인 미션 인덱스(항상 0 이상, ResolveMissionProgress의 클램프)는 -1과 결코
+	//# 실제 진행 중인 미션 인덱스(항상 1 이상, ResolveMissionProgress의 클램프)는 -1과 결코
 	//# 같아질 수 없으므로, 어떤 CurrentMissionId가 오든 이 NPC는 항상 Default로만 응답해야 한다
 	const int32 UncachedOffer = INDEX_NONE;
 	const int32 UncachedReport = INDEX_NONE;
@@ -67,8 +67,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FSpyNPCDialogueNegativeIndexLatentRiskTest::RunTest(const FString& Parameters)
 {
-	//# ResolveNPCDialogueState 자체는 CurrentMissionId가 0 이상이라는 것을 보장하지 않는다 —
-	//# 그 보장은 호출부(USpyMissionConfig::ResolveMissionProgress의 FMath::Max(0, InIndex))가 진다.
+	//# ResolveNPCDialogueState 자체는 CurrentMissionId가 1 이상이라는 것을 보장하지 않는다 —
+	//# 그 보장은 호출부(USpyMissionConfig::ResolveMissionProgress의 FMath::Max(1, InIndex))가 진다.
 	//# 만약 그 클램프가 훗날 제거되면, "미캐싱 NPC"의 sentinel(INDEX_NONE=-1)과 우연히 충돌해
 	//# 엉뚱하게 Offer 카드가 뜰 수 있다는 것을 이 테스트가 고정한다. 지금은 재현되지 않는 잠재
 	//# 위험이지 현재 버그가 아니다(호출부 클램프가 살아있는 한 CurrentMissionId는 -1이 될 수 없음)
@@ -334,7 +334,8 @@ bool FSpyMissionRewardLargeTableTest::RunTest(const FString& Parameters)
 
 struct FSpyMissionRaceMirrorState
 {
-	int32 MissionIndex = 0;
+	//# 1-based — 실제 컴포넌트(FSpyMissionState.MissionIndex)의 기본값과 동일하게 맞춘다
+	int32 MissionIndex = 1;
 	int32 Count = 0;
 	bool bAccepted = false;
 	bool bProcessing = false;
@@ -344,6 +345,20 @@ struct FSpyMissionRaceMirrorState
 
 	TArray<TPair<FGameplayTag, int32>> PendingEvents;
 };
+
+//# 테스트 전용 헬퍼 — 완성된 FSpyMissionRow 를 MissionTable 에 추가한다.
+//# System/Tests/SpyMissionTests.cpp 의 SpyMissionTests_AddMissionRow 와 동일 패턴
+static void SpyMissionRaceMirror_AddMissionRow(USpyMissionConfig* Config, const FSpyMissionRow& Row)
+{
+	if (Config->MissionTable == nullptr)
+	{
+		UDataTable* Table = NewObject<UDataTable>();
+		Table->RowStruct = FSpyMissionRow::StaticStruct();
+		Config->MissionTable = Table;
+	}
+
+	Config->MissionTable->AddRow(FName(*FString::Printf(TEXT("Mission_%d"), Row.MissionId)), Row);
+}
 
 static void SpyMissionRaceMirror_ProcessProgress(const USpyMissionConfig* Config, FSpyMissionRaceMirrorState& State, FGameplayTag InEventTag, int32 InAmount);
 
@@ -382,7 +397,12 @@ static void SpyMissionRaceMirror_ProcessProgress(const USpyMissionConfig* Config
 
 	if (Result.bCompletedNow)
 	{
-		const FSpyMissionEntry* CompletedEntry = Config->GetMission(State.MissionIndex);
+		const FSpyMissionRow* CompletedEntry = Config->GetMission(State.MissionIndex);
+		//# ⚠ 의도적으로 Dialogue 전용 — GrantReward 는 보상이 있으면 어떤 MissionType 이든
+		//# GE 를 적용하지만(SpyMissionComponent.cpp:237-260, Gameplay/Interact 포함), 이 미러는
+		//# spec §5-2-1 이 실제로 재현된 시나리오(NPC Report 완료 직후 재진입)만 흉내내는 것이
+		//# 목적이라 Interact 로 확장하지 않는다 — 아래 bAccepted 판정(Dialogue||Interact, 실제
+		//# ProcessProgress 조건과 동일)과는 별개 축이다
 		if (CompletedEntry != nullptr && CompletedEntry->MissionType == ESpyMissionType::Dialogue)
 		{
 			//# GrantReward의 GE 적용 → SpyLevelComponent::TryLevelUp → AddProgress 재진입
@@ -398,35 +418,41 @@ static void SpyMissionRaceMirror_ProcessProgress(const USpyMissionConfig* Config
 	State.MissionIndex = Result.MissionIndex;
 	State.Count = Result.Count;
 
-	const FSpyMissionEntry* NewEntry = Config->GetMission(State.MissionIndex);
-	State.bAccepted = (NewEntry != nullptr && NewEntry->MissionType == ESpyMissionType::Dialogue);
+	//# ProcessProgress 자동 수락 조건의 미러 — Dialogue/Interact 둘 다 카드 없는 자동 수락
+	//# (SpyMissionComponent.cpp:167-170 과 동일 조건)
+	const FSpyMissionRow* NewEntry = Config->GetMission(State.MissionIndex);
+	State.bAccepted = (NewEntry != nullptr &&
+		(NewEntry->MissionType == ESpyMissionType::Dialogue || NewEntry->MissionType == ESpyMissionType::Interact));
 }
 
-//# 픽스처 — [0] Gameplay(Kill) → [1] Dialogue(Report, 자동 수락) → [2] Gameplay(Level, Threshold 3)
+//# 픽스처(1-based) — [1] Gameplay(Kill) → [2] Dialogue(Report, 자동 수락) → [3] Gameplay(Level, Threshold 3)
 static USpyMissionConfig* SpyMissionRaceMirror_MakeConfig()
 {
 	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
 
-	FSpyMissionEntry Kill;
+	FSpyMissionRow Kill;
+	Kill.MissionId = 1;
 	Kill.MissionType = ESpyMissionType::Gameplay;
 	Kill.MatchTag = SpyGameplayTags::Event_Mission_Kill;
 	Kill.Mode = ESpyMissionMode::Accumulate;
 	Kill.TargetCount = 1;
-	Config->Missions.Add(Kill);
+	SpyMissionRaceMirror_AddMissionRow(Config, Kill);
 
-	FSpyMissionEntry Report;
+	FSpyMissionRow Report;
+	Report.MissionId = 2;
 	Report.MissionType = ESpyMissionType::Dialogue;
 	Report.MatchTag = SpyGameplayTags::Event_Mission_Report;
 	Report.Mode = ESpyMissionMode::Accumulate;
 	Report.TargetCount = 1;
-	Config->Missions.Add(Report);
+	SpyMissionRaceMirror_AddMissionRow(Config, Report);
 
-	FSpyMissionEntry Level;
+	FSpyMissionRow Level;
+	Level.MissionId = 3;
 	Level.MissionType = ESpyMissionType::Gameplay;
 	Level.MatchTag = SpyGameplayTags::Event_Mission_Level;
 	Level.Mode = ESpyMissionMode::Threshold;
 	Level.TargetCount = 3;
-	Config->Missions.Add(Level);
+	SpyMissionRaceMirror_AddMissionRow(Config, Level);
 
 	return Config;
 }
@@ -442,18 +468,18 @@ bool FSpyMissionRaceWithoutRecheckTest::RunTest(const FString& Parameters)
 
 	FSpyMissionRaceMirrorState State;
 	State.bRecheckOnDrain = false; //# 수정 전 코드 재현 — 드레인 루프가 bAccepted를 재검증하지 않음
-	State.bAccepted = true; //# 처치 미션(0)을 이미 NPC Offer로 수락한 상태에서 시작
+	State.bAccepted = true; //# 처치 미션(1)을 이미 NPC Offer로 수락한 상태에서 시작
 
-	//# 처치 완료 → 보고 미션(1, Dialogue)으로 자동 전진 + 자동 수락
+	//# 처치 완료 → 보고 미션(2, Dialogue)으로 자동 전진 + 자동 수락
 	SpyMissionRaceMirror_AddProgress(Config, State, SpyGameplayTags::Event_Mission_Kill, 1);
-	TestEqual(TEXT("Advanced to the report mission"), State.MissionIndex, 1);
+	TestEqual(TEXT("Advanced to the report mission"), State.MissionIndex, 2);
 	TestTrue(TEXT("Report mission auto-accepted"), State.bAccepted);
 
 	//# 보고 완료 시 보상이 우연히 레벨 3 신호를 재진입시킨다(§5-2-1). 수정 전 코드는 이
-	//# 신호를 큐에서 무조건 처리해 아직 미수락인 레벨 미션(2)을 조용히 완료시켜 버린다
+	//# 신호를 큐에서 무조건 처리해 아직 미수락인 레벨 미션(3)을 조용히 완료시켜 버린다
 	SpyMissionRaceMirror_AddProgress(Config, State, SpyGameplayTags::Event_Mission_Report, 1);
 
-	TestEqual(TEXT("BUG: level mission completed without ever being accepted"), State.MissionIndex, 3);
+	TestEqual(TEXT("BUG: level mission completed without ever being accepted"), State.MissionIndex, 4);
 
 	return true;
 }
@@ -472,14 +498,117 @@ bool FSpyMissionRaceWithRecheckTest::RunTest(const FString& Parameters)
 	State.bAccepted = true;
 
 	SpyMissionRaceMirror_AddProgress(Config, State, SpyGameplayTags::Event_Mission_Kill, 1);
-	TestEqual(TEXT("Advanced to the report mission"), State.MissionIndex, 1);
+	TestEqual(TEXT("Advanced to the report mission"), State.MissionIndex, 2);
 
 	SpyMissionRaceMirror_AddProgress(Config, State, SpyGameplayTags::Event_Mission_Report, 1);
 
 	//# 재진입 레벨 신호는 아직 미수락인 레벨 미션에 적용되지 못하고 조용히 버려진다
-	TestEqual(TEXT("FIX: still on the level mission, not accepted"), State.MissionIndex, 2);
+	TestEqual(TEXT("FIX: still on the level mission, not accepted"), State.MissionIndex, 3);
 	TestFalse(TEXT("FIX: level mission not auto-accepted"), State.bAccepted);
 	TestEqual(TEXT("FIX: level progress untouched by the discarded signal"), State.Count, 0);
+
+	return true;
+}
+
+//# ═══════════════════════════════════════════════════════════════════════════
+//# 오브젝트 상호작용 미션(ESpyMissionType::Interact) — bAccepted 미러 확장 회귀
+//# (docs/superpowers/specs/2026-08-03-interactable-object-mission-design.md §4-3,
+//# plan Task 2 Step 1). ProcessProgress 는 실제 컴포넌트라 Automation 대상이 아니므로,
+//# 위 레이스 미러가 이미 재현하는 "새 인덱스 진입 시 bAccepted 판정" 축만 Interact 타입으로
+//# 구동해 프로덕션 조건(Dialogue||Interact)과 미러가 계속 일치하는지 고정한다.
+//# ═══════════════════════════════════════════════════════════════════════════
+
+//# 픽스처(1-based) — [1] Gameplay(Kill) → [2] Interact(오브젝트 상호작용, 자동 수락)
+static USpyMissionConfig* SpyMissionRaceMirror_MakeInteractConfig()
+{
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+
+	FSpyMissionRow Kill;
+	Kill.MissionId = 1;
+	Kill.MissionType = ESpyMissionType::Gameplay;
+	Kill.MatchTag = SpyGameplayTags::Event_Mission_Kill;
+	Kill.Mode = ESpyMissionMode::Accumulate;
+	Kill.TargetCount = 1;
+	SpyMissionRaceMirror_AddMissionRow(Config, Kill);
+
+	FSpyMissionRow Interact;
+	Interact.MissionId = 2;
+	Interact.MissionType = ESpyMissionType::Interact;
+	Interact.MatchTag = SpyGameplayTags::Event_Mission_Interact;
+	Interact.Mode = ESpyMissionMode::Accumulate;
+	Interact.TargetCount = 1;
+	SpyMissionRaceMirror_AddMissionRow(Config, Interact);
+
+	return Config;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionAutoAcceptInteractTest,
+	"SkillProject.System.Mission.AutoAccept.Interact",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionAutoAcceptInteractTest::RunTest(const FString& Parameters)
+{
+	//# ⚠ 이 테스트는 bAccepted 판정 미러만 구동한다 — 위 §5-2-1 레이스 경로(라인 386 근방의
+	//# GE 재진입 시뮬레이션)는 의도적으로 Dialogue 전용이라 여기서 함께 검증되지 않는다
+	USpyMissionConfig* Config = SpyMissionRaceMirror_MakeInteractConfig();
+
+	FSpyMissionRaceMirrorState State;
+	State.bAccepted = true; //# 처치 미션(1)은 이미 수락된 상태에서 시작
+
+	SpyMissionRaceMirror_AddProgress(Config, State, SpyGameplayTags::Event_Mission_Kill, 1);
+
+	TestEqual(TEXT("Advanced to the interact mission"), State.MissionIndex, 2);
+	TestTrue(TEXT("Interact mission auto-accepted, matching production's Dialogue||Interact condition"), State.bAccepted);
+
+	return true;
+}
+
+//# 픽스처(1-based) — [1] Interact(오브젝트 상호작용, 자동 수락) → [2] Gameplay(NPC Offer 카드 필요)
+static USpyMissionConfig* SpyMissionRaceMirror_MakeInteractThenGameplayConfig()
+{
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+
+	FSpyMissionRow Interact;
+	Interact.MissionId = 1;
+	Interact.MissionType = ESpyMissionType::Interact;
+	Interact.MatchTag = SpyGameplayTags::Event_Mission_Interact;
+	Interact.Mode = ESpyMissionMode::Accumulate;
+	Interact.TargetCount = 1;
+	SpyMissionRaceMirror_AddMissionRow(Config, Interact);
+
+	FSpyMissionRow Kill;
+	Kill.MissionId = 2;
+	Kill.MissionType = ESpyMissionType::Gameplay;
+	Kill.MatchTag = SpyGameplayTags::Event_Mission_Kill;
+	Kill.Mode = ESpyMissionMode::Accumulate;
+	Kill.TargetCount = 1;
+	SpyMissionRaceMirror_AddMissionRow(Config, Kill);
+
+	return Config;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionAutoAcceptGameplayNotAcceptedTest,
+	"SkillProject.System.Mission.AutoAccept.GameplayStillManual",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionAutoAcceptGameplayNotAcceptedTest::RunTest(const FString& Parameters)
+{
+	//# 회귀 확인 — Interact 를 자동 수락 조건에 추가해도 Gameplay 타입은 여전히 수동 수락(NPC
+	//# Offer 카드)이 필요하다. Interact 미션 완료 직후 Gameplay 미션으로 넘어가는 시점에
+	//# bAccepted 가 자동으로 켜지지 않는지를 실제 판정 조건(미러)으로 확인한다.
+	//# 재진입 없이 끝나는 것은 386 라인의 GE 재진입 시뮬레이션이 Dialogue 전용이기 때문이다 —
+	//# 그 시뮬레이션을 Interact 로 확장해도(§386 주석 참조) 이 테스트의 결론 자체는 바뀌지 않는다
+	USpyMissionConfig* Config = SpyMissionRaceMirror_MakeInteractThenGameplayConfig();
+
+	FSpyMissionRaceMirrorState State;
+	State.bAccepted = true; //# Interact 미션(1)은 진입과 동시에 자동 수락된 상태에서 시작
+
+	SpyMissionRaceMirror_AddProgress(Config, State, SpyGameplayTags::Event_Mission_Interact, 1);
+
+	TestEqual(TEXT("Advanced to the gameplay mission"), State.MissionIndex, 2);
+	TestFalse(TEXT("Gameplay mission is not auto-accepted despite the Interact addition"), State.bAccepted);
 
 	return true;
 }

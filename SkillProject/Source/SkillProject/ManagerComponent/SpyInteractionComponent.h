@@ -7,6 +7,7 @@
 #include "Engine/EngineTypes.h"
 #include "ManagerComponent/CommonInterface.Manager.h"
 #include "NPC/CommonInterface.NPC.h"
+#include "Interactable/CommonInterface.Interactable.h"
 
 #include "SpyInteractionComponent.generated.h"
 
@@ -22,6 +23,7 @@ public:
 
 	//# ISpyInteractionHost
 	virtual void NotifyNPCRangeChanged(AActor* NPCActor, bool bInRange) override;
+	virtual void NotifyInteractableRangeChanged(AActor* InteractableActor, bool bInRange) override;
 	virtual void TryInteract() override;
 	virtual const FSpyNPCDialogueResult& GetLastDialogueResult() const override
 	{
@@ -56,6 +58,9 @@ protected:
 	void Server_RequestInteract(AActor* TargetNPC);
 
 	UFUNCTION(Server, Reliable)
+	void Server_RequestInteractObject(AActor* TargetObject);
+
+	UFUNCTION(Server, Reliable)
 	void Server_AcceptCurrentMission();
 
 	//# TargetNPC 는 서버가 이미 확정한 상호작용 대상이다 — 로컬 NearbyNPC 는 RPC 왕복 중
@@ -66,6 +71,9 @@ protected:
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<AActor> NearbyNPC;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AActor> NearbyInteractable;
 
 	//# 서버로부터 마지막으로 수신한 대화 결과. Dialogue/MissionOffer 위젯이
 	//# NativeConstruct 에서 1회 읽어(pull) 채운다 (ISpyInteractionHost::GetLastDialogueResult 참조)

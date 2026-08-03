@@ -109,6 +109,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Combo, "Event.Mission.Combo");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Level, "Event.Mission.Level");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Report, "Event.Mission.Report");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Interact, "Event.Mission.Interact");
 
 	const FGameplayTagContainer& GetComboTags()
 	{

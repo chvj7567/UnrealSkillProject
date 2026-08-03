@@ -181,6 +181,10 @@ public:
 	//# bInRange가 false면 이 NPCActor를 현재 대상에서 해제한다.
 	virtual void NotifyNPCRangeChanged(AActor* NPCActor, bool bInRange) = 0;
 
+	//# InteractableActor 는 오브젝트 상호작용 대상 액터(내부적으로 ISpyInteractableRoot 캐스팅은
+	//# 구현부가 담당). NPC 경로와 별개 슬롯으로 추적된다.
+	virtual void NotifyInteractableRangeChanged(AActor* InteractableActor, bool bInRange) = 0;
+
 	//# 입력 바인딩(Interact 액션)이 호출한다. 로컬에서 근접 NPC가 없으면 아무 일도 하지 않는다.
 	virtual void TryInteract() = 0;
 

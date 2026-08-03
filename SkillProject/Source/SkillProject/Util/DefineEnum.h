@@ -26,12 +26,13 @@ enum ECustomMovementMode : uint8
 };
 
 //# 미션 1개의 수락 방식을 가른다. Gameplay는 NPC Offer 카드로 수동 수락,
-//# Dialogue는 배열 진입과 동시에 자동 수락된다 (docs/superpowers/specs/2026-08-01-npc-mission-dialogue-design.md §4-2)
+//# Dialogue/Interact는 배열 진입과 동시에 자동 수락된다(카드를 보여줄 주체가 없다)
 UENUM(BlueprintType)
 enum class ESpyMissionType : uint8
 {
 	Gameplay,
 	Dialogue,
+	Interact,
 };
 
 //# NPC 상호작용 대사 상태 4종. Locked/Completed 구분을 두지 않는다 —

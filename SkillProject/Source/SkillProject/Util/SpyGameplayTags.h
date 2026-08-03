@@ -134,6 +134,7 @@ namespace SpyGameplayTags
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Combo);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Level);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Report);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Mission_Interact);
 
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> MovementModeTagMap;
 	SKILLPROJECT_API extern const TMap<uint8, FGameplayTag> CustomMovementModeTagMap;

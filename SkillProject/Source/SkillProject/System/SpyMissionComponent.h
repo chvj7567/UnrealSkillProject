@@ -10,7 +10,7 @@
 
 class USpyAbilitySystemComponent;
 class USpyMissionConfig;
-struct FSpyMissionEntry;
+struct FSpyMissionRow;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyMission_ProgressChanged, USpyMissionComponent*, MissionComponent, int32, MissionIndex, int32, Count, int32, TargetCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyMission_Completed, USpyMissionComponent*, MissionComponent, int32, CompletedIndex);
@@ -37,8 +37,9 @@ struct FSpyMissionState
 	GENERATED_BODY()
 
 public:
+	//# 1-based. 플레이어가 시작할 때 배정되는 첫 미션의 MissionId(=1)
 	UPROPERTY()
-	int32 MissionIndex = 0;
+	int32 MissionIndex = 1;
 
 	UPROPERTY()
 	int32 Count = 0;
@@ -82,7 +83,7 @@ public:
 
 	//# 인덱스로 임의 미션 엔트리를 조회한다. MissionConfig가 없거나 범위 밖이면 nullptr.
 	//# NPC의 RequestInteract가 카드(Offer)용 Description을 채울 때 쓴다.
-	const FSpyMissionEntry* GetMissionEntry(int32 InIndex) const;
+	const FSpyMissionRow* GetMissionEntry(int32 InMissionId) const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetMissionIndex() const { return MissionState.MissionIndex; }
@@ -95,6 +96,11 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	FText GetDisplayName() const;
+
+	//# 현재 미션의 담당 NPCId(범위 밖/미설정이면 9999). 이름 조회는 하지 않는다 —
+	//# 이 컴포넌트는 NPC 시스템을 모른다(cpp-style §8). 이름 조합은 HUD 몫이다.
+	UFUNCTION(BlueprintPure)
+	int32 GetCurrentNPCId() const;
 
 	UFUNCTION(BlueprintPure)
 	bool IsAllCompleted() const;

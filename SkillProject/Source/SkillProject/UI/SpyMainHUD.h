@@ -11,6 +11,7 @@ class UProgressBar;
 class UTextBlock;
 class USpyLevelComponent;
 class USpyCharacterAttributeSet;
+class USpyNPCConfig;
 class AActor;
 struct FGameplayEffectSpec;
 
@@ -70,6 +71,10 @@ protected:
 
 	void RefreshMission();
 
+	//# 미수락 상태 미션 문구 조립 — NPCConfig 로 이름을 찾아 "{이름} 찾아가세요"를 만든다.
+	//# NPCId 9999(시스템 퀘스트) 또는 조회 실패면 빈 텍스트
+	FText ResolveNPCNameHintText(int32 InNPCId) const;
+
 	//# 로컬 폰의 ASC 에서 AttributeSet 을 찾아 마나 변경을 구독한다. 아직 준비 안 됐으면 false
 	bool TryBindManaAttribute();
 
@@ -98,6 +103,10 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class USpyMissionComponent> BoundMissionComponent;
+
+	//# 미수락 미션 문구의 NPC 이름 조회용. WBP_MainHUD 에서 DA_SpyNPCHub 를 지정한다
+	UPROPERTY(EditDefaultsOnly, Category = "Mission")
+	TObjectPtr<USpyNPCConfig> NPCConfig;
 
 	FTimerHandle BindRetryTimerHandle;
 
