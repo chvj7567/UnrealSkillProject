@@ -17,6 +17,7 @@
 #include "Manager/SpyAssetManager.h"
 #include "ManagerComponent/SpyGrappleTargetingComponent.h"
 #include "ManagerComponent/SpyGrappleUIComponent.h"
+#include "ManagerComponent/SpyInteractionComponent.h"
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "MotionWarpingComponent.h"
@@ -78,6 +79,8 @@ ASpyCharacter::ASpyCharacter(const FObjectInitializer& ObjectInitializer)
 	SpyHealthComponent->OnDeath.AddDynamic(this, &ThisClass::OnDeath);
 
 	SpyLevelComponent = CreateDefaultSubobject<USpyLevelComponent>(TEXT("LevelComponent"));
+
+	InteractionComponent = CreateDefaultSubobject<USpyInteractionComponent>(TEXT("InteractionComponent"));
 }
 
 void ASpyCharacter::PostInitializeComponents()
@@ -304,6 +307,15 @@ void ASpyCharacter::AssembleComponents()
 	{
 		GrappleUI->InjectGrappleHost(CachedGrappleHost);
 	}
+}
+
+TScriptInterface<ISpyInteractionHost> ASpyCharacter::GetInteractionHost() const
+{
+	TScriptInterface<ISpyInteractionHost> Result;
+	Result.SetObject(InteractionComponent);
+	Result.SetInterface(Cast<ISpyInteractionHost>(InteractionComponent));
+
+	return Result;
 }
 
 void ASpyCharacter::AddMotionWarpTarget(FName WarpName, const FVector& Loc, const FRotator& Rot)

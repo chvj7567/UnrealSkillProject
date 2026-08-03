@@ -106,6 +106,7 @@ public:
 	{
 		return CachedGrappleHost;
 	}
+	virtual TScriptInterface<ISpyInteractionHost> GetInteractionHost() const override;
 	virtual void AddMotionWarpTarget(FName WarpName, const FVector& Loc, const FRotator& Rot) override;
 	//# ~ISpyCharacterRoot
 
@@ -155,6 +156,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	TObjectPtr<USpyCharacterConfig> CharacterConfig;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class USpyInteractionComponent> InteractionComponent;
 
 public:
 	//# 조립점 — 외부 호출 금지, 테스트에서만 직접 호출 (cpp-style §13).

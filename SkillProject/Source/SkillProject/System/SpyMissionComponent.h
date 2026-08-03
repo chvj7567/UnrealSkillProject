@@ -10,6 +10,7 @@
 
 class USpyAbilitySystemComponent;
 class USpyMissionConfig;
+struct FSpyMissionEntry;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyMission_ProgressChanged, USpyMissionComponent*, MissionComponent, int32, MissionIndex, int32, Count, int32, TargetCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyMission_Completed, USpyMissionComponent*, MissionComponent, int32, CompletedIndex);
@@ -41,6 +42,11 @@ public:
 
 	UPROPERTY()
 	int32 Count = 0;
+
+	//# 현재 미션을 수락했는가. false면 AddProgress가 진행 신호를 전부 무시한다.
+	//# Dialogue 타입 미션은 인덱스 진입과 동시에 자동으로 true가 된다 (ProcessProgress)
+	UPROPERTY()
+	bool bAccepted = false;
 };
 
 UCLASS()
@@ -65,6 +71,18 @@ public:
 	//# 어빌리티 활성화 콜백 같은 범용 훅은 쓰지 않는다 (활성화와 실행을 구분할 수 없어
 	//# 벽이 없는데 키만 눌러도 카운트되는 문제가 있었다)
 	void AddProgress(FGameplayTag InEventTag, int32 InAmount);
+
+	//# NPC 상호작용(서버에서 거리·인덱스 검증 완료)에서만 호출한다.
+	//# 이미 수락된 상태에서 재호출하면 멱등하게 true를 반환한다.
+	//# 수락 직후 현재 미션이 레벨 기반 Threshold 미션이면 레벨을 즉시 재평가한다 (spec §5-6).
+	bool AcceptCurrentMission();
+
+	UFUNCTION(BlueprintPure)
+	bool IsCurrentAccepted() const { return MissionState.bAccepted; }
+
+	//# 인덱스로 임의 미션 엔트리를 조회한다. MissionConfig가 없거나 범위 밖이면 nullptr.
+	//# NPC의 RequestInteract가 카드(Offer)용 Description을 채울 때 쓴다.
+	const FSpyMissionEntry* GetMissionEntry(int32 InIndex) const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetMissionIndex() const { return MissionState.MissionIndex; }

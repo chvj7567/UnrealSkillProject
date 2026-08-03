@@ -71,3 +71,20 @@ FSpyMissionProgressResult USpyMissionConfig::ResolveMissionProgress(int32 InInde
 
 	return Result;
 }
+
+float USpyMissionConfig::GetMissionReward(int32 InMissionId) const
+{
+	if (MissionRewardTable == nullptr)
+		return 0.f;
+
+	TArray<FSpyMissionRewardRow*> Rows;
+	MissionRewardTable->GetAllRows<FSpyMissionRewardRow>(TEXT("USpyMissionConfig::GetMissionReward"), Rows);
+
+	for (const FSpyMissionRewardRow* Row : Rows)
+	{
+		if (Row != nullptr && Row->MissionId == InMissionId)
+			return Row->ExperienceReward;
+	}
+
+	return 0.f;
+}

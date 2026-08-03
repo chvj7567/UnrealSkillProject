@@ -1,6 +1,6 @@
 # C++ 코딩 스타일
 
-> §1~7 은 문법 스타일, §8~13 은 설계 원칙이다.
+> §1~7 은 문법 스타일, §8~15 는 설계 원칙이다.
 > 모듈 의존 방향·서버 권한은 [unreal-infra.md](unreal-infra.md), UI 매니저/위젯 베이스 규칙은 [plugin-skuicore.md](plugin-skuicore.md) 가 SoT다.
 >
 > **이 문서는 프로젝트 비의존이다 — 그대로 복사해 쓴다.** 예제의 플레이스홀더는 각 프로젝트 값으로 읽는다:
@@ -500,7 +500,165 @@ Bot->SetControlEnabled(false);
 
 ---
 
-## 14. 기타
+## 14. 게임 데이터 저작 — DataTable 우선, DataAsset 은 정적 설정/에셋 참조 전용
+
+**콘텐츠·밸런스 데이터**(무기·장비·적 스탯 등 반복 로우가 있고 플레이 밸런싱으로 자주 바뀌는 값)는 **`UDataTable`**(CSV/JSON import + `FTableRowBase` 서브클래스 row struct)로 저작한다. **`UDataAsset` 은 오브젝트 참조가 필요하거나 거의 바뀌지 않는 정적 배선**(이름→경로 룩업, Config 수치, 컴포넌트/어빌리티 세트 조립 등)에 한정한다.
+
+이 구분은 로우 개수가 아니라 **자주 바뀌는가 + 오브젝트 참조가 필요한가** 로 가른다.
+
+**판단 기준**:
+- **`UDataTable` 대상**: 반복 로우가 있는 밸런스 데이터(무기 여러 종·적 스탯 테이블), 자주 튜닝되는 수치. 기획자가 CSV/JSON 로 직접 편집하는 형태가 적합한 데이터.
+- **`UDataAsset` 대상**: `TSoftObjectPtr`/`TSoftClassPtr` 등 **에셋 참조를 필드로 가져야 하는 데이터**(`UDataTable` 의 row struct 는 `USTRUCT` 라 소프트 참조는 담을 수 있지만 다른 `UDataAsset`·컴포넌트 목록 조립처럼 구조가 복잡한 배선은 `UDataAsset` 이 자연스럽다), 이름→경로 룩업(`USKAssetData`), Config 수치(`SpyMovementConfig` 등 거의 안 바뀌는 인프라성 값).
+
+```cpp
+//# (X) 반복되는 밸런스 로우를 DataAsset 배열 필드로
+UCLASS()
+class UMyWeaponData : public UDataAsset
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditDefaultsOnly)
+    TArray<FMyWeaponRow> Weapons;   //# 무기 종류가 늘어날 때마다 이 배열을 직접 편집
+};
+
+//# (O) 밸런스 로우는 DataTable row struct 로만
+USTRUCT(BlueprintType)
+struct FMyWeaponRow : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    int32 Damage = 10;
+
+    UPROPERTY(EditAnywhere)
+    float RoundsPerMinute = 600.f;
+};
+//  로드: AssetManager 경유 이름 룩업으로 UDataTable 을 얻고 FindRow<FMyWeaponRow>(RowName) 로 조회 (plugin-skassetcore.md §2)
+```
+
+**예외** — `UDataAsset` 로 남기는 경우:
+- 다른 `UDataAsset`·컴포넌트 클래스·어빌리티 세트처럼 **오브젝트 참조 조립**이 핵심인 데이터 (`USpyCharacterAssetData`, `USpyAbilityData` 등 기존 파이프라인)
+- 이름→경로 룩업, 빌드/인프라성 Config 값
+
+체크리스트:
+- [ ] 이 데이터가 "반복 로우가 있는 밸런스 콘텐츠"인가, "오브젝트 참조 조립/정적 설정"인가?
+- [ ] 반복 로우형이면 `UDataAsset` 배열 필드 대신 `UDataTable` + `FTableRowBase` row struct 로 저작했는가?
+- [ ] row struct 에셋 로드가 `USKAssetManager` 경유인가 (하드코딩 경로 금지, plugin-skassetcore.md §2)?
+
+### 14-1. `DataTable` row struct 설계 절차 — 정규화
+
+**새 `DataTable`의 row struct 를 설계할 때는, 지금 당장 다른 테이블과 연관이 없어 보여도 처음부터 아래 절차를 따른다.** 나중에 관계가 생겨서 리팩터링하는 게 아니라, 설계 시점에 미리 분해해 둔다.
+
+1. **이 로우의 핵심 엔티티가 무엇인지 먼저 정한다** — "이 테이블은 무엇 하나를 표현하는가"를 한 문장으로 답할 수 있어야 한다.
+2. **그 엔티티 고유의 데이터만 로우에 남긴다** — 다른 개념(다른 엔티티, 다른 로우, 외부 콘텐츠)을 가리키는 필드는 전부 후보에서 뺀다.
+3. **관계로 보이는 필드는 "선택적 관계"인지 "필수 1:1 관계"인지로 가른다.**
+   - **선택적 관계**(일부 로우에만 존재) → 별도 "관계 테이블"로 분리하고 상위 엔티티의 ID로 매칭한다. 관계가 있는 로우만 존재하게 해서 `-1`/`0`/`None` 같은 sentinel 값을 쓰지 않는다 — sentinel 값은 "관계가 없다"를 "관계가 있는데 값이 -1이다"로 오독하게 만든다. 지금은 상대편 테이블이 없어도, 그 관계 자체를 처음부터 별도 테이블로 모델링한다.
+   - **필수 1:1 관계**(모든 로우에 항상 정확히 하나씩 존재) → sentinel 문제가 애초에 없으므로, 엔티티가 그 참조를 관계 테이블 없이 직접 필드로 들어도 된다.
+4. **복합 키는 "하나의 로우가 그룹 내 여러 항목 중 하나"일 때 쓴다** — 단일 ID 하나로는 "이 로우들이 한 그룹에 속하고, 그 그룹 안에서 순서·구분이 있다"는 사실을 표현할 수 없다. 이럴 때 `GroupId`(그룹 식별) + `Index`(그룹 내 순서/구분) 조합을 키로 쓴다. 그룹 안에 원소가 정확히 하나뿐인 관계라면 쓰지 않는다 — 단일 ID로 충분하다.
+5. **관계 테이블 이름은 부모 엔티티 이름을 접두사로 언더스코어(`_`)로 잇는다** — `<부모>_<관계명>` 형태로 짓는다(예: `Quest` 엔티티의 보상 관계 테이블 → `Quest_Reward`). 그 관계 테이블 아래에 또 하위 관계가 있으면 한 단계씩 계속 이어 붙인다 — `<부모>_<관계명>_<하위관계명>`. 이름만 보고 어느 엔티티에서 몇 단계 파생됐는지 알 수 있어야 한다.
+
+```cpp
+//# (X) 관계·선택적 데이터를 엔티티 로우에 직접 얹고, 없는 경우 sentinel 로 채움
+USTRUCT(BlueprintType)
+struct FMyQuestRow : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) FText Title;
+    UPROPERTY(EditAnywhere) int32 GiverNPCId = -1;   //# NPC 관련 아니면 -1 (sentinel)
+    UPROPERTY(EditAnywhere) int32 RewardGold = 0;    //# 보상 없으면 0 (sentinel)
+};
+
+//# (O) 엔티티는 고유 데이터만, 선택적 관계는 이름 규칙(§14-1-5)을 따르는 별도 테이블로
+USTRUCT(BlueprintType)
+struct FMyQuestRow : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) FText Title;
+};
+
+USTRUCT(BlueprintType)
+struct FMyQuest_GiverRow : public FTableRowBase   //# Quest 의 선택적 관계 — NPC가 있는 퀘스트만 로우 존재
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) int32 QuestId = 0;
+    UPROPERTY(EditAnywhere) int32 NPCId = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FMyQuest_RewardRow : public FTableRowBase  //# Quest 의 선택적 관계 — 보상이 있는 퀘스트만 로우 존재
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) int32 QuestId = 0;
+    UPROPERTY(EditAnywhere) int32 RewardItemId = 0;   //# 필수 1:1이 아니라 "어떤 아이템인지"를 가리키는 선택적 관계라 별도 테이블에 둔다
+};
+
+USTRUCT(BlueprintType)
+struct FMyItemRow : public FTableRowBase   //# Item 은 Quest 와 무관한 별개의 최상위 엔티티
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) FText ItemName;
+    UPROPERTY(EditAnywhere) int32 ItemEffectId = 0;  //# 모든 아이템이 항상 하나씩 갖는 필수 1:1 관계라
+                                                      //# 관계 테이블 없이 직접 참조해도 된다 (§14-1-3)
+};
+
+USTRUCT(BlueprintType)
+struct FMyQuest_StepRow : public FTableRowBase   //# Quest 의 그룹 내 여러 로우 — 복합 키(§14-1-4)
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere) int32 QuestId = 0;    //# 그룹 식별
+    UPROPERTY(EditAnywhere) int32 StepIndex = 0;  //# 그룹 내 순서
+    UPROPERTY(EditAnywhere) FText StepText;
+};
+```
+
+체크리스트 (새 row struct 를 설계할 때마다 순서대로 확인):
+- [ ] 이 테이블의 핵심 엔티티를 한 문장으로 정의했는가?
+- [ ] 로우에 다른 엔티티의 ID를 직접 들고 있는 필드가 있는가? 있다면 모든 로우에 항상 존재하는 필수 1:1 관계인가, 일부 로우에만 있는 선택적 관계인가?
+- [ ] 선택적 관계인데 sentinel 값(`-1`/`0`/`None`)으로 채우고 있지 않은가? (관계 테이블로 분리했는가)
+- [ ] 한 로우가 "그룹 내 여러 항목 중 하나"를 표현하는가? 그렇다면 단일 ID 대신 `GroupId`+`Index` 복합 키를 썼는가?
+- [ ] 관계 테이블 이름이 `<부모>_<관계명>`(중첩이면 `<부모>_<관계명>_<하위관계명>`) 규칙을 따르는가?
+
+---
+
+## 15. 매직 넘버 금지 — 이름 있는 상수/Config 데이터로 추출
+
+로직 안에 의미를 알 수 없는 숫자 리터럴(매직 넘버)을 직접 쓰지 않는다.
+
+- **반복 사용되거나 게임플레이 튜닝 대상인 수치**는 하드코딩 금지 — §14 기준에 따라 Config `UDataAsset` 또는 `UDataTable` 로 이전한다.
+- **코드 전용 상수**(버퍼 크기, 타임아웃, 반경 등)는 이름 있는 상수(`static constexpr`)로 선언하거나 `UPROPERTY(EditDefaultsOnly)` 로 노출한다.
+- `0`/`1`/`-1`처럼 배열 인덱스·불리언 대용·루프 경계로 의미가 자명한 값은 매직 넘버로 보지 않는다.
+
+```cpp
+//# (X) 의미를 알 수 없는 리터럴
+if (Distance < 300.f)
+{
+    TryInteract();
+}
+
+//# (O) 이름 있는 상수 또는 Config 로 노출
+static constexpr float InteractRangeCm = 300.f;
+
+if (Distance < InteractRangeCm)
+{
+    TryInteract();
+}
+```
+
+체크리스트:
+- [ ] 코드에 의미를 알 수 없는 숫자 리터럴이 없는가?
+- [ ] 튜닝 대상 수치는 Config `DataAsset`/`DataTable` 로 노출됐는가? (§14)
+- [ ] 코드 전용 상수는 이름 있는 상수로 선언됐는가?
+
+---
+
+## 16. 기타
 
 - `UFUNCTION(BlueprintCallable)` 없이 BP 노출 금지
 - `Super::` 호출 누락 주의 (`BeginPlay`, `EndPlay`, `GetLifetimeReplicatedProps`, `ActivateAbility`)
@@ -517,8 +675,9 @@ Bot->SetControlEnabled(false);
 ## 예외
 
 - **§1~7 (문법 스타일): 예외 없음.** 단 §6 은 위에 명시한 "타입을 적을 수 없는 경우"만 허용.
-- **§8~13 (설계 원칙)**: 아래는 허용된 이탈이다.
+- **§8~15 (설계 원칙)**: 아래는 허용된 이탈이다.
   - §9 — 정식 ViewModel 계층은 `ModelViewViewModel` 플러그인을 켜기 전까지 도입하지 않는다.
   - §12 — 기존 1파일=1인터페이스 유지, 단일 구현체 internal 추상화 분리 유지.
   - §13 — 하위 컴포넌트가 1개뿐이면 루트 파사드 생략 가능.
+  - §14 — 기존 `USpyAbilityData`/`USpyCharacterAssetData`/`USpyComboAssetData`/`USpyAnimAssetData` 등 이미 구축된 `UDataAsset` 파이프라인은 grandfathered. 이 룰은 **신규 반복 로우형 밸런스 데이터**부터 적용한다.
   - 엔진/플러그인 오버라이드 시그니처가 강제하는 형태(예: 엔진이 요구하는 `virtual` 시그니처)는 스타일보다 우선한다.

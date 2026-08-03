@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "NPC/CommonInterface.NPC.h"
 
 #include "CommonInterface.Manager.generated.h"
 
@@ -101,6 +102,7 @@ struct FMotionWarpingData
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSyncMotionWarpingDataDelegate, FMotionWarpingData, InVaultData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSyncClilmbDataDelegate, const FClimbData&, InClimbData, const FClimbWallData&, InClimbWallData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGrappleTargetChanged, AActor*, NewTarget);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueLineChanged, FText, NPCName, FText, Line);
 
 //# 파쿠르 프로토콜 제공자 — USpyParkourManagerComponent 가 구현한다.
 //# GA 는 이 인터페이스로만 접근하고 구체 컴포넌트 타입을 알지 않는다.
@@ -159,4 +161,44 @@ public:
 	virtual AActor* GetLocalCachedTarget() const = 0;
 	virtual AActor* GetCurrentGrappleTarget() const = 0;
 	virtual FOnGrappleTargetChanged& OnGrappleTargetChanged() = 0;
+};
+
+//# 상호작용 호스트 — USpyInteractionComponent 가 구현한다.
+//# NPC 는 이 인터페이스로만 "플레이어가 범위에 들어왔다"를 알린다 —
+//# 구체 컴포넌트 타입을 알지 않는다 (§8, §10)
+UINTERFACE(MinimalAPI)
+class USpyInteractionHost : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class ISpyInteractionHost
+{
+	GENERATED_BODY()
+
+public:
+	//# NPCActor 는 상호작용 대상 액터(내부적으로 ISpyNPCRoot 캐스팅은 구현부가 담당).
+	//# bInRange가 false면 이 NPCActor를 현재 대상에서 해제한다.
+	virtual void NotifyNPCRangeChanged(AActor* NPCActor, bool bInRange) = 0;
+
+	//# 입력 바인딩(Interact 액션)이 호출한다. 로컬에서 근접 NPC가 없으면 아무 일도 하지 않는다.
+	virtual void TryInteract() = 0;
+
+	//# 서버로부터 마지막으로 수신한 대화 결과. OpenSpyUI 비동기 로드라 위젯 생성이 항상 늦다 —
+	//# 위젯은 NativeConstruct 에서 이 값을 1회 pull 한다(레이스 없음).
+	virtual const FSpyNPCDialogueResult& GetLastDialogueResult() const = 0;
+
+	//# 근접 상호작용 프롬프트에 표시할 동사 텍스트. OpenSpyUI 가 비동기(위젯 로드)라
+	//# 위젯은 NativeConstruct 에서 이 값을 1회 읽어(pull) 자신을 채운다(레이스 없음).
+	virtual FText GetInteractVerb() const = 0;
+
+	//# WBP_MissionOffer 의 [수락] 버튼이 호출한다. 서버에 수락 RPC를 보내고 카드를 닫는다.
+	virtual void ConfirmMissionCard() = 0;
+
+	//# WBP_MissionOffer 의 [거절] 버튼이 호출한다. 카드만 닫는다 (RPC 없음).
+	virtual void DismissMissionCard() = 0;
+
+	//# 대화창이 열린 채로 다음 페이지로 넘어갈 때 발화한다. 위젯은 NativeConstruct 에서 1회 구독하고
+	//# 이후 재생성 없이 이 델리게이트로 텍스트만 갱신한다(재오픈 시 NativeConstruct 미재실행 대응).
+	virtual FOnDialogueLineChanged& OnDialogueLineChanged() = 0;
 };

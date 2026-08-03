@@ -26,6 +26,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Move, "Input.Native.Move");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Look, "Input.Native.Look");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Native_CursorToggle, "Input.Native.CursorToggle");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Native_Interact, "Input.Native.Interact");
 
 	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_1, "Input.Ability.Skill.1");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Ability_Skill_2, "Input.Ability.Skill.2");
@@ -107,6 +108,7 @@ namespace SpyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Kill, "Event.Mission.Kill");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Combo, "Event.Mission.Combo");
 	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Level, "Event.Mission.Level");
+	UE_DEFINE_GAMEPLAY_TAG(Event_Mission_Report, "Event.Mission.Report");
 
 	const FGameplayTagContainer& GetComboTags()
 	{

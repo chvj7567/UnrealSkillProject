@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+#include "Util/DefineEnum.h"
 
 #include "SpyMissionConfig.generated.h"
 
@@ -26,7 +28,10 @@ struct FSpyMissionEntry
 	GENERATED_BODY()
 
 public:
-	//# 이 미션이 반응할 이벤트 태그. 계층 매칭이므로 부모 태그로 하위를 묶을 수 있다
+	UPROPERTY(EditDefaultsOnly, Category = "Mission")
+	ESpyMissionType MissionType = ESpyMissionType::Gameplay;
+
+	//# 이 미션이 반응할 이벤트 태그. Dialogue 타입은 전부 공용 Event_Mission_Report 를 쓴다
 	UPROPERTY(EditDefaultsOnly, Category = "Mission")
 	FGameplayTag MatchTag;
 
@@ -36,13 +41,28 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Mission", meta = (ClampMin = "1"))
 	int32 TargetCount = 1;
 
-	//# 완료 시 지급할 경험치
-	UPROPERTY(EditDefaultsOnly, Category = "Mission", meta = (ClampMin = "0.0"))
-	float ExperienceReward = 0.f;
-
-	//# HUD 표시 이름
+	//# HUD 상시 표시 이름. Dialogue 타입은 이 값 자체가 "시스템 메시지"다
 	UPROPERTY(EditDefaultsOnly, Category = "Mission")
 	FText DisplayName;
+
+	//# 수락 카드 서술문. Gameplay 타입만 사용 — Dialogue 타입은 카드가 없으므로 빈 문자열로 둔다
+	UPROPERTY(EditDefaultsOnly, Category = "Mission")
+	FText Description;
+};
+
+//# Mission 의 선택적 관계(§14-1) — Dialogue 타입 미션에만 행이 존재한다.
+//# 명명 규칙(§14-1-5): Mission_Reward
+USTRUCT(BlueprintType)
+struct FSpyMissionRewardRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	int32 MissionId = 0;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0"))
+	float ExperienceReward = 0.f;
 };
 
 //# 진행 판정 결과 — 부수효과 없는 계산의 출력
@@ -80,6 +100,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Mission")
 	TArray<FSpyMissionEntry> Missions;
 
+	//# Dialogue 타입 미션의 보상 관계 테이블. RowStruct = FSpyMissionRewardRow
+	UPROPERTY(EditDefaultsOnly, Category = "Mission")
+	TObjectPtr<UDataTable> MissionRewardTable;
+
 public:
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	int32 GetMissionCount() const;
@@ -93,4 +117,9 @@ public:
 	//# 진행 판정 — 부수효과 없음. 한 번의 호출로 최대 1개 미션만 완료한다
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	FSpyMissionProgressResult ResolveMissionProgress(int32 InIndex, int32 InCount, FGameplayTag InEventTag, int32 InAmount) const;
+
+	//# MissionId 로 보상을 조회한다. 행이 없으면(Gameplay 타입) 0.f — sentinel 이 아니라
+	//# "관계 없음"의 정상적인 부재 결과다 (spec §4-3)
+	UFUNCTION(BlueprintPure, Category = "Mission")
+	float GetMissionReward(int32 InMissionId) const;
 };

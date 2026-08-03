@@ -4,7 +4,27 @@
 
 #include "Misc/AutomationTest.h"
 #include "Data/SpyMissionConfig.h"
+#include "Engine/DataTable.h"
 #include "Util/SpyGameplayTags.h"
+
+//# 테스트 전용 헬퍼 — MissionId(=Missions[] 인덱스)별 보상 행을 MissionRewardTable 에 추가한다.
+//# 보상은 더 이상 FSpyMissionEntry 필드가 아니라 관계 테이블이다 (Task 1, cpp-style §14-1).
+//# 널이면 새로 만든다 (SpyNPCDialogueTests.cpp 의 인메모리 DataTable 픽스처 패턴과 동일)
+static void SpyMissionTests_AddReward(USpyMissionConfig* Config, int32 MissionId, float Reward)
+{
+	if (Config->MissionRewardTable == nullptr)
+	{
+		UDataTable* Table = NewObject<UDataTable>();
+		Table->RowStruct = FSpyMissionRewardRow::StaticStruct();
+		Config->MissionRewardTable = Table;
+	}
+
+	FSpyMissionRewardRow Row;
+	Row.MissionId = MissionId;
+	Row.ExperienceReward = Reward;
+
+	Config->MissionRewardTable->AddRow(FName(*FString::Printf(TEXT("Reward_%d"), MissionId)), Row);
+}
 
 //# 픽스처 — [0] Vault 3회(Accumulate), [1] Climb 3 도달(Threshold)
 static USpyMissionConfig* SpyMissionTests_MakeConfig()
@@ -15,15 +35,15 @@ static USpyMissionConfig* SpyMissionTests_MakeConfig()
 	Vault.MatchTag = SpyGameplayTags::Skill_Move_Vault;
 	Vault.Mode = ESpyMissionMode::Accumulate;
 	Vault.TargetCount = 3;
-	Vault.ExperienceReward = 10.f;
 	Config->Missions.Add(Vault);
+	SpyMissionTests_AddReward(Config, 0, 10.f);
 
 	FSpyMissionEntry Level;
 	Level.MatchTag = SpyGameplayTags::Skill_Move_Climb;
 	Level.Mode = ESpyMissionMode::Threshold;
 	Level.TargetCount = 3;
-	Level.ExperienceReward = 20.f;
 	Config->Missions.Add(Level);
+	SpyMissionTests_AddReward(Config, 1, 20.f);
 
 	return Config;
 }
@@ -232,54 +252,54 @@ static USpyMissionConfig* SpyMissionTests_MakeDesignConfig()
 	Kill.MatchTag = SpyGameplayTags::Event_Mission_Kill;
 	Kill.Mode = ESpyMissionMode::Accumulate;
 	Kill.TargetCount = 1;
-	Kill.ExperienceReward = 20.f;
 	Kill.DisplayName = FText::FromString(TEXT("적 1명 처치"));
 	Config->Missions.Add(Kill);
+	SpyMissionTests_AddReward(Config, 0, 20.f);
 
 	//# 1 — 레벨 3 달성 (Threshold)
 	FSpyMissionEntry Level;
 	Level.MatchTag = SpyGameplayTags::Event_Mission_Level;
 	Level.Mode = ESpyMissionMode::Threshold;
 	Level.TargetCount = 3;
-	Level.ExperienceReward = 10.f;
 	Level.DisplayName = FText::FromString(TEXT("레벨 3 달성"));
 	Config->Missions.Add(Level);
+	SpyMissionTests_AddReward(Config, 1, 10.f);
 
 	//# 2 — 콤보 4회 연결
 	FSpyMissionEntry Combo;
 	Combo.MatchTag = SpyGameplayTags::Event_Mission_Combo;
 	Combo.Mode = ESpyMissionMode::Accumulate;
 	Combo.TargetCount = 4;
-	Combo.ExperienceReward = 10.f;
 	Combo.DisplayName = FText::FromString(TEXT("콤보 4회 연결"));
 	Config->Missions.Add(Combo);
+	SpyMissionTests_AddReward(Config, 2, 10.f);
 
 	//# 3 — 장애물 넘기 5회
 	FSpyMissionEntry Vault;
 	Vault.MatchTag = SpyGameplayTags::Skill_Move_Vault;
 	Vault.Mode = ESpyMissionMode::Accumulate;
 	Vault.TargetCount = 5;
-	Vault.ExperienceReward = 10.f;
 	Vault.DisplayName = FText::FromString(TEXT("장애물 넘기 5회"));
 	Config->Missions.Add(Vault);
+	SpyMissionTests_AddReward(Config, 3, 10.f);
 
 	//# 4 — 벽 타기 3회
 	FSpyMissionEntry Climb;
 	Climb.MatchTag = SpyGameplayTags::Skill_Move_Climb;
 	Climb.Mode = ESpyMissionMode::Accumulate;
 	Climb.TargetCount = 3;
-	Climb.ExperienceReward = 15.f;
 	Climb.DisplayName = FText::FromString(TEXT("벽 타기 3회"));
 	Config->Missions.Add(Climb);
+	SpyMissionTests_AddReward(Config, 4, 15.f);
 
 	//# 5 — 그래플링 3회
 	FSpyMissionEntry Grapple;
 	Grapple.MatchTag = SpyGameplayTags::Skill_Move_GrappleHook;
 	Grapple.Mode = ESpyMissionMode::Accumulate;
 	Grapple.TargetCount = 3;
-	Grapple.ExperienceReward = 15.f;
 	Grapple.DisplayName = FText::FromString(TEXT("그래플링 3회"));
 	Config->Missions.Add(Grapple);
+	SpyMissionTests_AddReward(Config, 5, 15.f);
 
 	return Config;
 }
@@ -409,10 +429,10 @@ bool FSpyMissionDesignTableTest::RunTest(const FString& Parameters)
 		TestTrue(FString::Printf(TEXT("Mission %d match tag"), Index), Entry->MatchTag == ExpectedTags[Index]);
 		TestTrue(FString::Printf(TEXT("Mission %d mode"), Index), Entry->Mode == ExpectedModes[Index]);
 		TestEqual(FString::Printf(TEXT("Mission %d target count"), Index), Entry->TargetCount, ExpectedTargets[Index]);
-		TestEqual(FString::Printf(TEXT("Mission %d reward"), Index), Entry->ExperienceReward, ExpectedRewards[Index]);
+		TestEqual(FString::Printf(TEXT("Mission %d reward"), Index), Config->GetMissionReward(Index), ExpectedRewards[Index]);
 		TestFalse(FString::Printf(TEXT("Mission %d display name is not empty"), Index), Entry->DisplayName.IsEmpty());
 
-		RewardSum += Entry->ExperienceReward;
+		RewardSum += Config->GetMissionReward(Index);
 	}
 
 	//# §3-3 — 최소 필요 킬 2회(40 XP) + 보상 합 80 = 120 = Lv4 도달 누적치
@@ -443,8 +463,11 @@ bool FSpyMissionCppDefaultsEmptyTest::RunTest(const FString& Parameters)
 	const FSpyMissionEntry Default;
 	TestTrue(TEXT("Default mode is Accumulate"), Default.Mode == ESpyMissionMode::Accumulate);
 	TestEqual(TEXT("Default target count"), Default.TargetCount, 1);
-	TestEqual(TEXT("Default reward"), Default.ExperienceReward, 0.f);
 	TestFalse(TEXT("Default match tag is invalid"), Default.MatchTag.IsValid());
+
+	//# 보상은 더 이상 FSpyMissionEntry 필드가 아니라 MissionRewardTable 관계다 —
+	//# 테이블 미지정 상태에서는 "관계 없음"으로 0.f 를 반환해야 한다 (§4-3)
+	TestEqual(TEXT("Reward is 0 with no MissionRewardTable"), Config->GetMissionReward(0), 0.f);
 
 	return true;
 }

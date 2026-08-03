@@ -15,6 +15,7 @@
 #include "Data/SpyCharacterAssetData.h"
 #include "Character/SpyCharacterMovementComponent.h"
 #include "Character/SpyCharacter.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
 
 const FName USpyInputComponent::NAME_ActorFeatureName("Input");
 
@@ -103,6 +104,7 @@ void USpyInputComponent::InitializePlayerInput(UInputComponent* PlayerInputCompo
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Move, ETriggerEvent::Completed, this, &ThisClass::MoveEnd);
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Look, ETriggerEvent::Triggered, this, &ThisClass::Look);
 					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_CursorToggle, ETriggerEvent::Started, this, &ThisClass::CursorToggle);
+					SpyIC->BindNativeAction(InputConfig, SpyGameplayTags::Input_Native_Interact, ETriggerEvent::Started, this, &ThisClass::Interact);
 				}
 			}
 		}
@@ -250,6 +252,23 @@ void USpyInputComponent::Look(const FInputActionValue& InValue)
 			SpyCharacter->AddControllerPitchInput(LookAxisVector.Y);
 		}
 	}
+}
+
+void USpyInputComponent::Interact(const FInputActionValue& InValue)
+{
+	APawn* Pawn = GetPawn<APawn>();
+	if (Pawn == nullptr)
+		return;
+
+	ASpyCharacter* SpyCharacter = Cast<ASpyCharacter>(Pawn);
+	if (SpyCharacter == nullptr)
+		return;
+
+	TScriptInterface<ISpyInteractionHost> Host = SpyCharacter->GetInteractionHost();
+	if (Host.GetObject() == nullptr)
+		return;
+
+	Host->TryInteract();
 }
 
 void USpyInputComponent::OnRegister()

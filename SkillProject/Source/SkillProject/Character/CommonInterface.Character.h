@@ -24,6 +24,7 @@ public:
 	virtual TScriptInterface<ISpyParkourHost> GetParkourHost() const = 0;
 	virtual TScriptInterface<ISpyTargetProvider> GetTargetProvider() const = 0;
 	virtual TScriptInterface<ISpyGrappleHost> GetGrappleHost() const = 0;
+	virtual TScriptInterface<ISpyInteractionHost> GetInteractionHost() const = 0;
 
 	//# 벽 밀착 액션 동안 SpringArm 콜리전 테스트를 억제한다 (참조 카운트).
 	virtual void PushCameraCollisionSuppress() = 0;

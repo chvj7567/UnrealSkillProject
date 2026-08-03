@@ -6,6 +6,7 @@
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystem/Effect/SpyGE_ExperienceGain.h"
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
+#include "Character/SpyCharacterAttributeSet.h"
 #include "Data/SpyMissionConfig.h"
 #include "Util/SpyGameplayTags.h"
 
@@ -122,15 +123,20 @@ void USpyMissionComponent::AddProgress(FGameplayTag InEventTag, int32 InAmount)
 
 	TGuardValue<bool> ReentryGuard(bProcessingProgress, true);
 
-	ProcessProgress(InEventTag, InAmount);
+	//# NPC 대화로 수락하기 전에는 어떤 진행 신호도 반영하지 않는다.
+	if (MissionState.bAccepted)
+		ProcessProgress(InEventTag, InAmount);
 
-	//# 가드 안에서 쌓인 이벤트를 순차 처리한다
+	//# 드레인도 매 반복 "지금" 상태로 재검증한다 — 큐잉 당시엔 수락 상태였어도
+	//# ProcessProgress가 그 사이 미션을 전진시켜 bAccepted가 false로 바뀌었을 수 있다
+	//# (spec §5-2-1 — 보상 GE가 유발한 재진입 레벨업이 아직 미수락인 다음 미션을 완료시키는 경합 수정)
 	while (PendingEvents.Num() > 0)
 	{
 		const FSpyMissionPendingEvent Next = PendingEvents[0];
 		PendingEvents.RemoveAt(0);
 
-		ProcessProgress(Next.EventTag, Next.Amount);
+		if (MissionState.bAccepted)
+			ProcessProgress(Next.EventTag, Next.Amount);
 	}
 }
 
@@ -143,30 +149,61 @@ void USpyMissionComponent::ProcessProgress(FGameplayTag InEventTag, int32 InAmou
 		MissionState.MissionIndex, MissionState.Count, InEventTag, InAmount);
 
 	const bool bChanged = (Result.MissionIndex != MissionState.MissionIndex) || (Result.Count != MissionState.Count);
+
+	if (Result.bCompletedNow)
+	{
+		const int32 CompletedIndex = MissionState.MissionIndex;
+
+		GrantReward(CompletedIndex); //# Gameplay 타입은 MissionReward 행이 없어 조용히 no-op
+		OnMissionCompleted.Broadcast(this, CompletedIndex);
+	}
+
 	if (bChanged == false)
 		return;
-
-	const int32 CompletedIndex = MissionState.MissionIndex;
 
 	MissionState.MissionIndex = Result.MissionIndex;
 	MissionState.Count = Result.Count;
 
-	//# 서버 브로드캐스트 (클라이언트는 OnRep_MissionState 에서 처리)
+	//# 새로 진입한 미션이 Dialogue 타입이면 자동 수락 — NPC Offer 절차가 없다
+	const FSpyMissionEntry* NewEntry = GetMissionEntry(MissionState.MissionIndex);
+	MissionState.bAccepted = (NewEntry != nullptr && NewEntry->MissionType == ESpyMissionType::Dialogue);
+
 	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
 
-	if (Result.bCompletedNow)
-	{
-		OnMissionCompleted.Broadcast(this, CompletedIndex);
-
-		GrantReward(CompletedIndex);
-
-		UE_LOG(LogTemp, Log, TEXT("# [SpyMissionComponent] Mission %d completed by %s"), CompletedIndex, *GetNameSafe(GetOwner()));
-	}
-
-	if (Result.bAllCompleted)
-	{
+	if (IsAllCompleted())
 		OnAllMissionsCompleted.Broadcast(this);
+}
+
+bool USpyMissionComponent::AcceptCurrentMission()
+{
+	AActor* Owner = GetOwner();
+	if (Owner == nullptr || Owner->HasAuthority() == false)
+		return false;
+
+	if (IsAllCompleted())
+		return false;
+
+	if (MissionState.bAccepted)
+		return true; //# 멱등
+
+	MissionState.bAccepted = true;
+
+	//# 이미 조건을 만족한 상태로 수락하는 경우를 위한 재평가.
+	//# 레벨(Threshold) 미션은 승급 이벤트가 이 시점 이전에 이미 지나갔을 수 있다(spec §2-6/§5-6).
+	//# 현재는 레벨 미션이 유일한 Threshold 사례이므로 여기서 직접 재주입한다.
+	const FSpyMissionEntry* CurrentEntry = GetMissionEntry(MissionState.MissionIndex);
+	if (CurrentEntry != nullptr && CurrentEntry->MatchTag == SpyGameplayTags::Event_Mission_Level && AbilitySystemComponent != nullptr)
+	{
+		const float CurrentLevel = AbilitySystemComponent->GetNumericAttribute(USpyCharacterAttributeSet::GetLevelAttribute());
+		AddProgress(SpyGameplayTags::Event_Mission_Level, FMath::RoundToInt(CurrentLevel));
 	}
+
+	return true;
+}
+
+const FSpyMissionEntry* USpyMissionComponent::GetMissionEntry(int32 InIndex) const
+{
+	return (MissionConfig != nullptr ? MissionConfig->GetMission(InIndex) : nullptr);
 }
 
 void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
@@ -188,8 +225,22 @@ void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
 	}
 
 	const FSpyMissionEntry* Entry = MissionConfig->GetMission(InCompletedIndex);
-	if (Entry == nullptr || Entry->ExperienceReward <= 0.f)
+	if (Entry == nullptr)
 		return;
+
+	const float Reward = MissionConfig->GetMissionReward(InCompletedIndex);
+
+	if (Reward <= 0.f)
+	{
+		//# Gameplay 타입은 보상이 없는 게 정상이다. Dialogue 타입인데 0이면
+		//# MissionReward 행을 빠뜨린 에디터 데이터 실수일 수밖에 없다 — 경고로 구분한다
+		if (Entry->MissionType == ESpyMissionType::Dialogue)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("# [SpyMissionComponent] Dialogue 미션 %d 의 MissionReward 행이 없습니다 (데이터 누락 의심): %s"), InCompletedIndex, *GetNameSafe(GetOwner()));
+		}
+
+		return;
+	}
 
 	//# 기존 경험치 이펙트를 재사용한다 (새 GE 를 만들지 않는다)
 	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
@@ -200,6 +251,6 @@ void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
 	if (SpecHandle.IsValid() == false)
 		return;
 
-	SpecHandle.Data->SetSetByCallerMagnitude(SpyGameplayTags::Data_Experience_Gain, Entry->ExperienceReward);
+	SpecHandle.Data->SetSetByCallerMagnitude(SpyGameplayTags::Data_Experience_Gain, Reward);
 	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
 }
