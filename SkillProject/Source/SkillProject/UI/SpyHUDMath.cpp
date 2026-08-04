@@ -25,3 +25,11 @@ float SpyHUDMath::CooldownNormalized(float Remaining, float Duration)
 
 	return FMath::Clamp(Remaining / Duration, 0.f, 1.f);
 }
+
+FText SpyHUDMath::ResolveKeyDisplayName(const TArray<FKey>& MappedKeys)
+{
+	if (MappedKeys.IsEmpty())
+		return FText::GetEmpty();
+
+	return MappedKeys[0].GetDisplayName();
+}

@@ -40,6 +40,24 @@ bool FSpyHUDMathCooldownTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyHUDMathResolveKeyDisplayNameTest,
+	"SkillProject.HUD.Math.ResolveKeyDisplayName",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyHUDMathResolveKeyDisplayNameTest::RunTest(const FString& Parameters)
+{
+	//# 정상 케이스 — 매핑된 키가 있으면 첫 번째 키의 표시 이름을 반환한다
+	const TArray<FKey> MappedKeys = { EKeys::E };
+	TestTrue(TEXT("Returns first mapped key display name"), SpyHUDMath::ResolveKeyDisplayName(MappedKeys).ToString().Equals(TEXT("E")));
+
+	//# 엣지 케이스 — 매핑이 없으면(빈 배열) 빈 텍스트를 반환한다. 어떤 키를 보여줄지는
+	//# 호출부(위젯)의 폴백 정책 몫이지 이 함수가 임의로 단정하지 않는다
+	TestTrue(TEXT("Empty mapping returns empty text"), SpyHUDMath::ResolveKeyDisplayName(TArray<FKey>()).IsEmpty());
+
+	return true;
+}
+
 //# ---- 이하 test-engineer 확장: 8방위 전수 + 경계 회귀 + 랩 망라, 쿨다운 티어/엣지 ----
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(

@@ -21,6 +21,7 @@ class USpyHealthComponent;
 class USpyLevelComponent;
 class USpyAbilitySystemComponent;
 class UMotionWarpingComponent;
+class UInputAction;
 
 struct FOnAttributeChangeData;
 
@@ -107,6 +108,7 @@ public:
 		return CachedGrappleHost;
 	}
 	virtual TScriptInterface<ISpyInteractionHost> GetInteractionHost() const override;
+	virtual const UInputAction* GetInteractInputAction() const override;
 	virtual void AddMotionWarpTarget(FName WarpName, const FVector& Loc, const FRotator& Rot) override;
 	//# ~ISpyCharacterRoot
 

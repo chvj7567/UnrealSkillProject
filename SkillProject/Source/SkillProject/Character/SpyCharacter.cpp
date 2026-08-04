@@ -21,6 +21,7 @@
 #include "ManagerComponent/SpyParkourManagerComponent.h"
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "MotionWarpingComponent.h"
+#include "Input/SpyInputConfig.h"
 #include "Util/SpyGameplayTags.h"
 
 #include "Net/UnrealNetwork.h"
@@ -316,6 +317,27 @@ TScriptInterface<ISpyInteractionHost> ASpyCharacter::GetInteractionHost() const
 	Result.SetInterface(Cast<ISpyInteractionHost>(InteractionComponent));
 
 	return Result;
+}
+
+const UInputAction* ASpyCharacter::GetInteractInputAction() const
+{
+	//# SpyPawnExtensionComponent 는 캐릭터가 직접 소유한 멤버라 탐색이 아니다 (§13) —
+	//# InitState DataInitialized 이후에만 CharacterAssetData 가 채워진다.
+	if (IsValid(SpyPawnExtensionComponent) == false)
+		return nullptr;
+
+	const USpyCharacterAssetData* CharacterAssetData = SpyPawnExtensionComponent->GetCharacterAssetData();
+	if (CharacterAssetData == nullptr)
+		return nullptr;
+
+	if (CharacterAssetData->CharacterAssets.AssetEntries.IsEmpty())
+		return nullptr;
+
+	const USpyInputConfig* InputConfig = CharacterAssetData->CharacterAssets.AssetEntries[0].InputConfig;
+	if (InputConfig == nullptr)
+		return nullptr;
+
+	return InputConfig->FindNativeInputActionForTag(SpyGameplayTags::Input_Native_Interact);
 }
 
 void ASpyCharacter::AddMotionWarpTarget(FName WarpName, const FVector& Loc, const FRotator& Rot)
