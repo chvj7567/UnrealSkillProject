@@ -54,6 +54,18 @@ protected:
 	//# Dialogue 위젯도 동일한 비동기 로드 레이스가 있다 — CloseDialogue 직후 지연 재검증으로 닫는다.
 	void HandleDialogueCloseFailsafe();
 
+	//# 미션카드(MissionOffer) 열림/닫힘에만 커서를 묶는다 — 대화만 열려 있을 때는 켜지 않는다.
+	//# Owner(폰)→Controller 캐스팅 체인은 Server_RequestInteract_Implementation 과 동일 패턴 재사용 (§8)
+	void SetMissionCardCursorMode(bool bEnabled);
+
+	//# 카드 닫기 뒷정리 3단계 — ConfirmMissionCard/DismissMissionCard 양쪽이 공유한다:
+	//# CloseSpyUI(MissionOffer) + 대화 열려있으면 CloseDialogue() + 커서 복귀
+	void HandleMissionCardClosed();
+
+	//# 범위 이탈이 아니라 대화/카드가 자연 종료된 지점(AdvanceOrCloseDialogue, HandleMissionCardClosed)
+	//# 에서만 호출 — 여전히 범위 안이면 프롬프트를 다시 켠다. bInRange=false 경로에서는 호출 금지.
+	void ReopenInteractPromptIfStillNearby();
+
 	UFUNCTION(Server, Reliable)
 	void Server_RequestInteract(AActor* TargetNPC);
 

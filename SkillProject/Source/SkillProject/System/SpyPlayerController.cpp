@@ -45,7 +45,12 @@ void ASpyPlayerController::BeginPlay()
 
 void ASpyPlayerController::ToggleCursorMode()
 {
-	bCursorMode = (bCursorMode == false);
+	SetCursorMode(bCursorMode == false);
+}
+
+void ASpyPlayerController::SetCursorMode(bool bEnabled)
+{
+	bCursorMode = bEnabled;
 	bShowMouseCursor = bCursorMode;
 
 	if (bCursorMode)

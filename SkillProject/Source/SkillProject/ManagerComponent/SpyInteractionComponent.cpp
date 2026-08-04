@@ -7,9 +7,14 @@
 #include "Manager/SpyUIManager.h"
 #include "Util/DefineEnum.h"
 #include "System/SpyMissionComponent.h"
+#include "System/SpyPlayerController.h"
 
 //# plugin-skuicore.md 실측 로드 시간(~1.23초)보다 넉넉한 재검증 지연 — InteractPrompt/Dialogue 공용
 static constexpr float UICloseFailsafeDelaySec = 2.0f;
+
+//# OpenUI 는 비동기 로드 완료 순서로 AddToViewport 한다 — 호출 순서와 무관하게 뒤바뀔 수 있어
+//# 같은 ZOrder(기본 0)면 안 된다. 미션카드가 대화창을 항상 덮도록 명시적으로 높인다.
+static constexpr int32 MissionOfferZOrderAboveDialogue = 10;
 
 USpyInteractionComponent::USpyInteractionComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -140,6 +145,16 @@ void USpyInteractionComponent::TryInteract()
 		return;
 	}
 
+	if (NearbyNPC == nullptr && NearbyInteractable == nullptr)
+		return;
+
+	//# 범위 안에 그대로 있는 채로 상호작용이 시작되는 시점이라 프롬프트를 끈다 — 재진입 시 다시
+	//# 켜는 건 NotifyNPCRangeChanged/NotifyInteractableRangeChanged 몫이라 failsafe 는 안 쓴다.
+	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
+	{
+		UIManager->CloseSpyUI(ESpyUIType::InteractPrompt);
+	}
+
 	//# NPC 가 오브젝트보다 우선한다 — 이번 범위에서 실제로 겹칠 일은 없지만 기본 순서를 명시한다
 	if (NearbyNPC != nullptr)
 	{
@@ -147,8 +162,7 @@ void USpyInteractionComponent::TryInteract()
 		return;
 	}
 
-	if (NearbyInteractable != nullptr)
-		Server_RequestInteractObject(NearbyInteractable);
+	Server_RequestInteractObject(NearbyInteractable);
 }
 
 void USpyInteractionComponent::AdvanceOrCloseDialogue()
@@ -163,7 +177,9 @@ void USpyInteractionComponent::AdvanceOrCloseDialogue()
 		return;
 	}
 
+	//# 범위 이탈이 아니라 대사가 끝나 자연 종료되는 경로다 — 여전히 범위 안이면 프롬프트를 되살린다
 	CloseDialogue();
+	ReopenInteractPromptIfStillNearby();
 }
 
 void USpyInteractionComponent::CloseDialogue()
@@ -308,7 +324,10 @@ void USpyInteractionComponent::Client_ReceiveDialogueResult_Implementation(FSpyN
 
 	if (Result.bShowMissionCard)
 	{
-		UIManager->OpenSpyUI(ESpyUIType::MissionOffer);
+		UIManager->OpenSpyUI(ESpyUIType::MissionOffer, MissionOfferZOrderAboveDialogue);
+
+		//# 미션카드는 마우스 클릭으로 수락/거절해야 한다 — 커서가 꺼진 채로는 Slate 로 입력이 안 들어간다
+		SetMissionCardCursorMode(true);
 	}
 }
 
@@ -316,16 +335,57 @@ void USpyInteractionComponent::ConfirmMissionCard()
 {
 	Server_AcceptCurrentMission();
 
-	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
-	{
-		UIManager->CloseSpyUI(ESpyUIType::MissionOffer);
-	}
+	HandleMissionCardClosed();
 }
 
 void USpyInteractionComponent::DismissMissionCard()
+{
+	HandleMissionCardClosed();
+}
+
+void USpyInteractionComponent::HandleMissionCardClosed()
 {
 	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
 	{
 		UIManager->CloseSpyUI(ESpyUIType::MissionOffer);
 	}
+
+	//# 카드 액션 시점에 대화창이 아직 열려 있으면 같이 닫는다 (기존 헬퍼 재사용 — UIManager 닫기 +
+	//# failsafe 타이머 + bDialogueOpen/ConversingNPC 리셋을 전부 포함한다)
+	if (bDialogueOpen)
+	{
+		CloseDialogue();
+	}
+
+	//# 카드가 닫혔으니 게임플레이 조작(커서 없는 상태)으로 복귀한다
+	SetMissionCardCursorMode(false);
+
+	//# 범위 이탈이 아니라 카드 액션으로 자연 종료되는 경로다 — 여전히 범위 안이면 프롬프트를 되살린다
+	ReopenInteractPromptIfStillNearby();
+}
+
+void USpyInteractionComponent::ReopenInteractPromptIfStillNearby()
+{
+	if (NearbyNPC == nullptr && NearbyInteractable == nullptr)
+		return;
+
+	if (USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this)))
+	{
+		UIManager->OpenSpyUI(ESpyUIType::InteractPrompt);
+	}
+}
+
+void USpyInteractionComponent::SetMissionCardCursorMode(bool bEnabled)
+{
+	AActor* Owner = GetOwner();
+	if (Owner == nullptr)
+		return;
+
+	//# Server_RequestInteract_Implementation 과 동일한 Owner(폰)→Controller 캐스팅 체인을
+	//# 재사용한다 — 새 탐색을 추가하지 않는다 (§8)
+	ASpyPlayerController* PC = Cast<ASpyPlayerController>(Owner->GetInstigatorController());
+	if (PC == nullptr)
+		return;
+
+	PC->SetCursorMode(bEnabled);
 }
