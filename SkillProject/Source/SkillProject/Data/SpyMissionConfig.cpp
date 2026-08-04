@@ -100,3 +100,20 @@ float USpyMissionConfig::GetMissionReward(int32 InMissionId) const
 
 	return 0.f;
 }
+
+const FSpyMission_TargetLocationRow* USpyMissionConfig::GetMissionTargetLocation(int32 InMissionId) const
+{
+	if (MissionTargetLocationTable == nullptr)
+		return nullptr;
+
+	TArray<FSpyMission_TargetLocationRow*> Rows;
+	MissionTargetLocationTable->GetAllRows<FSpyMission_TargetLocationRow>(TEXT("USpyMissionConfig::GetMissionTargetLocation"), Rows);
+
+	for (const FSpyMission_TargetLocationRow* Row : Rows)
+	{
+		if (Row != nullptr && Row->MissionId == InMissionId)
+			return Row;
+	}
+
+	return nullptr;
+}

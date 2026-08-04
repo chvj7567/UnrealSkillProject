@@ -88,10 +88,21 @@ bool USpyMissionComponent::IsAllCompleted() const
 	return (MissionConfig->IsValidMissionIndex(MissionState.MissionIndex) == false);
 }
 
-void USpyMissionComponent::OnRep_MissionState()
+void USpyMissionComponent::OnRep_MissionState(FSpyMissionState OldMissionState)
 {
 	//# 클라이언트 표시 갱신
 	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
+
+	//# 원격 클라이언트는 서버 권한 경로(AcceptCurrentMission/ProcessProgress)를 타지 않으므로
+	//# 상태-diff 로 같은 신호를 재현한다. ⚠ Completed 를 Accepted 보다 반드시 먼저 판정 — design §2-3 참조.
+	if (OldMissionState.MissionIndex != MissionState.MissionIndex)
+		OnMissionCompleted.Broadcast(this, OldMissionState.MissionIndex);
+
+	const bool bAcceptedTransition = (OldMissionState.bAccepted == false && MissionState.bAccepted == true) ||
+		(OldMissionState.MissionIndex != MissionState.MissionIndex && MissionState.bAccepted == true);
+
+	if (bAcceptedTransition)
+		OnMissionAccepted.Broadcast(this, MissionState.MissionIndex);
 
 	if (IsAllCompleted())
 	{
@@ -179,6 +190,10 @@ void USpyMissionComponent::ProcessProgress(FGameplayTag InEventTag, int32 InAmou
 	MissionState.bAccepted = (NewEntry != nullptr &&
 		(NewEntry->MissionType == ESpyMissionType::Dialogue || NewEntry->MissionType == ESpyMissionType::Interact));
 
+	//# 새 미션이 Dialogue/Interact 타입이라 자동 수락됐다면 그 사실도 전용 델리게이트로 알린다
+	if (MissionState.bAccepted)
+		OnMissionAccepted.Broadcast(this, MissionState.MissionIndex);
+
 	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
 
 	if (IsAllCompleted())
@@ -202,6 +217,10 @@ bool USpyMissionComponent::AcceptCurrentMission()
 	//# 수락 사실 자체를 즉시 알린다 — HUD는 이 델리게이트로만 갱신되므로 진행값 불변이어도 필요
 	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
 
+	//# 수락 사실 전용 신호 — 진행값이 바뀔 때마다 도는 OnMissionProgressChanged 와 달리
+	//# "새 미션을 따라가기 시작해야 한다"를 아는 구독자(내비게이션 등)를 위한 전용 델리게이트
+	OnMissionAccepted.Broadcast(this, MissionState.MissionIndex);
+
 	//# 이미 조건을 만족한 상태로 수락하는 경우를 위한 재평가.
 	//# 레벨(Threshold) 미션은 승급 이벤트가 이 시점 이전에 이미 지나갔을 수 있다(spec §2-6/§5-6).
 	//# 현재는 레벨 미션이 유일한 Threshold 사례이므로 여기서 직접 재주입한다.
@@ -218,6 +237,11 @@ bool USpyMissionComponent::AcceptCurrentMission()
 const FSpyMissionRow* USpyMissionComponent::GetMissionEntry(int32 InMissionId) const
 {
 	return (MissionConfig != nullptr ? MissionConfig->GetMission(InMissionId) : nullptr);
+}
+
+const FSpyMission_TargetLocationRow* USpyMissionComponent::GetMissionTargetLocation(int32 InMissionId) const
+{
+	return (MissionConfig != nullptr ? MissionConfig->GetMissionTargetLocation(InMissionId) : nullptr);
 }
 
 void USpyMissionComponent::GrantReward(int32 InCompletedIndex)

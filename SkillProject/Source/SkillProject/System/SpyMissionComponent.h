@@ -11,10 +11,12 @@
 class USpyAbilitySystemComponent;
 class USpyMissionConfig;
 struct FSpyMissionRow;
+struct FSpyMission_TargetLocationRow;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyMission_ProgressChanged, USpyMissionComponent*, MissionComponent, int32, MissionIndex, int32, Count, int32, TargetCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyMission_Completed, USpyMissionComponent*, MissionComponent, int32, CompletedIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSpyMission_AllCompleted, USpyMissionComponent*, MissionComponent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyMission_Accepted, USpyMissionComponent*, MissionComponent, int32, MissionIndex);
 
 //# 재진입 가드에 걸린 진행 이벤트를 보관한다 (버리지 않고 순차 처리)
 USTRUCT()
@@ -85,6 +87,10 @@ public:
 	//# NPC의 RequestInteract가 카드(Offer)용 Description을 채울 때 쓴다.
 	const FSpyMissionRow* GetMissionEntry(int32 InMissionId) const;
 
+	//# 인덱스로 목표 좌표를 조회한다(§14-1 선택적 관계). 없으면 nullptr — 데이터는 MissionConfig
+	//# 가 소유하고 이 컴포넌트는 위임만 한다(cpp-style §8), GetMissionEntry 와 동일한 패턴
+	const FSpyMission_TargetLocationRow* GetMissionTargetLocation(int32 InMissionId) const;
+
 	UFUNCTION(BlueprintPure)
 	int32 GetMissionIndex() const { return MissionState.MissionIndex; }
 
@@ -116,7 +122,7 @@ protected:
 	void GrantReward(int32 InCompletedIndex);
 
 	UFUNCTION()
-	void OnRep_MissionState();
+	void OnRep_MissionState(FSpyMissionState OldMissionState);
 
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -127,6 +133,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FSpyMission_AllCompleted OnAllMissionsCompleted;
+
+	UPROPERTY(BlueprintAssignable)
+	FSpyMission_Accepted OnMissionAccepted;
 
 protected:
 	//# PlayerState BP 기본값에서 지정한다

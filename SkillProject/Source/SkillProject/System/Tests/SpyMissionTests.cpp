@@ -26,6 +26,23 @@ static void SpyMissionTests_AddReward(USpyMissionConfig* Config, int32 MissionId
 	Config->MissionRewardTable->AddRow(FName(*FString::Printf(TEXT("Reward_%d"), MissionId)), Row);
 }
 
+//# 테스트 전용 헬퍼 — MissionId 별 목표 좌표 행을 MissionTargetLocationTable 에 추가한다.
+static void SpyMissionTests_AddTargetLocation(USpyMissionConfig* Config, int32 MissionId, const FVector& Location)
+{
+	if (Config->MissionTargetLocationTable == nullptr)
+	{
+		UDataTable* Table = NewObject<UDataTable>();
+		Table->RowStruct = FSpyMission_TargetLocationRow::StaticStruct();
+		Config->MissionTargetLocationTable = Table;
+	}
+
+	FSpyMission_TargetLocationRow Row;
+	Row.MissionId = MissionId;
+	Row.TargetLocation = Location;
+
+	Config->MissionTargetLocationTable->AddRow(FName(*FString::Printf(TEXT("TargetLocation_%d"), MissionId)), Row);
+}
+
 //# 테스트 전용 헬퍼 — 완성된 FSpyMissionRow 를 MissionTable 에 추가한다.
 //# 널이면 새로 만든다 (SpyMissionTests_AddReward 와 동일 패턴)
 static void SpyMissionTests_AddMissionRow(USpyMissionConfig* Config, const FSpyMissionRow& Row)
@@ -781,6 +798,185 @@ bool FSpyMissionInteractTypeMismatchTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Index unchanged"), Result.MissionIndex, 1);
 	TestEqual(TEXT("Count unchanged"), Result.Count, 0);
 	TestFalse(TEXT("Mismatched tag completes nothing"), Result.bCompletedNow);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationFoundTest,
+	"SkillProject.System.Mission.TargetLocation.Found",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationFoundTest::RunTest(const FString& Parameters)
+{
+	USpyMissionConfig* Config = SpyMissionTests_MakeConfig();
+	SpyMissionTests_AddTargetLocation(Config, 1, FVector(100.f, 200.f, 0.f));
+
+	const FSpyMission_TargetLocationRow* Row = Config->GetMissionTargetLocation(1);
+
+	if (Row == nullptr)
+	{
+		AddError(TEXT("Expected a target location row for MissionId 1"));
+
+		return false;
+	}
+
+	TestEqual(TEXT("Target location matches"), Row->TargetLocation, FVector(100.f, 200.f, 0.f));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationMissingTest,
+	"SkillProject.System.Mission.TargetLocation.Missing",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationMissingTest::RunTest(const FString& Parameters)
+{
+	//# 목표 지점이 정의되지 않은 미션(2)은 조회가 nullptr 이어야 한다 — sentinel 아님(§14-1)
+	USpyMissionConfig* Config = SpyMissionTests_MakeConfig();
+	SpyMissionTests_AddTargetLocation(Config, 1, FVector(100.f, 200.f, 0.f));
+
+	TestNull(TEXT("Mission 2 has no target location row"), Config->GetMissionTargetLocation(2));
+
+	return true;
+}
+
+//# ─────────────────────────────────────────────────────────────────────────────
+//# 이하 test-engineer 확장 — Mission_TargetLocation 엣지 케이스: MissionId 경계값(0/음수),
+//# 중복 로우, 원점(0,0,0) 좌표(sentinel 문제 없는지)
+//# ─────────────────────────────────────────────────────────────────────────────
+
+//# 동일 MissionId 를 가리키는 서로 다른 행(FName 키가 다름)을 강제로 만드는 헬퍼.
+//# 프로덕션 데이터 저작 실수로만 발생하는 상황이지만, GetMissionTargetLocation 의
+//# 결정적 동작(첫 매칭 반환)을 회귀로 고정해 어느 로우가 이기는지 조용히 바뀌지 않게 한다.
+static void SpyMissionTests_AddTargetLocationWithRowName(USpyMissionConfig* Config, FName RowName, int32 MissionId, const FVector& Location)
+{
+	if (Config->MissionTargetLocationTable == nullptr)
+	{
+		UDataTable* Table = NewObject<UDataTable>();
+		Table->RowStruct = FSpyMission_TargetLocationRow::StaticStruct();
+		Config->MissionTargetLocationTable = Table;
+	}
+
+	FSpyMission_TargetLocationRow Row;
+	Row.MissionId = MissionId;
+	Row.TargetLocation = Location;
+
+	Config->MissionTargetLocationTable->AddRow(RowName, Row);
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationZeroMissionIdNotFoundByDefaultTest,
+	"SkillProject.System.Mission.TargetLocation.ZeroMissionIdNotFoundByDefault",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationZeroMissionIdNotFoundByDefaultTest::RunTest(const FString& Parameters)
+{
+	//# MissionId 0은 1-based 체계에서 "실제 미션이 아님"을 뜻하지만, GetMissionTargetLocation
+	//# 자체는 0을 특별 취급하지 않는다 — 행이 없으면 다른 id와 마찬가지로 그냥 nullptr
+	USpyMissionConfig* Config = SpyMissionTests_MakeConfig();
+	SpyMissionTests_AddTargetLocation(Config, 1, FVector(100.f, 200.f, 0.f));
+
+	TestNull(TEXT("MissionId 0 has no row -> nullptr, same as any other missing id"), Config->GetMissionTargetLocation(0));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationZeroMissionIdFoundIfExplicitlyAddedTest,
+	"SkillProject.System.Mission.TargetLocation.ZeroMissionIdFoundIfExplicitlyAdded",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationZeroMissionIdFoundIfExplicitlyAddedTest::RunTest(const FString& Parameters)
+{
+	//# 반대로 MissionId 0인 행을 명시적으로 넣으면 조회된다 — 스캔 로직에 0을 걸러내는
+	//# 특수 분기가 없다는 뜻(순수 선형 매칭, sentinel 없음 원칙 §14-1과 일관)
+	USpyMissionConfig* Config = SpyMissionTests_MakeConfig();
+	SpyMissionTests_AddTargetLocation(Config, 0, FVector(1.f, 2.f, 3.f));
+
+	const FSpyMission_TargetLocationRow* Row = Config->GetMissionTargetLocation(0);
+	if (Row == nullptr)
+	{
+		AddError(TEXT("Expected a target location row for the explicitly-added MissionId 0"));
+
+		return false;
+	}
+
+	TestEqual(TEXT("Row with MissionId 0 resolves like any other id"), Row->TargetLocation, FVector(1.f, 2.f, 3.f));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationNegativeMissionIdTest,
+	"SkillProject.System.Mission.TargetLocation.NegativeMissionId",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationNegativeMissionIdTest::RunTest(const FString& Parameters)
+{
+	//# 음수 MissionId 조회 — 크래시 없이 nullptr. ResolveMissionProgress 의 인덱스 clamp와
+	//# 달리 이 조회 경로는 clamp 하지 않는다(순수 조회라 clamp 할 "현재 상태"가 없다)
+	USpyMissionConfig* Config = SpyMissionTests_MakeConfig();
+	SpyMissionTests_AddTargetLocation(Config, 1, FVector(100.f, 200.f, 0.f));
+
+	TestNull(TEXT("Negative MissionId has no row -> nullptr"), Config->GetMissionTargetLocation(-1));
+	TestNull(TEXT("Deeply negative MissionId also -> nullptr"), Config->GetMissionTargetLocation(-9999));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationDuplicateMissionIdTest,
+	"SkillProject.System.Mission.TargetLocation.DuplicateMissionIdResolvesDeterministically",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationDuplicateMissionIdTest::RunTest(const FString& Parameters)
+{
+	//# 데이터 저작 실수로 같은 MissionId 를 가리키는 행이 두 개 존재하는 경우(§8이 강제로
+	//# 막지는 않는다). GetAllRows는 TMap(RowMap)을 순회하므로 등록 순서가 조회 순서를
+	//# 보장하지 않는다(SpyNPCDialogueEdgeCaseTests.cpp의 FSpyMissionRewardDuplicateIdTest
+	//# 선례와 동일한 근거) — "먼저 추가된 행이 이긴다" 같은 순서 의존 단정은 하지 않고,
+	//# 두 값을 동일하게 둬 어느 쪽이 먼저 잡혀도 결과가 결정적임을 확인한다
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	SpyMissionTests_AddTargetLocationWithRowName(Config, TEXT("TargetLocation_5_A"), 5, FVector(10.f, 0.f, 0.f));
+	SpyMissionTests_AddTargetLocationWithRowName(Config, TEXT("TargetLocation_5_B"), 5, FVector(10.f, 0.f, 0.f));
+
+	const FSpyMission_TargetLocationRow* Row = Config->GetMissionTargetLocation(5);
+	if (Row == nullptr)
+	{
+		AddError(TEXT("Expected a target location row for MissionId 5"));
+
+		return false;
+	}
+
+	TestEqual(TEXT("Duplicate rows with the same value resolve deterministically"), Row->TargetLocation, FVector(10.f, 0.f, 0.f));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetLocationOriginCoordinateIsValidTest,
+	"SkillProject.System.Mission.TargetLocation.OriginCoordinateIsValid",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetLocationOriginCoordinateIsValidTest::RunTest(const FString& Parameters)
+{
+	//# 좌표 (0,0,0)은 "설정 안 함"의 sentinel 이 아니라 유효한 좌표다 — "행이 없음"(nullptr)과
+	//# "행이 있고 값이 원점"을 혼동하지 않는지 같은 테스트에서 대조 확인한다(§14-1 sentinel 금지)
+	USpyMissionConfig* Config = SpyMissionTests_MakeConfig();
+	SpyMissionTests_AddTargetLocation(Config, 1, FVector::ZeroVector);
+
+	const FSpyMission_TargetLocationRow* OriginRow = Config->GetMissionTargetLocation(1);
+	if (OriginRow == nullptr)
+	{
+		AddError(TEXT("A row with an origin coordinate must still be found — not treated as unset"));
+
+		return false;
+	}
+
+	TestEqual(TEXT("Origin coordinate is returned as-is"), OriginRow->TargetLocation, FVector::ZeroVector);
+	TestNull(TEXT("A genuinely missing mission (2) is still nullptr, not confused with the origin row"), Config->GetMissionTargetLocation(2));
 
 	return true;
 }
