@@ -77,21 +77,6 @@ public:
 	float ExperienceReward = 0.f;
 };
 
-//# Mission 의 선택적 관계(§14-1) — 목표 지점이 정의된 미션에만 행이 존재한다.
-//# 명명 규칙(§14-1-5): Mission_TargetLocation. Dialogue 타입도 NPCId 대신 이 좌표를 그대로 쓴다.
-USTRUCT(BlueprintType)
-struct FSpyMission_TargetLocationRow : public FTableRowBase
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere)
-	int32 MissionId = 0;
-
-	UPROPERTY(EditAnywhere)
-	FVector TargetLocation = FVector::ZeroVector;
-};
-
 //# 진행 판정 결과 — 부수효과 없는 계산의 출력
 USTRUCT(BlueprintType)
 struct FSpyMissionProgressResult
@@ -131,10 +116,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Mission")
 	TObjectPtr<UDataTable> MissionRewardTable;
 
-	//# 선택적 관계 — 목표 지점이 있는 미션만 행 존재. RowStruct = FSpyMission_TargetLocationRow
-	UPROPERTY(EditDefaultsOnly, Category = "Mission")
-	TObjectPtr<UDataTable> MissionTargetLocationTable;
-
 public:
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	int32 GetMissionCount() const;
@@ -153,7 +134,4 @@ public:
 	//# "관계 없음"의 정상적인 부재 결과다 (spec §4-3)
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	float GetMissionReward(int32 InMissionId) const;
-
-	//# MissionId 로 목표 좌표를 조회한다. 행이 없으면(목표 미정의) nullptr — sentinel 아님(§14-1)
-	const FSpyMission_TargetLocationRow* GetMissionTargetLocation(int32 InMissionId) const;
 };

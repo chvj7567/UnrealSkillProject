@@ -2,15 +2,16 @@
 
 #include "NPC/SpyNPCCharacter.h"
 #include "Components/SphereComponent.h"
-#include "Character/CommonInterface.Character.h"
-#include "ManagerComponent/CommonInterface.Manager.h"
-#include "System/SpyMissionComponent.h"
-#include "Data/SpyMissionConfig.h"
-#include "Data/SpyNPCDialogueRow.h"
-#include "Util/SpyGameplayTags.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
+#include "Character/CommonInterface.Character.h"
+#include "ManagerComponent/CommonInterface.Manager.h"
+#include "Data/SpyMissionConfig.h"
+#include "Data/SpyNPCDialogueRow.h"
+#include "System/SpyMissionComponent.h"
+#include "System/SpyMissionTargetRegistrySubsystem.h"
+#include "Util/SpyGameplayTags.h"
 
 ASpyNPCCharacter::ASpyNPCCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -29,6 +30,24 @@ void ASpyNPCCharacter::BeginPlay()
 	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &ASpyNPCCharacter::OnInteractionSphereEndOverlap);
 
 	CacheNPCData();
+
+	//# 미션 목표 좌표 레지스트리 자기등록(design §5-2·§5-4) — Dialogue 미션은 이 NPC 위치를 그대로 목표로 쓴다
+	if (UWorld* World = GetWorld())
+	{
+		if (USpyMissionTargetRegistrySubsystem* Registry = World->GetSubsystem<USpyMissionTargetRegistrySubsystem>())
+			Registry->RegisterNPCLocation(NPCId, this);
+	}
+}
+
+void ASpyNPCCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (USpyMissionTargetRegistrySubsystem* Registry = World->GetSubsystem<USpyMissionTargetRegistrySubsystem>())
+			Registry->UnregisterNPCLocation(NPCId, this);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void ASpyNPCCharacter::CacheNPCData()

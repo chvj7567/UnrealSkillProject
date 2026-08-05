@@ -9,6 +9,7 @@
 #include "Character/CommonInterface.Character.h"
 #include "ManagerComponent/CommonInterface.Manager.h"
 #include "System/SpyMissionComponent.h"
+#include "System/SpyMissionTargetRegistrySubsystem.h"
 
 ASpyInteractableObject::ASpyInteractableObject()
 {
@@ -29,6 +30,31 @@ void ASpyInteractableObject::BeginPlay()
 
 	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &ASpyInteractableObject::OnInteractionSphereBeginOverlap);
 	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &ASpyInteractableObject::OnInteractionSphereEndOverlap);
+
+	//# 미션 목표 좌표 레지스트리 자기등록(design §5-3·§5-4) — 소진(consume) 시 해제 여부는
+	//# 이번 범위 밖(design §7-6, 현재 Interact 데이터 없음)
+	if (MissionEventTag.IsValid())
+	{
+		if (UWorld* World = GetWorld())
+		{
+			if (USpyMissionTargetRegistrySubsystem* Registry = World->GetSubsystem<USpyMissionTargetRegistrySubsystem>())
+				Registry->RegisterMissionTargetLocation(MissionEventTag, this);
+		}
+	}
+}
+
+void ASpyInteractableObject::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (MissionEventTag.IsValid())
+	{
+		if (UWorld* World = GetWorld())
+		{
+			if (USpyMissionTargetRegistrySubsystem* Registry = World->GetSubsystem<USpyMissionTargetRegistrySubsystem>())
+				Registry->UnregisterMissionTargetLocation(MissionEventTag, this);
+		}
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void ASpyInteractableObject::OnConstruction(const FTransform& Transform)

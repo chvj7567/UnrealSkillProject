@@ -6,12 +6,14 @@
 #include "Engine/StaticMesh.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/Pawn.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "TimerManager.h"
 #include "Data/SpyMissionConfig.h"
 #include "Manager/SpyAssetManager.h"
 #include "System/SpyMissionComponent.h"
+#include "System/SpyMissionTargetRegistrySubsystem.h"
 #include "System/SpyNavPathMath.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyNavigationComponent)
@@ -26,6 +28,7 @@ void USpyNavigationComponent::BeginPlay()
 	Super::BeginPlay();
 
 	const APawn* OwningPawn = Cast<APawn>(GetOwner());
+
 	if (OwningPawn == nullptr || OwningPawn->IsLocallyControlled() == false)
 		return;
 
@@ -97,9 +100,12 @@ void USpyNavigationComponent::BindMissionComponent(USpyMissionComponent* InMissi
 	UnbindMissionComponent();
 
 	BoundMissionComponent = InMissionComponent;
-	BoundMissionComponent->OnMissionAccepted.AddDynamic(this, &USpyNavigationComponent::HandleMissionAccepted);
-	BoundMissionComponent->OnMissionCompleted.AddDynamic(this, &USpyNavigationComponent::HandleMissionCompleted);
-	BoundMissionComponent->OnAllMissionsCompleted.AddDynamic(this, &USpyNavigationComponent::HandleAllMissionsCompleted);
+	BoundMissionComponent->OnMissionProgressChanged.AddDynamic(this, &USpyNavigationComponent::HandleMissionProgressChanged);
+
+	//# design npc-mission-dialogue.md §6-2(a) 결함 B / mission-ground-navigation.md §5-8 —
+	//# 구독 전 상태를 놓치지 않도록 바인드 직후 즉시 1회 현재 상태 기준으로 호출한다.
+	HandleMissionProgressChanged(BoundMissionComponent, BoundMissionComponent->GetMissionIndex(),
+								  BoundMissionComponent->GetCount(), BoundMissionComponent->GetTargetCount());
 }
 
 void USpyNavigationComponent::UnbindMissionComponent()
@@ -107,37 +113,58 @@ void USpyNavigationComponent::UnbindMissionComponent()
 	if (BoundMissionComponent == nullptr)
 		return;
 
-	BoundMissionComponent->OnMissionAccepted.RemoveDynamic(this, &USpyNavigationComponent::HandleMissionAccepted);
-	BoundMissionComponent->OnMissionCompleted.RemoveDynamic(this, &USpyNavigationComponent::HandleMissionCompleted);
-	BoundMissionComponent->OnAllMissionsCompleted.RemoveDynamic(this, &USpyNavigationComponent::HandleAllMissionsCompleted);
+	BoundMissionComponent->OnMissionProgressChanged.RemoveDynamic(this, &USpyNavigationComponent::HandleMissionProgressChanged);
 
 	BoundMissionComponent = nullptr;
+
+	//# 재바인드 시 새 컴포넌트의 초기 상태를 반드시 재계산하도록 가드를 리셋한다
+	LastResolvedMissionIndex = INDEX_NONE;
+	bLastResolvedAccepted = false;
 }
 
-void USpyNavigationComponent::HandleMissionAccepted(USpyMissionComponent* MissionComponent, int32 MissionIndex)
+void USpyNavigationComponent::HandleMissionProgressChanged(USpyMissionComponent* MissionComponent, int32 MissionIndex, int32 Count, int32 TargetCount)
 {
 	if (BoundMissionComponent == nullptr)
 		return;
 
-	const FSpyMission_TargetLocationRow* TargetRow = BoundMissionComponent->GetMissionTargetLocation(MissionIndex);
-	if (TargetRow == nullptr)
+	const bool bAccepted = BoundMissionComponent->IsCurrentAccepted();
+
+	//# design §5-8 과잉 재계산 가드 — Count 만 바뀌어도 이 델리게이트가 발화하므로
+	//# (MissionIndex, bAccepted) 가 직전과 동일하면 레지스트리 재질의를 생략한다.
+	if (MissionIndex == LastResolvedMissionIndex && bAccepted == bLastResolvedAccepted)
+		return;
+
+	LastResolvedMissionIndex = MissionIndex;
+	bLastResolvedAccepted = bAccepted;
+
+	const FSpyMissionRow* Entry = BoundMissionComponent->GetMissionEntry(MissionIndex);
+	if (Entry == nullptr)
 	{
 		StopPath();
 
 		return;
 	}
 
-	StartPathTo(TargetRow->TargetLocation);
-}
+	if (bAccepted == false)
+	{
+		//# design §5-2-1 — 미수락 상태는 MissionType 과 무관하게 담당 NPC 위치를 가리킨다
+		bPendingIsDialogue = true;
+		PendingNPCId = BoundMissionComponent->GetCurrentNPCId();
+	}
+	else
+	{
+		//# design §5-5 — 수락됨이면 MissionType 이 1차 게이트다 (NPCId 유무로 분기하지 않는다)
+		bPendingIsDialogue = (Entry->MissionType == ESpyMissionType::Dialogue);
+		PendingNPCId = Entry->NPCId;
+	}
 
-void USpyNavigationComponent::HandleMissionCompleted(USpyMissionComponent* MissionComponent, int32 CompletedIndex)
-{
-	StopPath();
-}
+	PendingMatchTag = Entry->MatchTag;
+	TargetRetryCount = 0;
 
-void USpyNavigationComponent::HandleAllMissionsCompleted(USpyMissionComponent* MissionComponent)
-{
-	StopPath();
+	if (UWorld* World = GetWorld())
+		World->GetTimerManager().ClearTimer(TargetRetryTimerHandle);
+
+	TryResolveTarget();
 }
 
 void USpyNavigationComponent::StartPathTo(const FVector& InTargetLocation)
@@ -159,13 +186,91 @@ void USpyNavigationComponent::StopPath()
 	bPathActive = false;
 	CurrentTargetLocation = FVector::ZeroVector;
 
+	//# design §5-6 — 대기 중인 좌표 재시도 타이머도 함께 정리한다. 완료→수락이 같은 OnRep 안에서
+	//# 연달아 일어날 때(§2-3), 낡은 재시도가 새 미션에 잘못된 좌표를 주입하는 경합을 막는다.
 	if (UWorld* World = GetWorld())
+	{
 		World->GetTimerManager().ClearTimer(RepathTimerHandle);
+		World->GetTimerManager().ClearTimer(TargetRetryTimerHandle);
+	}
 
 	if (PathSpline != nullptr)
 		PathSpline->ClearSplinePoints(true);
 
 	HideVisual();
+}
+
+USpyMissionTargetRegistrySubsystem* USpyNavigationComponent::GetMissionTargetRegistry()
+{
+	if (OverrideTargetRegistry != nullptr)
+		return OverrideTargetRegistry;
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+		return nullptr;
+
+	return World->GetSubsystem<USpyMissionTargetRegistrySubsystem>();
+}
+
+void USpyNavigationComponent::TryResolveTarget()
+{
+	//# design §5-6 — NoNPCId(sentinel) 는 재시도해도 채워지지 않는다. 재시도 없이 즉시 포기한다.
+	if (bPendingIsDialogue && PendingNPCId == FSpyMissionRow::NoNPCId)
+	{
+		if (UWorld* World = GetWorld())
+			World->GetTimerManager().ClearTimer(TargetRetryTimerHandle);
+
+		return;
+	}
+
+	USpyMissionTargetRegistrySubsystem* Registry = GetMissionTargetRegistry();
+
+	FVector TargetLocation = FVector::ZeroVector;
+	bool bFound = false;
+
+	if (Registry != nullptr)
+	{
+		//# design §5-5 — Dialogue 는 NPCId 키 공간, 그 외(Gameplay/Interact)는 MatchTag 키 공간(§5-4)
+		bFound = bPendingIsDialogue
+			? (PendingNPCId != FSpyMissionRow::NoNPCId && Registry->FindNPCLocation(PendingNPCId, TargetLocation))
+			: (PendingMatchTag.IsValid() && Registry->FindMissionTargetLocation(PendingMatchTag, TargetLocation));
+	}
+
+	if (bFound)
+	{
+		if (UWorld* World = GetWorld())
+			World->GetTimerManager().ClearTimer(TargetRetryTimerHandle);
+
+		StartPathTo(TargetLocation);
+
+		return;
+	}
+
+	++TargetRetryCount;
+
+	if (TargetRetryCount == 1)
+	{
+		//# 최초 시도 실패 — 이후 0.2초 간격으로 재시도한다(design §5-6)
+		if (UWorld* World = GetWorld())
+			World->GetTimerManager().SetTimer(TargetRetryTimerHandle, this, &USpyNavigationComponent::TryResolveTarget, TargetRetryIntervalSeconds, true);
+
+		return;
+	}
+
+	if (TargetRetryCount < TargetRetryMaxCount)
+		return;
+
+	//# design §5-6 — 약 2초 안에 못 찾으면 포기. Dialogue 는 데이터 버그 가능성이 높아 경고 1회,
+	//# Gameplay/Interact 는 장소 무관 미션과 구분할 매직 넘버가 없어 조용히 포기한다.
+	if (UWorld* World = GetWorld())
+		World->GetTimerManager().ClearTimer(TargetRetryTimerHandle);
+
+	if (bPendingIsDialogue && bWarnedMissingNPCLocation == false)
+	{
+		bWarnedMissingNPCLocation = true;
+
+		UE_LOG(LogTemp, Warning, TEXT("# [SpyNavigationComponent] NPCId %d 위치를 레지스트리에서 찾지 못했습니다 (NPC 미배치 의심): %s"), PendingNPCId, *GetNameSafe(GetOwner()));
+	}
 }
 
 void USpyNavigationComponent::HideVisual()
@@ -263,6 +368,9 @@ void USpyNavigationComponent::ApplyPathPoints(const TArray<FVector>& InPathPoint
 
 		Segment->SetVisibility(true);
 		Segment->SetStartAndEnd(Segments[Index].Key, Tangent, Segments[Index].Value, Tangent, true);
+
+		if (UMaterialInstanceDynamic* DynMat = PathSegmentMaterialPool[Index])
+			DynMat->SetScalarParameterValue(TEXT("SegmentWorldLength"), Tangent.Size());
 	}
 
 	for (int32 Index = Segments.Num(); Index < PathSegmentPool.Num(); ++Index)
@@ -292,10 +400,13 @@ void USpyNavigationComponent::EnsureSegmentPoolSize(int32 InRequiredCount)
 		if (SegmentMesh != nullptr)
 			Segment->SetStaticMesh(SegmentMesh);
 
-		//# 글로우 머티리얼 에셋 제작은 이번 스펙 범위 밖(아트 작업) — 미등록 시 엔진 기본 머티리얼로 표시된다
+		//# 글로우 머티리얼 에셋 제작은 이번 스펙 범위 밖(아트 작업) — 미등록 시 엔진 기본 머티리얼로 표시된다.
+		//# 세그먼트별 SegmentWorldLength 파라미터를 세팅하려면 다이나믹 인스턴스가 필요하다.
+		UMaterialInstanceDynamic* DynMat = nullptr;
 		if (UMaterialInterface* GlowMaterial = USpyAssetManager::GetAssetByName<UMaterialInterface>(TEXT("NavPathGlow")))
-			Segment->SetMaterial(0, GlowMaterial);
+			DynMat = Segment->CreateDynamicMaterialInstance(0, GlowMaterial);
 
 		PathSegmentPool.Add(Segment);
+		PathSegmentMaterialPool.Add(DynMat);
 	}
 }

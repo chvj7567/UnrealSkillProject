@@ -20,7 +20,10 @@ static void SpyMissionComponentTests_SetMissionConfig(USpyMissionComponent* Comp
 	Prop->SetObjectPropertyValue_InContainer(Component, Config);
 }
 
-static USpyMissionConfig* SpyMissionComponentTests_MakeConfigWithTargetLocation()
+//# design §0(2026-08-05) 개정으로 Mission_TargetLocation(DataTable) 셋업은 제거했다 —
+//# 좌표는 이제 USpyMissionTargetRegistrySubsystem(레벨 배치 액터 자동 추적)에서 온다(§7-6).
+//# 이 헬퍼는 순수 MissionTable 픽스처(Vault 미션 1개)만 담당한다.
+static USpyMissionConfig* SpyMissionComponentTests_MakeConfig()
 {
 	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
 
@@ -36,42 +39,7 @@ static USpyMissionConfig* SpyMissionComponentTests_MakeConfigWithTargetLocation(
 	MissionTable->AddRow(TEXT("Mission_1"), Row);
 	Config->MissionTable = MissionTable;
 
-	UDataTable* TargetLocationTable = NewObject<UDataTable>();
-	TargetLocationTable->RowStruct = FSpyMission_TargetLocationRow::StaticStruct();
-
-	FSpyMission_TargetLocationRow TargetRow;
-	TargetRow.MissionId = 1;
-	TargetRow.TargetLocation = FVector(500.f, 0.f, 0.f);
-	TargetLocationTable->AddRow(TEXT("TargetLocation_1"), TargetRow);
-	Config->MissionTargetLocationTable = TargetLocationTable;
-
 	return Config;
-}
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FSpyMissionComponentTargetLocationPassthroughTest,
-	"SkillProject.System.MissionComponent.TargetLocationPassthrough",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-
-bool FSpyMissionComponentTargetLocationPassthroughTest::RunTest(const FString& Parameters)
-{
-	AActor* Owner = NewObject<AActor>(GetTransientPackage());
-	USpyMissionComponent* Component = NewObject<USpyMissionComponent>(Owner);
-	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfigWithTargetLocation());
-
-	const FSpyMission_TargetLocationRow* Row = Component->GetMissionTargetLocation(1);
-
-	if (Row == nullptr)
-	{
-		AddError(TEXT("Expected a target location row for MissionId 1"));
-
-		return false;
-	}
-
-	TestEqual(TEXT("Target location matches"), Row->TargetLocation, FVector(500.f, 0.f, 0.f));
-	TestNull(TEXT("No target location for MissionId 2"), Component->GetMissionTargetLocation(2));
-
-	return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -83,7 +51,7 @@ bool FSpyMissionComponentAcceptIdempotentTest::RunTest(const FString& Parameters
 {
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* Component = NewObject<USpyMissionComponent>(Owner);
-	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfigWithTargetLocation());
+	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfig());
 
 	TestFalse(TEXT("Not accepted initially"), Component->IsCurrentAccepted());
 
@@ -127,7 +95,7 @@ bool FSpyMissionComponentRemoteClientAcceptedTest::RunTest(const FString& Parame
 	//# 경로). OnRep_MissionState 만으로 OnMissionAccepted 가 발화해야 한다(design §2-3)
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* Component = NewObject<USpyMissionComponent>(Owner);
-	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfigWithTargetLocation());
+	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfig());
 
 	USpyMissionComponentTestListener* Listener = NewObject<USpyMissionComponentTestListener>();
 	Component->OnMissionAccepted.AddDynamic(Listener, &USpyMissionComponentTestListener::HandleMissionAccepted);
@@ -164,7 +132,7 @@ bool FSpyMissionComponentRemoteClientCompletedTest::RunTest(const FString& Param
 	//# OnMissionCompleted 가 발화해야 한다(design §2-3 "완료된 인덱스는 이전 값이다")
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* Component = NewObject<USpyMissionComponent>(Owner);
-	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfigWithTargetLocation());
+	SpyMissionComponentTests_SetMissionConfig(Component, SpyMissionComponentTests_MakeConfig());
 
 	USpyMissionComponentTestListener* Listener = NewObject<USpyMissionComponentTestListener>();
 	Component->OnMissionCompleted.AddDynamic(Listener, &USpyMissionComponentTestListener::HandleMissionCompleted);
@@ -202,7 +170,7 @@ bool FSpyMissionComponentRemoteClientOrderTest::RunTest(const FString& Parameter
 	//# 호출 한 번에 동시에 일어날 때, Completed 가 Accepted 보다 반드시 먼저 발화해야 한다.
 	//# 뒤집히면 USpyNavigationComponent::HandleMissionCompleted(무조건 StopPath) 가 같은
 	//# 프레임에 막 시작된 새 경로를 지워버린다(design-reviewer 1차검토 BLOCKER)
-	USpyMissionConfig* Config = SpyMissionComponentTests_MakeConfigWithTargetLocation();
+	USpyMissionConfig* Config = SpyMissionComponentTests_MakeConfig();
 
 	UDataTable* SecondMissionTable = Config->MissionTable;
 	FSpyMissionRow DialogueRow;
@@ -259,7 +227,7 @@ bool FSpyMissionComponentRemoteClientMultiStepSkipTest::RunTest(const FString& P
 	//# 서버가 한 레플리케이션 윈도우 안에서 1(완료)->2(자동수락+즉시완료, 예: 보상 XP 재진입)
 	//# ->3(자동수락) 을 전부 처리 — 클라이언트는 중간 상태(2)를 전혀 못 보고 최종
 	//# 스냅샷(1->3)만 받는다(design §2-3 "PendingEvents 드레인 루프" 시나리오)
-	USpyMissionConfig* Config = SpyMissionComponentTests_MakeConfigWithTargetLocation();
+	USpyMissionConfig* Config = SpyMissionComponentTests_MakeConfig();
 
 	UDataTable* MissionTable = Config->MissionTable;
 	FSpyMissionRow SkippedRow;
@@ -273,11 +241,6 @@ bool FSpyMissionComponentRemoteClientMultiStepSkipTest::RunTest(const FString& P
 	FinalRow.MissionType = ESpyMissionType::Dialogue;
 	FinalRow.MatchTag = SpyGameplayTags::Event_Mission_Report;
 	MissionTable->AddRow(TEXT("Mission_3"), FinalRow);
-
-	FSpyMission_TargetLocationRow FinalTargetRow;
-	FinalTargetRow.MissionId = 3;
-	FinalTargetRow.TargetLocation = FVector(999.f, 0.f, 0.f);
-	Config->MissionTargetLocationTable->AddRow(TEXT("TargetLocation_3"), FinalTargetRow);
 
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* Component = NewObject<USpyMissionComponent>(Owner);
@@ -311,18 +274,24 @@ bool FSpyMissionComponentRemoteClientMultiStepSkipTest::RunTest(const FString& P
 	TestEqual(TEXT("Accepted carries the FINAL index (3) — the loss is harmless for navigation"), Listener->LastAcceptedIndex, 3);
 	TestTrue(TEXT("Completed still fires before Accepted even with a multi-step skip"), Listener->CompletedOrder < Listener->AcceptedOrder);
 
-	//# 내비게이션 목적에 무해하다는 design 주장의 근거 — 최종 인덱스(3)로 목표 좌표가 정확히 조회된다
-	const FSpyMission_TargetLocationRow* FinalTarget = Component->GetMissionTargetLocation(3);
-	if (FinalTarget == nullptr)
+	//# 내비게이션 목적에 무해하다는 design 주장의 근거 — 최종 인덱스(3)의 엔트리가 정확히 조회된다.
+	//# 좌표 자체(design §0 개정 후 USpyMissionTargetRegistrySubsystem 소관)는 여기서 검증하지 않는다.
+	const FSpyMissionRow* FinalEntry = Component->GetMissionEntry(3);
+	if (FinalEntry == nullptr)
 	{
-		AddError(TEXT("Expected a target location row for the final mission (3)"));
+		AddError(TEXT("Expected mission entry 3 to resolve after the skip"));
 
 		return false;
 	}
 
-	TestEqual(TEXT("Final mission's target location resolves correctly despite the skip"), FinalTarget->TargetLocation, FVector(999.f, 0.f, 0.f));
+	TestTrue(TEXT("Final mission entry is the Dialogue mission we added"), FinalEntry->MissionType == ESpyMissionType::Dialogue);
 
 	return true;
 }
+
+//# design npc-mission-dialogue.md §6-2 개정(2026-08-05) — ASC-init 시점 자동수락 특례는
+//# mission-ground-navigation.md §5-2-1(미수락 상태에서도 네비게이션이 NPC를 직접 가리킴)로
+//# 대체되어 제거됐다. 위 특례를 검증하던 회귀 테스트(ASCInit.* 4건)도 함께 제거한다 —
+//# test-engineer 가 §5-2-1 기준으로 새 회귀를 작성한다.
 
 #endif //# WITH_DEV_AUTOMATION_TESTS

@@ -8,6 +8,8 @@
 > **선행 시스템**: [미션 시스템 기획서](mission-system.md) — 미션 6종의 `DisplayName`/`MatchTag`/`Mode`/`TargetCount`/`ExperienceReward`는 그 문서 §3-1에서 이미 확정됐고, 이 문서는 그 값을 **입력으로만** 쓴다(spec §4-9가 이미 정합성을 확인했다 — 이 문서에서 재검산하지 않는다).
 >
 > **(2026-08-03 후속 결정 — 1-based 전환)** 이 문서(2026-08-01c 작성)는 원래 `MissionId`/`NPCId`를 0-based(0~11 / 0~5)로 서술했다. 사용자가 이후 별도로 "ID는 1부터"를 지시했고 코드·라이브 데이터가 이미 1-based(`MissionId` 1~12, `NPCId` 1~6)로 전환돼, 아래 §1 핵심 메커니즘·§2 NPC 표를 포함한 문서 전체의 숫자를 1-based로 갱신했다(§3 헤더의 상세 노트도 참조). 같은 후속 결정에 `Mission` 데이터의 저장 방식 전환도 포함된다 — `Missions[]`(`UDataAsset`의 `TArray<FSpyMissionEntry>`)에서 `MissionTable`(`UDataTable*`, row struct `FSpyMissionRow`)로 바뀌었다(`docs/superpowers/specs/2026-08-03-mission-datatable-npcid-design.md` 참조) — §3-6·§6-3·§6-5의 표기도 그에 맞춰 갱신했다.
+>
+> **(2026-08-05 후속 결정 — 세션 시작 내비게이션 문제는 부트스트랩 미션이 아니라 내비게이션 규칙으로 해소)** 세션 시작부터 플레이어가 레이븐과 처음 접촉하기 전까지 내비게이션이 안내할 대상이 없는 닭-달걀 문제가 있었다([mission-ground-navigation.md](mission-ground-navigation.md) §5 계열 참조). 이 문제는 한때 "레이븐과 접선"이라는 신규 부트스트랩 `MissionId`를 체인 맨 앞에 삽입하는 방식(`Greeting` 상태·`Mission_Greeting` 관계 테이블·ASC-init 특례)으로 풀려 했으나, **그 접근은 전부 폐기됐다.** 대신 "현재 미션이 미수락이면 담당 NPC로, 수락됐으면 기존 로직으로" 안내하는 내비게이션 규칙(mission-ground-navigation.md §5-2-1·§5-8)이 같은 문제를 미션 데이터 변경 없이 해소한다 — 이 문서의 미션 체인은 부트스트랩 이전의 **12행 원본**으로 완전히 되돌아간다.
 
 ---
 
@@ -62,7 +64,7 @@ DialogueId = (NPCId - 1) * 10 + StateOffset
 StateOffset: Default = 0, Offer = 1, InProgress = 2, Report = 3
 ```
 
-예: 레이븐(`NPCId = 1`) → Default 0 / Offer 1 / InProgress 2 / Report 3. 폭스(`NPCId = 6`) → 50/51/52/53. 이 규칙 하나로 24개 `DialogueId`가 전부 결정되므로 §3-3 표에서 값을 다시 나열하되 규칙에서 벗어나는 예외는 없다.
+예: 레이븐(`NPCId = 1`) → Default 0 / Offer 1 / InProgress 2 / Report 3. 폭스(`NPCId = 6`) → 50/51/52/53. 이 규칙 하나로 `DialogueId`가 전부 결정되므로 §3-3 표에서 값을 다시 나열하되 규칙에서 벗어나는 예외는 없다.
 
 ### 3-2. `NPC` 테이블 (`DT_SpyNPC`, 6행)
 
@@ -79,9 +81,9 @@ StateOffset: Default = 0, Offer = 1, InProgress = 2, Report = 3
 
 ### 3-3. `Dialogue` 테이블 (`DT_SpyDialogue`, 24행)
 
-전 행 `DialogueIndex = 0`. 4상태는 spec §6이 확정한 순서(`Default`/`Offer`/`InProgress`/`Report`) 그대로 나열한다.
+전 행 `DialogueIndex = 0`. spec §6이 확정한 4상태(`Default`/`Offer`/`InProgress`/`Report`) 순서로 나열한다.
 
-**도달 가능성 확인**: 이전 판(5상태)과 달리 이번 4상태는 **6 NPC 전원에서 전부 도달 가능**한 살아있는 데이터다 — 죽은 로우가 없다. 다만 `Default`가 도달하는 시점의 의미가 NPC마다 다르다: 레이븐은 자신의 `Report`(MissionId 2)를 이미 끝낸 **뒤**(`CurrentMissionId ≥ 3`)에만 `Default`가 나오므로 순수 종료형 문구로 써도 안전하다. 팰컨~울프는 자기 차례가 **오기 전**(`CurrentMissionId <` 자신의 Offer)과 **끝난 뒤**(`CurrentMissionId >` 자신의 Report) 양쪽 모두에서 `Default`가 나오므로, 어느 쪽으로 읽어도 어색하지 않은 **시제 중립 문구**로 썼다(예: "지금은 ~ 없다"). 폭스는 자기 차례가 오기 전과 **전체 완료 시점**(`CurrentMissionId = 13`) 양쪽에서 나오므로 마찬가지로 중립 문구를 썼다. 체인의 진행 안내("다음은 OO")는 전부 `Report`(정확히 한 번만 발화하는 지점)로 몰아 뒀다 — §3-3-7 참고.
+**도달 가능성 확인**: 4상태는 **6 NPC 전원에서 전부 도달 가능**한 살아있는 데이터다 — 죽은 로우가 없다. 다만 `Default`가 도달하는 시점의 의미가 NPC마다 다르다: 레이븐은 자신의 `Report`(`MissionId 2`)를 이미 끝낸 **뒤**(`CurrentMissionId ≥ 3`)에만 `Default`가 나오므로 순수 종료형 문구로 써도 안전하다. 팰컨~울프는 자기 차례가 **오기 전**(`CurrentMissionId <` 자신의 Offer)과 **끝난 뒤**(`CurrentMissionId >` 자신의 Report) 양쪽 모두에서 `Default`가 나오므로, 어느 쪽으로 읽어도 어색하지 않은 **시제 중립 문구**로 썼다(예: "지금은 ~ 없다"). 폭스는 자기 차례가 오기 전과 **전체 완료 시점**(`CurrentMissionId = 13`, 마지막 `MissionId 12`를 넘긴 값) 양쪽에서 나오므로 마찬가지로 중립 문구를 썼다. 체인의 진행 안내("다음은 OO")는 전부 `Report`(정확히 한 번만 발화하는 지점)로 몰아 뒀다 — §3-3-7 참고.
 
 #### `NPCId = 1` — 정보원 "레이븐"
 
@@ -137,7 +139,7 @@ StateOffset: Default = 0, Offer = 1, InProgress = 2, Report = 3
 | InProgress | 52 | 조준을 화면 중앙에 맞춰. 서두르지 말고. |
 | Report | 53 | 훈련 끝. 넌 이제 현장에 나갈 준비가 됐다. |
 
-**`Report` 문구의 역할(§3-3-7)**: `Report` 상태는 서버가 `RequestInteract` 한 호출 안에서 판정과 완료 처리를 동시에 끝내는 유일한 지점이라(spec §7), "다음은 어디로 가야 하는가"를 정확히 한 번만 말해도 되는 유일한 슬롯이다. 레이븐→팰컨→바이퍼→스패로우→울프→폭스 순으로 다음 담당자를 명시했고, **폭스의 `Report`만 체인 종결 문구**(현장 투입 승인)로 다음 NPC를 언급하지 않는다 — `MissionId 12` 완료가 곧 전체 완료(`MissionIndex`가 마지막 미션(12)을 넘어 13이 됨, spec §9)이기 때문이다.
+**`Report` 문구의 역할(§3-3-7)**: `Report` 상태는 서버가 `RequestInteract` 한 호출 안에서 판정과 완료 처리를 동시에 끝내는 유일한 지점이라(spec §7), "다음은 어디로 가야 하는가"를 정확히 한 번만 말해도 되는 유일한 슬롯이다. 레이븐→팰컨→바이퍼→스패로우→울프→폭스 순으로 다음 담당자를 명시했고, **폭스의 `Report`만 체인 종결 문구**(현장 투입 승인)로 다음 NPC를 언급하지 않는다 — `MissionId 12`(마지막) 완료가 곧 전체 완료(`MissionIndex`가 마지막 미션을 넘어 13이 됨, spec §9)이기 때문이다.
 
 ### 3-4. `MissionCommunication` 테이블 (`DT_SpyMissionCommunication`, 12행)
 
@@ -158,7 +160,7 @@ StateOffset: Default = 0, Offer = 1, InProgress = 2, Report = 3
 | 11 | 6 | Offer | 51 | 52 | — (미사용) |
 | 12 | 6 | Report | — (미사용) | — (미사용) | 53 |
 
-### 3-5. `MissionReward` 테이블 (`DT_SpyMissionReward`, 6행 — `Dialogue` 타입에만 존재)
+### 3-5. `MissionReward` 테이블 (`DT_SpyMissionReward`, 6행)
 
 | `MissionId` | `ExperienceReward` |
 |---|---|
@@ -173,24 +175,26 @@ StateOffset: Default = 0, Offer = 1, InProgress = 2, Report = 3
 
 ### 3-6. `Mission` 데이터 (`MissionTable`, 12행)
 
-| `MissionId` | `MissionType` | `DisplayName` | `MatchTag` | `Mode` | `TargetCount` | `Description` |
-|---|---|---|---|---|---|---|
-| 1 | Gameplay | 적 1명 처치 | `Event.Mission.Kill` | Accumulate | 1 | 목표 : 감시 중인 적 요원 1명을 제거하라 |
-| 2 | Dialogue | 레이븐에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열 — 카드 자체가 없다, spec §4-2)* |
-| 3 | Gameplay | 레벨 3 달성 | `Event.Mission.Level` | Threshold | 3 | 목표 : 전투 숙련도를 3단계까지 끌어올려라 |
-| 4 | Dialogue | 팰컨에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
-| 5 | Gameplay | 콤보 4회 연결 | `Event.Mission.Combo` | Accumulate | 4 | 목표 : 근접 연계 공격을 끊지 않고 4회 이어가라 |
-| 6 | Dialogue | 바이퍼에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
-| 7 | Gameplay | 장애물 넘기 5회 | `Skill.Move.Vault` | Accumulate | 5 | 목표 : 장애물을 5회 뛰어넘어 침투 루트를 확보하라 |
-| 8 | Dialogue | 스패로우에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
-| 9 | Gameplay | 벽 타기 3회 | `Skill.Move.Climb` | Accumulate | 3 | 목표 : 벽면을 3회 등반해 은밀 진입로를 익혀라 |
-| 10 | Dialogue | 울프에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
-| 11 | Gameplay | 그래플링 3회 | `Skill.Move.GrappleHook` | Accumulate | 3 | 목표 : 그래플 훅으로 3회 이동해 고지 접근 루트를 확보하라 |
-| 12 | Dialogue | 폭스에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
+| `MissionId` | `MissionType` | `NPCId` | `DisplayName` | `MatchTag` | `Mode` | `TargetCount` | `Description` |
+|---|---|---|---|---|---|---|---|
+| 1 | Gameplay | 1 | 적 1명 처치 | `Event.Mission.Kill` | Accumulate | 1 | 목표 : 감시 중인 적 요원 1명을 제거하라 |
+| 2 | Dialogue | 1 | 레이븐에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열 — 카드 자체가 없다, spec §4-2)* |
+| 3 | Gameplay | 2 | 레벨 3 달성 | `Event.Mission.Level` | Threshold | 3 | 목표 : 전투 숙련도를 3단계까지 끌어올려라 |
+| 4 | Dialogue | 2 | 팰컨에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
+| 5 | Gameplay | 3 | 콤보 4회 연결 | `Event.Mission.Combo` | Accumulate | 4 | 목표 : 근접 연계 공격을 끊지 않고 4회 이어가라 |
+| 6 | Dialogue | 3 | 바이퍼에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
+| 7 | Gameplay | 4 | 장애물 넘기 5회 | `Skill.Move.Vault` | Accumulate | 5 | 목표 : 장애물을 5회 뛰어넘어 침투 루트를 확보하라 |
+| 8 | Dialogue | 4 | 스패로우에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
+| 9 | Gameplay | 5 | 벽 타기 3회 | `Skill.Move.Climb` | Accumulate | 3 | 목표 : 벽면을 3회 등반해 은밀 진입로를 익혀라 |
+| 10 | Dialogue | 5 | 울프에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
+| 11 | Gameplay | 6 | 그래플링 3회 | `Skill.Move.GrappleHook` | Accumulate | 3 | 목표 : 그래플 훅으로 3회 이동해 고지 접근 루트를 확보하라 |
+| 12 | Dialogue | 6 | 폭스에게 보고하십시오 | `Event.Mission.Report` | Accumulate | 1 | *(빈 문자열)* |
 
-- `Gameplay` 행 6종의 `DisplayName`/`MatchTag`/`Mode`/`TargetCount`는 mission-system.md §3-1 값 그대로(변경 없음). `Description`도 같은 문서 §5(이전 판) 값을 그대로 재사용한다.
-- `Dialogue` 행 6종의 `DisplayName`(spec §4-8 예시를 이 문서가 최종 확정값으로 채택)은 그 자체가 HUD "시스템 메시지"다. `Description`은 **의도적으로 빈 문자열**이다 — `Dialogue` 타입은 수락 카드가 없으므로 채울 자리가 없다(spec §4-2). 이는 누락이 아니라 확정된 설계다.
-- **검산**: `Description`에 등장하는 숫자(1/3/4/5/3/3)가 `DisplayName`의 목표 수(1/3/4/5/3/3)와 전부 일치 — mission-system.md §3-1과 모순 없음.
+**`NPCId` 열**: 코드의 `FSpyMissionRow`가 이미 직접 필드로 갖고 있다(`docs/superpowers/specs/2026-08-03-mission-datatable-npcid-design.md`) — 이 문서는 §2 표의 "담당 `MissionId`"와 일치해야 한다는 원칙만 유지하고 값 자체는 라이브 데이터 기준으로 재확정하지 않는다. **mission-ground-navigation.md §5-2-1이 이 값을 12행 전부(Gameplay·Dialogue 구분 없이)에서 필수로 요구한다** — 미수락 상태의 미션은 `MissionType`과 무관하게 이 `NPCId`로 담당 NPC에게 안내되므로(같은 문서 §8 조건 7), 이전에는 Dialogue 6종에만 구조적으로 필요했던 값이 이제 12행 전부에서 빠짐없이 채워져야 한다.
+
+- `Gameplay` 행 6종의 `DisplayName`/`MatchTag`/`Mode`/`TargetCount`는 mission-system.md §3-1 값 그대로. `Description`도 같은 문서 §5 값을 그대로 재사용한다.
+- `Dialogue` 행 6종의 `DisplayName`(spec §4-8 예시를 이 문서가 최종 확정값으로 채택)은 그 자체가 HUD "시스템 메시지"다. `Description`은 6종 전부 **의도적으로 빈 문자열**이다 — `Dialogue` 타입은 수락 카드가 없으므로 채울 자리가 없다(spec §4-2). 이는 누락이 아니라 확정된 설계다.
+- **검산**: `Description`에 등장하는 숫자(1/3/4/5/3/3, `Gameplay` 6종)가 `DisplayName`의 목표 수(1/3/4/5/3/3)와 전부 일치 — mission-system.md §3-1과 모순 없음.
 
 ---
 
@@ -292,40 +296,57 @@ mission-system.md §2-4가 정리한 구역(전투 구역 / 파쿠르 레인 / �
 
 **신규 태그 없음.** spec §10 "변경 파일 목록"이 `Util/SpyGameplayTags.h|.cpp`에 `Event_Mission_Report` 신규 등록을 이미 명시했다. 이 문서는 값을 추가하지 않는다.
 
-### 6-2. C++ 인터페이스
+### 6-2. C++ 인터페이스 및 게임플레이 로직 확장 — 신규 없음 + 기존 Greeting 코드 제거 필요 (2026-08-05 BLOCKER 보강)
 
-**신규 없음.** `ISpyNPCRoot`/`ISpyInteractionHost`/`ISpyCharacterRoot`의 상호작용 컴포넌트 접근자는 spec §3이 이미 확정했다.
+**신규 로직은 없다.** 세션 시작 시점 내비게이션 문제는 이 문서의 미션 데이터·판정 로직이 아니라 mission-ground-navigation.md §5-2-1·§5-8의 내비게이션 규칙(미수락 시 담당 NPC로 안내)으로 해소된다 — 이 문서(`npc-mission-dialogue.md`)의 스키마·판정 함수·완료 경로에 **새로** 추가할 코드는 없다.
+
+**단, 이전 라운드(2026-08-05 1차·2차 개정, 이후 폐기)에서 이미 만들어진 Greeting 코드는 문서만 되돌린다고 사라지지 않는다 — 아래는 명시적 제거 대상이다. 제거 자체가 코드 변경이므로 gameplay-programmer 라운드가 다시 필요하다.**
+
+| # | 대상 | 파일 | 제거 내용 |
+|---|---|---|---|
+| 1 | `ESpyNPCDialogueState::Greeting` (5번째 상태값) | `Util/DefineEnum.h` | enum 값 삭제 — 4상태(`Default`/`Offer`/`InProgress`/`Report`, spec §6)로 복귀 |
+| 2 | `FSpyMissionGreetingRow` 구조체 | `SpyNPCDialogueRow.h`(또는 실제 위치, gameplay-programmer 확인) | row struct 전체 삭제 |
+| 3 | `USpyNPCConfig::MissionGreetingTable` 필드 | 위와 동일 | 필드 삭제 — `DA_SpyNPCConfig`는 다시 `NPCTable`/`DialogueTable`/`MissionCommunicationTable` 3개 테이블 묶음(§6-3)으로 복귀 |
+| 4 | `CachedGreetingMissionId`/`CachedGreetingDialogueId`/`CachedGreetingLine` 캐시 필드 | `SpyNPCCharacter.h` | 필드 3개 삭제 |
+| 5 | `CacheNPCData()`의 `MissionGreetingTable` 스캔 로직 | `SpyNPCCharacter.cpp` | 해당 블록 삭제 |
+| 6 | `RequestInteract()`의 Greeting 재판정 분기 | `SpyNPCCharacter.cpp` | `ResolveNPCDialogueState`가 `Default`를 반환한 뒤 추가로 돌던 Greeting 재판정 코드 전체 삭제 — `ResolveNPCDialogueState`의 결과를 그대로 쓰는 원래 흐름으로 복귀 |
+
+**왜 위험한가 — design-reviewer 지적**: 새 12행 체계에서 `MissionId` 재번호가 이전 라운드와 다르다(예: 이전 라운드의 `MissionId 4/7/10`류 Greeting 관계 행이 새 체계에서는 다른 미션을 가리킬 수 있다). `RequestInteract()`의 옛 Greeting 재판정 분기는 `MissionType`을 보지 않고 순수 `MissionIndex` 일치만 보므로, 위 코드·`DT_SpyMission_Greeting` 테이블이 남아있으면 그 미션을 수락한 뒤 해당 NPC와 대화할 때 정상 `Offer`/`Report` 대신 엉뚱한 Greeting 대사가 뜨는 **무증상 실패**가 난다. 이 문서군이 §3-1a(이제 삭제됨)에서부터 경계해 온 바로 그 패턴이며, 문서 롤백만으로는 막히지 않는다.
+
+**에셋 정리(코드 아님, 메인이 unreal-mcp로 처리)**: `DT_SpyMission_Greeting` DataTable 에셋 자체를 **삭제한다.** 위 코드 제거(항목 2·3) 후 참조가 끊기므로 고아 에셋으로 남기지 않는다 — `mission-ground-navigation.md` §7-6이 `DT_Mission_TargetLocation`을 처리한 것과 동일한 방식.
 
 ### 6-3. DataAsset·DataTable 스키마 — 값 입력
 
 | 대상 | 값 | 근거 |
 |---|---|---|
-| `DT_SpyNPC`(6행) | §3-2 표 그대로 | spec §4-4 |
-| `DT_SpyDialogue`(24행) | §3-3 6개 하위 표 그대로 (`DialogueIndex` 전부 0) | spec §4-5 |
+| `DT_SpyNPC`(6행) | §3-2 표 그대로 (변경 없음) | spec §4-4 |
+| `DT_SpyDialogue`(24행) | §3-3 하위 표 그대로 (`DialogueIndex` 전부 0) | spec §4-5 |
 | `DT_SpyMissionCommunication`(12행) | §3-4 표 그대로 | spec §4-6 |
 | `DT_SpyMissionReward`(6행) | §3-5 표 그대로 | spec §4-3 |
-| `DA_SpyMissionConfig`의 `MissionTable`(DataTable, 12행) | §3-6 표 그대로 (`MissionId` = 1~12, 1-based — 배열 위치와 무관한 명시적 필드) | spec §4-2 |
-| `DA_SpyNPCConfig`(NPC 블루프린트 6종이 참조하는 허브) | `NPCTable`/`DialogueTable`/`MissionCommunicationTable` 3개 지정 | spec §4-7 |
-| NPC 블루프린트 6종의 `NPCId` | §2 표의 `NPCId` 열(1~6) — `MissionCommunication.NPCId`와 정확히 일치해야 한다 | spec §3-1 |
-| `IA_Interact` InputAction → IMC 키 매핑 | **`F`** | §5-1 |
-| NPC 상호작용 `SphereComponent` 반경 + 서버 재검증 임계값 | **300cm** (동일 값) | §5-1 |
-| `WBP_MissionOffer` 카드 헤더·버튼 라벨 | `새 임무`/`수락`/`거절` | §5-3 |
+| `DA_SpyMissionConfig`의 `MissionTable`(DataTable, 12행) | §3-6 표 그대로 (`MissionId` = 1~12, 1-based, `NPCId` 열 포함) | spec §4-2 |
+| `DA_SpyNPCConfig`(NPC 블루프린트 6종이 참조하는 허브) | 기존 `NPCTable`/`DialogueTable`/`MissionCommunicationTable` 3개 (변경 없음) | spec §4-7 |
+| NPC 블루프린트 6종의 `NPCId` | §2 표의 `NPCId` 열(1~6, 변경 없음) — `MissionCommunication.NPCId`와 정확히 일치해야 한다 | spec §3-1 |
+| `IA_Interact` InputAction → IMC 키 매핑 | **`F`** (변경 없음) | §5-1 |
+| NPC 상호작용 `SphereComponent` 반경 + 서버 재검증 임계값 | **300cm** (동일 값, 변경 없음) | §5-1 |
+| `WBP_MissionOffer` 카드 헤더·버튼 라벨 | `새 임무`/`수락`/`거절` (변경 없음) | §5-3 |
+| **`DT_SpyMission_Greeting`(2026-08-05 BLOCKER 보강)** | **삭제 대상** — §6-2 코드 제거(항목 2·3)와 함께 에셋 자체를 삭제한다 | §6-2 |
 
 ### 6-4. GA·GE 명세
 
-**신규 GA·GE 없음.** 보상 GE는 기존 `USpyGE_ExperienceGain` 재사용(mission-system.md §6-4). 매그니튜드는 §3-5 `MissionReward` 값(20/10/10/10/15/15) 그대로이며, 지급 호출 지점은 `USpyMissionComponent::ProcessProgress` 안의 `GrantReward()`(spec §5-2) — 완료된 `Dialogue` 미션의 `MissionId`로 `GetMissionReward()`를 조회해 적용한다.
+**신규 GA·GE 없음.** 보상 GE는 기존 `USpyGE_ExperienceGain` 재사용(mission-system.md §6-4). 매그니튜드는 §3-5 `MissionReward` 값(20/10/10/10/15/15, `MissionId` 2/4/6/8/10/12 순) 그대로이며, 지급 호출 지점은 `USpyMissionComponent::ProcessProgress` 안의 `GrantReward()`(spec §5-2) — 완료된 `Dialogue` 미션의 `MissionId`로 `GetMissionReward()`를 조회해 적용한다.
 
 ### 6-5. ⚠ 에디터 데이터 조건
 
 | # | 조건 | 어기면 |
 |---|---|---|
-| 1 | `MissionTable` 12행이 §3-6 표 순서(홀수=Gameplay, 짝수=Dialogue) 그대로 | 순서가 바뀌면 §4-1의 정확성 제약(레이븐이 봇 스폰보다 먼저)이 엉뚱한 미션에 걸리게 되어 배치 근거가 무너진다 |
-| 2 | 레이븐(`NPCId 1`)이 전투 구역 봇 스폰 지점보다 먼저 지나는 진입로에 배치 | §4-4 D1 메트릭(0% 목표) 초과 가능성 — `MissionId 1`의 봇 자원이 수락 전에 낭비될 수 있다 |
-| 3 | NPC 블루프린트 6종의 `NPCConfig`에 `DA_SpyNPCConfig`(3개 테이블 묶음)를 반드시 지정 | `BeginPlay` 캐싱이 실패해 `NPCName`/대사가 전부 빈 텍스트로 표시되는 **무증상 실패**다 |
+| 1 | `MissionTable` 12행이 §3-6 표 순서(홀수=Gameplay·짝수=Dialogue) 그대로 | 순서가 바뀌면 §4-1의 정확성 제약(레이븐이 봇 스폰보다 먼저)이 엉뚱한 미션에 걸리게 되어 배치 근거가 무너진다 |
+| 2 | 레이븐(`NPCId 1`)이 전투 구역 봇 스폰 지점보다 먼저 지나는 진입로에 배치 | §4-4 D1 메트릭(0% 목표) 초과 가능성 — `MissionId 1`(처치)의 봇 자원이 수락 전에 낭비될 수 있다 |
+| 3 | NPC 블루프린트 6종의 `NPCConfig`에 `DA_SpyNPCConfig`(**3개** 테이블 묶음 — `NPCTable`/`DialogueTable`/`MissionCommunicationTable`)를 반드시 지정 | `BeginPlay` 캐싱이 실패해 `NPCName`/대사가 전부 빈 텍스트로 표시되는 **무증상 실패**다 |
 | 4 | `DT_SpyMissionCommunication`에서 `NPCId`별로 **정확히 2행**(`Role = Offer` 1개 + `Role = Report` 1개)이 존재 | 한 NPC에 Offer/Report 행이 없거나 2개 이상이면 `CachedOfferMissionId`/`CachedReportMissionId`가 정의되지 않는다(spec §9 엣지케이스) |
 | 5 | `DT_SpyDialogue` 24행 모두 `Text` 필드를 채운다 | 하나라도 비면 해당 상태에서만 재현되는 **부분적 무증상 실패**가 나온다 — 예: `NPCId 4`의 `Report`(33)만 비면 스패로우에게 보고할 때만 재현돼 QA에서 늦게 발견된다 |
 | 6 | `IA_Interact`를 `F` 키로 매핑하기 전, 기존 `IMC`에 `F` 키가 다른 액션에 이미 쓰이고 있지 않은지 확인 | 충돌 시 프롬프트 문구("F 대화하기")와 실제 조작이 어긋나거나 기존 기능이 깨진다. 이 프로젝트의 스킬 입력은 `1~6` 숫자 키를 쓰므로 `F`는 비어 있을 가능성이 높지만, 실제 IMC 애셋은 구현 시점에 재확인한다 |
 | 7 | `WBP_MissionOffer`에 보상 텍스트 UI 요소(텍스트 블록 등)를 두지 않는다 | `Gameplay` 미션은 보상이 없다(§3-5) — 보상 UI 요소가 있으면 항상 빈 값이 노출되거나, 개발자가 임의로 값을 채워 넣는 실수를 유발한다 |
+| 8 | **(2026-08-05 BLOCKER 보강)** §6-2의 Greeting 코드 제거(항목 1~6)와 `DT_SpyMission_Greeting` 에셋 삭제가 실제로 반영됐는지 gameplay-programmer 구현 완료 후 확인한다 — `ESpyNPCDialogueState::Greeting`·관련 캐시 필드·재판정 분기가 하나라도 남아있으면 안 된다 | 남아있으면 `RequestInteract()`의 옛 Greeting 재판정이 `MissionType`을 보지 않고 `MissionIndex`만 비교하므로, 새 12행 체계에서 재번호가 어긋난 잔여 `Mission_Greeting` 행이 있을 경우 정상 `Offer`/`Report` 대신 엉뚱한 Greeting 대사가 뜨는 **무증상 실패**가 난다(§6-2) |
 
 ---
 

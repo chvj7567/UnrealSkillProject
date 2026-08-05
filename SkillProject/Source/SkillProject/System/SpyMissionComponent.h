@@ -11,7 +11,6 @@
 class USpyAbilitySystemComponent;
 class USpyMissionConfig;
 struct FSpyMissionRow;
-struct FSpyMission_TargetLocationRow;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpyMission_ProgressChanged, USpyMissionComponent*, MissionComponent, int32, MissionIndex, int32, Count, int32, TargetCount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpyMission_Completed, USpyMissionComponent*, MissionComponent, int32, CompletedIndex);
@@ -86,10 +85,6 @@ public:
 	//# 인덱스로 임의 미션 엔트리를 조회한다. MissionConfig가 없거나 범위 밖이면 nullptr.
 	//# NPC의 RequestInteract가 카드(Offer)용 Description을 채울 때 쓴다.
 	const FSpyMissionRow* GetMissionEntry(int32 InMissionId) const;
-
-	//# 인덱스로 목표 좌표를 조회한다(§14-1 선택적 관계). 없으면 nullptr — 데이터는 MissionConfig
-	//# 가 소유하고 이 컴포넌트는 위임만 한다(cpp-style §8), GetMissionEntry 와 동일한 패턴
-	const FSpyMission_TargetLocationRow* GetMissionTargetLocation(int32 InMissionId) const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetMissionIndex() const { return MissionState.MissionIndex; }

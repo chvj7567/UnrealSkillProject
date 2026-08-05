@@ -1,10 +1,16 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Components/SceneComponent.h"
 #include "Data/SpyMissionConfig.h"
 #include "Engine/DataTable.h"
+#include "GameFramework/Actor.h"
+#include "Interactable/SpyInteractableObject.h"
 #include "ManagerComponent/SpyNavigationComponent.h"
+#include "NPC/SpyNPCCharacter.h"
+#include "Navigation/SpyMissionTargetPoint.h"
 #include "System/SpyMissionComponent.h"
+#include "System/SpyMissionTargetRegistrySubsystem.h"
 #include "UObject/UnrealType.h"
 #include "Util/SpyGameplayTags.h"
 
@@ -17,7 +23,9 @@ static void SpyNavigationComponentTests_SetMissionConfig(USpyMissionComponent* C
 	Prop->SetObjectPropertyValue_InContainer(Component, Config);
 }
 
-static USpyMissionConfig* SpyNavigationComponentTests_MakeConfigWithTargetLocation()
+//# design §0(2026-08-05) 개정으로 Mission_TargetLocation(DataTable) 셋업은 제거했다 —
+//# 좌표는 이제 USpyMissionTargetRegistrySubsystem(레벨 배치 액터 자동 추적)에서 온다(§7-6).
+static USpyMissionConfig* SpyNavigationComponentTests_MakeConfig()
 {
 	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
 
@@ -33,16 +41,60 @@ static USpyMissionConfig* SpyNavigationComponentTests_MakeConfigWithTargetLocati
 	MissionTable->AddRow(TEXT("Mission_1"), Row);
 	Config->MissionTable = MissionTable;
 
-	UDataTable* TargetLocationTable = NewObject<UDataTable>();
-	TargetLocationTable->RowStruct = FSpyMission_TargetLocationRow::StaticStruct();
-
-	FSpyMission_TargetLocationRow TargetRow;
-	TargetRow.MissionId = 1;
-	TargetRow.TargetLocation = FVector(500.f, 0.f, 0.f);
-	TargetLocationTable->AddRow(TEXT("TargetLocation_1"), TargetRow);
-	Config->MissionTargetLocationTable = TargetLocationTable;
-
 	return Config;
+}
+
+//# code-reviewer 가 지적한 구조적 공백(BLOCKER 회귀 위험) — RootComponent 가 없는 액터의
+//# GetActorLocation() 은 항상 원점을 반환하므로, 레지스트리가 좌표를 통째로 무시해도 검증
+//# 못 하는 테스트가 됐었다. World 없이도 SetActorLocation 이 실제로 반영되는 최소 픽스처
+//# (RootComponent 부착 + 비원점 좌표)를 공용 헬퍼로 둔다 — 이하 모든 좌표 검증 테스트가 이걸 쓴다.
+static AActor* SpyNavigationComponentTests_MakeLocatedActor(const FVector& InLocation)
+{
+	AActor* Actor = NewObject<AActor>(GetTransientPackage());
+	USceneComponent* Root = NewObject<USceneComponent>(Actor, TEXT("Root"));
+	Actor->SetRootComponent(Root);
+	Actor->SetActorLocation(InLocation);
+
+	return Actor;
+}
+
+//# 기존 3개 핵심 테스트가 공유하는 Vault 마커 위치 — 원점이 아닌 값을 써서 "등록/조회
+//# 성공 여부"뿐 아니라 "그 좌표가 정확히 패스스루되는가"까지 이 3개 테스트에서 함께 검증한다.
+static const FVector SpyNavigationComponentTests_VaultMarkerLocation(500.f, -250.f, 120.f);
+
+static USpyMissionTargetRegistrySubsystem* SpyNavigationComponentTests_MakeRegistryWithVaultTarget()
+{
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	AActor* MarkerActor = SpyNavigationComponentTests_MakeLocatedActor(SpyNavigationComponentTests_VaultMarkerLocation);
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Vault, MarkerActor);
+
+	return Registry;
+}
+
+//# SpyMissionComponentTests.cpp 의 동일 리플렉션 기법을 이 파일 전용으로 다시 둔다 — OnRep_MissionState
+//# 는 protected UFUNCTION 이라 실제 레플리케이션 없이 "원격 클라이언트가 새 스냅샷을 받았다"를
+//# 시뮬레이션하는 유일한 방법이다.
+static void SpyNavigationComponentTests_SimulateReplication(USpyMissionComponent* Component, const FSpyMissionState& OldState)
+{
+	UFunction* Func = USpyMissionComponent::StaticClass()->FindFunctionByName(TEXT("OnRep_MissionState"));
+	check(Func != nullptr);
+
+	struct FOnRepMissionStateParms
+	{
+		FSpyMissionState OldMissionState;
+	};
+
+	FOnRepMissionStateParms Parms;
+	Parms.OldMissionState = OldState;
+
+	Component->ProcessEvent(Func, &Parms);
+}
+
+static void SpyNavigationComponentTests_SetMissionState(USpyMissionComponent* Component, const FSpyMissionState& NewState)
+{
+	FStructProperty* MissionStateProp = FindFProperty<FStructProperty>(USpyMissionComponent::StaticClass(), TEXT("MissionState"));
+	check(MissionStateProp != nullptr);
+	MissionStateProp->SetValue_InContainer(Component, &NewState);
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -54,17 +106,18 @@ bool FSpyNavigationComponentAcceptStartsPathTest::RunTest(const FString& Paramet
 {
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
-	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfigWithTargetLocation());
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
 
 	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
 	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
 
 	TestFalse(TEXT("Path inactive before accept"), NavComponent->IsPathActive());
 
 	MissionComponent->AcceptCurrentMission();
 
 	TestTrue(TEXT("Path active after accept"), NavComponent->IsPathActive());
-	TestEqual(TEXT("Target location matches Mission_TargetLocation row"), NavComponent->GetCurrentTargetLocation(), FVector(500.f, 0.f, 0.f));
+	TestEqual(TEXT("Target location matches the registered marker's non-zero location"), NavComponent->GetCurrentTargetLocation(), SpyNavigationComponentTests_VaultMarkerLocation);
 
 	return true;
 }
@@ -76,7 +129,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FSpyNavigationComponentNoTargetLocationTest::RunTest(const FString& Parameters)
 {
-	//# 목표 좌표가 정의되지 않은 미션은 수락해도 경로가 활성화되지 않는다 (spec 범위 §2 "제외")
+	//# 장소 무관 미션(Kill)은 어떤 액터도 그 MatchTag 로 등록하지 않으므로 조회가 항상
+	//# 실패해야 한다 — 이것이 §5-1 원칙 3항("대상 없음")을 구현하는 메커니즘이다(design §5-5)
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
 
@@ -97,10 +151,11 @@ bool FSpyNavigationComponentNoTargetLocationTest::RunTest(const FString& Paramet
 
 	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
 	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
 
 	MissionComponent->AcceptCurrentMission();
 
-	TestFalse(TEXT("No target location row -> path stays inactive"), NavComponent->IsPathActive());
+	TestFalse(TEXT("No matching registry entry -> path stays inactive"), NavComponent->IsPathActive());
 
 	return true;
 }
@@ -114,10 +169,11 @@ bool FSpyNavigationComponentCompleteStopsPathTest::RunTest(const FString& Parame
 {
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
-	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfigWithTargetLocation());
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
 
 	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
 	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
 
 	MissionComponent->AcceptCurrentMission();
 	TestTrue(TEXT("Path active after accept"), NavComponent->IsPathActive());
@@ -131,130 +187,292 @@ bool FSpyNavigationComponentCompleteStopsPathTest::RunTest(const FString& Parame
 }
 
 //# ─────────────────────────────────────────────────────────────────────────────
-//# 이하 test-engineer 확장 — 재진입(구독 해제 후 무반응)·상태 잔존(연속 미션 재사용)·
-//# 레이스(OnRep 다단계 스킵) 엣지 케이스. 기존 3개 테스트는 RecomputePath 의
-//# GetWorld()==nullptr 조기 반환 경로만 타므로(bPathActive 플래그만 검증), 여기서는
-//# HandleMissionAccepted/HandleMissionCompleted 상태 머신 그 자체의 조합을 확장한다.
+//# 이하 test-engineer 확장 (design §5-7·§7-6, 2026-08-05 개정 기준 재작성)
 //# ─────────────────────────────────────────────────────────────────────────────
 
-//# System/Tests/SpyMissionComponentTests.cpp 의 동일 헬퍼를 이 파일 전용으로 다시 둔다 —
-//# OnRep_MissionState 는 protected UFUNCTION 이라 리플렉션으로 직접 호출한다.
-static void SpyNavigationComponentTests_SimulateReplication(USpyMissionComponent* Component, const FSpyMissionState& OldState)
-{
-	UFunction* Func = USpyMissionComponent::StaticClass()->FindFunctionByName(TEXT("OnRep_MissionState"));
-	check(Func != nullptr);
-
-	struct FOnRepMissionStateParms
-	{
-		FSpyMissionState OldMissionState;
-	};
-
-	FOnRepMissionStateParms Parms;
-	Parms.OldMissionState = OldState;
-
-	Component->ProcessEvent(Func, &Parms);
-}
-
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FSpyNavigationComponentUnbindStopsReactingTest,
-	"SkillProject.Navigation.Component.UnbindStopsReacting",
+	FSpyNavigationComponentTargetLocationPassesThroughTest,
+	"SkillProject.Navigation.Component.TargetLocationPassesThrough",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FSpyNavigationComponentUnbindStopsReactingTest::RunTest(const FString& Parameters)
+bool FSpyNavigationComponentTargetLocationPassesThroughTest::RunTest(const FString& Parameters)
 {
-	//# 구독 해제 누락 회귀 방지 — UnbindMissionComponent 이후에는 그 컴포넌트의 어떤
-	//# 이벤트에도 더 이상 반응하지 않아야 한다(델리게이트 구독 해제 누락 엣지케이스)
+	//# code-reviewer BLOCKER 회귀 고정 — 실제 ASpyMissionTargetPoint(마커 액터)를 원점이 아닌
+	//# 좌표로 옮겨서, 레지스트리→NavComponent 경로가 그 좌표를 정확히 패스스루하는지 검증한다.
+	//# RootComponent 가 없었다면(수정 전) 이 좌표는 항상 (0,0,0)으로 관측됐을 것이다.
+	const FVector ExpectedLocation(1234.f, -567.f, 89.f);
+
+	ASpyMissionTargetPoint* Marker = NewObject<ASpyMissionTargetPoint>(GetTransientPackage());
+	Marker->SetActorLocation(ExpectedLocation);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Vault, Marker);
+
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
-	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfigWithTargetLocation());
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
 
 	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
 	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestTrue(TEXT("Path active after accept"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target location exactly matches ASpyMissionTargetPoint's non-zero world location"), NavComponent->GetCurrentTargetLocation(), ExpectedLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentDialogueTargetPassesThroughTest,
+	"SkillProject.Navigation.Component.DialogueTargetPassesThrough",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentDialogueTargetPassesThroughTest::RunTest(const FString& Parameters)
+{
+	//# Dialogue 분기(NPCId 키 공간)의 동일 회귀 고정 — 실제 ASpyNPCCharacter 를 원점이 아닌
+	//# 좌표로 옮겨 등록한다(design §5-1 원칙 1항).
+	const FVector ExpectedLocation(-42.f, 815.f, 16.f);
+	const int32 NPCId = 7;
+
+	ASpyNPCCharacter* NPC = NewObject<ASpyNPCCharacter>(GetTransientPackage());
+	NPC->SetActorLocation(ExpectedLocation);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterNPCLocation(NPCId, NPC);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Dialogue;
+	Row.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	Row.NPCId = NPCId;
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestTrue(TEXT("Path active after accept (Dialogue auto-resolves NPCId branch)"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target location exactly matches ASpyNPCCharacter's non-zero world location"), NavComponent->GetCurrentTargetLocation(), ExpectedLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentInteractTargetUsesMatchTagBranchTest,
+	"SkillProject.Navigation.Component.InteractTargetUsesMatchTagBranch",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentInteractTargetUsesMatchTagBranchTest::RunTest(const FString& Parameters)
+{
+	//# design §5-3 마지막 문단 — Interact 타입은 NPCId 가 없으므로(ASpyInteractableObject 실측)
+	//# Dialogue 분기가 아니라 Gameplay 와 동일한 MatchTag 분기를 타야 한다. NPCId 는 일부러
+	//# NoNPCId 로 남겨 둔다 — 그래도 조회가 성공해야 이 분기가 MatchTag 로 갔다는 증거가 된다.
+	const FVector ExpectedLocation(300.f, 300.f, 0.f);
+	const FGameplayTag InteractTag = SpyGameplayTags::Event_Mission_Interact;
+
+	ASpyInteractableObject* Interactable = NewObject<ASpyInteractableObject>(GetTransientPackage());
+	Interactable->SetActorLocation(ExpectedLocation);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterMissionTargetLocation(InteractTag, Interactable);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Interact;
+	Row.MatchTag = InteractTag;
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestTrue(TEXT("Path active — Interact resolved via the MatchTag branch, not NPCId"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target location matches the interactable object's location"), NavComponent->GetCurrentTargetLocation(), ExpectedLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentDialogueMissingNPCIdSkipsLookupTest,
+	"SkillProject.Navigation.Component.DialogueMissingNPCIdSkipsLookup",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentDialogueMissingNPCIdSkipsLookupTest::RunTest(const FString& Parameters)
+{
+	//# design §5-2 회귀 고정 — Dialogue 인데 NPCId == NoNPCId(9999) 이면 레지스트리 조회
+	//# 자체를 시도하지 않아야 한다. 레지스트리에 "우연히" 9999 키로 등록된 액터를 심어 둬서,
+	//# 정말로 게이트가 조회를 막았는지(그저 아무것도 없어서 실패한 게 아닌지) 구분한다.
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Dialogue;
+	Row.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	Row.NPCId = FSpyMissionRow::NoNPCId; //# 명시적으로 담당 NPC 없음
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterNPCLocation(FSpyMissionRow::NoNPCId, SpyNavigationComponentTests_MakeLocatedActor(FVector(1.f, 2.f, 3.f)));
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestFalse(TEXT("NPCId == NoNPCId gate blocks the lookup even though the sentinel key resolves"), NavComponent->IsPathActive());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentGameplayInvalidMatchTagSkipsLookupTest,
+	"SkillProject.Navigation.Component.GameplayInvalidMatchTagSkipsLookup",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentGameplayInvalidMatchTagSkipsLookupTest::RunTest(const FString& Parameters)
+{
+	//# design §5-2 회귀 고정 — Gameplay/Interact 인데 MatchTag 가 invalid 이면 조회를 시도하지
+	//# 않아야 한다(에디터 데이터 실수 방어). 레지스트리에는 관계없는 유효한 태그 항목을 하나
+	//# 남겨 둬서, "아무것도 없어서"가 아니라 게이트가 실제로 막았음을 구분한다.
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Gameplay;
+	//# Row.MatchTag 를 의도적으로 설정하지 않는다 — invalid 상태 그대로 (에디터 데이터 누락 시뮬레이션)
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestFalse(TEXT("Invalid MatchTag gate blocks the lookup"), NavComponent->IsPathActive());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentUnbindStopsListeningTest,
+	"SkillProject.Navigation.Component.UnbindStopsListening",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentUnbindStopsListeningTest::RunTest(const FString& Parameters)
+{
+	//# 구독 해제 엣지케이스 — UnbindMissionComponent() 이후에는 그 컴포넌트가 계속 진행돼도
+	//# NavComponent 가 더 이상 반응하지 않아야 한다(델리게이트가 실제로 RemoveDynamic 됐는가).
+	USpyMissionConfig* Config = SpyNavigationComponentTests_MakeConfig();
+
+	UDataTable* MissionTable = Config->MissionTable;
+	FSpyMissionRow DialogueRow;
+	DialogueRow.MissionId = 2;
+	DialogueRow.MissionType = ESpyMissionType::Dialogue;
+	DialogueRow.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	MissionTable->AddRow(TEXT("Mission_2"), DialogueRow);
+
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
+
+	MissionComponent->AcceptCurrentMission();
+	TestTrue(TEXT("Path active after accept, before unbind"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target is the vault marker before unbind"), NavComponent->GetCurrentTargetLocation(), SpyNavigationComponentTests_VaultMarkerLocation);
+
 	NavComponent->UnbindMissionComponent();
 
-	MissionComponent->AcceptCurrentMission();
-
-	TestFalse(TEXT("Path stays inactive — delegate was detached before the accept"), NavComponent->IsPathActive());
-
-	return true;
-}
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FSpyNavigationComponentSequentialMissionsNoStaleStateTest,
-	"SkillProject.Navigation.Component.SequentialMissionsNoStaleState",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-
-bool FSpyNavigationComponentSequentialMissionsNoStaleStateTest::RunTest(const FString& Parameters)
-{
-	//# 리소스 재사용 후 상태 잔존 엣지케이스 — 같은 NavComponent 로 미션 1을 완료하고
-	//# 미션 2를 재수락했을 때, 미션 1의 목표 좌표가 남아있지 않아야 한다
-	USpyMissionConfig* Config = SpyNavigationComponentTests_MakeConfigWithTargetLocation();
-
-	FSpyMissionRow SecondMission;
-	SecondMission.MissionId = 2;
-	SecondMission.MissionType = ESpyMissionType::Gameplay;
-	SecondMission.MatchTag = SpyGameplayTags::Skill_Move_Climb;
-	SecondMission.Mode = ESpyMissionMode::Accumulate;
-	SecondMission.TargetCount = 1;
-	Config->MissionTable->AddRow(TEXT("Mission_2"), SecondMission);
-
-	FSpyMission_TargetLocationRow SecondTargetRow;
-	SecondTargetRow.MissionId = 2;
-	SecondTargetRow.TargetLocation = FVector(0.f, 777.f, 0.f);
-	Config->MissionTargetLocationTable->AddRow(TEXT("TargetLocation_2"), SecondTargetRow);
-
-	AActor* Owner = NewObject<AActor>(GetTransientPackage());
-	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
-	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
-
-	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
-	NavComponent->BindMissionComponent(MissionComponent);
-
-	MissionComponent->AcceptCurrentMission();
-	TestEqual(TEXT("Mission 1 target active"), NavComponent->GetCurrentTargetLocation(), FVector(500.f, 0.f, 0.f));
-
+	//# 미션 1을 완료시켜 미션 2(Dialogue, 자동 수락)로 전이 — Unbind 전이었다면 StopPath() 후
+	//# 재조회가 일어났겠지만, Unbind 이후에는 어떤 반응도 없어야 한다.
 	MissionComponent->AddProgress(SpyGameplayTags::Skill_Move_Vault, 3);
-	TestFalse(TEXT("Path inactive between missions — no stale target"), NavComponent->IsPathActive());
-	TestEqual(TEXT("Target reset to zero, not left at mission 1's location"), NavComponent->GetCurrentTargetLocation(), FVector::ZeroVector);
 
-	//# Gameplay 타입은 자동 수락되지 않는다 — 명시적으로 재수락한다
-	MissionComponent->AcceptCurrentMission();
-
-	TestTrue(TEXT("Path active again for mission 2"), NavComponent->IsPathActive());
-	TestEqual(TEXT("Retargeted to mission 2, no leak from mission 1"), NavComponent->GetCurrentTargetLocation(), FVector(0.f, 777.f, 0.f));
+	TestTrue(TEXT("Path state unchanged after unbind — no longer reacting to completion"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target location unchanged after unbind — no retarget attempted"), NavComponent->GetCurrentTargetLocation(), SpyNavigationComponentTests_VaultMarkerLocation);
 
 	return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FSpyNavigationComponentRemoteClientMultiStepSkipRetargetsTest,
-	"SkillProject.Navigation.Component.RemoteClientMultiStepSkipRetargets",
+	FSpyNavigationComponentSequentialMissionsRetargetTest,
+	"SkillProject.Navigation.Component.SequentialMissionsRetarget",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FSpyNavigationComponentRemoteClientMultiStepSkipRetargetsTest::RunTest(const FString& Parameters)
+bool FSpyNavigationComponentSequentialMissionsRetargetTest::RunTest(const FString& Parameters)
 {
-	//# design §2-3 이 인정한 "손실 있지만 내비게이션엔 무해" 주장을 NavigationComponent
-	//# 관점에서 직접 검증한다 — AcceptCurrentMission() 을 그 이후로는 호출하지 않고(원격
-	//# 클라이언트 시뮬레이션) OnRep 한 번으로 1->3(중간 2 스킵) 전이를 재현했을 때,
-	//# 최종적으로 미션 3의 목표로 정확히 리타겟되는지 확인한다.
-	USpyMissionConfig* Config = SpyNavigationComponentTests_MakeConfigWithTargetLocation();
+	//# 정상 순차 전이 — 미션1(Gameplay, Vault) 완료 -> 미션2(Dialogue, 자동 수락) 진입 시
+	//# 내비게이션이 미션1의 낡은 목표를 지우고 미션2의 새 목표(NPC 위치)로 정확히 재타겟팅해야 한다.
+	const FVector VaultLocation(100.f, 0.f, 0.f);
+	const FVector NPCLocation(0.f, 100.f, 0.f);
+	const int32 NPCId = 42;
 
-	FSpyMissionRow SkippedRow;
-	SkippedRow.MissionId = 2;
-	SkippedRow.MissionType = ESpyMissionType::Dialogue;
-	SkippedRow.MatchTag = SpyGameplayTags::Event_Mission_Report;
-	Config->MissionTable->AddRow(TEXT("Mission_2"), SkippedRow);
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
 
-	FSpyMissionRow FinalRow;
-	FinalRow.MissionId = 3;
-	FinalRow.MissionType = ESpyMissionType::Dialogue;
-	FinalRow.MatchTag = SpyGameplayTags::Event_Mission_Report;
-	Config->MissionTable->AddRow(TEXT("Mission_3"), FinalRow);
+	FSpyMissionRow VaultRow;
+	VaultRow.MissionId = 1;
+	VaultRow.MissionType = ESpyMissionType::Gameplay;
+	VaultRow.MatchTag = SpyGameplayTags::Skill_Move_Vault;
+	VaultRow.Mode = ESpyMissionMode::Accumulate;
+	VaultRow.TargetCount = 1;
+	MissionTable->AddRow(TEXT("Mission_1"), VaultRow);
 
-	FSpyMission_TargetLocationRow FinalTargetRow;
-	FinalTargetRow.MissionId = 3;
-	FinalTargetRow.TargetLocation = FVector(999.f, 250.f, 0.f);
-	Config->MissionTargetLocationTable->AddRow(TEXT("TargetLocation_3"), FinalTargetRow);
+	FSpyMissionRow DialogueRow;
+	DialogueRow.MissionId = 2;
+	DialogueRow.MissionType = ESpyMissionType::Dialogue;
+	DialogueRow.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	DialogueRow.NPCId = NPCId;
+	MissionTable->AddRow(TEXT("Mission_2"), DialogueRow);
+
+	Config->MissionTable = MissionTable;
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Vault, SpyNavigationComponentTests_MakeLocatedActor(VaultLocation));
+	Registry->RegisterNPCLocation(NPCId, SpyNavigationComponentTests_MakeLocatedActor(NPCLocation));
 
 	AActor* Owner = NewObject<AActor>(GetTransientPackage());
 	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
@@ -262,30 +480,280 @@ bool FSpyNavigationComponentRemoteClientMultiStepSkipRetargetsTest::RunTest(cons
 
 	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
 	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
 
-	//# 미션 1을 먼저 정상 수락해 경로가 활성 상태(구 목표 500,0,0)로 시작하게 만든다 —
-	//# "리소스 재사용 후 상태 잔존" 여부를 함께 검증하기 위한 사전 조건
 	MissionComponent->AcceptCurrentMission();
-	TestEqual(TEXT("Starts on mission 1's target"), NavComponent->GetCurrentTargetLocation(), FVector(500.f, 0.f, 0.f));
+	TestEqual(TEXT("Target starts at the vault marker"), NavComponent->GetCurrentTargetLocation(), VaultLocation);
+
+	MissionComponent->AddProgress(SpyGameplayTags::Skill_Move_Vault, 1);
+
+	TestTrue(TEXT("Path still active — mission 2 auto-accepted and retargeted"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target retargets to mission 2's NPC location, not the stale vault location"), NavComponent->GetCurrentTargetLocation(), NPCLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentMultiStepSkipRetargetsTest,
+	"SkillProject.Navigation.Component.MultiStepSkipRetargets",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentMultiStepSkipRetargetsTest::RunTest(const FString& Parameters)
+{
+	//# design §2-3 "매 트랜지션과 1:1 대응하지 않는다, 그래도 내비게이션엔 무해"를 고정한다 —
+	//# 원격 클라이언트가 미션1(완료)->미션2(스킵, Dialogue)->미션3(Dialogue) 스냅샷을 한 번의
+	//# OnRep 으로 받으면, 내비게이션은 미션2 를 전혀 조회하지 않고 최종 미션3 로 곧바로
+	//# 재타겟팅해야 한다(SpyMissionComponentTests.cpp RemoteClientMultiStepSkipTest 와 짝).
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row1;
+	Row1.MissionId = 1;
+	Row1.MissionType = ESpyMissionType::Gameplay;
+	Row1.MatchTag = SpyGameplayTags::Skill_Move_Vault;
+	MissionTable->AddRow(TEXT("Mission_1"), Row1);
+
+	FSpyMissionRow Row2; //# 스킵되는 중간 미션 — 목표를 등록해 두어 "조회조차 안 됐다"를 검증 가능하게 한다
+	Row2.MissionId = 2;
+	Row2.MissionType = ESpyMissionType::Dialogue;
+	Row2.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	Row2.NPCId = 20;
+	MissionTable->AddRow(TEXT("Mission_2"), Row2);
+
+	FSpyMissionRow Row3;
+	Row3.MissionId = 3;
+	Row3.MissionType = ESpyMissionType::Dialogue;
+	Row3.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	Row3.NPCId = 30;
+	MissionTable->AddRow(TEXT("Mission_3"), Row3);
+
+	Config->MissionTable = MissionTable;
+
+	const FVector SkippedLocation(999.f, 999.f, 999.f);
+	const FVector FinalLocation(50.f, 60.f, 70.f);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterNPCLocation(20, SpyNavigationComponentTests_MakeLocatedActor(SkippedLocation));
+	Registry->RegisterNPCLocation(30, SpyNavigationComponentTests_MakeLocatedActor(FinalLocation));
+
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
 
 	FSpyMissionState OldState;
 	OldState.MissionIndex = 1;
-	OldState.Count = 3;
+	OldState.Count = 0;
 	OldState.bAccepted = true;
-
-	FStructProperty* MissionStateProp = FindFProperty<FStructProperty>(USpyMissionComponent::StaticClass(), TEXT("MissionState"));
-	check(MissionStateProp != nullptr);
 
 	FSpyMissionState NewState;
 	NewState.MissionIndex = 3;
 	NewState.Count = 0;
 	NewState.bAccepted = true;
-	MissionStateProp->SetValue_InContainer(MissionComponent, &NewState);
+	SpyNavigationComponentTests_SetMissionState(MissionComponent, NewState);
 
 	SpyNavigationComponentTests_SimulateReplication(MissionComponent, OldState);
 
-	TestTrue(TEXT("Path still active after the multi-step transition"), NavComponent->IsPathActive());
-	TestEqual(TEXT("Retargeted to mission 3's location, not a stale mission-1 target"), NavComponent->GetCurrentTargetLocation(), FVector(999.f, 250.f, 0.f));
+	TestTrue(TEXT("Path active after skip-retarget to mission 3"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target retargets directly to mission 3's NPC location, skipping mission 2 entirely"), NavComponent->GetCurrentTargetLocation(), FinalLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentFirstResolveAttemptFailsGracefullyTest,
+	"SkillProject.Navigation.Component.FirstResolveAttemptFailsGracefully",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentFirstResolveAttemptFailsGracefullyTest::RunTest(const FString& Parameters)
+{
+	//# design §5-6 재시도 타이머 — 실제 0.2초 간격 최대 약 10회 반복은 World 의 타이머 틱이
+	//# 필요해 이 SimpleAutomationTest 하네스(World 없음)로는 자동화할 수 없다(보고서 "자동화
+	//# 한계" 참조). TargetRetryCount 는 UPROPERTY 가 아니라 리플렉션으로도 순수하게 들여다볼
+	//# 수 없다 — production 코드 추가 요청으로 별도 보고한다. 여기서는 관측 가능한 범위에서
+	//# "빈 레지스트리로 최초 조회가 실패해도 크래시 없이 path-inactive 로 안전하게 끝난다"만 고정한다.
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Gameplay;
+	Row.MatchTag = SpyGameplayTags::Skill_Move_Vault;
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	//# 빈 레지스트리 — Vault 를 등록한 액터가 없어 최초 조회가 반드시 실패한다
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(NewObject<USpyMissionTargetRegistrySubsystem>());
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestFalse(TEXT("Path stays inactive — first resolve attempt failed, no crash"), NavComponent->IsPathActive());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentFixtureRealClassesSelfCheckTest,
+	"SkillProject.Navigation.Component.FixtureRealClassesSelfCheck",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentFixtureRealClassesSelfCheckTest::RunTest(const FString& Parameters)
+{
+	//# 자가진단 — TargetLocationPassesThrough/DialogueTargetPassesThrough/InteractTargetUsesMatchTagBranch
+	//# 는 전부 "World 없이 NewObject 로 만든 ASpyMissionTargetPoint/ASpyNPCCharacter 도
+	//# SetActorLocation 이 RootComponent 를 통해 실제로 반영된다"는 가정에 기댄다. 이 가정이
+	//# 틀리면 그 테스트들은 production 회귀와 똑같은 실패 모양(기대 좌표 대신 원점 관측)으로
+	//# 보인다 — 이 테스트가 먼저 깨지면 원인이 픽스처임을 바로 구분할 수 있다.
+	const FVector ExpectedLocation(111.f, 222.f, 333.f);
+
+	ASpyMissionTargetPoint* Marker = NewObject<ASpyMissionTargetPoint>(GetTransientPackage());
+	Marker->SetActorLocation(ExpectedLocation);
+	TestEqual(TEXT("ASpyMissionTargetPoint.SetActorLocation takes effect without a World"), Marker->GetActorLocation(), ExpectedLocation);
+
+	ASpyNPCCharacter* NPC = NewObject<ASpyNPCCharacter>(GetTransientPackage());
+	NPC->SetActorLocation(ExpectedLocation);
+	TestEqual(TEXT("ASpyNPCCharacter.SetActorLocation takes effect without a World"), NPC->GetActorLocation(), ExpectedLocation);
+
+	return true;
+}
+
+//# ─────────────────────────────────────────────────────────────────────────────
+//# test-engineer 확장 (design npc-mission-dialogue.md §6-2(a) 결함 B) —
+//# 바인드 시점 pull 회귀. 픽스처는 추상적인 MissionId 값만 쓰므로 실제 미션 체인 행수와
+//# 무관하게 유효하다.
+//# ─────────────────────────────────────────────────────────────────────────────
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentBindAfterAcceptPullsImmediatelyTest,
+	"SkillProject.Navigation.Component.BindAfterAcceptPullsImmediately",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentBindAfterAcceptPullsImmediatelyTest::RunTest(const FString& Parameters)
+{
+	//# design npc-mission-dialogue.md §6-2(a) 결함 B 회귀 — ASC-init 처럼 바인드보다 먼저
+	//# 수락이 끝나 있는 세션 시작 경합을 재현한다. 이미 수락된 상태로 바인드하면 새 브로드캐스트를
+	//# 기다리지 않고 바인드 직후 즉시 1회 pull 로 경로를 시작해야 한다
+	//# (USpyNavigationComponent::BindMissionComponent, SpyMainHUD::RefreshMission()과 동일 패턴).
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	//# 수락을 바인드보다 먼저 완료시킨다 — 바인드 시점에는 이미 OnMissionAccepted 가 지나간 뒤다
+	MissionComponent->AcceptCurrentMission();
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
+
+	TestFalse(TEXT("Path inactive before bind (no subscriber yet)"), NavComponent->IsPathActive());
+
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	TestTrue(TEXT("Bind pulls the already-accepted mission and starts the path immediately"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target resolves to the vault marker without waiting for a new broadcast"), NavComponent->GetCurrentTargetLocation(), SpyNavigationComponentTests_VaultMarkerLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentUnacceptedMissingNPCIdSkipsLookupTest,
+	"SkillProject.Navigation.Component.UnacceptedMissingNPCIdSkipsLookup",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentUnacceptedMissingNPCIdSkipsLookupTest::RunTest(const FString& Parameters)
+{
+	//# code-reviewer 지적 회귀 — 이전 이름("BindWithoutPriorAcceptDoesNotPull")은 mission-ground-
+	//# navigation.md §5-2-1 신규 규칙(미수락이면 MissionType 무관 담당 NPC로 안내)과 정반대로
+	//# 읽힌다. 실제로 이 테스트가 통과하는 이유는 "미수락이라서"가 아니라 픽스처의 NPCId 가
+	//# NoNPCId(9999) sentinel 로 남아 있어 TryResolveTarget 의 sentinel 게이트(§5-6)에 걸리기
+	//# 때문이다 — 진짜 의도대로 이름·픽스처를 명시화해 재작성한다(§5-2-1 자체의 반례가 아님).
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Gameplay;
+	Row.MatchTag = SpyGameplayTags::Skill_Move_Vault;
+	Row.NPCId = FSpyMissionRow::NoNPCId; //# 명시적으로 담당 NPC 없음 — §5-2-1 미수락 분기라도 조회할 대상이 없다
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->SetMissionTargetRegistry(SpyNavigationComponentTests_MakeRegistryWithVaultTarget());
+
+	//# AcceptCurrentMission() 을 호출하지 않는다 — 미수락 상태에서 바인드해도 NPCId 가 없으면
+	//# (§5-2-1 분기 자체는 타지만) sentinel 게이트가 조회를 막아야 한다
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	TestFalse(TEXT("Unaccepted + NoNPCId sentinel — the gate blocks the lookup, not the unaccepted state itself"), NavComponent->IsPathActive());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentUnacceptedGameplayGuidesToNPCTest,
+	"SkillProject.Navigation.Component.UnacceptedGameplayGuidesToNPC",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentUnacceptedGameplayGuidesToNPCTest::RunTest(const FString& Parameters)
+{
+	//# design npc-mission-dialogue.md §6-2·§6-5(조건8) / mission-ground-navigation.md §5-2-1 —
+	//# 부트스트랩(Greeting) 없이도 세션 시작부터 곧장 담당 NPC로 안내되는 신규 핵심 동작.
+	//# 미수락 상태는 MissionType 과 무관하게 NPCId 키 공간을 조회한다 — 여기서는 일부러
+	//# MissionType 을 Dialogue 가 아니라 Gameplay(카드 수락이 필요한 처치 미션 등)로 두고
+	//# AcceptCurrentMission() 을 호출하지 않는다. MatchTag(Event_Mission_Kill)는 레지스트리에
+	//# 등록하지 않아, 조회가 성공한다면 그것이 반드시 NPCId 경로를 탔다는 증거가 되게 한다.
+	const FVector NPCLocation(700.f, -300.f, 50.f);
+	const int32 NPCId = 5;
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterNPCLocation(NPCId, SpyNavigationComponentTests_MakeLocatedActor(NPCLocation));
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow Row;
+	Row.MissionId = 1;
+	Row.MissionType = ESpyMissionType::Gameplay; //# Dialogue 가 아님 — NPCId 조회가 타입과 무관함을 증명하는 핵심
+	Row.MatchTag = SpyGameplayTags::Event_Mission_Kill; //# 레지스트리에 등록하지 않는다 — MatchTag 분기였다면 실패했어야 한다
+	Row.Mode = ESpyMissionMode::Accumulate;
+	Row.TargetCount = 1;
+	Row.NPCId = NPCId;
+	MissionTable->AddRow(TEXT("Mission_1"), Row);
+	Config->MissionTable = MissionTable;
+
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	//# AcceptCurrentMission() 을 의도적으로 호출하지 않는다 — 미수락 상태를 유지한 채 바인드한다.
+	//# BindMissionComponent 는 구독 직후 현재 상태로 HandleMissionProgressChanged 를 1회
+	//# 동기 호출하므로, 레지스트리를 먼저 세팅해 둬야 이 1회 호출 안에서 바로 해석된다.
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	TestTrue(TEXT("Unaccepted Gameplay mission still guides to its NPC — MissionType is not the gate while unaccepted"), NavComponent->IsPathActive());
+	TestEqual(TEXT("Target resolves via NPCId, not MatchTag, while unaccepted"), NavComponent->GetCurrentTargetLocation(), NPCLocation);
 
 	return true;
 }

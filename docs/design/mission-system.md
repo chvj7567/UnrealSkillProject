@@ -3,6 +3,8 @@
 > **이 문서의 범위**: `USpyMissionConfig::Missions` 배열에 들어갈 **미션 6종의 순서 · `MatchTag` · `Mode` · `TargetCount` · `ExperienceReward` · `DisplayName`** 확정과 그 근거.
 > 구조·클래스·판정 함수·컴포넌트 배치·HUD 바인딩 방식은 [spec](../superpowers/specs/2026-07-22-mission-system-design.md) 과 [plan](../superpowers/plans/2026-07-22-mission-system.md) 에서 이미 확정됐다. 이 문서는 그것을 다시 제안하지 않는다.
 > **선행 시스템**: [경험치·레벨 기획서](experience-level.md) — 킬 예산(6) · 킬당 20 XP · 커브 `[20,40,60]` · 최대 Lv4 는 그 문서에서 확정된 값이며, 여기서 바꾸지 않는다.
+>
+> **(2026-08-05 후속 결정 — 후행 문서와의 번호 공간 분리 안내)** 이 문서 §3-1의 `#` 열(1~6)은 **이 문서 자신의 로컬 라벨**이며, `USpyMissionConfig::Missions` 배열 인덱스에 대응하던 원래 스키마의 흔적이다. 그 스키마는 이후 [npc-mission-dialogue.md](npc-mission-dialogue.md)(2026-08-01c)가 `MissionTable`(`UDataTable`, 전역 `MissionId` 1-based)로 대체했고, `Gameplay` 6종 사이사이에 NPC `Dialogue` 미션 6종을 끼워 넣었다 — 이 문서의 `#` 열은 그 대체 이후 전역 `MissionId`와 **일치하지 않는다**(둘 다 1부터 시작하는 서로 다른 번호 공간, 대응은 §3-1-1). npc-mission-dialogue.md가 한때 세션 시작 내비게이션 문제 해소를 위해 신규 부트스트랩 `MissionId`(레이븐 "접선") 삽입을 검토했으나 **그 접근은 폐기됐다** — 같은 문제는 대신 내비게이션 규칙(mission-ground-navigation.md §5 이하)으로 해소된다. 이 문서의 `#` 열·모든 수치(§2·§3·§4)와 §3-1-1의 대응표는 **부트스트랩 삽입 자체가 없었던 것과 동일하게** 영향받지 않는다. `MissionTable`의 현재 살아있는 스키마·전역 `MissionId` 값은 **npc-mission-dialogue.md §3-6이 단일 진실**이며, 이 문서를 갱신하지 않는다(§6-3 참고).
 
 ---
 
@@ -142,6 +144,19 @@
 | 6 | **그래플링 3회** | `Skill.Move.GrappleHook` | `Accumulate` | **3** | **15** |
 
 **보상 합 검산**: 20 + 10 + 10 + 10 + 15 + 15 = **80**.
+
+### 3-1-1. 전역 `MissionId` 대응표
+
+npc-mission-dialogue.md가 `Gameplay` 6종 사이사이에 NPC `Dialogue` 미션 6종을 끼워 넣은 뒤, 위 §3-1의 로컬 `#` 1~6이 가리키는 전역 `MissionId`는 아래와 같다. **이 대응표는 참조용이며, 위 §3-1 표의 `#` 값 자체는 바꾸지 않는다** — 이 문서가 계속 로컬 라벨로 §2·§4를 서술하기 때문이다.
+
+| 이 문서 `#` | `DisplayName` | 전역 `MissionId` |
+|---|---|---|
+| 1 | 적 1명 처치 | **1** |
+| 2 | 레벨 3 달성 | **3** |
+| 3 | 콤보 4회 연결 | **5** |
+| 4 | 장애물 넘기 5회 | **7** |
+| 5 | 벽 타기 3회 | **9** |
+| 6 | 그래플링 3회 | **11** |
 
 ### 3-2. 목표 수 근거
 
@@ -283,6 +298,8 @@ spec §8 이 정한 표시 규칙(`Txt_MissionName` = `DisplayName`, `Txt_Missio
 **스키마 변경 없음** — plan Task 1 Step 3 의 `FSpyMissionEntry` 5개 필드가 그대로다. **값만 §3-1 로 확정한다.**
 
 입력 위치: `SpyMissionConfig` DataAsset(plan §9 "에셋" 항목, 예: `DA_SpyMissionConfig`) 의 `Missions` 배열. **배열 인덱스 0~5 가 §3-1 표의 1~6번 순서와 그대로 대응해야 한다** — 순서가 곧 진행 순서이고, §2 의 교착 방지 논리는 이 순서에 전적으로 의존한다.
+
+**⚠ 저장 방식 갱신 (2026-08-03, npc-mission-dialogue.md가 확정)**: 위 `Missions` 배열/`FSpyMissionEntry`는 이후 `MissionTable`(`UDataTable*`, row struct `FSpyMissionRow`, 전역 1-based `MissionId`)로 대체됐다 — 이 문서는 그 대체를 다시 서술하지 않는다. **현재 살아있는 스키마·행 값은 npc-mission-dialogue.md §3-6·§6-3이 단일 진실이다.** 이 절의 "배열 인덱스 0~5" 서술은 대체 이전 스키마를 가리키는 역사적 기록으로 남긴다 — §2의 교착 방지 논리(순서 의존) 자체는 `MissionTable`의 `MissionId` 순서로 그대로 이어진다(§3-1-1).
 
 ### 6-4. GA · GE 명세
 

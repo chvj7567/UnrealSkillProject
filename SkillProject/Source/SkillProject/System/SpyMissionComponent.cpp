@@ -239,11 +239,6 @@ const FSpyMissionRow* USpyMissionComponent::GetMissionEntry(int32 InMissionId) c
 	return (MissionConfig != nullptr ? MissionConfig->GetMission(InMissionId) : nullptr);
 }
 
-const FSpyMission_TargetLocationRow* USpyMissionComponent::GetMissionTargetLocation(int32 InMissionId) const
-{
-	return (MissionConfig != nullptr ? MissionConfig->GetMissionTargetLocation(InMissionId) : nullptr);
-}
-
 void USpyMissionComponent::GrantReward(int32 InCompletedIndex)
 {
 	if (MissionConfig == nullptr)

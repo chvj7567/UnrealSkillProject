@@ -4,17 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "GameplayTagContainer.h"
 
 #include "SpyNavigationComponent.generated.h"
 
+class UMaterialInstanceDynamic;
 class USpyMissionComponent;
+class USpyMissionTargetRegistrySubsystem;
 class USplineComponent;
 class USplineMeshComponent;
 class UStaticMesh;
 
 //# 활성 미션의 목표 지점까지 바닥 글로우 라인으로 안내하는 로컬 클라이언트 전용 연출 컴포넌트.
 //# 서버/타 플레이어에 레플리케이트하지 않는다 — 소유 폰이 로컬 컨트롤일 때만 동작한다.
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SKILLPROJECT_API USpyNavigationComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -40,20 +43,20 @@ public:
 	void BindMissionComponent(USpyMissionComponent* InMissionComponent);
 	void UnbindMissionComponent();
 
+	//# §5-7 테스트 주입 지점 — BindMissionComponent 와 같은 목적. World 없이 만든 테스트
+	//# 픽스처가 실제 UWorldSubsystem 조회 없이 좌표 조회를 검증할 수 있게 한다.
+	void SetMissionTargetRegistry(USpyMissionTargetRegistrySubsystem* InRegistry) { OverrideTargetRegistry = InRegistry; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	bool AutoDiscoverAndBindMissionComponent();
 
+	//# design mission-ground-navigation.md §5-8 — OnMissionAccepted/OnMissionCompleted/
+	//# OnAllMissionsCompleted 3개 대신 OnMissionProgressChanged 1개만 구독한다.
 	UFUNCTION()
-	void HandleMissionAccepted(USpyMissionComponent* MissionComponent, int32 MissionIndex);
-
-	UFUNCTION()
-	void HandleMissionCompleted(USpyMissionComponent* MissionComponent, int32 CompletedIndex);
-
-	UFUNCTION()
-	void HandleAllMissionsCompleted(USpyMissionComponent* MissionComponent);
+	void HandleMissionProgressChanged(USpyMissionComponent* MissionComponent, int32 MissionIndex, int32 Count, int32 TargetCount);
 
 	void StartPathTo(const FVector& InTargetLocation);
 	void StopPath();
@@ -63,6 +66,10 @@ protected:
 	void EnsureSegmentPoolSize(int32 InRequiredCount);
 	void HideVisual();
 
+	//# design §5-5·§5-6 — 레지스트리 조회 1회 시도. 실패하면 0.2초 간격 재시도 타이머를 건다.
+	USpyMissionTargetRegistrySubsystem* GetMissionTargetRegistry();
+	void TryResolveTarget();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Navigation")
 	float UpdateIntervalSeconds = 0.75f;
@@ -70,8 +77,34 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<USpyMissionComponent> BoundMissionComponent;
 
+	//# §5-7 테스트 주입 지점 — 설정돼 있으면 GetWorld()->GetSubsystem<>() 대신 이걸 쓴다
+	UPROPERTY(Transient)
+	TObjectPtr<USpyMissionTargetRegistrySubsystem> OverrideTargetRegistry;
+
 	FTimerHandle BindRetryTimerHandle;
 	FTimerHandle RepathTimerHandle;
+
+	//# HandleMissionProgressChanged 가 채우는 대기 중인 조회 키(§5-5) — 재시도 타이머가 참조한다.
+	//# bPendingIsDialogue==true 는 "NPCId 키 공간으로 조회"를 뜻한다 — Dialogue 타입뿐 아니라
+	//# 미수락 상태(§5-2-1, MissionType 무관)에서도 이 경로를 재사용한다.
+	bool bPendingIsDialogue = false;
+	int32 PendingNPCId = 0;
+	FGameplayTag PendingMatchTag;
+
+	FTimerHandle TargetRetryTimerHandle;
+	int32 TargetRetryCount = 0;
+
+	//# design §5-8 과잉 재계산 가드 — 직전 호출의 (MissionIndex, bAccepted) 와 동일하면
+	//# Count 만 바뀐 진행 이벤트로 보고 레지스트리 재질의를 생략한다
+	int32 LastResolvedMissionIndex = INDEX_NONE;
+	bool bLastResolvedAccepted = false;
+
+	//# design §5-6 — 0.2초 간격 최대 약 10회(≈2초) 재시도 후 포기
+	static constexpr float TargetRetryIntervalSeconds = 0.2f;
+	static constexpr int32 TargetRetryMaxCount = 10;
+
+	//# Dialogue 조회 실패는 데이터 버그를 뜻하므로 경고 로그 1회(bWarnedMissingConfig 와 동일 패턴, §5-6)
+	bool bWarnedMissingNPCLocation = false;
 
 	FVector CurrentTargetLocation = FVector::ZeroVector;
 	bool bPathActive = false;
@@ -81,6 +114,11 @@ protected:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<USplineMeshComponent>> PathSegmentPool;
+
+	//# PathSegmentPool 과 같은 인덱스로 관리되는 다이나믹 머티리얼 인스턴스 풀 —
+	//# 세그먼트별 SegmentWorldLength 파라미터를 세팅하기 위함
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> PathSegmentMaterialPool;
 
 	//# §4-3 가시성 히스테리시스의 "이전 프레임 상태" — SpyNavPathMath::EvaluateHysteresisVisibility 가
 	//# 순수 함수로 남도록 이 컴포넌트가 상태를 들고 있는다(Task 3 확장 참고)
