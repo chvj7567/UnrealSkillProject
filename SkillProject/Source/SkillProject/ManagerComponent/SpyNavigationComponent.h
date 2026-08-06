@@ -137,6 +137,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Navigation")
 	float GroundZOffsetCm = 3.f;
 
+	//# PathSpline(Catmull-Rom) 을 따라 렌더 세그먼트용 점을 재샘플링하는 간격 — 코너를
+	//# 곡선으로 그리기 위함(원본 NavMesh 경로점을 직선으로만 잇지 않는다)
+	UPROPERTY(EditDefaultsOnly, Category = "Navigation")
+	float CurveSampleIntervalCm = 60.f;
+
+	//# CurveSampleIntervalCm 하한 — 디자이너가 극단적으로 작은 값을 넣어도 재샘플링 루프가
+	//# 무한에 가깝게 돌지 않게 막는다.
+	static constexpr float MinCurveSampleIntervalCm = 10.f;
+
+	//# 매우 긴 경로에서도 세그먼트(=USplineMeshComponent+다이나믹 머티리얼) 개수가 폭증하지
+	//# 않게 하는 상한 — 초과하면 간격을 늘려 상한 이하로 맞춘다(첫 프레임 동기 생성 히치 방지).
+	static constexpr int32 MaxCurveSampleCount = 120;
+
+	//# 마지막 재샘플 지점과 스플라인 끝점 사이 최소 거리 — 이보다 가까우면 거의 0-length인
+	//# 꼬리 세그먼트(SetStartAndEnd 에 거의 0인 탄젠트)가 생겨 렌더/머티리얼이 깨진다.
+	static constexpr float MinTailSegmentCm = 1.f;
+
 	//# USplineMeshComponent 는 StaticMesh 가 없으면 아무것도 그리지 않는다(머티리얼과 별개) —
 	//# 실제 "길" 형태 메시는 아트 작업 범위 밖이라 에디터에서 임시 지오메트리를 지정할 수 있게 노출
 	UPROPERTY(EditDefaultsOnly, Category = "Navigation")

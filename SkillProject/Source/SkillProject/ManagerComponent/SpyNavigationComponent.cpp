@@ -358,19 +358,67 @@ void USpyNavigationComponent::ApplyPathPoints(const TArray<FVector>& InPathPoint
 	}
 	PathSpline->UpdateSpline();
 
-	const TArray<TPair<FVector, FVector>> Segments = SpyNavPathMath::BuildSplineSegments(OffsetPoints);
+	//# 원본 경로점을 직선으로 잇지 않고, PathSpline 이 계산한 Catmull-Rom 곡선을 따라
+	//# 일정 간격으로 재샘플링한 점으로 세그먼트를 만든다 — 코너가 곡선으로 표시된다.
+	TArray<FVector> CurvePoints;
+	//# CurvePoints 와 인덱스 1:1 대응하는 스플라인상 거리 — 세그먼트별로 실제 접선을
+	//# 조회하기 위한 키(아래 bHasReliableSpline 분기 참조).
+	TArray<float> CurveDistances;
+	const float SplineLength = PathSpline->GetSplineLength();
+	const bool bHasReliableSpline = (SplineLength > KINDA_SMALL_NUMBER);
+	if (bHasReliableSpline)
+	{
+		//# 하한(디자이너 오설정 방지) + 상한(긴 경로에서 세그먼트/컴포넌트 폭증 방지)을
+		//# 둘 다 적용한 유효 간격.
+		float EffectiveSampleIntervalCm = FMath::Max(CurveSampleIntervalCm, MinCurveSampleIntervalCm);
+		if (SplineLength / EffectiveSampleIntervalCm > MaxCurveSampleCount)
+			EffectiveSampleIntervalCm = SplineLength / static_cast<float>(MaxCurveSampleCount);
+
+		for (float Distance = 0.f; Distance < SplineLength - MinTailSegmentCm; Distance += EffectiveSampleIntervalCm)
+		{
+			CurvePoints.Add(PathSpline->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World));
+			CurveDistances.Add(Distance);
+		}
+		CurvePoints.Add(PathSpline->GetLocationAtDistanceAlongSpline(SplineLength, ESplineCoordinateSpace::World));
+		CurveDistances.Add(SplineLength);
+	}
+	else
+	{
+		CurvePoints = OffsetPoints;
+	}
+
+	const TArray<TPair<FVector, FVector>> Segments = SpyNavPathMath::BuildSplineSegments(CurvePoints);
 	EnsureSegmentPoolSize(Segments.Num());
 
+	//# 세그먼트마다 UV 가 0부터 리셋되는 머티리얼 특성 때문에 화살표 위상을 이어주는 누적 거리.
+	//# 플레이어(움직임) 대신 목표(월드 고정) 쪽을 위상 0으로 앵커하기 위해 -SplineLength 에서 시작한다.
+	float RunningDistanceCm = -SplineLength;
 	for (int32 Index = 0; Index < Segments.Num(); ++Index)
 	{
 		USplineMeshComponent* Segment = PathSegmentPool[Index];
-		const FVector Tangent = (Segments[Index].Value - Segments[Index].Key);
+		const FVector ChordTangent = (Segments[Index].Value - Segments[Index].Key);
+
+		//# 세그먼트 자신의 직선 방향 대신 PathSpline 의 실제 접선을 쓴다 — 인접 세그먼트가
+		//# 공유점에서 같은 접선을 갖게 돼 코너의 빈틈/겹침이 사라진다.
+		FVector StartTangent = ChordTangent;
+		FVector EndTangent = ChordTangent;
+		if (bHasReliableSpline)
+		{
+			StartTangent = PathSpline->GetTangentAtDistanceAlongSpline(CurveDistances[Index], ESplineCoordinateSpace::World);
+			EndTangent = PathSpline->GetTangentAtDistanceAlongSpline(CurveDistances[Index + 1], ESplineCoordinateSpace::World);
+		}
 
 		Segment->SetVisibility(true);
-		Segment->SetStartAndEnd(Segments[Index].Key, Tangent, Segments[Index].Value, Tangent, true);
+		Segment->SetStartAndEnd(Segments[Index].Key, StartTangent, Segments[Index].Value, EndTangent, true);
 
 		if (UMaterialInstanceDynamic* DynMat = PathSegmentMaterialPool[Index])
-			DynMat->SetScalarParameterValue(TEXT("SegmentWorldLength"), Tangent.Size());
+		{
+			DynMat->SetScalarParameterValue(TEXT("SegmentWorldLength"), ChordTangent.Size());
+			DynMat->SetScalarParameterValue(TEXT("SegmentStartDistanceCm"), RunningDistanceCm);
+			DynMat->SetScalarParameterValue(TEXT("TotalPathLengthCm"), SplineLength);
+		}
+
+		RunningDistanceCm += ChordTangent.Size();
 	}
 
 	for (int32 Index = Segments.Num(); Index < PathSegmentPool.Num(); ++Index)
