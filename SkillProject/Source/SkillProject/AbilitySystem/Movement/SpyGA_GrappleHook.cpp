@@ -148,7 +148,8 @@ void USpyGA_GrappleHook::ActivateAbility(
 
 		if (LocalTarget == nullptr)
 		{
-			UE_LOG(LogTemp, Error, TEXT("[GrappleGA][CLI] LocalTarget NULL → early return (no task)"));
+			UE_LOG(LogTemp, Error, TEXT("[GrappleGA][CLI] LocalTarget NULL → EndAbility"));
+			EndAbility(Handle, ActorInfo, ActivationInfo, false, true);
 			return;
 		}
 

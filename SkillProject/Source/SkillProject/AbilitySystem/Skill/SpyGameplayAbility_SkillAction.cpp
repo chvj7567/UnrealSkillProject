@@ -17,19 +17,32 @@ void USpyGameplayAbility_SkillAction::ActivateAbility(const FGameplayAbilitySpec
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	//# 미션 진행 — 콤보로 연결되어 활성화된 경우만 센다.
-	//# 최초 입력 활성화는 TriggerEventData가 없으므로 세지 않는다 (3연타 = 연결 2회).
-	//# InputPressed는 bReplicateInputDirectly가 False라 데디케이티드 서버에서 원격 폰에 대해 실행되지 않으므로
-	//# 서버까지 확정 전달되는 이 경로(ServerTryActivateAbilityWithEventData)에서 잡는다
-	if (HasAuthority(&ActivationInfo) && TriggerEventData != nullptr)
+	//# 미션 진행 — "콤보 실행 1회"당 1번만 센다. 체인 없는 최초 입력은 실행 경계라 카운트 플래그를 리셋하고,
+	//# 콤보로 연결된 링크 중 이번 실행의 첫 링크에서만 AddProgress 한다 (서버까지 확정 전달되는 이 경로에서 판정).
+	if (HasAuthority(&ActivationInfo))
 	{
-		if (SpyGameplayTags::GetComboTags().HasTagExact(TriggerEventData->EventTag))
+		USpyAbilitySystemComponent* OwnerASC = Cast<USpyAbilitySystemComponent>(ActorInfo->AbilitySystemComponent.Get());
+		if (IsValid(OwnerASC))
 		{
-			if (ASpyCharacter* ComboOwner = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+			if (TriggerEventData == nullptr)
 			{
-				if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(ComboOwner->GetPlayerState()))
+				//# 체인 없는 새 활성화 = 새 실행의 시작. 콤보 윈도우 태그(AnimNotify 발화 여부)에
+				//# 의존하지 않고 GAS 활성화 이벤트 자체로만 판단해 리셋이 몽타주 인터럽트와 무관하게 보장된다.
+				OwnerASC->ResetComboMissionCounted();
+			}
+			else if (SpyGameplayTags::GetComboTags().HasTagExact(TriggerEventData->EventTag))
+			{
+				const bool bMarkedNow = OwnerASC->TryMarkComboMissionCounted();
+
+				if (bMarkedNow)
 				{
-					MissionComp->AddProgress(SpyGameplayTags::Event_Mission_Combo, 1);
+					if (ASpyCharacter* ComboOwner = Cast<ASpyCharacter>(GetAvatarActorFromActorInfo()))
+					{
+						if (USpyMissionComponent* MissionComp = USpyMissionComponent::FindMissionComponent(ComboOwner->GetPlayerState()))
+						{
+							MissionComp->AddProgress(SpyGameplayTags::Event_Mission_Combo, 1);
+						}
+					}
 				}
 			}
 		}

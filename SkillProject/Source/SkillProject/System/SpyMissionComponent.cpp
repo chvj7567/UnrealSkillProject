@@ -170,29 +170,28 @@ void USpyMissionComponent::ProcessProgress(FGameplayTag InEventTag, int32 InAmou
 		MissionState.MissionIndex, MissionState.Count, InEventTag, InAmount);
 
 	const bool bChanged = (Result.MissionIndex != MissionState.MissionIndex) || (Result.Count != MissionState.Count);
-
-	if (Result.bCompletedNow)
-	{
-		const int32 CompletedIndex = MissionState.MissionIndex;
-
-		GrantReward(CompletedIndex); //# Gameplay 타입은 MissionReward 행이 없어 조용히 no-op
-		OnMissionCompleted.Broadcast(this, CompletedIndex);
-	}
-
 	if (bChanged == false)
 		return;
 
+	//# ResolveMissionProgress 는 bCompletedNow 일 때만 MissionIndex 를 전진시킨다(SpyMissionConfig.cpp) —
+	//# 별도로 인덱스 변경 여부를 재계산하지 않고 이 신호 하나로 "다음 미션 전환" 전체를 판단한다.
+	if (Result.bCompletedNow)
+	{
+		//# 상태 대입 전에 실행 — 완료 인덱스는 "이전 값"이어야 한다(design §2-3, OnRep 계약과 동일).
+		GrantReward(MissionState.MissionIndex); //# Gameplay 타입은 MissionReward 행이 없어 조용히 no-op
+		OnMissionCompleted.Broadcast(this, MissionState.MissionIndex);
+
+		//# 새로 진입할 미션이 Dialogue/Interact 타입이면 자동 수락 — 카드를 보여줄 NPC가 없다
+		const FSpyMissionRow* NewEntry = GetMissionEntry(Result.MissionIndex);
+		MissionState.bAccepted = (NewEntry != nullptr &&
+			(NewEntry->MissionType == ESpyMissionType::Dialogue || NewEntry->MissionType == ESpyMissionType::Interact));
+
+		if (MissionState.bAccepted)
+			OnMissionAccepted.Broadcast(this, Result.MissionIndex);
+	}
+
 	MissionState.MissionIndex = Result.MissionIndex;
 	MissionState.Count = Result.Count;
-
-	//# 새로 진입한 미션이 Dialogue/Interact 타입이면 자동 수락 — 카드를 보여줄 NPC가 없다
-	const FSpyMissionRow* NewEntry = GetMissionEntry(MissionState.MissionIndex);
-	MissionState.bAccepted = (NewEntry != nullptr &&
-		(NewEntry->MissionType == ESpyMissionType::Dialogue || NewEntry->MissionType == ESpyMissionType::Interact));
-
-	//# 새 미션이 Dialogue/Interact 타입이라 자동 수락됐다면 그 사실도 전용 델리게이트로 알린다
-	if (MissionState.bAccepted)
-		OnMissionAccepted.Broadcast(this, MissionState.MissionIndex);
 
 	OnMissionProgressChanged.Broadcast(this, MissionState.MissionIndex, MissionState.Count, GetTargetCount());
 

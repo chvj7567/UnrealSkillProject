@@ -157,3 +157,17 @@ bool USpyAbilitySystemComponent::IsActiveAbilityByTag(const FGameplayTag& Abilit
 
 	return false;
 }
+
+bool USpyAbilitySystemComponent::TryMarkComboMissionCounted()
+{
+	if (bComboMissionCounted)
+		return false;
+
+	bComboMissionCounted = true;
+	return true;
+}
+
+void USpyAbilitySystemComponent::ResetComboMissionCounted()
+{
+	bComboMissionCounted = false;
+}
