@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Interactable/SpyInteractableObject.h"
 #include "Interactable/CommonInterface.Interactable.h"
+#include "System/CommonInterface.System.h"
 
 //# ─────────────────────────────────────────────────────────────────────────────
 //# ASpyInteractableObject 는 HasAuthority()/실제 물리 오버랩이 필요한 RequestInteract·
@@ -46,6 +47,77 @@ bool FSpyInteractableObjectCppDefaultsTest::RunTest(const FString& Parameters)
 
 	//# ISpyInteractableRoot 계약 — null 요청자는 월드/물리 없이도 안전하게 false (가드 절)
 	TestFalse(TEXT("IsPawnInRange(nullptr) is a safe guard clause, no world needed"), Interactable->IsPawnInRange(nullptr));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyInteractableObjectImplementsHideVolumeTest,
+	"SkillProject.Interactable.Object.ImplementsHideVolume",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyInteractableObjectImplementsHideVolumeTest::RunTest(const FString& Parameters)
+{
+	ASpyInteractableObject* Interactable = NewObject<ASpyInteractableObject>();
+
+	TestTrue(TEXT("ASpyInteractableObject implements ISpyMissionTargetHideVolume"),
+			 Interactable->GetClass()->ImplementsInterface(USpyMissionTargetHideVolume::StaticClass()));
+
+	ISpyMissionTargetHideVolume* HideVolume = Cast<ISpyMissionTargetHideVolume>(Interactable);
+	TestNotNull(TEXT("Cast to the interface succeeds"), HideVolume);
+	TestNotNull(TEXT("GetHideTriggerComponent() returns a valid component by default (bEnableHideTrigger defaults to true)"), HideVolume->GetHideTriggerComponent());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyInteractableObjectHideTriggerEnabledReturnsComponentTest,
+	"SkillProject.Interactable.Object.HideTriggerEnabledReturnsComponent",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyInteractableObjectHideTriggerEnabledReturnsComponentTest::RunTest(const FString& Parameters)
+{
+	ASpyInteractableObject* Interactable = NewObject<ASpyInteractableObject>();
+
+	FBoolProperty* Prop = FindFProperty<FBoolProperty>(ASpyInteractableObject::StaticClass(), TEXT("bEnableHideTrigger"));
+	if (Prop == nullptr)
+	{
+		AddError(TEXT("bEnableHideTrigger property not found via reflection — field renamed?"));
+
+		return false;
+	}
+	Prop->SetPropertyValue_InContainer(Interactable, true);
+
+	ISpyMissionTargetHideVolume* HideVolume = Cast<ISpyMissionTargetHideVolume>(Interactable);
+	TestNotNull(TEXT("Cast to the interface succeeds"), HideVolume);
+	TestNotNull(TEXT("GetHideTriggerComponent() returns a valid component when bEnableHideTrigger is true"), HideVolume->GetHideTriggerComponent());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyInteractableObjectHideTriggerExplicitlyDisabledReturnsNullTest,
+	"SkillProject.Interactable.Object.HideTriggerExplicitlyDisabledReturnsNull",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyInteractableObjectHideTriggerExplicitlyDisabledReturnsNullTest::RunTest(const FString& Parameters)
+{
+	//# 기본값이 true 로 바뀐 뒤에도 디자이너가 인스턴스별로 false 를 켜면 여전히 거리
+	//# 히스테리시스 폴백 경로(nullptr)를 타야 한다 — opt-out 경로 자체가 죽지 않았는지 고정
+	ASpyInteractableObject* Interactable = NewObject<ASpyInteractableObject>();
+
+	FBoolProperty* Prop = FindFProperty<FBoolProperty>(ASpyInteractableObject::StaticClass(), TEXT("bEnableHideTrigger"));
+	if (Prop == nullptr)
+	{
+		AddError(TEXT("bEnableHideTrigger property not found via reflection — field renamed?"));
+
+		return false;
+	}
+	Prop->SetPropertyValue_InContainer(Interactable, false);
+
+	ISpyMissionTargetHideVolume* HideVolume = Cast<ISpyMissionTargetHideVolume>(Interactable);
+	TestNotNull(TEXT("Cast to the interface succeeds"), HideVolume);
+	TestNull(TEXT("GetHideTriggerComponent() is nullptr when bEnableHideTrigger is explicitly set to false"), HideVolume->GetHideTriggerComponent());
 
 	return true;
 }

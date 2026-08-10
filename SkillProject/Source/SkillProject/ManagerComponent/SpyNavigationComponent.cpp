@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ManagerComponent/SpyNavigationComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Engine/StaticMesh.h"
@@ -12,6 +13,7 @@
 #include "TimerManager.h"
 #include "Data/SpyMissionConfig.h"
 #include "Manager/SpyAssetManager.h"
+#include "System/CommonInterface.System.h"
 #include "System/SpyMissionComponent.h"
 #include "System/SpyMissionTargetRegistrySubsystem.h"
 #include "System/SpyNavPathMath.h"
@@ -167,13 +169,15 @@ void USpyNavigationComponent::HandleMissionProgressChanged(USpyMissionComponent*
 	TryResolveTarget();
 }
 
-void USpyNavigationComponent::StartPathTo(const FVector& InTargetLocation)
+void USpyNavigationComponent::StartPathTo(const FVector& InTargetLocation, AActor* InTargetActor)
 {
 	CurrentTargetLocation = InTargetLocation;
 	bPathActive = true;
 
 	//# 콜드 스타트를 "이전에 보이고 있었다"로 시드한다 — design §4-3 콜드 스타트 조항 참조.
 	bPathVisible = true;
+
+	BindHideTrigger(InTargetActor);
 
 	RecomputePath();
 
@@ -185,6 +189,8 @@ void USpyNavigationComponent::StopPath()
 {
 	bPathActive = false;
 	CurrentTargetLocation = FVector::ZeroVector;
+
+	UnbindHideTrigger();
 
 	//# design §5-6 — 대기 중인 좌표 재시도 타이머도 함께 정리한다. 완료→수락이 같은 OnRep 안에서
 	//# 연달아 일어날 때(§2-3), 낡은 재시도가 새 미션에 잘못된 좌표를 주입하는 경합을 막는다.
@@ -241,7 +247,11 @@ void USpyNavigationComponent::TryResolveTarget()
 		if (UWorld* World = GetWorld())
 			World->GetTimerManager().ClearTimer(TargetRetryTimerHandle);
 
-		StartPathTo(TargetLocation);
+		AActor* TargetActor = bPendingIsDialogue
+			? Registry->FindNPCActor(PendingNPCId)
+			: Registry->FindMissionTargetActor(PendingMatchTag);
+
+		StartPathTo(TargetLocation, TargetActor);
 
 		return;
 	}
@@ -292,6 +302,14 @@ void USpyNavigationComponent::RecomputePath()
 	if (bPathActive == false)
 		return;
 
+	//# design 2026-08-10 §6 — 트리거 활성 타겟은 NavMesh 쿼리 자체를 생략한다(거리 계산 불필요)
+	if (bInsideHideTrigger)
+	{
+		HideVisual();
+
+		return;
+	}
+
 	AActor* Owner = GetOwner();
 	if (Owner == nullptr)
 		return;
@@ -328,8 +346,19 @@ void USpyNavigationComponent::ApplyPathPoints(const TArray<FVector>& InPathPoint
 		return;
 
 	//# 트리밍 전 "원본" 경로 길이로 히스테리시스를 먼저 판정한다 — design §4-3 규칙 순서 참조.
+	//# 트리거 바인딩 여부와 무관하게 아래 TrimDistanceCm 계산에서 항상 필요해 스코프 밖에 둔다.
 	const float RemainingPathLength = SpyNavPathMath::ComputePathLength(InPathPoints);
-	bPathVisible = SpyNavPathMath::EvaluateHysteresisVisibility(RemainingPathLength, ArrivalHideDistanceCm, ArrivalReshowDistanceCm, bPathVisible);
+
+	if (BoundHideTrigger.IsValid())
+	{
+		//# 트리거 바인딩 타겟은 히스테리시스 자체를 쓰지 않는다 — RecomputePath 가드가
+		//# "안"을 이미 걸러내므로 여기 도달한 것 자체가 "밖"이라는 뜻이다(design 2026-08-10 §6 개정).
+		bPathVisible = true;
+	}
+	else
+	{
+		bPathVisible = SpyNavPathMath::EvaluateHysteresisVisibility(RemainingPathLength, ArrivalHideDistanceCm, ArrivalReshowDistanceCm, bPathVisible);
+	}
 
 	if (bPathVisible == false)
 	{
@@ -457,4 +486,73 @@ void USpyNavigationComponent::EnsureSegmentPoolSize(int32 InRequiredCount)
 		PathSegmentPool.Add(Segment);
 		PathSegmentMaterialPool.Add(DynMat);
 	}
+}
+
+void USpyNavigationComponent::BindHideTrigger(AActor* TargetActor)
+{
+	UnbindHideTrigger();
+
+	//# GetObject() 널체크로는 인터페이스 미구현 여부를 걸러낼 수 없다 — Cast<Interface> 로 먼저 판정한다
+	//# (Interactable/SpyInteractableObject.cpp 의 동일 근거 주석 참조).
+	ISpyMissionTargetHideVolume* HideVolumeHost = Cast<ISpyMissionTargetHideVolume>(TargetActor);
+	if (HideVolumeHost == nullptr)
+		return;
+
+	UPrimitiveComponent* TriggerComponent = HideVolumeHost->GetHideTriggerComponent();
+	if (TriggerComponent == nullptr)
+		return;
+
+	BoundHideTrigger = TriggerComponent;
+	TriggerComponent->OnComponentBeginOverlap.AddDynamic(this, &USpyNavigationComponent::HandleHideTriggerBeginOverlap);
+	TriggerComponent->OnComponentEndOverlap.AddDynamic(this, &USpyNavigationComponent::HandleHideTriggerEndOverlap);
+
+	//# 구독 시점에 이미 트리거 안에 서 있는 경우(예: 트리거 안에서 미션을 수락) 대비 —
+	//# BeginOverlap 이벤트는 발화하지 않으므로 현재 상태를 직접 조회해 동기화한다.
+	AActor* Owner = GetOwner();
+	bInsideHideTrigger = (Owner != nullptr) && TriggerComponent->IsOverlappingActor(Owner);
+}
+
+void USpyNavigationComponent::UnbindHideTrigger()
+{
+	if (UPrimitiveComponent* TriggerComponent = BoundHideTrigger.Get())
+	{
+		TriggerComponent->OnComponentBeginOverlap.RemoveDynamic(this, &USpyNavigationComponent::HandleHideTriggerBeginOverlap);
+		TriggerComponent->OnComponentEndOverlap.RemoveDynamic(this, &USpyNavigationComponent::HandleHideTriggerEndOverlap);
+	}
+
+	BoundHideTrigger = nullptr;
+	bInsideHideTrigger = false;
+}
+
+void USpyNavigationComponent::HandleHideTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+															  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	NotifyHideTriggerEntered(OtherActor);
+}
+
+void USpyNavigationComponent::HandleHideTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+														   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	NotifyHideTriggerExited(OtherActor);
+}
+
+void USpyNavigationComponent::NotifyHideTriggerEntered(AActor* OtherActor)
+{
+	if (OtherActor != GetOwner())
+		return;
+
+	bInsideHideTrigger = true;
+	HideVisual();
+}
+
+void USpyNavigationComponent::NotifyHideTriggerExited(AActor* OtherActor)
+{
+	if (OtherActor != GetOwner())
+		return;
+
+	bInsideHideTrigger = false;
+
+	//# World/NavSystem 없어 RecomputePath 가 조기반환해도 "밖" 상태를 동기 반영(design §6).
+	bPathVisible = true;
+	RecomputePath();
 }

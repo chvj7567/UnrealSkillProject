@@ -14,6 +14,7 @@ class USpyMissionTargetRegistrySubsystem;
 class USplineComponent;
 class USplineMeshComponent;
 class UStaticMesh;
+class UPrimitiveComponent;
 
 //# 활성 미션의 목표 지점까지 바닥 글로우 라인으로 안내하는 로컬 클라이언트 전용 연출 컴포넌트.
 //# 서버/타 플레이어에 레플리케이트하지 않는다 — 소유 폰이 로컬 컨트롤일 때만 동작한다.
@@ -31,11 +32,30 @@ public:
 		return bPathActive;
 	}
 
+	//# design 2026-08-10 §6 테스트/디버그 훅 — 현재 라인이 실제로 그려지고 있는지
+	UFUNCTION(BlueprintPure)
+	bool IsPathVisible() const
+	{
+		return bPathVisible;
+	}
+
+	//# design 2026-08-10 §6 테스트 훅 — 현재 타겟이 트리거 볼륨을 노출해 구독 중인지
+	UFUNCTION(BlueprintPure)
+	bool IsHideTriggerBound() const
+	{
+		return BoundHideTrigger.IsValid();
+	}
+
 	UFUNCTION(BlueprintPure)
 	FVector GetCurrentTargetLocation() const
 	{
 		return CurrentTargetLocation;
 	}
+
+	//# design 2026-08-10 §6 테스트 주입 지점(§5-7 과 동일 목적) — 실제 오버랩 델리게이트와 동일한
+	//# 진입점이라 테스트가 물리 없이 직접 호출한다. OtherActor 가 소유 폰이 아니면 무시한다.
+	void NotifyHideTriggerEntered(AActor* OtherActor);
+	void NotifyHideTriggerExited(AActor* OtherActor);
 
 	//# SpyMainHUD::TryBindMissionComponent 와 동일한 재시도 바인딩 흐름의 실제 바인딩 단계.
 	//# 테스트에서도 컨트롤러/PlayerState 체인 없이 직접 호출한다(cpp-style §8 탐색 지양의
@@ -58,13 +78,26 @@ protected:
 	UFUNCTION()
 	void HandleMissionProgressChanged(USpyMissionComponent* MissionComponent, int32 MissionIndex, int32 Count, int32 TargetCount);
 
-	void StartPathTo(const FVector& InTargetLocation);
+	void StartPathTo(const FVector& InTargetLocation, AActor* InTargetActor);
 	void StopPath();
 
 	void RecomputePath();
 	void ApplyPathPoints(const TArray<FVector>& InPathPoints);
 	void EnsureSegmentPoolSize(int32 InRequiredCount);
 	void HideVisual();
+
+	//# design 2026-08-10 §6 — 타겟이 ISpyMissionTargetHideVolume 를 구현하고 트리거를 노출하면
+	//# 구독하고, 그렇지 않으면 아무 것도 하지 않는다(거리 히스테리시스 폴백).
+	void BindHideTrigger(AActor* TargetActor);
+	void UnbindHideTrigger();
+
+	UFUNCTION()
+	void HandleHideTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+										UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void HandleHideTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+									  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	//# design §5-5·§5-6 — 레지스트리 조회 1회 시도. 실패하면 0.2초 간격 재시도 타이머를 건다.
 	USpyMissionTargetRegistrySubsystem* GetMissionTargetRegistry();
@@ -108,6 +141,12 @@ protected:
 
 	FVector CurrentTargetLocation = FVector::ZeroVector;
 	bool bPathActive = false;
+
+	//# design 2026-08-10 §6 — 현재 타겟이 노출한 트리거 컴포넌트(없으면 invalid). 타겟 전환/StopPath 시 해제된다.
+	UPROPERTY(Transient)
+	TWeakObjectPtr<UPrimitiveComponent> BoundHideTrigger;
+
+	bool bInsideHideTrigger = false;
 
 	UPROPERTY(Transient)
 	TObjectPtr<USplineComponent> PathSpline;

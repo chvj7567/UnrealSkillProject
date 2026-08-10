@@ -59,3 +59,21 @@ bool USpyMissionTargetRegistrySubsystem::FindMissionTargetLocation(FGameplayTag 
 
 	return true;
 }
+
+AActor* USpyMissionTargetRegistrySubsystem::FindNPCActor(int32 NPCId) const
+{
+	const TWeakObjectPtr<AActor>* Found = NPCLocations.Find(NPCId);
+	if (Found == nullptr || Found->IsValid() == false)
+		return nullptr;
+
+	return Found->Get();
+}
+
+AActor* USpyMissionTargetRegistrySubsystem::FindMissionTargetActor(FGameplayTag InTag) const
+{
+	const TWeakObjectPtr<AActor>* Found = MissionTargetLocations.Find(InTag);
+	if (Found == nullptr || Found->IsValid() == false)
+		return nullptr;
+
+	return Found->Get();
+}

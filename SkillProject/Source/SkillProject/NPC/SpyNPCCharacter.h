@@ -5,16 +5,19 @@
 #include "CoreMinimal.h"
 #include "ModularCharacter.h"
 #include "NPC/CommonInterface.NPC.h"
+#include "System/CommonInterface.System.h"
 
 #include "SpyNPCCharacter.generated.h"
 
 class USphereComponent;
+class UBoxComponent;
+class UPrimitiveComponent;
 class USpyNPCConfig;
 
 //# NPC 도메인 루트. NPCId 하나로 3개 DataTable(USpyNPCConfig 경유)을 BeginPlay에 1회 스캔해
 //# 자신의 Default/Offer/InProgress/Report 대사와 담당 MissionId(Offer/Report) 를 캐싱한다.
 UCLASS()
-class SKILLPROJECT_API ASpyNPCCharacter : public AModularCharacter, public ISpyNPCRoot
+class SKILLPROJECT_API ASpyNPCCharacter : public AModularCharacter, public ISpyNPCRoot, public ISpyMissionTargetHideVolume
 {
 	GENERATED_BODY()
 
@@ -29,6 +32,9 @@ public:
 	}
 	virtual bool IsPawnInRange(const AActor* RequesterPawn) const override;
 	virtual bool GetDialogueLineAtIndex(int32 InDialogueId, int32 InPageIndex, FText& OutLine) const override;
+
+	//# ISpyMissionTargetHideVolume
+	virtual UPrimitiveComponent* GetHideTriggerComponent() const override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,6 +61,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Dialogue")
 	TObjectPtr<USpyNPCConfig> NPCConfig;
+
+	//# 사용자 요청(2026-08-10) — 기본 true: 트리거를 기본 활성화한다. 인스턴스에서 false로
+	//# 끄면 거리 히스테리시스로 폴백한다(design §5의 opt-in 방향을 opt-out으로 반전).
+	UPROPERTY(EditAnywhere, Category = "Navigation")
+	bool bEnableHideTrigger = true;
+
+	//# InteractionSphere(상호작용 판정)와 완전히 분리된 네비 숨김 전용 볼륨(design 2026-08-10 §5)
+	UPROPERTY(VisibleAnywhere, Category = "Navigation")
+	TObjectPtr<UBoxComponent> HideTriggerVolume;
 
 	//# BeginPlay 1회 캐싱 (§8 — 매 프레임/매 상호작용 조회 금지)
 	bool bDataCached = false;

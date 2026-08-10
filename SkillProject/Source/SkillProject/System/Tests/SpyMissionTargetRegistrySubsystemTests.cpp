@@ -358,4 +358,154 @@ bool FSpyMissionTargetRegistryStaleActorFailsFindTest::RunTest(const FString& Pa
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindNPCActorSucceedsTest,
+	"SkillProject.System.MissionTargetRegistry.FindNPCActorSucceeds",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindNPCActorSucceedsTest::RunTest(const FString& Parameters)
+{
+	AActor* NPCActor = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(1.f, 2.f, 3.f));
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterNPCLocation(7, NPCActor);
+
+	TestEqual(TEXT("FindNPCActor returns the exact registered actor"), Registry->FindNPCActor(7), NPCActor);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindNPCActorUnknownFailsTest,
+	"SkillProject.System.MissionTargetRegistry.FindNPCActorUnknownFails",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindNPCActorUnknownFailsTest::RunTest(const FString& Parameters)
+{
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+
+	TestNull(TEXT("Unregistered NPCId returns nullptr"), Registry->FindNPCActor(9999));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindMissionTargetActorSucceedsTest,
+	"SkillProject.System.MissionTargetRegistry.FindMissionTargetActorSucceeds",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindMissionTargetActorSucceedsTest::RunTest(const FString& Parameters)
+{
+	AActor* MarkerActor = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(4.f, 5.f, 6.f));
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Vault, MarkerActor);
+
+	TestEqual(TEXT("FindMissionTargetActor returns the exact registered actor"), Registry->FindMissionTargetActor(SpyGameplayTags::Skill_Move_Vault), MarkerActor);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindMissionTargetActorUnknownFailsTest,
+	"SkillProject.System.MissionTargetRegistry.FindMissionTargetActorUnknownFails",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindMissionTargetActorUnknownFailsTest::RunTest(const FString& Parameters)
+{
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+
+	TestNull(TEXT("Unregistered tag returns nullptr"), Registry->FindMissionTargetActor(SpyGameplayTags::Skill_Move_Vault));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindMissionTargetActorStaleFailsTest,
+	"SkillProject.System.MissionTargetRegistry.FindMissionTargetActorStaleFails",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindMissionTargetActorStaleFailsTest::RunTest(const FString& Parameters)
+{
+	//# FindMissionTargetLocation 의 기존 StaleActorFailsFind 테스트와 동일 근거 — 액터 조회 API 도
+	//# TWeakObjectPtr::IsValid() 로 동일하게 방어해야 한다
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	AActor* MarkerActor = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(5.f, 5.f, 5.f));
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Vault, MarkerActor);
+
+	MarkerActor->MarkAsGarbage();
+
+	TestNull(TEXT("FindMissionTargetActor returns nullptr once the registered actor is garbage"), Registry->FindMissionTargetActor(SpyGameplayTags::Skill_Move_Vault));
+
+	return true;
+}
+
+//# ─────────────────────────────────────────────────────────────────────────────
+//# Find*Actor 는 Find*Location 과 같은 TMap 을 읽어 재등록 가드가 이미 전이적으로 성립한다 —
+//# 아래는 그 보장을 새 API 표면에 명시적으로 고정한다(문서화 락, 유일한 실제 갭은 stale 짝 누락).
+//# ─────────────────────────────────────────────────────────────────────────────
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindNPCActorStaleFailsTest,
+	"SkillProject.System.MissionTargetRegistry.FindNPCActorStaleFails",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindNPCActorStaleFailsTest::RunTest(const FString& Parameters)
+{
+	//# FindMissionTargetActorStaleFails 와 대칭인 NPCId 키 공간 버전 — 이 짝이 빠져 있었다.
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	AActor* NPCActor = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(5.f, 5.f, 5.f));
+	Registry->RegisterNPCLocation(15, NPCActor);
+
+	NPCActor->MarkAsGarbage();
+
+	TestNull(TEXT("FindNPCActor returns nullptr once the registered actor is garbage"), Registry->FindNPCActor(15));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindNPCActorSurvivesMismatchedUnregisterTest,
+	"SkillProject.System.MissionTargetRegistry.FindNPCActorSurvivesMismatchedUnregister",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindNPCActorSurvivesMismatchedUnregisterTest::RunTest(const FString& Parameters)
+{
+	//# UnregisterMismatchedActorIsNoOpTest 와 동일한 재등록 가드를 FindNPCActor 로 직접 관측한다.
+	AActor* ActorA = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(10.f, 0.f, 0.f));
+	AActor* ActorB = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(20.f, 0.f, 0.f));
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterNPCLocation(16, ActorA);
+	Registry->RegisterNPCLocation(16, ActorB);
+
+	Registry->UnregisterNPCLocation(16, ActorA); //# 뒤늦게 실행된 A의 EndPlay
+
+	TestEqual(TEXT("FindNPCActor still returns B after A's stale Unregister call"), Registry->FindNPCActor(16), ActorB);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyMissionTargetRegistryFindMissionTargetActorSurvivesMismatchedUnregisterTest,
+	"SkillProject.System.MissionTargetRegistry.FindMissionTargetActorSurvivesMismatchedUnregister",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyMissionTargetRegistryFindMissionTargetActorSurvivesMismatchedUnregisterTest::RunTest(const FString& Parameters)
+{
+	//# UnregisterMismatchedActorIsNoOpMissionTagTest 와 동일한 재등록 가드를 FindMissionTargetActor 로 직접 관측한다.
+	AActor* ActorA = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(0.f, 10.f, 0.f));
+	AActor* ActorB = SpyMissionTargetRegistrySubsystemTests_MakeLocatedActor(FVector(0.f, 20.f, 0.f));
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Jump, ActorA);
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Jump, ActorB);
+
+	Registry->UnregisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Jump, ActorA);
+
+	TestEqual(TEXT("FindMissionTargetActor still returns B after A's stale Unregister call"), Registry->FindMissionTargetActor(SpyGameplayTags::Skill_Move_Jump), ActorB);
+
+	return true;
+}
+
 #endif //# WITH_DEV_AUTOMATION_TESTS

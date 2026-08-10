@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "NPC/SpyNPCCharacter.h"
+#include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
@@ -20,6 +21,11 @@ ASpyNPCCharacter::ASpyNPCCharacter(const FObjectInitializer& ObjectInitializer)
 	InteractionSphere->SetupAttachment(GetRootComponent());
 	InteractionSphere->SetSphereRadius(300.f);
 	InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+	HideTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("HideTriggerVolume"));
+	HideTriggerVolume->SetupAttachment(GetRootComponent());
+	HideTriggerVolume->SetBoxExtent(FVector(400.f, 400.f, 100.f));
+	HideTriggerVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ASpyNPCCharacter::BeginPlay()
@@ -28,6 +34,9 @@ void ASpyNPCCharacter::BeginPlay()
 
 	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &ASpyNPCCharacter::OnInteractionSphereBeginOverlap);
 	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &ASpyNPCCharacter::OnInteractionSphereEndOverlap);
+
+	if (bEnableHideTrigger)
+		HideTriggerVolume->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	CacheNPCData();
 
@@ -237,4 +246,9 @@ bool ASpyNPCCharacter::GetDialogueLineAtIndex(int32 InDialogueId, int32 InPageIn
 	}
 
 	return TryGetDialogueLineAtIndex(NPCConfig->DialogueTable, InDialogueId, InPageIndex, OutLine);
+}
+
+UPrimitiveComponent* ASpyNPCCharacter::GetHideTriggerComponent() const
+{
+	return bEnableHideTrigger ? HideTriggerVolume : nullptr;
 }

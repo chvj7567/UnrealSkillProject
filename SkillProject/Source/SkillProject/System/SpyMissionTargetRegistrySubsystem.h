@@ -29,6 +29,11 @@ public:
 	void UnregisterMissionTargetLocation(FGameplayTag InTag, AActor* InActor);
 	bool FindMissionTargetLocation(FGameplayTag InTag, FVector& OutLocation) const;
 
+	//# HideTriggerVolume 조회용(design 2026-08-10 §3) — 좌표가 아니라 액터 자체가 필요한
+	//# 소비자(IMissionTargetHideVolume 캐스팅용, Task 5)를 위한 API.
+	AActor* FindNPCActor(int32 NPCId) const;
+	AActor* FindMissionTargetActor(FGameplayTag InTag) const;
+
 private:
 	UPROPERTY(Transient)
 	TMap<int32, TWeakObjectPtr<AActor>> NPCLocations;

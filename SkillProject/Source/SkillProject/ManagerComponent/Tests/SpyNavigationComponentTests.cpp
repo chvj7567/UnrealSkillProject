@@ -1,14 +1,18 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/SplineComponent.h"
 #include "Data/SpyMissionConfig.h"
 #include "Engine/DataTable.h"
 #include "GameFramework/Actor.h"
 #include "Interactable/SpyInteractableObject.h"
 #include "ManagerComponent/SpyNavigationComponent.h"
+#include "ManagerComponent/Tests/SpyNavigationComponentTestAccessor.h"
 #include "NPC/SpyNPCCharacter.h"
 #include "Navigation/SpyMissionTargetPoint.h"
+#include "System/CommonInterface.System.h"
 #include "System/SpyMissionComponent.h"
 #include "System/SpyMissionTargetRegistrySubsystem.h"
 #include "UObject/UnrealType.h"
@@ -56,6 +60,39 @@ static AActor* SpyNavigationComponentTests_MakeLocatedActor(const FVector& InLoc
 	Actor->SetActorLocation(InLocation);
 
 	return Actor;
+}
+
+//# design 2026-08-10 §5 — 트리거 활성 마커를 만들고 즉시 레지스트리에 등록한다.
+//# ASpyMissionTargetPoint 는 RootComponent 가 이미 있어 SetActorLocation 이 World 없이도 반영된다.
+static ASpyMissionTargetPoint* SpyNavigationComponentTests_MakeHideTriggerTarget(
+	USpyMissionTargetRegistrySubsystem* Registry, const FVector& InLocation, bool bEnableHideTrigger)
+{
+	ASpyMissionTargetPoint* Target = NewObject<ASpyMissionTargetPoint>(GetTransientPackage());
+	Target->SetActorLocation(InLocation);
+
+	FBoolProperty* Prop = FindFProperty<FBoolProperty>(ASpyMissionTargetPoint::StaticClass(), TEXT("bEnableHideTrigger"));
+	check(Prop != nullptr);
+	Prop->SetPropertyValue_InContainer(Target, bEnableHideTrigger);
+
+	Registry->RegisterMissionTargetLocation(SpyGameplayTags::Skill_Move_Vault, Target);
+
+	return Target;
+}
+
+//# design 2026-08-10 §5 — 트리거 활성 NPC 타겟을 만들고 즉시 레지스트리에 등록한다(NPCId 키 공간).
+static ASpyNPCCharacter* SpyNavigationComponentTests_MakeHideTriggerNPC(
+	USpyMissionTargetRegistrySubsystem* Registry, int32 NPCId, const FVector& InLocation, bool bEnableHideTrigger)
+{
+	ASpyNPCCharacter* NPC = NewObject<ASpyNPCCharacter>(GetTransientPackage());
+	NPC->SetActorLocation(InLocation);
+
+	FBoolProperty* Prop = FindFProperty<FBoolProperty>(ASpyNPCCharacter::StaticClass(), TEXT("bEnableHideTrigger"));
+	check(Prop != nullptr);
+	Prop->SetPropertyValue_InContainer(NPC, bEnableHideTrigger);
+
+	Registry->RegisterNPCLocation(NPCId, NPC);
+
+	return NPC;
 }
 
 //# 기존 3개 핵심 테스트가 공유하는 Vault 마커 위치 — 원점이 아닌 값을 써서 "등록/조회
@@ -754,6 +791,315 @@ bool FSpyNavigationComponentUnacceptedGameplayGuidesToNPCTest::RunTest(const FSt
 
 	TestTrue(TEXT("Unaccepted Gameplay mission still guides to its NPC — MissionType is not the gate while unaccepted"), NavComponent->IsPathActive());
 	TestEqual(TEXT("Target resolves via NPCId, not MatchTag, while unaccepted"), NavComponent->GetCurrentTargetLocation(), NPCLocation);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentHideTriggerBindsWhenEnabledTest,
+	"SkillProject.Navigation.Component.HideTriggerBindsWhenEnabled",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentHideTriggerBindsWhenEnabledTest::RunTest(const FString& Parameters)
+{
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, FVector(500.f, -250.f, 120.f), true);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestTrue(TEXT("Path active after accept"), NavComponent->IsPathActive());
+	TestTrue(TEXT("Hide trigger bound — target has bEnableHideTrigger=true"), NavComponent->IsHideTriggerBound());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentHideTriggerDisabledTargetDoesNotBindTest,
+	"SkillProject.Navigation.Component.HideTriggerDisabledTargetDoesNotBind",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentHideTriggerDisabledTargetDoesNotBindTest::RunTest(const FString& Parameters)
+{
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	//# 명시적으로 false로 끈 타겟(opt-out) — 기존 레벨과 동일 조건
+	SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, FVector(500.f, -250.f, 120.f), false);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	TestTrue(TEXT("Path still starts normally"), NavComponent->IsPathActive());
+	TestFalse(TEXT("No trigger bound — falls back to distance hysteresis"), NavComponent->IsHideTriggerBound());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentHideTriggerEnterHidesPathTest,
+	"SkillProject.Navigation.Component.HideTriggerEnterHidesPath",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentHideTriggerEnterHidesPathTest::RunTest(const FString& Parameters)
+{
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, FVector(500.f, -250.f, 120.f), true);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+	TestTrue(TEXT("Path visible immediately after accept (seeded true in StartPathTo)"), NavComponent->IsPathVisible());
+
+	NavComponent->NotifyHideTriggerEntered(Owner);
+
+	TestFalse(TEXT("Path hides immediately on trigger enter, no distance check needed"), NavComponent->IsPathVisible());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentHideTriggerIgnoresOtherActorTest,
+	"SkillProject.Navigation.Component.HideTriggerIgnoresOtherActor",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentHideTriggerIgnoresOtherActorTest::RunTest(const FString& Parameters)
+{
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, FVector(500.f, -250.f, 120.f), true);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	AActor* UnrelatedActor = NewObject<AActor>(GetTransientPackage());
+	NavComponent->NotifyHideTriggerEntered(UnrelatedActor);
+
+	TestTrue(TEXT("A different local pawn overlapping the same trigger does not affect this owner's nav"), NavComponent->IsPathVisible());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentHideTriggerExitReshowsImmediatelyTest,
+	"SkillProject.Navigation.Component.HideTriggerExitReshowsImmediately",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentHideTriggerExitReshowsImmediatelyTest::RunTest(const FString& Parameters)
+{
+	//# design-reviewer BLOCKER 회귀 고정 — World/NavSystem 없이도(RecomputePath 조기반환 환경) 즉시
+	//# 재표시되는지 검증한다. bPathVisible 시딩은 RecomputePath 성공 여부와 무관하게 동기 반영돼야 한다.
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, FVector(500.f, -250.f, 120.f), true);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+
+	NavComponent->NotifyHideTriggerEntered(Owner);
+	TestFalse(TEXT("Path hidden after entering the trigger"), NavComponent->IsPathVisible());
+
+	NavComponent->NotifyHideTriggerExited(Owner);
+	TestTrue(TEXT("Path visible again immediately on exit — no distance hysteresis dead zone"), NavComponent->IsPathVisible());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentHideTriggerUnbindsOnStopPathTest,
+	"SkillProject.Navigation.Component.HideTriggerUnbindsOnStopPath",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentHideTriggerUnbindsOnStopPathTest::RunTest(const FString& Parameters)
+{
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, SpyNavigationComponentTests_MakeConfig());
+
+	USpyNavigationComponent* NavComponent = NewObject<USpyNavigationComponent>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, FVector(500.f, -250.f, 120.f), true);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+	TestTrue(TEXT("Hide trigger bound after accept"), NavComponent->IsHideTriggerBound());
+
+	//# 목표 3회 중 3회 채워 완료시킨다 (Vault 미션, Accumulate) — FSpyNavigationComponentCompleteStopsPathTest 와 동일 패턴
+	MissionComponent->AddProgress(SpyGameplayTags::Skill_Move_Vault, 3);
+
+	TestFalse(TEXT("Path inactive after mission completed"), NavComponent->IsPathActive());
+	TestFalse(TEXT("Hide trigger unbound once the path stops"), NavComponent->IsHideTriggerBound());
+
+	return true;
+}
+
+//# ─────────────────────────────────────────────────────────────────────────────
+//# code-reviewer 확인 갭 — HideTriggerExitReshowsImmediatelyTest 는 World 없어 RecomputePath 가
+//# 조기반환해 ApplyPathPoints()의 BoundHideTrigger.IsValid() 바이패스를 위양성으로 통과시켰다.
+//# ─────────────────────────────────────────────────────────────────────────────
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentApplyPathPointsBypassesHysteresisWhenTriggerBoundTest,
+	"SkillProject.Navigation.Component.ApplyPathPointsBypassesHysteresisWhenTriggerBound",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentApplyPathPointsBypassesHysteresisWhenTriggerBoundTest::RunTest(const FString& Parameters)
+{
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyNavigationComponentTestAccessor* NavComponent = NewObject<USpyNavigationComponentTestAccessor>(Owner);
+
+	USplineComponent* Spline = NewObject<USplineComponent>(GetTransientPackage());
+	NavComponent->Test_SetPathSpline(Spline);
+
+	UBoxComponent* FakeTrigger = NewObject<UBoxComponent>(GetTransientPackage());
+	NavComponent->Test_SetBoundHideTrigger(FakeTrigger);
+
+	//# exit 직후 시딩된 "이전엔 보였다" 상태를 재현한다(NotifyHideTriggerExited 의 bPathVisible=true 시드와 동일)
+	NavComponent->Test_SetPathVisible(true);
+
+	//# half-extent 가 ArrivalHideDistanceCm(300cm) 보다 작은 트리거에서 exit 한 상황을 흉내낸다 —
+	//# 단일 좌표라 ComputePathLength == 0, 히스테리시스만 있었다면 즉시 재은닉됐어야 한다.
+	TArray<FVector> ShortPath;
+	ShortPath.Add(FVector(10.f, 20.f, 30.f));
+	NavComponent->Test_ApplyPathPoints(ShortPath);
+
+	TestTrue(TEXT("BoundHideTrigger valid — bypass branch taken"), NavComponent->IsHideTriggerBound());
+	TestTrue(TEXT("ApplyPathPoints keeps the path visible despite RemainingPathLength(0cm) being far below ArrivalHideDistanceCm(300cm)"), NavComponent->IsPathVisible());
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentApplyPathPointsAppliesHysteresisWhenTriggerNotBoundTest,
+	"SkillProject.Navigation.Component.ApplyPathPointsAppliesHysteresisWhenTriggerNotBound",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentApplyPathPointsAppliesHysteresisWhenTriggerNotBoundTest::RunTest(const FString& Parameters)
+{
+	//# 대조군 — 위 바이패스 테스트가 "항상 true"가 아니라 BoundHideTrigger 유무에 실제로
+	//# 좌우됨을 증명한다. 트리거 미바인딩이면 동일한 짧은 경로가 정상 히스테리시스로 숨어야 한다.
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyNavigationComponentTestAccessor* NavComponent = NewObject<USpyNavigationComponentTestAccessor>(Owner);
+
+	USplineComponent* Spline = NewObject<USplineComponent>(GetTransientPackage());
+	NavComponent->Test_SetPathSpline(Spline);
+	NavComponent->Test_SetPathVisible(true);
+
+	TArray<FVector> ShortPath;
+	ShortPath.Add(FVector(10.f, 20.f, 30.f));
+	NavComponent->Test_ApplyPathPoints(ShortPath);
+
+	TestFalse(TEXT("No trigger bound"), NavComponent->IsHideTriggerBound());
+	TestFalse(TEXT("Without a bound trigger, the same short path correctly hides via the normal hysteresis"), NavComponent->IsPathVisible());
+
+	return true;
+}
+
+//# ─────────────────────────────────────────────────────────────────────────────
+//# 요청 갭 — StopPath 없이 다음 목표로 전환될 때(BindHideTrigger 가 항상 먼저 호출하는
+//# UnbindHideTrigger, cpp:493) 이전 트리거 구독이 델리게이트 IsBound() 로 실제로 끊기는지 확인.
+//# ─────────────────────────────────────────────────────────────────────────────
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentSequentialHideTriggerTargetsRebindTest,
+	"SkillProject.Navigation.Component.SequentialHideTriggerTargetsRebind",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentSequentialHideTriggerTargetsRebindTest::RunTest(const FString& Parameters)
+{
+	const int32 NPCId = 88;
+	const FVector VaultLocation(500.f, -250.f, 120.f);
+	const FVector NPCLocation(0.f, 300.f, 0.f);
+
+	USpyMissionConfig* Config = NewObject<USpyMissionConfig>();
+	UDataTable* MissionTable = NewObject<UDataTable>();
+	MissionTable->RowStruct = FSpyMissionRow::StaticStruct();
+
+	FSpyMissionRow VaultRow;
+	VaultRow.MissionId = 1;
+	VaultRow.MissionType = ESpyMissionType::Gameplay;
+	VaultRow.MatchTag = SpyGameplayTags::Skill_Move_Vault;
+	VaultRow.Mode = ESpyMissionMode::Accumulate;
+	VaultRow.TargetCount = 1;
+	MissionTable->AddRow(TEXT("Mission_1"), VaultRow);
+
+	FSpyMissionRow DialogueRow;
+	DialogueRow.MissionId = 2;
+	DialogueRow.MissionType = ESpyMissionType::Dialogue;
+	DialogueRow.MatchTag = SpyGameplayTags::Event_Mission_Report;
+	DialogueRow.NPCId = NPCId;
+	MissionTable->AddRow(TEXT("Mission_2"), DialogueRow);
+
+	Config->MissionTable = MissionTable;
+
+	USpyMissionTargetRegistrySubsystem* Registry = NewObject<USpyMissionTargetRegistrySubsystem>();
+	ASpyMissionTargetPoint* TargetA = SpyNavigationComponentTests_MakeHideTriggerTarget(Registry, VaultLocation, true);
+	ASpyNPCCharacter* TargetB = SpyNavigationComponentTests_MakeHideTriggerNPC(Registry, NPCId, NPCLocation, true);
+
+	AActor* Owner = NewObject<AActor>(GetTransientPackage());
+	USpyMissionComponent* MissionComponent = NewObject<USpyMissionComponent>(Owner);
+	SpyNavigationComponentTests_SetMissionConfig(MissionComponent, Config);
+
+	USpyNavigationComponentTestAccessor* NavComponent = NewObject<USpyNavigationComponentTestAccessor>(Owner);
+	NavComponent->BindMissionComponent(MissionComponent);
+	NavComponent->SetMissionTargetRegistry(Registry);
+
+	MissionComponent->AcceptCurrentMission();
+	TestTrue(TEXT("Hide trigger bound to target A after accept"), NavComponent->IsHideTriggerBound());
+
+	ISpyMissionTargetHideVolume* HideVolumeA = Cast<ISpyMissionTargetHideVolume>(TargetA);
+	TestNotNull(TEXT("Target A casts to ISpyMissionTargetHideVolume"), HideVolumeA);
+	if (HideVolumeA == nullptr)
+		return false;
+
+	UPrimitiveComponent* TriggerA = HideVolumeA->GetHideTriggerComponent();
+	TestTrue(TEXT("Target A's trigger component listens for overlap events after bind"), NavComponent->Test_IsAnyHideTriggerListenerBound(TriggerA));
+
+	//# 목표 1회 채워 완료 -> 미션2(Dialogue, 자동 수락)로 곧바로 전환. StopPath 를 거치지 않는다.
+	MissionComponent->AddProgress(SpyGameplayTags::Skill_Move_Vault, 1);
+
+	TestFalse(TEXT("Target A's trigger listener is removed once the target switches — no stale subscription"), NavComponent->Test_IsAnyHideTriggerListenerBound(TriggerA));
+	TestTrue(TEXT("Hide trigger re-bound to target B"), NavComponent->IsHideTriggerBound());
+
+	ISpyMissionTargetHideVolume* HideVolumeB = Cast<ISpyMissionTargetHideVolume>(TargetB);
+	TestNotNull(TEXT("Target B casts to ISpyMissionTargetHideVolume"), HideVolumeB);
+	if (HideVolumeB == nullptr)
+		return false;
+
+	UPrimitiveComponent* TriggerB = HideVolumeB->GetHideTriggerComponent();
+	TestTrue(TEXT("Target B's trigger component now listens for overlap events"), NavComponent->Test_IsAnyHideTriggerListenerBound(TriggerB));
 
 	return true;
 }
