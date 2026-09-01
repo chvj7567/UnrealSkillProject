@@ -381,6 +381,15 @@ void USpyInteractionComponent::SetMissionCardCursorMode(bool bEnabled)
 	if (Owner == nullptr)
 		return;
 
+	//# QuitConfirm 이 열려 있으면 그 팝업이 커서를 요구하는 상태다 — 미션카드가 닫혀도 덮어쓰지 않는다
+	//# (ASpyPlayerController::HandleQuitConfirmClosed 와 대칭되는 최소 확인)
+	if (bEnabled == false)
+	{
+		USpyUIManager* UIManager = Cast<USpyUIManager>(USKUIManager::Get(this));
+		if (UIManager != nullptr && UIManager->IsSpyUIOpen(ESpyUIType::QuitConfirm))
+			return;
+	}
+
 	//# Server_RequestInteract_Implementation 과 동일한 Owner(폰)→Controller 캐스팅 체인을
 	//# 재사용한다 — 새 탐색을 추가하지 않는다 (§8)
 	ASpyPlayerController* PC = Cast<ASpyPlayerController>(Owner->GetInstigatorController());
