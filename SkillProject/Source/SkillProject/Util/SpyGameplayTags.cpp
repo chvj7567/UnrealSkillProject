@@ -86,6 +86,7 @@ namespace SpyGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Attack, "GameplayCue.Actor.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Target, "GameplayCue.Actor.Target");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Actor_Death, "GameplayCue.Actor.Death");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayCue_Static_Hit, "GameplayCue.Static.Hit");
 

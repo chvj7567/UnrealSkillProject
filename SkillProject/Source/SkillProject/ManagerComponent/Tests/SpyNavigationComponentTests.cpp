@@ -1,12 +1,15 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "AIController.h"
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SplineComponent.h"
 #include "Data/SpyMissionConfig.h"
 #include "Engine/DataTable.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "Interactable/SpyInteractableObject.h"
 #include "ManagerComponent/SpyNavigationComponent.h"
 #include "ManagerComponent/Tests/SpyNavigationComponentTestAccessor.h"
@@ -1100,6 +1103,50 @@ bool FSpyNavigationComponentSequentialHideTriggerTargetsRebindTest::RunTest(cons
 
 	UPrimitiveComponent* TriggerB = HideVolumeB->GetHideTriggerComponent();
 	TestTrue(TEXT("Target B's trigger component now listens for overlap events"), NavComponent->Test_IsAnyHideTriggerListenerBound(TriggerB));
+
+	return true;
+}
+
+//# ─────────────────────────────────────────────────────────────────────────────
+//# 버그 수정 회귀(2026-09-01) — standalone/listen server 에서 IsLocallyControlled() 만으로는
+//# AI 봇도 통과해 네비게이션이 켜지는 문제. ShouldActivateForOwningPawn 게이트를 직접 검증한다.
+//# ─────────────────────────────────────────────────────────────────────────────
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentPlayerControlledPawnActivatesTest,
+	"SkillProject.Navigation.Component.PlayerControlledPawnActivates",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentPlayerControlledPawnActivatesTest::RunTest(const FString& Parameters)
+{
+	//# 정상 케이스 — 플레이어가 조종하는 폰은 게이트를 통과해야 한다. 프로덕션과 동일하게
+	//# SetController 만 세팅한다(Controller 타입만으로 판정하므로 PlayerState 는 불필요).
+	APawn* Pawn = NewObject<APawn>(GetTransientPackage());
+	APlayerController* PlayerController = NewObject<APlayerController>(GetTransientPackage());
+
+	Pawn->SetController(PlayerController);
+
+	TestTrue(TEXT("Player-controlled pawn passes the activation gate"), USpyNavigationComponentTestAccessor::Test_ShouldActivateForOwningPawn(Pawn));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FSpyNavigationComponentAIControlledPawnDoesNotActivateTest,
+	"SkillProject.Navigation.Component.AIControlledPawnDoesNotActivate",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FSpyNavigationComponentAIControlledPawnDoesNotActivateTest::RunTest(const FString& Parameters)
+{
+	//# 엣지 케이스 — standalone 환경에서는 AAIController 도 IsLocallyControlled()==true 이지만
+	//# APlayerController 가 아니므로 게이트가 막아야 한다(버그 재현 조건 그대로).
+	APawn* Pawn = NewObject<APawn>(GetTransientPackage());
+	AAIController* AIController = NewObject<AAIController>(GetTransientPackage());
+
+	Pawn->SetController(AIController);
+
+	TestTrue(TEXT("AI-controlled pawn is still locally controlled in standalone"), Pawn->IsLocallyControlled());
+	TestFalse(TEXT("AI-controlled pawn fails the activation gate despite being locally controlled"), USpyNavigationComponentTestAccessor::Test_ShouldActivateForOwningPawn(Pawn));
 
 	return true;
 }

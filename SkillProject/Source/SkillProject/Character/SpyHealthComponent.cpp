@@ -77,8 +77,9 @@ void USpyHealthComponent::OnUnregister()
 
 void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
-	if (NewValue <= 0)
+	if (NewValue <= 0 && bDead == false)
 	{
+		bDead = true;
 		OnDeath.Broadcast(DamageInstigator, DamageCauser);
 	}
 
@@ -154,4 +155,9 @@ void USpyHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* 
 void USpyHealthComponent::HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
 	OnMaxHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void USpyHealthComponent::ResetDeathState()
+{
+	bDead = false;
 }

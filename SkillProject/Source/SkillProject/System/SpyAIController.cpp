@@ -179,6 +179,29 @@ void ASpyAIController::SetBehaviorTree(UBehaviorTree* InBehaviorTreeAsset)
 	BehaviorTreeAsset = InBehaviorTreeAsset;
 }
 
+float ASpyAIController::GetDissolveDurationSeconds() const
+{
+	if (AIConfig == nullptr)
+		return DefaultDissolveDurationSeconds;
+
+	return AIConfig->DissolveDurationSeconds;
+}
+
+void ASpyAIController::RestartAILogic()
+{
+	//# OnPossess 는 최초 1회만 RunBehaviorTree 를 호출한다 — 리스폰 시 재활용된
+	//# 컨트롤러는 재빙의되지 않으므로 여기서 직접 재시작한다.
+	if (BehaviorTreeAsset != nullptr)
+	{
+		RunBehaviorTree(BehaviorTreeAsset);
+	}
+
+	if (AIPerceptionComponent != nullptr)
+	{
+		AIPerceptionComponent->RequestStimuliListenerUpdate();
+	}
+}
+
 void ASpyAIController::BroadcastOnPlayerStateChanged()
 {
 	OnPlayerStateChanged();

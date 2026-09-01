@@ -34,4 +34,8 @@ public:
 	//# Damage
 	UPROPERTY(EditDefaultsOnly, Category = "Perception|Damage")
 	float DamageMaxAge = 5.f;
+
+	//# Death / Respawn
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	float DissolveDurationSeconds = 2.0f;
 };

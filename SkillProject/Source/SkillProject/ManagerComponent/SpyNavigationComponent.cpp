@@ -5,6 +5,7 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -31,7 +32,7 @@ void USpyNavigationComponent::BeginPlay()
 
 	const APawn* OwningPawn = Cast<APawn>(GetOwner());
 
-	if (OwningPawn == nullptr || OwningPawn->IsLocallyControlled() == false)
+	if (ShouldActivateForOwningPawn(OwningPawn) == false)
 		return;
 
 	PathSpline = NewObject<USplineComponent>(GetOwner(), TEXT("SpyNavigationPathSpline"));
@@ -55,6 +56,19 @@ void USpyNavigationComponent::BeginPlay()
 										  }),
 										  0.2f, true);
 	}
+}
+
+bool USpyNavigationComponent::ShouldActivateForOwningPawn(const APawn* InPawn)
+{
+	if (InPawn == nullptr)
+		return false;
+
+	//# IsLocallyControlled() 는 네트워크 role 기준이라 standalone/listen server 에서는 AI 봇도 true 다.
+	//# Controller 타입으로 실제 플레이어 조종만 통과시킨다(IsPlayerControlled() 는 PlayerState 기준이라 부적합).
+	if (InPawn->IsLocallyControlled() == false)
+		return false;
+
+	return Cast<APlayerController>(InPawn->GetController()) != nullptr;
 }
 
 void USpyNavigationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)

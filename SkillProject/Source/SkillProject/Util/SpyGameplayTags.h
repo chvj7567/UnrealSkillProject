@@ -108,6 +108,7 @@ namespace SpyGameplayTags
 	//# Actor 게임플레이큐
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Attack);
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Target);
+	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Actor_Death);
 
 	//# Static 게임플레이큐
 	SKILLPROJECT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayCue_Static_Hit);

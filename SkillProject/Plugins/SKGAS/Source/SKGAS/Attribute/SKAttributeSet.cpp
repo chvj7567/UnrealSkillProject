@@ -68,7 +68,11 @@ void USKAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
                 //# TODO
             }
 
-            //# 사망 확인
+			//# Health 를 [0, MaxHealth] 로 클램프 — 클램프 없이 음수로 내려가는 버그 수정.
+			//# 사망 판정(<= 0.0f)은 클램프 전 값 기준으로 이미 참이므로 순서를 바꿔도 무관.
+			SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
+
+			//# 사망 확인
             if (GetHealth() <= 0.0f)
             {
                 FGameplayEventData Payload;

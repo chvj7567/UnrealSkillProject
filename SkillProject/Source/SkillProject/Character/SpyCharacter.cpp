@@ -5,6 +5,7 @@
 #include "AbilitySystem/SpyAbilitySystemComponent.h"
 #include "BrainComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Character/SpyCharacterAttributeSet.h"
 #include "Character/SpyHealthComponent.h"
 #include "Character/SpyLevelComponent.h"
 #include "Character/SpyPawnExtensionComponent.h"
@@ -22,6 +23,7 @@
 #include "ManagerComponent/SpyTargetingManagerComponent.h"
 #include "MotionWarpingComponent.h"
 #include "Input/SpyInputConfig.h"
+#include "System/SpyAIController.h"
 #include "Util/SpyGameplayTags.h"
 
 #include "Net/UnrealNetwork.h"
@@ -265,6 +267,54 @@ void ASpyCharacter::OnDeath(AActor* InOwningActor, AActor* InCauserActor)
 	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnDeath: %s"), *GetName());
 }
 
+void ASpyCharacter::OnRespawn(const FTransform& RespawnTransform)
+{
+	//# 텔레포트·Health 직접 세팅·GA 취소는 명백한 게임플레이 상태 변경 — 서버 전용.
+	//# 콜리전 복구·bDead 래치 해제는 HandleCharacterDeathTagChanged 가 태그 리플리케이션으로
+	//# 서버/클라 양쪽에서 동일하게 처리한다(아래 CancelAbilities 가 그 태그 해제를 동기 트리거).
+	if (HasAuthority() == false)
+		return;
+
+	SetActorLocationAndRotation(RespawnTransform.GetLocation(), RespawnTransform.GetRotation());
+
+	if (USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent())
+	{
+		//# GA_Death 를 종료시키면 K2_AddGameplayCueWithParams(Task7)가 트래킹한 Cue 와
+		//# ActivationOwnedTags(Character.State.Death) 가 함께 자동 해제된다.
+		FGameplayTagContainer DeathAbilityTags(SpyGameplayTags::Skill_Util_Death);
+		SpyASC->CancelAbilities(&DeathAbilityTags);
+
+		if (const USpyCharacterAttributeSet* AttributeSet = SpyASC->GetSet<USpyCharacterAttributeSet>())
+		{
+			SpyASC->SetNumericAttributeBase(USpyCharacterAttributeSet::GetHealthAttribute(), AttributeSet->GetMaxHealth());
+		}
+	}
+
+	if (ASpyAIController* SpyAIController = Cast<ASpyAIController>(GetController()))
+	{
+		SpyAIController->RestartAILogic();
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("# [SpyCharacter] OnRespawn: %s"), *GetName());
+}
+
+void ASpyCharacter::HandleCharacterDeathTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	//# 태그가 아직 남아있으면(사망 진입) 아무 것도 하지 않는다 — 사라진 순간(NewCount == 0)만 복구 대상.
+	if (NewCount > 0)
+		return;
+
+	if (UCapsuleComponent* CapsuleComp = GetCapsuleComponent())
+	{
+		CapsuleComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+	}
+
+	if (SpyHealthComponent != nullptr)
+	{
+		SpyHealthComponent->ResetDeathState();
+	}
+}
+
 void ASpyCharacter::OnAbilitySystemInitialized()
 {
 	USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent();
@@ -274,6 +324,11 @@ void ASpyCharacter::OnAbilitySystemInitialized()
 	SpyLevelComponent->InitializeByAbilitySystem(SpyASC);
 
 	InitializeGameplayTags();
+
+	//# Character.State.Death 태그 해제를 서버/클라 공통으로 감지 — bDead 래치·콜리전 복구용.
+	//# ASC 는 재활용 봇의 생애 동안 재생성되지 않으므로 InitState 당 1회만 구독하면 된다.
+	SpyASC->RegisterGameplayTagEvent(SKGameplayTags::Character_State_Death, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &ThisClass::HandleCharacterDeathTagChanged);
 
 	if (HasAuthority())
 	{
@@ -286,6 +341,12 @@ void ASpyCharacter::OnAbilitySystemInitialized()
 
 void ASpyCharacter::OnAbilitySystemUninitialized()
 {
+	if (USpyAbilitySystemComponent* SpyASC = GetSpyAbilitySystemComponent())
+	{
+		SpyASC->RegisterGameplayTagEvent(SKGameplayTags::Character_State_Death, EGameplayTagEventType::NewOrRemoved)
+			.RemoveAll(this);
+	}
+
 	SpyHealthComponent->UnInitializeByAbilitySystem();
 	SpyLevelComponent->UnInitializeByAbilitySystem();
 }

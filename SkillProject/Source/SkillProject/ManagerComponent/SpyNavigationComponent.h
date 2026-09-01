@@ -8,6 +8,7 @@
 
 #include "SpyNavigationComponent.generated.h"
 
+class APawn;
 class UMaterialInstanceDynamic;
 class USpyMissionComponent;
 class USpyMissionTargetRegistrySubsystem;
@@ -17,7 +18,7 @@ class UStaticMesh;
 class UPrimitiveComponent;
 
 //# 활성 미션의 목표 지점까지 바닥 글로우 라인으로 안내하는 로컬 클라이언트 전용 연출 컴포넌트.
-//# 서버/타 플레이어에 레플리케이트하지 않는다 — 소유 폰이 로컬 컨트롤일 때만 동작한다.
+//# 소유 폰이 로컬 + 플레이어 컨트롤일 때만 동작(레플리케이트 안 함) — 판정 사유는 §ShouldActivateForOwningPawn.
 UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SKILLPROJECT_API USpyNavigationComponent : public UActorComponent
 {
@@ -70,6 +71,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	//# BeginPlay 활성화 게이트(테스트 가능하도록 분리) — standalone/listen server 에서
+	//# IsLocallyControlled() 는 AI 봇도 true 라 Controller 가 APlayerController 인지로 가른다.
+	static bool ShouldActivateForOwningPawn(const APawn* InPawn);
 
 	bool AutoDiscoverAndBindMissionComponent();
 

@@ -34,11 +34,17 @@ public:
 	float GetMaxHealth() const;
 	float GetHealthNormalized() const;
 
+	//# 사망 후 추가 피해로 OnDeath 가 중복 발화되는 것을 막는 bDead 래치를 해제한다 — 리스폰 완료 시 호출.
+	void ResetDeathState();
+
 protected:
 	virtual void OnUnregister() override;
 
 	virtual void HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+
+	//# 사망당 OnDeath 를 1회만 발화시키는 래치. ResetDeathState() 로만 해제된다.
+	bool bDead = false;
 
 public:
 	UPROPERTY()

@@ -45,4 +45,11 @@ public:
 
 		return InTrigger->OnComponentBeginOverlap.IsBound() || InTrigger->OnComponentEndOverlap.IsBound();
 	}
+
+	//# BeginPlay 활성화 게이트(ShouldActivateForOwningPawn) 는 protected static 이라
+	//# World 없이 Pawn+Controller 픽스처만으로 이 정적 래퍼를 통해 검증한다.
+	static bool Test_ShouldActivateForOwningPawn(const APawn* InPawn)
+	{
+		return ShouldActivateForOwningPawn(InPawn);
+	}
 };

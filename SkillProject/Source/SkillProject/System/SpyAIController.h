@@ -43,6 +43,12 @@ public:
 public:
 	void SetBehaviorTree(UBehaviorTree* InBehaviorTreeAsset);
 
+	//# AIConfig 가 유효하면 그 값, 아니면 DefaultDissolveDurationSeconds 를 반환.
+	float GetDissolveDurationSeconds() const;
+
+	//# 리스폰 시 재활용된 컨트롤러의 BT/Perception 을 재시작한다. OnPossess 는 최초 1회만 호출되므로 별도 API로 노출.
+	void RestartAILogic();
+
 protected:
 	void BroadcastOnPlayerStateChanged();
 	
@@ -78,6 +84,7 @@ protected:
 private:
 	float TargetRefreshAccumulator = 0.f;
 	static constexpr float TargetRefreshInterval = 0.3f;
+	static constexpr float DefaultDissolveDurationSeconds = 2.0f;
 
 	//# 폰 라이프사이클 추적 — destroy 감지용
 	UPROPERTY(Transient)

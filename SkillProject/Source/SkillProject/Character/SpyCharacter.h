@@ -6,6 +6,7 @@
 #include "Character/SpyCharacterMovementComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "GameplayTagContainer.h"
 #include "ModularCharacter.h"
 #include "Character/CommonInterface.Character.h"
 
@@ -124,9 +125,17 @@ public:
 	UFUNCTION()
 	virtual void OnDeath(AActor* InOwningActor, AActor* InCauserActor);
 
+	//# 리스폰 단일 진입점(OnDeath() 대칭, cpp-style §13) — 텔레포트·콜리전·ASC·bDead 래치·AI 재시작을 캡슐화한다.
+	UFUNCTION(BlueprintCallable)
+	virtual void OnRespawn(const FTransform& RespawnTransform);
+
 protected:
 	virtual void OnAbilitySystemInitialized();
 	virtual void OnAbilitySystemUninitialized();
+
+	//# Character.State.Death 태그가 사라진 순간(GAS 태그 리플리케이션으로 서버/클라 양쪽에서 동일하게 발화) —
+	//# 서버 전용 OnRespawn() 이 도달하지 않는 클라이언트의 콜리전·bDead 래치를 여기서 함께 복구한다.
+	void HandleCharacterDeathTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 	void InitializeGameplayTags();
 
