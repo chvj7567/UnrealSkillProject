@@ -2,6 +2,7 @@
 
 
 #include "Manager/SpyUIManager.h"
+#include "SKUserWidget.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(SpyUIManager)
 
@@ -37,6 +38,22 @@ void USpyUIManager::OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComp
 {
 	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
 	OpenSubUI(FName(*EnumName), WidgetComponent, Space);
+}
+
+bool USpyUIManager::IsSpyUIOpen(ESpyUIType UIType) const
+{
+	FString EnumName = StaticEnum<ESpyUIType>()->GetNameStringByValue((int64)UIType);
+	const FName TargetName = FName(*EnumName);
+
+	for (const TObjectPtr<USKUserWidget>& UserWidget : OpenUIList)
+	{
+		if (IsValid(UserWidget) && UserWidget->GetUIName() == TargetName)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 USKUserWidget* USpyUIManager::OpenPersistentSpyUI(ESpyUIType UIType, int32 ZOrder)

@@ -7,6 +7,7 @@
 #include "Character/SpyCharacter.h"
 #include "Data/SpyCharacterConfig.h"
 #include "InputActionValue.h"
+#include "InputCoreTypes.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Util/SpyGameplayTags.h"
@@ -119,6 +120,46 @@ void ASpyPlayerController::PostProcessInput(const float DeltaTime, const bool bG
 	}
 
 	Super::PostProcessInput(DeltaTime, bGamePaused);
+}
+
+void ASpyPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	//# 시스템 UI 토글이라 게임플레이 어빌리티 입력 경로 대신 레거시 키 바인딩을 직접 사용
+	InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &ASpyPlayerController::HandleEscapePressed);
+}
+
+void ASpyPlayerController::HandleEscapePressed()
+{
+	USpyUIManager* UIMgr = USpyUIManager::Get(this);
+	if (UIMgr == nullptr)
+		return;
+
+	if (UIMgr->IsSpyUIOpen(ESpyUIType::QuitConfirm))
+	{
+		UIMgr->CloseSpyUI(ESpyUIType::QuitConfirm);
+		HandleQuitConfirmClosed();
+	}
+	else
+	{
+		UIMgr->OpenSpyUI(ESpyUIType::QuitConfirm);
+
+		//# 마우스 클릭으로 Yes/No 를 눌러야 한다 — 커서가 꺼진 채로는 Slate 로 입력이 안 들어간다
+		//# (SetMissionCardCursorMode 와 동일 사유, SpyInteractionComponent.cpp:329-330)
+		SetCursorMode(true);
+	}
+}
+
+void ASpyPlayerController::HandleQuitConfirmClosed()
+{
+	USpyUIManager* UIMgr = USpyUIManager::Get(this);
+
+	//# 미션카드 등 다른 UI 가 여전히 커서를 요구하면 그 상태를 덮어쓰지 않는다
+	if (UIMgr != nullptr && UIMgr->IsSpyUIOpen(ESpyUIType::MissionOffer))
+		return;
+
+	SetCursorMode(false);
 }
 
 USpyAbilitySystemComponent* ASpyPlayerController::GetSpyAbilitySystemComponent() const

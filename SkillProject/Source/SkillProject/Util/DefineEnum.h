@@ -16,6 +16,7 @@ enum ESpyUIType : uint8
 	Dialogue UMETA(DisplayName = "Dialogue"),
 	MissionOffer UMETA(DisplayName = "MissionOffer"),
 	InteractPrompt UMETA(DisplayName = "InteractPrompt"),
+	QuitConfirm UMETA(DisplayName = "QuitConfirm"),
 };
 
 UENUM(BlueprintType)

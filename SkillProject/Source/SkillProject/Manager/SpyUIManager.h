@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OpenSubSpyUI(ESpyUIType UIType, UWidgetComponent* WidgetComponent, EWidgetSpace Space);
 
+	UFUNCTION(BlueprintCallable)
+	bool IsSpyUIOpen(ESpyUIType UIType) const;
+
 public:
 	//# 트래블을 넘어 유지되는 UI (로딩 화면 등)
 	UFUNCTION(BlueprintCallable)

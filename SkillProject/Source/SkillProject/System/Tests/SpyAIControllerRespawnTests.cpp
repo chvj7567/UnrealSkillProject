@@ -3,6 +3,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Perception/AIPerceptionComponent.h"
 #include "UObject/UnrealType.h"
 #include "Data/SpyAIConfig.h"
 #include "System/SpyAIController.h"

@@ -27,6 +27,16 @@ protected:
 	virtual void UpdateRotation(float DeltaTime) override;
 	virtual void PreProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
+	virtual void SetupInputComponent() override;
+
+protected:
+	//# ESC — 종료 확인 팝업 토글. 로컬 UI 액션이라 서버 권한 체크 대상 아님 (unreal-infra §2)
+	void HandleEscapePressed();
+
+public:
+	//# QuitConfirm 이 닫힌 뒤 커서 모드를 정리한다(ESC 재입력·팝업 내 No 버튼 양쪽에서 호출) —
+	//# 미션카드 등 다른 UI 가 여전히 커서를 요구하면 끄지 않는다(최소 확인, 완전한 스택 복원은 아님)
+	void HandleQuitConfirmClosed();
 
 public:
 	UFUNCTION(BlueprintCallable)
